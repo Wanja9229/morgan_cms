@@ -361,12 +361,13 @@
                     }
 
                     // 보드 토글 + 패널 상태 업데이트
+                    // 패널 자동 열기 제거 - 클릭해야만 열리도록 변경
                     var boardToggle = document.getElementById('sidebar-board-toggle');
                     if (boardToggle && window.MG_BoardPanel) {
                         window.MG_BoardPanel.setCommunityPage(isCommunity);
                         if (isCommunity) {
                             boardToggle.classList.add('!bg-mg-accent', '!text-white', '!rounded-xl');
-                            window.MG_BoardPanel.open();
+                            // 패널은 자동으로 열지 않음 - 사용자가 클릭해야 열림
                         } else {
                             boardToggle.classList.remove('!bg-mg-accent', '!text-white', '!rounded-xl');
                             window.MG_BoardPanel.close();
@@ -374,11 +375,13 @@
                     }
 
                     // 보드 서브메뉴 내 개별 항목 활성 상태 업데이트
-                    if (isCommunity && boTable) {
-                        var boardLinks = document.querySelectorAll('#sidebar-board-panel nav a');
+                    // isCommunity일 때만 처리 (RP 페이지에서도 게시판 하이라이트 제거 필요)
+                    if (isCommunity) {
+                        var boardLinks = document.querySelectorAll('#sidebar-board-panel nav a[href*="bo_table"]');
                         boardLinks.forEach(function(link) {
                             var linkHref = link.getAttribute('href') || '';
-                            var isActive = linkHref.indexOf('bo_table=' + boTable) !== -1;
+                            // boTable이 있을 때만 해당 게시판 활성화, 없으면 모두 비활성화
+                            var isActive = boTable && linkHref.indexOf('bo_table=' + boTable) !== -1;
                             var hashSpan = link.querySelector('span:first-child');
                             var dotSpan = link.querySelector('.ml-auto');
 
