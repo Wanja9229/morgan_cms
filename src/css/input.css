@@ -1,0 +1,328 @@
+/**
+ * Morgan Edition - Tailwind CSS v4 Source
+ *
+ * 빌드 명령어:
+ * npm run css:dev   - 개발 빌드
+ * npm run css:watch - 감시 모드
+ * npm run css:build - 프로덕션 빌드 (minify)
+ */
+
+@import "tailwindcss";
+
+/* 콘텐츠 경로 설정 */
+@source "../../theme/morgan/**/*.php";
+@source "../../theme/morgan/**/*.js";
+@source "../../plugin/**/*.php";
+@source "../../bbs/**/*.php";
+@source "../../adm/**/*.php";
+@source "../../api/**/*.php";
+
+/* Safelist 파일 - 동적 클래스용 */
+@source "../../theme/morgan/safelist.html";
+
+/* Morgan Edition 테마 컬러 */
+@theme {
+    /* Discord 스타일 다크 테마 */
+    --color-mg-bg-primary: #1e1f22;
+    --color-mg-bg-secondary: #2b2d31;
+    --color-mg-bg-tertiary: #313338;
+
+    --color-mg-text-primary: #f2f3f5;
+    --color-mg-text-secondary: #b5bac1;
+    --color-mg-text-muted: #949ba4;
+
+    --color-mg-accent: #f59f0a;
+    --color-mg-accent-hover: #d97706;
+
+    /* 추가 색상 */
+    --color-mg-success: #22c55e;
+    --color-mg-warning: #eab308;
+    --color-mg-error: #ef4444;
+    --color-mg-info: #3b82f6;
+
+    /* 사이드바 너비 */
+    --spacing-sidebar: 3.5rem; /* 56px */
+}
+
+/* CSS 변수 (테마 시스템 호환용) */
+:root {
+    --mg-bg-primary: #1e1f22;
+    --mg-bg-secondary: #2b2d31;
+    --mg-bg-tertiary: #313338;
+    --mg-text-primary: #f2f3f5;
+    --mg-text-secondary: #b5bac1;
+    --mg-text-muted: #949ba4;
+    --mg-accent: #f59f0a;
+    --mg-accent-hover: #d97706;
+}
+
+/* 기본 스타일 */
+html {
+    color-scheme: dark;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans KR', sans-serif;
+    background-color: var(--mg-bg-primary);
+    color: var(--mg-text-primary);
+}
+
+/* 사이드바 아이콘 버튼 */
+.sidebar-icon {
+    @apply flex items-center justify-center;
+    @apply w-11 h-11 rounded-full;
+    @apply bg-mg-bg-tertiary text-mg-text-secondary;
+    @apply transition-all duration-150 cursor-pointer;
+}
+
+.sidebar-icon:hover {
+    @apply rounded-xl bg-mg-accent text-white;
+}
+
+/* 스크롤바 스타일 (다크모드) */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--mg-bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--mg-bg-tertiary);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--mg-text-muted);
+}
+
+@layer components {
+
+/* 버튼 컴포넌트 */
+.btn {
+    @apply inline-flex items-center justify-center;
+    @apply px-4 py-2 rounded-md;
+    @apply font-medium text-sm;
+    @apply transition-colors duration-150;
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+}
+
+.btn-primary {
+    @apply bg-mg-accent text-white;
+    @apply hover:bg-mg-accent-hover;
+    @apply focus:ring-mg-accent;
+}
+
+.btn-secondary {
+    @apply bg-mg-bg-tertiary text-mg-text-primary;
+    @apply hover:bg-mg-bg-secondary;
+    @apply focus:ring-mg-bg-tertiary;
+}
+
+.btn-ghost {
+    @apply bg-transparent text-mg-text-secondary;
+    @apply hover:bg-mg-bg-tertiary hover:text-mg-text-primary;
+}
+
+/* 입력 필드 */
+.input {
+    @apply w-full px-3 py-2 rounded-md;
+    @apply bg-mg-bg-primary text-mg-text-primary;
+    @apply border border-mg-bg-tertiary;
+    @apply placeholder:text-mg-text-muted;
+    @apply focus:outline-none focus:ring-2 focus:ring-mg-accent focus:border-transparent;
+    @apply transition-colors duration-150;
+}
+
+/* 카드 컴포넌트 */
+.card {
+    @apply bg-mg-bg-secondary rounded-lg p-4;
+    @apply border border-mg-bg-tertiary;
+}
+
+.card-header {
+    @apply text-lg font-semibold text-mg-text-primary mb-3;
+    @apply flex items-center gap-2;
+}
+
+/* 뱃지 */
+.badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full;
+    @apply text-xs font-medium;
+}
+
+.badge-accent {
+    @apply bg-mg-accent/20 text-mg-accent;
+}
+
+.badge-success {
+    @apply bg-mg-success/20 text-mg-success;
+}
+
+.badge-warning {
+    @apply bg-mg-warning/20 text-mg-warning;
+}
+
+.badge-error {
+    @apply bg-mg-error/20 text-mg-error;
+}
+
+/* 이모티콘 */
+.mg-emoticon {
+    display: inline-block;
+    width: 1.75rem;
+    height: 1.75rem;
+    vertical-align: middle;
+    object-fit: contain;
+}
+
+/* 이모티콘 피커 */
+.mg-emoticon-btn {
+    @apply p-1.5 rounded text-mg-text-muted;
+    @apply hover:text-mg-accent hover:bg-mg-bg-tertiary;
+    @apply transition-colors cursor-pointer;
+    line-height: 0;
+}
+
+.mg-emoticon-popup {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    width: 320px;
+    max-height: 360px;
+    background: var(--mg-bg-secondary);
+    border: 1px solid var(--mg-bg-tertiary);
+    border-radius: 0.5rem;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.25rem;
+}
+
+.mg-emoticon-popup-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.625rem 0.75rem;
+    border-bottom: 1px solid var(--mg-bg-tertiary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--mg-text-secondary);
+}
+
+.mg-emoticon-popup-close {
+    background: none;
+    border: none;
+    color: var(--mg-text-muted);
+    cursor: pointer;
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 0 0.25rem;
+}
+
+.mg-emoticon-popup-close:hover {
+    color: var(--mg-text-primary);
+}
+
+.mg-emoticon-popup-tabs {
+    display: flex;
+    gap: 0.125rem;
+    padding: 0.375rem;
+    border-bottom: 1px solid var(--mg-bg-tertiary);
+    overflow-x: auto;
+    flex-shrink: 0;
+}
+
+.mg-emoticon-tab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 0.25rem;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    flex-shrink: 0;
+    color: var(--mg-text-muted);
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.mg-emoticon-tab img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+.mg-emoticon-tab:hover {
+    background: var(--mg-bg-tertiary);
+}
+
+.mg-emoticon-tab.active {
+    background: var(--mg-bg-tertiary);
+    color: var(--mg-accent);
+}
+
+.mg-emoticon-popup-grid {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.25rem;
+    align-content: start;
+    min-height: 140px;
+}
+
+.mg-emoticon-grid-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    aspect-ratio: 1;
+    border: none;
+    background: transparent;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    padding: 0.25rem;
+}
+
+.mg-emoticon-grid-item:hover {
+    background: var(--mg-bg-tertiary);
+}
+
+.mg-emoticon-grid-item img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
+.mg-emoticon-popup-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--mg-text-muted);
+    font-size: 0.8rem;
+    line-height: 1.6;
+}
+
+.mg-emoticon-popup-footer {
+    padding: 0.375rem 0.75rem;
+    border-top: 1px solid var(--mg-bg-tertiary);
+    text-align: center;
+}
+
+.mg-emoticon-popup-footer a {
+    font-size: 0.75rem;
+    color: var(--mg-text-muted);
+}
+
+.mg-emoticon-popup-footer a:hover {
+    color: var(--mg-accent);
+}
+
+} /* end @layer components */

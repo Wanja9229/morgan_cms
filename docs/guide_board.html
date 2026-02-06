@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Creative Log Board Gallery</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#5461f2",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101222",
+                        "surface-dark": "#1e2038", // Slightly lighter than background-dark for cards
+                        "surface-darker": "#111222",
+                        "border-dark": "#2b2e50",
+                        "text-muted": "#9296c9",
+                    },
+                    fontFamily: {
+                        "display": ["Spline Sans", "Noto Sans", "sans-serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display overflow-x-hidden flex flex-col min-h-screen">
+<!-- Top Navigation Bar -->
+<header class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-b-border-dark dark:bg-background-dark/95 bg-white/95 backdrop-blur-md px-6 py-3">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3 text-white">
+<div class="size-8 flex items-center justify-center bg-primary rounded-lg text-white">
+<span class="material-symbols-outlined text-xl">swords</span>
+</div>
+<h2 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] hidden sm:block">Roleplay Central</h2>
+</div>
+<!-- Search Bar -->
+<label class="hidden md:flex flex-col min-w-40 !h-10 max-w-64">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full group">
+<div class="text-text-muted flex border-none bg-slate-100 dark:bg-[#1e2038] items-center justify-center pl-4 rounded-l-lg border-r-0 group-focus-within:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg rounded-l-none text-slate-900 dark:text-white focus:outline-0 focus:ring-0 border-none bg-slate-100 dark:bg-[#1e2038] focus:border-none h-full placeholder:text-text-muted px-4 pl-2 text-sm font-normal leading-normal transition-all" placeholder="Search logs..." value=""/>
+</div>
+</label>
+</div>
+<div class="flex flex-1 justify-end gap-4 sm:gap-8 items-center">
+<nav class="hidden lg:flex items-center gap-6">
+<a class="text-text-muted hover:text-white text-sm font-medium leading-normal transition-colors" href="#">Dashboard</a>
+<a class="text-text-muted hover:text-white text-sm font-medium leading-normal transition-colors" href="#">Characters</a>
+<a class="text-white text-sm font-medium leading-normal" href="#">World</a>
+<a class="text-text-muted hover:text-white text-sm font-medium leading-normal transition-colors" href="#">Gallery</a>
+</nav>
+<button class="flex items-center justify-center gap-2 rounded-lg h-9 px-4 bg-primary hover:bg-primary/90 text-white text-sm font-bold leading-normal tracking-[0.015em] transition-all shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-[18px]">edit_square</span>
+<span class="truncate">Write Log</span>
+</button>
+<button class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-9 border border-border-dark" data-alt="User profile avatar showing a stylized character" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBpNX2chbht-yg7CdIS3G0r5A09MTCN0gw-LwkYQFAsBR9aqiCZ6yoJCDyBItqSOqz77e7exJ74M6atcH-g1HUuVWLq-bkndgesv0L0vp-QpZQ5DwyncGQ2Em9hLQ4IfF5hHjVK0a-jbouEhTGtRpxF37cJqCQ4pdYMgP-tYXcNdPIkDXscaGw_WEbL1aLLcc9F4n79-4Nd9889RpRjJZZVR2KQKYs1hnvzOGBqehkhM6ZAaVVUHmYWunDXdK6TfPEKvDaER5nqdg");'></button>
+</div>
+</header>
+<div class="flex flex-1 w-full max-w-[1600px] mx-auto">
+<!-- Left Sidebar Filter -->
+<aside class="hidden md:flex w-64 flex-col gap-6 p-6 border-r border-border-dark sticky top-[65px] h-[calc(100vh-65px)] overflow-y-auto">
+<div>
+<h3 class="text-white text-sm font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-lg">filter_list</span>
+                    Log Type
+                </h3>
+<div class="flex flex-col gap-2">
+<label class="flex items-center gap-3 cursor-pointer group">
+<div class="relative flex items-center justify-center size-5">
+<input checked="" class="peer appearance-none size-5 border border-border-dark rounded bg-[#1e2038] checked:bg-primary checked:border-primary transition-all" type="checkbox"/>
+<span class="material-symbols-outlined text-white text-sm absolute opacity-0 peer-checked:opacity-100 pointer-events-none">check</span>
+</div>
+<span class="text-text-muted group-hover:text-white text-sm font-medium transition-colors">All Logs</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<div class="relative flex items-center justify-center size-5">
+<input class="peer appearance-none size-5 border border-border-dark rounded bg-[#1e2038] checked:bg-primary checked:border-primary transition-all" type="checkbox"/>
+<span class="material-symbols-outlined text-white text-sm absolute opacity-0 peer-checked:opacity-100 pointer-events-none">check</span>
+</div>
+<span class="text-text-muted group-hover:text-white text-sm font-medium transition-colors">Fiction / Novel</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<div class="relative flex items-center justify-center size-5">
+<input class="peer appearance-none size-5 border border-border-dark rounded bg-[#1e2038] checked:bg-primary checked:border-primary transition-all" type="checkbox"/>
+<span class="material-symbols-outlined text-white text-sm absolute opacity-0 peer-checked:opacity-100 pointer-events-none">check</span>
+</div>
+<span class="text-text-muted group-hover:text-white text-sm font-medium transition-colors">Illustration</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<div class="relative flex items-center justify-center size-5">
+<input class="peer appearance-none size-5 border border-border-dark rounded bg-[#1e2038] checked:bg-primary checked:border-primary transition-all" type="checkbox"/>
+<span class="material-symbols-outlined text-white text-sm absolute opacity-0 peer-checked:opacity-100 pointer-events-none">check</span>
+</div>
+<span class="text-text-muted group-hover:text-white text-sm font-medium transition-colors">Comics / Manga</span>
+</label>
+</div>
+</div>
+<div class="h-px bg-border-dark w-full"></div>
+<div>
+<h3 class="text-white text-sm font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-lg">category</span>
+                    Categories
+                </h3>
+<div class="flex flex-col gap-1">
+<a class="flex items-center justify-between py-2 px-3 rounded-md bg-[#1e2038] text-white text-sm font-medium border border-border-dark" href="#">
+<span>Main Story</span>
+<span class="text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded">128</span>
+</a>
+<a class="flex items-center justify-between py-2 px-3 rounded-md hover:bg-[#1e2038] text-text-muted hover:text-white text-sm font-medium transition-colors" href="#">
+<span>Side Stories</span>
+<span class="text-xs bg-[#2b2e50] text-text-muted px-1.5 py-0.5 rounded">45</span>
+</a>
+<a class="flex items-center justify-between py-2 px-3 rounded-md hover:bg-[#1e2038] text-text-muted hover:text-white text-sm font-medium transition-colors" href="#">
+<span>Alternate Universe</span>
+<span class="text-xs bg-[#2b2e50] text-text-muted px-1.5 py-0.5 rounded">32</span>
+</a>
+<a class="flex items-center justify-between py-2 px-3 rounded-md hover:bg-[#1e2038] text-text-muted hover:text-white text-sm font-medium transition-colors" href="#">
+<span>Events</span>
+<span class="text-xs bg-[#2b2e50] text-text-muted px-1.5 py-0.5 rounded">12</span>
+</a>
+</div>
+</div>
+<div class="mt-auto">
+<div class="bg-gradient-to-br from-primary/20 to-purple-500/10 border border-primary/20 rounded-xl p-4">
+<p class="text-white text-sm font-bold mb-1">Monthly Event</p>
+<p class="text-xs text-text-muted mb-3">Participate in the "Winter Solstice" writing challenge.</p>
+<button class="w-full py-2 bg-primary hover:bg-primary/90 text-white text-xs font-bold rounded transition-colors">View Details</button>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col min-w-0">
+<!-- Header Section -->
+<div class="px-6 pt-6 pb-2">
+<!-- Breadcrumbs -->
+<div class="flex flex-wrap gap-2 mb-4 items-center">
+<a class="text-text-muted hover:text-white text-sm font-medium transition-colors" href="#">Home</a>
+<span class="material-symbols-outlined text-text-muted text-sm">chevron_right</span>
+<a class="text-text-muted hover:text-white text-sm font-medium transition-colors" href="#">Campaigns</a>
+<span class="material-symbols-outlined text-text-muted text-sm">chevron_right</span>
+<span class="text-white text-sm font-medium">Log Gallery</span>
+</div>
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+<div>
+<h1 class="text-slate-900 dark:text-white text-3xl font-bold leading-tight tracking-tight">Log Gallery</h1>
+<p class="text-text-muted mt-1 text-sm">Explore recent roleplay logs, artwork, and character stories.</p>
+</div>
+<!-- View Toggles / Sort -->
+<div class="flex items-center gap-2 bg-[#1e2038] p-1 rounded-lg border border-border-dark self-start">
+<button class="p-1.5 rounded bg-primary text-white shadow-sm">
+<span class="material-symbols-outlined text-[20px] block">grid_view</span>
+</button>
+<button class="p-1.5 rounded text-text-muted hover:text-white hover:bg-[#2b2e50] transition-colors">
+<span class="material-symbols-outlined text-[20px] block">view_agenda</span>
+</button>
+</div>
+</div>
+<!-- Chips / Tags -->
+<div class="flex gap-3 pb-2 flex-wrap items-center">
+<span class="text-text-muted text-sm font-medium mr-1">Popular:</span>
+<button class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full border border-border-dark bg-[#1e2038] pl-3 pr-2 hover:border-primary hover:text-primary transition-colors group">
+<p class="text-white group-hover:text-primary text-xs font-medium leading-normal">#Romance</p>
+</button>
+<button class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full border border-border-dark bg-[#1e2038] pl-3 pr-2 hover:border-primary hover:text-primary transition-colors group">
+<p class="text-white group-hover:text-primary text-xs font-medium leading-normal">#Combat</p>
+</button>
+<button class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full border border-border-dark bg-[#1e2038] pl-3 pr-2 hover:border-primary hover:text-primary transition-colors group">
+<p class="text-white group-hover:text-primary text-xs font-medium leading-normal">#SliceOfLife</p>
+</button>
+<button class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full border border-border-dark bg-[#1e2038] pl-3 pr-2 hover:border-primary hover:text-primary transition-colors group">
+<p class="text-white group-hover:text-primary text-xs font-medium leading-normal">#Horror</p>
+</button>
+<button class="ml-auto text-primary text-sm font-medium hover:underline">Clear all</button>
+</div>
+</div>
+<!-- Masonry Grid Content -->
+<div class="p-6 pt-2">
+<div class="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
+<!-- Card 1 -->
+<div class="break-inside-avoid group cursor-pointer">
+<div class="relative overflow-hidden rounded-xl bg-[#1e2038] border border-border-dark hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/10">
+<!-- Image -->
+<div class="relative w-full">
+<div class="w-full bg-center bg-no-repeat bg-cover aspect-[3/4]" data-alt="Dark fantasy warrior character standing in rain" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAHWIFrIqgeH391UqPWKAQMCT5CHqAn5Flv2FduAT2wzeqUvkMN0g3P0J57WxIElTjrj3m7BATRDmm_sfF2JWd2v4kGzOPBdKb6ZWa-5NnqgTNj5IBeboeeq0oNYUcVb-CKRtGpUUiTEdLabCk8TSABJ1tPY2-QU-bGJWLYGx8CF4AnzFxPaV9h_lAa2wRo88kUGXVo-hw3vmGJjSS5KEqE4tbF7tJqj0yqStoARFN_bF2cv3DTg7coQOvWsGTXF3Pffig84QSu6A");'></div>
+<div class="absolute inset-0 bg-gradient-to-t from-[#1e2038] via-transparent to-transparent opacity-60"></div>
+<div class="absolute top-3 right-3 bg-black/50 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-white uppercase tracking-wider border border-white/10">
+                                    Fiction
+                                </div>
+</div>
+<!-- Content -->
+<div class="p-4 pt-2">
+<div class="flex items-center gap-2 mb-2">
+<div class="size-6 rounded-full bg-cover bg-center border border-border-dark" data-alt="Avatar of user UserA" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAGfrvvKFUp6ciRpBFpRytsYokioz_ytC2T7dGwhBZ3zd948-niBLmyKl49VSoHHYsUy9xVil9rYaAYcLU90M9wZbC7UJw2X0R2MaByCUUBzwMZS8h37Q68w7tUfrCZguaq99_tctVVRhugD_mMiG-MU5rRWHNeErxoNgcrtS3nGjnaBDtgZCzSgxgRRSPFyfWxvXyX0H5od6qgW71fItuslIbZ5zGl3TDCGEnQL2_CXpqhqXH3WoM8OrYl9LCIXDN6vBX2XGl-WA");'></div>
+<span class="text-xs text-text-muted">UserA</span>
+<span class="text-xs text-text-muted mx-1">•</span>
+<span class="text-xs text-text-muted">2h ago</span>
+</div>
+<h3 class="text-white text-lg font-bold leading-snug mb-1 group-hover:text-primary transition-colors">Eldric's Last Stand</h3>
+<p class="text-text-muted text-sm line-clamp-2 mb-3">The rain poured relentlessly as the final battalion marched towards the obsidian keep...</p>
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2 py-0.5 rounded bg-[#2b2e50] text-text-muted text-[10px] font-medium">#DarkFantasy</span>
+<span class="px-2 py-0.5 rounded bg-[#2b2e50] text-text-muted text-[10px] font-medium">#Combat</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="break-inside-avoid group cursor-pointer">
+<div class="relative overflow-hidden rounded-xl bg-[#1e2038] border border-border-dark hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/10">
+<div class="relative w-full">
+<div class="w-full bg-center bg-no-repeat bg-cover aspect-[4/3]" data-alt="Cozy tea party illustration with magical lighting" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCBzfyuLdlwr0TKQiCYR0Gebk88I-tTAdXLOzCadWRt9ugerzlUeGZIhStnClHfmW4Qi9AH-oiSf80k6mVAjT2CLz_-VZRw1hjd2m_pNqVh1e8VNDqQUzzitRElaJZqIMYY9JBX1CiDZMsLpk3CrSDaUCp4Swn7CwrGuITKnojDTZyclRj_nJLce97SJ7EEpxQ4v127A8ui-flgIwYvyltMwrEqq_s_ZMbt8fCLyA8rKymjwBb2Dzgu_i1byI0r-KQhQZiu6XRWgg");'></div>
+<div class="absolute top-3 right-3 bg-black/50 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-white uppercase tracking-wider border border-white/10">
+                                    Art
+                                </div>
+</div>
+<div class="p-4 pt-2">
+<div class="flex items-center gap-2 mb-2">
+<div class="size-6 rounded-full bg-cover bg-center border border-border-dark" data-alt="Avatar of user UserB" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC8vhpsL2rHG19H_iYDAAT9f-29boJomxv15r2ll9wl6u_fcFMRRfL5pgouR14jsMcYmB5700d6n8WM1MQLxBPk6T6Pq_EW1ItoJk-etq0IexZt5umses7wONrWPEWdWd_o3xsxpxnwGZT06RIEfaC_lTSEF9qz51DIUJLe1_sL2kx4nlOC5Hrbj1guLGwpDJCvRqdZEPAWD_Rpfbyd_3ke2IW0ZQUeUrVn4txsYqhJC34JULOJWYcLrwhZxeQ7_R5fw5YLZK7tcw");'></div>
+<span class="text-xs text-text-muted">UserB</span>
+</div>
+<h3 class="text-white text-lg font-bold leading-snug mb-1 group-hover:text-primary transition-colors">Midnight Tea Party</h3>
+<p class="text-text-muted text-sm line-clamp-2 mb-3">A small sketch of Lira and Vex having a quiet moment.</p>
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2 py-0.5 rounded bg-[#2b2e50] text-text-muted text-[10px] font-medium">#Wholesome</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="break-inside-avoid group cursor-pointer">
+<div class="relative overflow-hidden rounded-xl bg-[#1e2038] border border-border-dark hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/10">
+<div class="relative w-full">
+<div class="w-full bg-center bg-no-repeat bg-cover aspect-[16/9]" data-alt="Ancient ruins map with grid overlay" data-location="The Sunken Temple" style='background-image: url("https://placeholder.pics/svg/300");'></div>
+<div class="absolute top-3 right-3 bg-black/50 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-white uppercase tracking-wider border border-white/10">
+                                    Log
+                                </div>
+</div>
+<div class="p-4 pt-2">
+<div class="flex items-center gap-2 mb-2">
+<div class="size-6 rounded-full bg-cover bg-center border border-border-dark" data-alt="Avatar of user UserC" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBuVpWyg9henRnjpPFlvdKYHaq7SQVIQwK8KaSJP6tl-znVa2ftNPt9T6khzuPyNJKZFvvsBOEp1Zb7CjDmggmMM1rWMdsX8mD0tBySJ3eMu9iIXL3qaAzNei7C1VyLhgYUzfOVsvqxsWNecX8pHTYNyK9H5u5AthUIELq9GnV1Mj-SaFa_ox4eGrPFvO42QT-WqeaTiT9nMmy164jkQqANYy6vnqrSEBrxO8b50Y26E0OXXOrBvX0_24hp1_uDK-O1c2yRVh95uA");'></div>
+<span class="text-xs text-text-muted">UserC</span>
+</div>
+<h3 class="text-white text-lg font-bold leading-snug mb-1 group-hover:text-primary transition-colors">The Ancient Ruins Exploration</h3>
+<p class="text-text-muted text-sm line-clamp-2 mb-3">Session 4: The party encounters a mimic disguised as a chest.</p>
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2 py-0.5 rounded bg-[#2b2e50] text-text-muted text-[10px] font-medium">#Adventure</span>
+<span class="px-2 py-0.5 rounded bg-[#2b2e50] text-text-muted text-[10px] font-medium">#Party</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="break-inside-avoid group cursor-pointer">
+<div class="relative overflow-hidden rounded-xl bg-[#1e2038] border border-border-dark hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/10">
+<div class="relative w-full">
+<div class="w-full bg-center bg-no-repeat bg-cover aspect-[3/5]" data-alt="Cyberpunk character portrait with neon lights" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDWDkqpZF2rLY5E-U1_Ihkh3N-Jo3mFpobikh_oxbC73UAczI_cViKtTjvTkzckvNF0iez3rEeATD4kM6KUShiqWxYtuUvU7BoNErKYEeJvVw7mMEU_LCPj1_vwfatC7m6z-Nh9MdQaKviBK8ZGNPpquNb-WYOmZ3rw6eWzH6IlyIAoKW_hLMsg8LYzCO5X-hfIKJpVqyFqq94lJg3wiEuzFpwn2THlQyGDYZH5r4Qs5WgQaF_ArxjwnxwZtAU5lVa3yS3BtDFBbw");'></div>
+<div class="absolute top-3 right-3 bg-black/50 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-white uppercase tracking-wider border border-white/10">
+                                    Profile
+                                </div>
+</div>
+<div class="p-4 pt-2">
+<div class="flex items-center gap-2 mb-2">
+<div class="size-6 rounded-full bg-cover bg-center border border-border-dark" data-alt="Avatar of user UserD" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDyUFlJHzsdCk9X9CW0tCj39dzaJJaDwp4v_25716B3O-hOwRD9GKm1uTwICiHlzXRJ51rDg7tcR_6YbgIVLajy1D3nCKG8omEFbzvwY_xlSdeaRgVC_pDS_rZt6fqHvlcZpapCee0dm-Tf_1P1qrrofn13TZA_hFipFageZlNtdL7kqQmsPfi4T92NdUebJdYzt9PFHvr6l7Z-WwmWSXvXCol5VtsPEpABb05HH7SWDLsgEYf8YO5hl57iiXrGkzQX65P95yx9oQ");'></div>
+<span class="text-xs text-text-muted">UserD</span>
+</div>
+<h3 class="text-white text-lg font-bold leading-snug mb-1 group-hover:text-primary transition-colors">Kael &amp; Jyn Sparring</h3>
+<div class="flex flex-wrap gap-1.5 mt-3">
+<span class="px-2 py-0.5 rounded bg-[#2b2e50] text-text-muted text-[10px] font-medium">#Training</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 5 -->
+<div class="break-inside-avoid group cursor-pointer">
+<div class="relative overflow-hidden rounded-xl bg-[#1e2038] border border-border-dark hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/10">
+<!-- Text Only Log -->
+<div class="p-6 bg-gradient-to-br from-[#232648] to-[#1e2038]">
+<span class="material-symbols-outlined text-4xl text-primary/50 mb-2">menu_book</span>
+<h3 class="text-white text-xl font-bold leading-snug mb-2 group-hover:text-primary transition-colors">Secret Meeting Notes</h3>
+<p class="text-text-muted text-sm line-clamp-4 italic">"If the council finds out about this, we are all dead. Meet me at the docks at midnight. Come alone." - Note found in the locker.</p>
+</div>
+<div class="p-4 pt-2 border-t border-border-dark bg-[#1e2038]">
+<div class="flex items-center gap-2 mb-2">
+<div class="size-6 rounded-full bg-cover bg-center border border-border-dark" data-alt="Avatar of user UserF" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCRVZEbBny6HwQM9TcdSW71r_csaDc0M677E08JBtCxqL7mq1ZhvYTvFVIz13mMz1ojjv5ENuNAKgtZXcX3DgccQbRytRwTLVt5Mh6nHejhi4keWftwSPgyv02qpeEXeDP9fILPuWsglScO3XCtEH_HY7hQJHgIGImJBfKajaot4qOrNNrWf3k_Ox1sgmojqd65LcQPTjbx9-TxQTatfbTS8MoGwvaXP0s0BJXLIMXzcHYS_1QpOcgZewAeSM5jKjVzOoq1CP8kNA");'></div>
+<span class="text-xs text-text-muted">UserF</span>
+</div>
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2 py-0.5 rounded bg-[#2b2e50] text-text-muted text-[10px] font-medium">#Mystery</span>
+<span class="px-2 py-0.5 rounded bg-[#2b2e50] text-text-muted text-[10px] font-medium">#Lore</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 6 -->
+<div class="break-inside-avoid group cursor-pointer">
+<div class="relative overflow-hidden rounded-xl bg-[#1e2038] border border-border-dark hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/10">
+<div class="relative w-full">
+<div class="w-full bg-center bg-no-repeat bg-cover aspect-square" data-alt="Festival lanterns glowing in the night sky" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDVJfK4ho4qoP-RraBs4Tll2-LgTbH9GeF89yJHEbm4Kc6lZTJO57z84gn45-y2MbLKV5HHuJYDN-jCz_t2l3lKaoRhelEE2ROp6aXs9-otPirhlcU8O3g2b0AAkFWL1j0AWZ18427DLZ-wnadYBso-atN0iWtTEVYbc2_wPs2hEKyrOs0NMdYpXsIapiBKT9S5jZ1obL5NfzyRoApMDJID9_Hm82cxjm_LPlFRiBUN-ORGRq7lTzC8x-cofSjbc3sxhTYk4KQGvA");'></div>
+<div class="absolute top-3 right-3 bg-black/50 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-white uppercase tracking-wider border border-white/10">
+                                    Event
+                                </div>
+</div>
+<div class="p-4 pt-2">
+<div class="flex items-center gap-2 mb-2">
+<div class="size-6 rounded-full bg-cover bg-center border border-border-dark" data-alt="Avatar of user UserE" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBx4zIuw5cIMHolpa-I6VMeX81pzr9l6c4QjoKy0CCSScA_1n-iR_44eUWz2tUZ_qrhrD3YCKDVIRqQhFsLqBPzjhoqGpd7vZkhpcwsJuL2A4rFgmsY2D-jOQXyOTDs0gsSbeEXE_B0_g_IethuVt0uocpdJTsElweOIzeFY2nz4NvtnY6RYgPW-tHoyeULEAtCtfOV4TLDVFsm9Po1YzhzI7MEAkR4nQiez8-2uL9FZt4UrTziVmQmn-h-ax1UFH4rdWF9QjXbXw");'></div>
+<span class="text-xs text-text-muted">UserE</span>
+</div>
+<h3 class="text-white text-lg font-bold leading-snug mb-1 group-hover:text-primary transition-colors">Festival Night</h3>
+<p class="text-text-muted text-sm line-clamp-2 mb-3">The annual Lantern Festival was a blast! Thanks to everyone who participated.</p>
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2 py-0.5 rounded bg-[#2b2e50] text-text-muted text-[10px] font-medium">#Social</span>
+<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 text-[10px] font-medium">#Event</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 7 -->
+<div class="break-inside-avoid group cursor-pointer">
+<div class="relative overflow-hidden rounded-xl bg-[#1e2038] border border-border-dark hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/10">
+<div class="relative w-full">
+<div class="w-full bg-center bg-no-repeat bg-cover aspect-[4/5]" data-alt="Detailed sketch of a mechanical weapon concept" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAzBYOCIGu5fwDi-2hhf_AnzgLWj-8Izh6VhQJHWfU0fRer2AjlPCy-8hHKlBivH9IELguc_7yn6n7kDtXSej_GuYUX_fzxfGka5Nyf55lK5u0W3JthAT8FQU_yN55fhnNAnNaA1TFWMHDM2bBKNM1MYPnrEVLKQxmpO2ygB_AOAnwvjfnERXFEjHtTyD7AwRGinwL0MBljd8eCr2uu1-mw7Su7CBeh0gUPxB2vs2pbMkKVC1g7AQlclX4s8SlgJHdcx0pdShc68g");'></div>
+<div class="absolute top-3 right-3 bg-black/50 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-white uppercase tracking-wider border border-white/10">
+                                    Concept
+                                </div>
+</div>
+<div class="p-4 pt-2">
+<div class="flex items-center gap-2 mb-2">
+<div class="size-6 rounded-full bg-cover bg-center border border-border-dark" data-alt="Avatar of user UserH" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAPJOOQx4IVtlIyWR00UXT9iY-KRZUyMArweKzjsps7k_UJK7aQVpjI3ohMonxvK0m_RiYUH4KBL6kdN5prUVqojya-HrgzcdotJcMHEgXo3tOVXe0BPNGrhxXQ_RIybXKgKMyHlKDyuRk2vKCYFS49BohO7pRaFRm4VII345isi12P3IJCZ6QcmgNiHgQ1QU91rNHMnwlLXQ3QFduQoYw2_-WrhYF4Ow6fJKeunzgb52bCwnPsZ1nn1pPSAdLygYpt8oB7dfS5xw");'></div>
+<span class="text-xs text-text-muted">UserH</span>
+</div>
+<h3 class="text-white text-lg font-bold leading-snug mb-1 group-hover:text-primary transition-colors">Weapon Concept: The Soul Reaver</h3>
+<div class="flex flex-wrap gap-1.5 mt-3">
+<span class="px-2 py-0.5 rounded bg-[#2b2e50] text-text-muted text-[10px] font-medium">#Items</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Load More -->
+<div class="flex justify-center p-8 pb-12">
+<button class="flex items-center gap-2 text-text-muted hover:text-white font-medium transition-colors">
+<span>Load More</span>
+<span class="material-symbols-outlined animate-bounce">expand_more</span>
+</button>
+</div>
+</main>
+</div>
+</body></html>

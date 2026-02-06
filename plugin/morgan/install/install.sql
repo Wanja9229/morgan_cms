@@ -1,0 +1,1202 @@
+-- Morgan Edition - Database Schema
+-- Version: 1.0
+-- Phase 2: Core Tables
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ======================================
+-- 1. 캐릭터 관련 테이블
+-- ======================================
+
+-- 1.1 캐릭터 기본 정보
+CREATE TABLE IF NOT EXISTS `mg_character` (
+    `ch_id` int NOT NULL AUTO_INCREMENT,
+    `mb_id` varchar(20) NOT NULL COMMENT '소유자 회원 ID',
+    `ch_name` varchar(100) NOT NULL COMMENT '캐릭터 이름',
+    `ch_state` enum('editing','pending','approved','deleted') NOT NULL DEFAULT 'editing' COMMENT '상태',
+    `ch_type` enum('main','sub','npc') NOT NULL DEFAULT 'main' COMMENT '유형',
+    `ch_main` tinyint(1) NOT NULL DEFAULT 0 COMMENT '대표 캐릭터 여부',
+    `side_id` int DEFAULT NULL COMMENT '세력 ID',
+    `class_id` int DEFAULT NULL COMMENT '종족 ID',
+    `ch_thumb` varchar(500) DEFAULT NULL COMMENT '두상 이미지',
+    `ch_image` varchar(500) DEFAULT NULL COMMENT '전신 이미지',
+    `ch_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '등록일',
+    `ch_update` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일',
+    PRIMARY KEY (`ch_id`),
+    INDEX `idx_mb_id` (`mb_id`),
+    INDEX `idx_state` (`ch_state`),
+    INDEX `idx_main` (`mb_id`, `ch_main`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='캐릭터';
+
+-- 1.2 캐릭터 승인 로그
+CREATE TABLE IF NOT EXISTS `mg_character_log` (
+    `log_id` int NOT NULL AUTO_INCREMENT,
+    `ch_id` int NOT NULL COMMENT '캐릭터 ID',
+    `log_action` enum('submit','approve','reject','edit') NOT NULL COMMENT '액션',
+    `log_memo` text COMMENT '메모 (반려 사유 등)',
+    `admin_id` varchar(20) DEFAULT NULL COMMENT '처리자 ID',
+    `log_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '처리일시',
+    PRIMARY KEY (`log_id`),
+    INDEX `idx_ch_id` (`ch_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='캐릭터 승인 로그';
+
+-- 1.3 프로필 양식
+CREATE TABLE IF NOT EXISTS `mg_profile_field` (
+    `pf_id` int NOT NULL AUTO_INCREMENT,
+    `pf_code` varchar(50) NOT NULL COMMENT '항목 코드',
+    `pf_name` varchar(100) NOT NULL COMMENT '표시명',
+    `pf_type` enum('text','textarea','select','multiselect','url','image') NOT NULL DEFAULT 'text' COMMENT '입력 타입',
+    `pf_options` text COMMENT '선택지 (JSON)',
+    `pf_placeholder` varchar(200) DEFAULT NULL COMMENT '힌트 텍스트',
+    `pf_help` text COMMENT '도움말',
+    `pf_required` tinyint(1) NOT NULL DEFAULT 0 COMMENT '필수 여부',
+    `pf_order` int NOT NULL DEFAULT 0 COMMENT '정렬 순서',
+    `pf_category` varchar(50) DEFAULT '기본정보' COMMENT '분류/섹션',
+    `pf_use` tinyint(1) NOT NULL DEFAULT 1 COMMENT '사용 여부',
+    PRIMARY KEY (`pf_id`),
+    UNIQUE KEY `idx_code` (`pf_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='프로필 양식';
+
+-- 1.4 프로필 값
+CREATE TABLE IF NOT EXISTS `mg_profile_value` (
+    `pv_id` int NOT NULL AUTO_INCREMENT,
+    `ch_id` int NOT NULL COMMENT '캐릭터 ID',
+    `pf_id` int NOT NULL COMMENT '프로필 항목 ID',
+    `pv_value` text COMMENT '입력값',
+    PRIMARY KEY (`pv_id`),
+    UNIQUE KEY `idx_ch_pf` (`ch_id`, `pf_id`),
+    INDEX `idx_ch_id` (`ch_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='프로필 값';
+
+-- 1.5 세력
+CREATE TABLE IF NOT EXISTS `mg_side` (
+    `side_id` int NOT NULL AUTO_INCREMENT,
+    `side_name` varchar(100) NOT NULL COMMENT '세력명',
+    `side_desc` text COMMENT '설명',
+    `side_image` varchar(500) DEFAULT NULL COMMENT '이미지',
+    `side_order` int NOT NULL DEFAULT 0 COMMENT '정렬 순서',
+    `side_use` tinyint(1) NOT NULL DEFAULT 1 COMMENT '사용 여부',
+    PRIMARY KEY (`side_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='세력';
+
+-- 1.6 종족
+CREATE TABLE IF NOT EXISTS `mg_class` (
+    `class_id` int NOT NULL AUTO_INCREMENT,
+    `class_name` varchar(100) NOT NULL COMMENT '종족명',
+    `class_desc` text COMMENT '설명',
+    `class_image` varchar(500) DEFAULT NULL COMMENT '이미지',
+    `class_order` int NOT NULL DEFAULT 0 COMMENT '정렬 순서',
+    `class_use` tinyint(1) NOT NULL DEFAULT 1 COMMENT '사용 여부',
+    PRIMARY KEY (`class_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='종족';
+
+-- ======================================
+-- 2. 시스템 테이블
+-- ======================================
+
+-- 2.1 Morgan Edition 설정
+CREATE TABLE IF NOT EXISTS `mg_config` (
+    `cf_id` int NOT NULL AUTO_INCREMENT,
+    `cf_key` varchar(50) NOT NULL COMMENT '설정 키',
+    `cf_value` text COMMENT '설정 값',
+    `cf_desc` varchar(200) DEFAULT NULL COMMENT '설명',
+    PRIMARY KEY (`cf_id`),
+    UNIQUE KEY `idx_key` (`cf_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Morgan Edition 설정';
+
+-- 2.2 출석
+CREATE TABLE IF NOT EXISTS `mg_attendance` (
+    `at_id` int NOT NULL AUTO_INCREMENT,
+    `mb_id` varchar(20) NOT NULL COMMENT '회원 ID',
+    `at_date` date NOT NULL COMMENT '출석 날짜',
+    `at_point` int NOT NULL DEFAULT 0 COMMENT '지급 포인트',
+    `at_game_type` varchar(20) DEFAULT 'dice' COMMENT '게임 종류',
+    `at_game_result` text COMMENT '게임 결과 (JSON)',
+    `at_ip` varchar(45) DEFAULT NULL COMMENT 'IP 주소',
+    `at_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '출석 시간',
+    PRIMARY KEY (`at_id`),
+    UNIQUE KEY `idx_mb_date` (`mb_id`, `at_date`),
+    INDEX `idx_date` (`at_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='출석';
+
+-- 2.3 알림
+CREATE TABLE IF NOT EXISTS `mg_notification` (
+    `noti_id` int NOT NULL AUTO_INCREMENT,
+    `mb_id` varchar(20) NOT NULL COMMENT '수신자 회원 ID',
+    `noti_type` varchar(50) NOT NULL COMMENT '알림 유형',
+    `noti_title` varchar(200) NOT NULL COMMENT '제목',
+    `noti_content` text COMMENT '내용',
+    `noti_url` varchar(500) DEFAULT NULL COMMENT '링크',
+    `noti_read` tinyint(1) NOT NULL DEFAULT 0 COMMENT '읽음 여부',
+    `noti_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일',
+    PRIMARY KEY (`noti_id`),
+    INDEX `idx_mb_id` (`mb_id`),
+    INDEX `idx_read` (`mb_id`, `noti_read`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='알림';
+
+-- 2.4 글-캐릭터 연결
+CREATE TABLE IF NOT EXISTS `mg_write_character` (
+    `wc_id` int NOT NULL AUTO_INCREMENT,
+    `bo_table` varchar(20) NOT NULL COMMENT '게시판 테이블명',
+    `wr_id` int NOT NULL COMMENT '글 ID',
+    `ch_id` int NOT NULL COMMENT '캐릭터 ID',
+    `wc_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '연결일',
+    PRIMARY KEY (`wc_id`),
+    UNIQUE KEY `idx_board_write` (`bo_table`, `wr_id`),
+    INDEX `idx_ch_id` (`ch_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='글-캐릭터 연결';
+
+-- 2.5 메인 페이지 행
+CREATE TABLE IF NOT EXISTS `mg_main_row` (
+    `row_id` int NOT NULL AUTO_INCREMENT,
+    `row_order` int NOT NULL DEFAULT 0 COMMENT '정렬 순서',
+    `row_use` tinyint(1) NOT NULL DEFAULT 1 COMMENT '사용 여부',
+    PRIMARY KEY (`row_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='메인 페이지 행';
+
+-- 2.6 메인 페이지 위젯
+CREATE TABLE IF NOT EXISTS `mg_main_widget` (
+    `widget_id` int NOT NULL AUTO_INCREMENT,
+    `row_id` int NOT NULL COMMENT '행 ID',
+    `widget_type` varchar(50) NOT NULL COMMENT '위젯 타입',
+    `widget_order` int NOT NULL DEFAULT 0 COMMENT '정렬 순서',
+    `widget_cols` int NOT NULL DEFAULT 12 COMMENT '컬럼 너비 (1-12)',
+    `widget_config` text COMMENT '위젯 설정 (JSON)',
+    `widget_use` tinyint(1) NOT NULL DEFAULT 1 COMMENT '사용 여부',
+    PRIMARY KEY (`widget_id`),
+    INDEX `idx_row_id` (`row_id`),
+    CONSTRAINT `fk_widget_row` FOREIGN KEY (`row_id`) REFERENCES `mg_main_row`(`row_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='메인 페이지 위젯';
+
+-- ======================================
+-- 3. 상점 관련 테이블
+-- ======================================
+
+-- 3.1 상점 카테고리
+CREATE TABLE IF NOT EXISTS `mg_shop_category` (
+    `sc_id` int NOT NULL AUTO_INCREMENT,
+    `sc_name` varchar(50) NOT NULL COMMENT '카테고리명',
+    `sc_desc` varchar(200) DEFAULT NULL COMMENT '설명',
+    `sc_icon` varchar(100) DEFAULT NULL COMMENT '아이콘',
+    `sc_order` int NOT NULL DEFAULT 0 COMMENT '정렬 순서',
+    `sc_use` tinyint(1) NOT NULL DEFAULT 1 COMMENT '사용 여부',
+    PRIMARY KEY (`sc_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='상점 카테고리';
+
+-- 3.2 상점 상품
+CREATE TABLE IF NOT EXISTS `mg_shop_item` (
+    `si_id` int NOT NULL AUTO_INCREMENT,
+    `sc_id` int NOT NULL COMMENT '카테고리 ID',
+    `si_name` varchar(100) NOT NULL COMMENT '상품명',
+    `si_desc` text COMMENT '설명',
+    `si_image` varchar(500) DEFAULT NULL COMMENT '이미지',
+    `si_price` int NOT NULL COMMENT '가격',
+    `si_type` enum('title','badge','nick_color','nick_effect','profile_border','equip','emoticon_set','furniture','etc') NOT NULL DEFAULT 'etc' COMMENT '타입',
+    `si_effect` text COMMENT '효과 데이터 (JSON)',
+    `si_stock` int NOT NULL DEFAULT -1 COMMENT '재고 (-1=무제한)',
+    `si_stock_sold` int NOT NULL DEFAULT 0 COMMENT '판매 수량',
+    `si_limit_per_user` int NOT NULL DEFAULT 0 COMMENT '1인당 제한 (0=무제한)',
+    `si_sale_start` datetime DEFAULT NULL COMMENT '판매 시작일',
+    `si_sale_end` datetime DEFAULT NULL COMMENT '판매 종료일',
+    `si_consumable` tinyint(1) NOT NULL DEFAULT 0 COMMENT '소모품 여부',
+    `si_display` tinyint(1) NOT NULL DEFAULT 1 COMMENT '노출 여부',
+    `si_use` tinyint(1) NOT NULL DEFAULT 1 COMMENT '사용 가능 여부',
+    `si_order` int NOT NULL DEFAULT 0 COMMENT '정렬 순서',
+    `si_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '등록일',
+    PRIMARY KEY (`si_id`),
+    INDEX `idx_category` (`sc_id`),
+    INDEX `idx_display` (`si_display`, `si_use`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='상점 상품';
+
+-- 3.3 구매 로그
+CREATE TABLE IF NOT EXISTS `mg_shop_log` (
+    `sl_id` int NOT NULL AUTO_INCREMENT,
+    `mb_id` varchar(20) NOT NULL COMMENT '구매자',
+    `si_id` int NOT NULL COMMENT '상품 ID',
+    `sl_price` int NOT NULL COMMENT '구매 가격',
+    `sl_type` enum('purchase','gift_send','gift_receive') NOT NULL DEFAULT 'purchase' COMMENT '유형',
+    `sl_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '일시',
+    PRIMARY KEY (`sl_id`),
+    INDEX `idx_mb_id` (`mb_id`),
+    INDEX `idx_si_id` (`si_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='구매 로그';
+
+-- 3.4 인벤토리
+CREATE TABLE IF NOT EXISTS `mg_inventory` (
+    `iv_id` int NOT NULL AUTO_INCREMENT,
+    `mb_id` varchar(20) NOT NULL COMMENT '회원 ID',
+    `si_id` int NOT NULL COMMENT '상품 ID',
+    `iv_count` int NOT NULL DEFAULT 1 COMMENT '보유 수량',
+    `iv_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '획득일',
+    PRIMARY KEY (`iv_id`),
+    UNIQUE KEY `idx_mb_si` (`mb_id`, `si_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='인벤토리';
+
+-- 3.5 아이템 적용
+CREATE TABLE IF NOT EXISTS `mg_item_active` (
+    `ia_id` int NOT NULL AUTO_INCREMENT,
+    `mb_id` varchar(20) NOT NULL COMMENT '회원 ID',
+    `si_id` int NOT NULL COMMENT '상품 ID',
+    `ia_type` varchar(20) NOT NULL COMMENT '적용 타입',
+    `ch_id` int DEFAULT NULL COMMENT '캐릭터 ID (캐릭터별 적용 시)',
+    `ia_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '적용일',
+    PRIMARY KEY (`ia_id`),
+    INDEX `idx_mb_type` (`mb_id`, `ia_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='아이템 적용';
+
+-- 3.6 선물
+CREATE TABLE IF NOT EXISTS `mg_gift` (
+    `gf_id` int NOT NULL AUTO_INCREMENT,
+    `mb_id_from` varchar(20) NOT NULL COMMENT '보내는 사람',
+    `mb_id_to` varchar(20) NOT NULL COMMENT '받는 사람',
+    `si_id` int NOT NULL COMMENT '상품 ID',
+    `gf_message` varchar(200) DEFAULT NULL COMMENT '메시지',
+    `gf_status` enum('pending','accepted','rejected') NOT NULL DEFAULT 'pending' COMMENT '상태',
+    `gf_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '선물 일시',
+    PRIMARY KEY (`gf_id`),
+    INDEX `idx_to_status` (`mb_id_to`, `gf_status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='선물';
+
+-- ======================================
+-- 4. 샘플 데이터
+-- ======================================
+
+-- 3.1 기본 프로필 양식
+INSERT INTO `mg_profile_field` (`pf_code`, `pf_name`, `pf_type`, `pf_placeholder`, `pf_required`, `pf_order`, `pf_category`) VALUES
+('age', '나이', 'text', '예: 25세, 불명', 0, 1, '기본정보'),
+('gender', '성별', 'select', NULL, 0, 2, '기본정보'),
+('height', '키', 'text', '예: 175cm', 0, 3, '외형'),
+('personality', '성격', 'textarea', '캐릭터의 성격을 설명해주세요', 0, 4, '성격'),
+('appearance', '외형', 'textarea', '외모 특징을 설명해주세요', 0, 5, '외형'),
+('background', '배경', 'textarea', '캐릭터의 배경 스토리', 0, 6, '기타')
+ON DUPLICATE KEY UPDATE `pf_name` = VALUES(`pf_name`);
+
+-- 3.2 성별 옵션 추가
+UPDATE `mg_profile_field` SET `pf_options` = '["남성","여성","기타","불명"]' WHERE `pf_code` = 'gender';
+
+-- 4.3 기본 설정값
+INSERT INTO `mg_config` (`cf_key`, `cf_value`, `cf_desc`) VALUES
+('character_approval', '1', '캐릭터 승인제 사용 (0: 즉시승인, 1: 관리자승인)'),
+('character_max', '10', '회원당 최대 캐릭터 수'),
+('attendance_point', '100', '출석 기본 포인트'),
+('attendance_bonus', '500', '연속 출석 보너스 (7일)'),
+('theme_primary_color', '#f59f0a', '테마 메인 컬러'),
+('shop_use', '1', '상점 사용 여부'),
+('shop_gift_use', '1', '선물 기능 사용 여부'),
+('point_name', 'P', '포인트 단위'),
+('rp_use', '1', '역극 기능 사용 여부'),
+('rp_require_reply', '0', '판 세우기 전 필요 이음 수'),
+('rp_max_member_default', '0', '기본 최대 참여자 수 (0=무제한)'),
+('rp_max_member_limit', '20', '참여자 상한선'),
+('rp_content_min', '20', '최소 글자 수'),
+('emoticon_use', '1', '이모티콘 기능 사용 여부'),
+('emoticon_creator_use', '1', '유저 이모티콘 제작 허용'),
+('emoticon_commission_rate', '10', '판매 수수료율 (%)'),
+('emoticon_min_count', '8', '셋 당 최소 이모티콘 수'),
+('emoticon_max_count', '30', '셋 당 최대 이모티콘 수'),
+('emoticon_image_max_size', '512', '이모티콘 이미지 최대 크기 (KB)'),
+('emoticon_image_size', '128', '이모티콘 이미지 권장 크기 (px)')
+ON DUPLICATE KEY UPDATE `cf_value` = VALUES(`cf_value`);
+
+-- ======================================
+-- 5. 역극(RP) 관련 테이블
+-- ======================================
+
+-- 5.1 역극 스레드
+CREATE TABLE IF NOT EXISTS `mg_rp_thread` (
+    `rt_id` int NOT NULL AUTO_INCREMENT,
+    `rt_title` varchar(200) NOT NULL COMMENT '제목',
+    `rt_content` text NOT NULL COMMENT '시작글',
+    `rt_image` varchar(500) DEFAULT NULL COMMENT '첨부 이미지',
+    `mb_id` varchar(20) NOT NULL COMMENT '판장 회원 ID',
+    `ch_id` int NOT NULL COMMENT '판장 캐릭터 ID',
+    `rt_max_member` int NOT NULL DEFAULT 0 COMMENT '최대 참여자 (0=무제한)',
+    `rt_status` enum('open','closed','deleted') NOT NULL DEFAULT 'open' COMMENT '상태',
+    `rt_reply_count` int NOT NULL DEFAULT 0 COMMENT '이음 수',
+    `rt_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일',
+    `rt_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '최근 활동일',
+    PRIMARY KEY (`rt_id`),
+    INDEX `idx_status` (`rt_status`),
+    INDEX `idx_update` (`rt_update`),
+    INDEX `idx_mb_id` (`mb_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='역극 스레드';
+
+-- 5.2 역극 이음 (댓글)
+CREATE TABLE IF NOT EXISTS `mg_rp_reply` (
+    `rr_id` int NOT NULL AUTO_INCREMENT,
+    `rt_id` int NOT NULL COMMENT '역극 ID',
+    `rr_content` text NOT NULL COMMENT '내용',
+    `rr_image` varchar(500) DEFAULT NULL COMMENT '첨부 이미지',
+    `mb_id` varchar(20) NOT NULL COMMENT '작성자 회원 ID',
+    `ch_id` int NOT NULL COMMENT '작성 캐릭터 ID',
+    `rr_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '작성일',
+    PRIMARY KEY (`rr_id`),
+    INDEX `idx_rt_id` (`rt_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='역극 이음';
+
+-- 5.3 역극 참여자
+CREATE TABLE IF NOT EXISTS `mg_rp_member` (
+    `rm_id` int NOT NULL AUTO_INCREMENT,
+    `rt_id` int NOT NULL COMMENT '역극 ID',
+    `mb_id` varchar(20) NOT NULL COMMENT '참여자 회원 ID',
+    `ch_id` int NOT NULL COMMENT '참여 캐릭터 ID',
+    `rm_reply_count` int NOT NULL DEFAULT 0 COMMENT '이음 횟수',
+    `rm_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '참여 시작일',
+    PRIMARY KEY (`rm_id`),
+    UNIQUE KEY `idx_rt_mb` (`rt_id`, `mb_id`),
+    INDEX `idx_mb_id` (`mb_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='역극 참여자';
+
+-- ======================================
+-- 7. 이모티콘 관련 테이블
+-- ======================================
+
+-- 7.1 이모티콘 셋
+CREATE TABLE IF NOT EXISTS `mg_emoticon_set` (
+    `es_id` int NOT NULL AUTO_INCREMENT,
+    `es_name` varchar(100) NOT NULL COMMENT '셋 이름',
+    `es_desc` text COMMENT '설명',
+    `es_preview` varchar(500) DEFAULT NULL COMMENT '미리보기 이미지',
+    `es_price` int NOT NULL DEFAULT 0 COMMENT '가격 (포인트)',
+    `es_order` int NOT NULL DEFAULT 0 COMMENT '정렬 순서',
+    `es_use` tinyint(1) NOT NULL DEFAULT 1 COMMENT '사용 여부',
+    `es_creator_id` varchar(20) DEFAULT NULL COMMENT '제작자 회원 ID (NULL=관리자)',
+    `es_status` enum('draft','pending','approved','rejected') NOT NULL DEFAULT 'draft' COMMENT '승인 상태',
+    `es_reject_reason` text COMMENT '반려 사유',
+    `es_sales_count` int NOT NULL DEFAULT 0 COMMENT '판매 수',
+    `es_total_revenue` int NOT NULL DEFAULT 0 COMMENT '누적 판매액',
+    `es_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '등록일',
+    `es_update` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일',
+    PRIMARY KEY (`es_id`),
+    INDEX `idx_creator` (`es_creator_id`),
+    INDEX `idx_status` (`es_status`),
+    INDEX `idx_use` (`es_use`, `es_status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='이모티콘 셋';
+
+-- 7.2 이모티콘 개별 이미지
+CREATE TABLE IF NOT EXISTS `mg_emoticon` (
+    `em_id` int NOT NULL AUTO_INCREMENT,
+    `es_id` int NOT NULL COMMENT '셋 ID',
+    `em_code` varchar(50) NOT NULL COMMENT '이모티콘 코드 (:smile:)',
+    `em_image` varchar(500) NOT NULL COMMENT '이미지 경로',
+    `em_order` int NOT NULL DEFAULT 0 COMMENT '정렬 순서',
+    PRIMARY KEY (`em_id`),
+    INDEX `idx_es_id` (`es_id`),
+    UNIQUE INDEX `idx_code` (`em_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='이모티콘';
+
+-- 7.3 이모티콘 보유
+CREATE TABLE IF NOT EXISTS `mg_emoticon_own` (
+    `eo_id` int NOT NULL AUTO_INCREMENT,
+    `mb_id` varchar(20) NOT NULL COMMENT '회원 ID',
+    `es_id` int NOT NULL COMMENT '셋 ID',
+    `eo_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '구매일',
+    PRIMARY KEY (`eo_id`),
+    UNIQUE INDEX `idx_mb_es` (`mb_id`, `es_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='이모티콘 보유';
+
+-- 4.4 기본 상점 카테고리
+INSERT INTO `mg_shop_category` (`sc_name`, `sc_desc`, `sc_icon`, `sc_order`) VALUES
+('꾸미기', '칭호, 뱃지, 닉네임 효과', 'sparkles', 1),
+('이모티콘', '이모티콘, 스티커', 'face-smile', 2),
+('테두리', '프로필 테두리', 'square', 3),
+('장비', '캐릭터 장착 아이템', 'shield', 4),
+('기타', '기타 아이템', 'gift', 5)
+ON DUPLICATE KEY UPDATE `sc_name` = VALUES(`sc_name`);
+
+-- ======================================
+-- 6. 기본 게시판 (GnuBoard5)
+-- ======================================
+
+-- 6.1 게시판 그룹: community
+INSERT IGNORE INTO `g5_group` (`gr_id`, `gr_subject`, `gr_device`, `gr_admin`, `gr_use_access`, `gr_order`)
+VALUES ('community', '커뮤니티', 'both', '', 0, 0);
+
+-- 6.2 기본 게시판 5종
+-- notice (공지사항) - basic 스킨, 관리자만 글쓰기, 댓글 비활성화
+INSERT INTO `g5_board` SET
+    `bo_table` = 'notice',
+    `gr_id` = 'community',
+    `bo_subject` = '공지사항',
+    `bo_device` = 'both',
+    `bo_admin` = '',
+    `bo_list_level` = 1,
+    `bo_read_level` = 1,
+    `bo_write_level` = 10,
+    `bo_reply_level` = 10,
+    `bo_comment_level` = 10,
+    `bo_upload_level` = 10,
+    `bo_download_level` = 1,
+    `bo_html_level` = 1,
+    `bo_link_level` = 1,
+    `bo_count_modify` = 1,
+    `bo_count_delete` = 1,
+    `bo_read_point` = 0,
+    `bo_write_point` = 0,
+    `bo_comment_point` = 0,
+    `bo_download_point` = 0,
+    `bo_use_category` = 0,
+    `bo_category_list` = '',
+    `bo_use_sideview` = 0,
+    `bo_use_file_content` = 0,
+    `bo_use_secret` = 0,
+    `bo_use_dhtml_editor` = 1,
+    `bo_select_editor` = '',
+    `bo_use_rss_view` = 0,
+    `bo_use_good` = 0,
+    `bo_use_nogood` = 0,
+    `bo_use_name` = 0,
+    `bo_use_signature` = 0,
+    `bo_use_ip_view` = 0,
+    `bo_use_list_view` = 0,
+    `bo_use_list_file` = 0,
+    `bo_use_list_content` = 0,
+    `bo_table_width` = 100,
+    `bo_subject_len` = 60,
+    `bo_mobile_subject_len` = 30,
+    `bo_page_rows` = 15,
+    `bo_mobile_page_rows` = 15,
+    `bo_new` = 24,
+    `bo_hot` = 100,
+    `bo_image_width` = 835,
+    `bo_skin` = 'theme/basic',
+    `bo_mobile_skin` = 'theme/basic',
+    `bo_include_head` = '_head.php',
+    `bo_include_tail` = '_tail.php',
+    `bo_content_head` = '',
+    `bo_mobile_content_head` = '',
+    `bo_content_tail` = '',
+    `bo_mobile_content_tail` = '',
+    `bo_insert_content` = '',
+    `bo_gallery_cols` = 4,
+    `bo_gallery_width` = 202,
+    `bo_gallery_height` = 150,
+    `bo_mobile_gallery_width` = 125,
+    `bo_mobile_gallery_height` = 100,
+    `bo_upload_count` = 2,
+    `bo_upload_size` = 1048576,
+    `bo_reply_order` = 1,
+    `bo_use_search` = 1,
+    `bo_order` = 1,
+    `bo_count_write` = 0,
+    `bo_count_comment` = 0,
+    `bo_write_min` = 0,
+    `bo_write_max` = 0,
+    `bo_comment_min` = 0,
+    `bo_comment_max` = 0,
+    `bo_notice` = '',
+    `bo_use_email` = 0,
+    `bo_use_cert` = '',
+    `bo_use_sns` = 0,
+    `bo_use_captcha` = 0,
+    `bo_sort_field` = '',
+    `bo_1_subj` = '', `bo_2_subj` = '', `bo_3_subj` = '', `bo_4_subj` = '', `bo_5_subj` = '',
+    `bo_6_subj` = '', `bo_7_subj` = '', `bo_8_subj` = '', `bo_9_subj` = '', `bo_10_subj` = '',
+    `bo_1` = '', `bo_2` = '', `bo_3` = '', `bo_4` = '', `bo_5` = '',
+    `bo_6` = '', `bo_7` = '', `bo_8` = '', `bo_9` = '', `bo_10` = ''
+ON DUPLICATE KEY UPDATE `bo_subject` = VALUES(`bo_subject`);
+
+-- qna (문의) - memo 스킨, 회원 글쓰기, 관리자만 댓글, 비밀글 활성화
+INSERT INTO `g5_board` SET
+    `bo_table` = 'qna',
+    `gr_id` = 'community',
+    `bo_subject` = '문의',
+    `bo_device` = 'both',
+    `bo_admin` = '',
+    `bo_list_level` = 1,
+    `bo_read_level` = 1,
+    `bo_write_level` = 2,
+    `bo_reply_level` = 2,
+    `bo_comment_level` = 10,
+    `bo_upload_level` = 2,
+    `bo_download_level` = 1,
+    `bo_html_level` = 1,
+    `bo_link_level` = 1,
+    `bo_count_modify` = 1,
+    `bo_count_delete` = 1,
+    `bo_read_point` = 0,
+    `bo_write_point` = 5,
+    `bo_comment_point` = 1,
+    `bo_download_point` = 0,
+    `bo_use_category` = 0,
+    `bo_category_list` = '',
+    `bo_use_sideview` = 0,
+    `bo_use_file_content` = 0,
+    `bo_use_secret` = 1,
+    `bo_use_dhtml_editor` = 1,
+    `bo_select_editor` = '',
+    `bo_use_rss_view` = 0,
+    `bo_use_good` = 0,
+    `bo_use_nogood` = 0,
+    `bo_use_name` = 0,
+    `bo_use_signature` = 0,
+    `bo_use_ip_view` = 0,
+    `bo_use_list_view` = 0,
+    `bo_use_list_file` = 0,
+    `bo_use_list_content` = 0,
+    `bo_table_width` = 100,
+    `bo_subject_len` = 60,
+    `bo_mobile_subject_len` = 30,
+    `bo_page_rows` = 15,
+    `bo_mobile_page_rows` = 15,
+    `bo_new` = 24,
+    `bo_hot` = 100,
+    `bo_image_width` = 835,
+    `bo_skin` = 'theme/memo',
+    `bo_mobile_skin` = 'theme/memo',
+    `bo_include_head` = '_head.php',
+    `bo_include_tail` = '_tail.php',
+    `bo_content_head` = '',
+    `bo_mobile_content_head` = '',
+    `bo_content_tail` = '',
+    `bo_mobile_content_tail` = '',
+    `bo_insert_content` = '',
+    `bo_gallery_cols` = 4,
+    `bo_gallery_width` = 202,
+    `bo_gallery_height` = 150,
+    `bo_mobile_gallery_width` = 125,
+    `bo_mobile_gallery_height` = 100,
+    `bo_upload_count` = 2,
+    `bo_upload_size` = 1048576,
+    `bo_reply_order` = 1,
+    `bo_use_search` = 1,
+    `bo_order` = 2,
+    `bo_count_write` = 0,
+    `bo_count_comment` = 0,
+    `bo_write_min` = 0,
+    `bo_write_max` = 0,
+    `bo_comment_min` = 0,
+    `bo_comment_max` = 0,
+    `bo_notice` = '',
+    `bo_use_email` = 0,
+    `bo_use_cert` = '',
+    `bo_use_sns` = 0,
+    `bo_use_captcha` = 0,
+    `bo_sort_field` = '',
+    `bo_1_subj` = '', `bo_2_subj` = '', `bo_3_subj` = '', `bo_4_subj` = '', `bo_5_subj` = '',
+    `bo_6_subj` = '', `bo_7_subj` = '', `bo_8_subj` = '', `bo_9_subj` = '', `bo_10_subj` = '',
+    `bo_1` = '', `bo_2` = '', `bo_3` = '', `bo_4` = '', `bo_5` = '',
+    `bo_6` = '', `bo_7` = '', `bo_8` = '', `bo_9` = '', `bo_10` = ''
+ON DUPLICATE KEY UPDATE `bo_subject` = VALUES(`bo_subject`);
+
+-- owner (오너게시판) - memo 스킨, 회원 글쓰기/댓글, 비밀글 비활성화
+INSERT INTO `g5_board` SET
+    `bo_table` = 'owner',
+    `gr_id` = 'community',
+    `bo_subject` = '오너게시판',
+    `bo_device` = 'both',
+    `bo_admin` = '',
+    `bo_list_level` = 1,
+    `bo_read_level` = 1,
+    `bo_write_level` = 2,
+    `bo_reply_level` = 2,
+    `bo_comment_level` = 2,
+    `bo_upload_level` = 2,
+    `bo_download_level` = 1,
+    `bo_html_level` = 1,
+    `bo_link_level` = 1,
+    `bo_count_modify` = 1,
+    `bo_count_delete` = 1,
+    `bo_read_point` = 0,
+    `bo_write_point` = 5,
+    `bo_comment_point` = 1,
+    `bo_download_point` = 0,
+    `bo_use_category` = 0,
+    `bo_category_list` = '',
+    `bo_use_sideview` = 0,
+    `bo_use_file_content` = 0,
+    `bo_use_secret` = 0,
+    `bo_use_dhtml_editor` = 1,
+    `bo_select_editor` = '',
+    `bo_use_rss_view` = 0,
+    `bo_use_good` = 1,
+    `bo_use_nogood` = 0,
+    `bo_use_name` = 0,
+    `bo_use_signature` = 0,
+    `bo_use_ip_view` = 0,
+    `bo_use_list_view` = 0,
+    `bo_use_list_file` = 0,
+    `bo_use_list_content` = 0,
+    `bo_table_width` = 100,
+    `bo_subject_len` = 60,
+    `bo_mobile_subject_len` = 30,
+    `bo_page_rows` = 15,
+    `bo_mobile_page_rows` = 15,
+    `bo_new` = 24,
+    `bo_hot` = 100,
+    `bo_image_width` = 835,
+    `bo_skin` = 'theme/memo',
+    `bo_mobile_skin` = 'theme/memo',
+    `bo_include_head` = '_head.php',
+    `bo_include_tail` = '_tail.php',
+    `bo_content_head` = '',
+    `bo_mobile_content_head` = '',
+    `bo_content_tail` = '',
+    `bo_mobile_content_tail` = '',
+    `bo_insert_content` = '',
+    `bo_gallery_cols` = 4,
+    `bo_gallery_width` = 202,
+    `bo_gallery_height` = 150,
+    `bo_mobile_gallery_width` = 125,
+    `bo_mobile_gallery_height` = 100,
+    `bo_upload_count` = 2,
+    `bo_upload_size` = 1048576,
+    `bo_reply_order` = 1,
+    `bo_use_search` = 1,
+    `bo_order` = 3,
+    `bo_count_write` = 0,
+    `bo_count_comment` = 0,
+    `bo_write_min` = 0,
+    `bo_write_max` = 0,
+    `bo_comment_min` = 0,
+    `bo_comment_max` = 0,
+    `bo_notice` = '',
+    `bo_use_email` = 0,
+    `bo_use_cert` = '',
+    `bo_use_sns` = 0,
+    `bo_use_captcha` = 0,
+    `bo_sort_field` = '',
+    `bo_1_subj` = '', `bo_2_subj` = '', `bo_3_subj` = '', `bo_4_subj` = '', `bo_5_subj` = '',
+    `bo_6_subj` = '', `bo_7_subj` = '', `bo_8_subj` = '', `bo_9_subj` = '', `bo_10_subj` = '',
+    `bo_1` = '', `bo_2` = '', `bo_3` = '', `bo_4` = '', `bo_5` = '',
+    `bo_6` = '', `bo_7` = '', `bo_8` = '', `bo_9` = '', `bo_10` = ''
+ON DUPLICATE KEY UPDATE `bo_subject` = VALUES(`bo_subject`);
+
+-- vent (앓이란) - postit 스킨, 회원 글쓰기, 댓글 비활성화, 익명 활성화
+INSERT INTO `g5_board` SET
+    `bo_table` = 'vent',
+    `gr_id` = 'community',
+    `bo_subject` = '앓이란',
+    `bo_device` = 'both',
+    `bo_admin` = '',
+    `bo_list_level` = 1,
+    `bo_read_level` = 1,
+    `bo_write_level` = 2,
+    `bo_reply_level` = 10,
+    `bo_comment_level` = 10,
+    `bo_upload_level` = 2,
+    `bo_download_level` = 1,
+    `bo_html_level` = 1,
+    `bo_link_level` = 1,
+    `bo_count_modify` = 1,
+    `bo_count_delete` = 1,
+    `bo_read_point` = 0,
+    `bo_write_point` = 5,
+    `bo_comment_point` = 0,
+    `bo_download_point` = 0,
+    `bo_use_category` = 0,
+    `bo_category_list` = '',
+    `bo_use_sideview` = 0,
+    `bo_use_file_content` = 0,
+    `bo_use_secret` = 0,
+    `bo_use_dhtml_editor` = 0,
+    `bo_select_editor` = '',
+    `bo_use_rss_view` = 0,
+    `bo_use_good` = 0,
+    `bo_use_nogood` = 0,
+    `bo_use_name` = 0,
+    `bo_use_signature` = 0,
+    `bo_use_ip_view` = 0,
+    `bo_use_list_view` = 0,
+    `bo_use_list_file` = 0,
+    `bo_use_list_content` = 0,
+    `bo_table_width` = 100,
+    `bo_subject_len` = 60,
+    `bo_mobile_subject_len` = 30,
+    `bo_page_rows` = 20,
+    `bo_mobile_page_rows` = 20,
+    `bo_new` = 24,
+    `bo_hot` = 100,
+    `bo_image_width` = 835,
+    `bo_skin` = 'theme/postit',
+    `bo_mobile_skin` = 'theme/postit',
+    `bo_include_head` = '_head.php',
+    `bo_include_tail` = '_tail.php',
+    `bo_content_head` = '',
+    `bo_mobile_content_head` = '',
+    `bo_content_tail` = '',
+    `bo_mobile_content_tail` = '',
+    `bo_insert_content` = '',
+    `bo_gallery_cols` = 4,
+    `bo_gallery_width` = 202,
+    `bo_gallery_height` = 150,
+    `bo_mobile_gallery_width` = 125,
+    `bo_mobile_gallery_height` = 100,
+    `bo_upload_count` = 0,
+    `bo_upload_size` = 0,
+    `bo_reply_order` = 1,
+    `bo_use_search` = 0,
+    `bo_order` = 4,
+    `bo_count_write` = 0,
+    `bo_count_comment` = 0,
+    `bo_write_min` = 0,
+    `bo_write_max` = 0,
+    `bo_comment_min` = 0,
+    `bo_comment_max` = 0,
+    `bo_notice` = '',
+    `bo_use_email` = 0,
+    `bo_use_cert` = '',
+    `bo_use_sns` = 0,
+    `bo_use_captcha` = 0,
+    `bo_sort_field` = '',
+    `bo_1_subj` = '익명', `bo_2_subj` = '', `bo_3_subj` = '', `bo_4_subj` = '', `bo_5_subj` = '',
+    `bo_6_subj` = '', `bo_7_subj` = '', `bo_8_subj` = '', `bo_9_subj` = '', `bo_10_subj` = '',
+    `bo_1` = 'anonymous', `bo_2` = '', `bo_3` = '', `bo_4` = '', `bo_5` = '',
+    `bo_6` = '', `bo_7` = '', `bo_8` = '', `bo_9` = '', `bo_10` = ''
+ON DUPLICATE KEY UPDATE `bo_subject` = VALUES(`bo_subject`);
+
+-- log (로그) - gallery 스킨, 회원 글쓰기/댓글, 비밀글 비활성화
+INSERT INTO `g5_board` SET
+    `bo_table` = 'log',
+    `gr_id` = 'community',
+    `bo_subject` = '로그',
+    `bo_device` = 'both',
+    `bo_admin` = '',
+    `bo_list_level` = 1,
+    `bo_read_level` = 1,
+    `bo_write_level` = 2,
+    `bo_reply_level` = 2,
+    `bo_comment_level` = 2,
+    `bo_upload_level` = 2,
+    `bo_download_level` = 1,
+    `bo_html_level` = 1,
+    `bo_link_level` = 1,
+    `bo_count_modify` = 1,
+    `bo_count_delete` = 1,
+    `bo_read_point` = 0,
+    `bo_write_point` = 5,
+    `bo_comment_point` = 1,
+    `bo_download_point` = 0,
+    `bo_use_category` = 0,
+    `bo_category_list` = '',
+    `bo_use_sideview` = 0,
+    `bo_use_file_content` = 0,
+    `bo_use_secret` = 0,
+    `bo_use_dhtml_editor` = 1,
+    `bo_select_editor` = '',
+    `bo_use_rss_view` = 0,
+    `bo_use_good` = 1,
+    `bo_use_nogood` = 0,
+    `bo_use_name` = 0,
+    `bo_use_signature` = 0,
+    `bo_use_ip_view` = 0,
+    `bo_use_list_view` = 0,
+    `bo_use_list_file` = 1,
+    `bo_use_list_content` = 0,
+    `bo_table_width` = 100,
+    `bo_subject_len` = 60,
+    `bo_mobile_subject_len` = 30,
+    `bo_page_rows` = 16,
+    `bo_mobile_page_rows` = 12,
+    `bo_new` = 24,
+    `bo_hot` = 100,
+    `bo_image_width` = 835,
+    `bo_skin` = 'theme/gallery',
+    `bo_mobile_skin` = 'theme/gallery',
+    `bo_include_head` = '_head.php',
+    `bo_include_tail` = '_tail.php',
+    `bo_content_head` = '',
+    `bo_mobile_content_head` = '',
+    `bo_content_tail` = '',
+    `bo_mobile_content_tail` = '',
+    `bo_insert_content` = '',
+    `bo_gallery_cols` = 4,
+    `bo_gallery_width` = 202,
+    `bo_gallery_height` = 150,
+    `bo_mobile_gallery_width` = 125,
+    `bo_mobile_gallery_height` = 100,
+    `bo_upload_count` = 5,
+    `bo_upload_size` = 5242880,
+    `bo_reply_order` = 1,
+    `bo_use_search` = 1,
+    `bo_order` = 5,
+    `bo_count_write` = 0,
+    `bo_count_comment` = 0,
+    `bo_write_min` = 0,
+    `bo_write_max` = 0,
+    `bo_comment_min` = 0,
+    `bo_comment_max` = 0,
+    `bo_notice` = '',
+    `bo_use_email` = 0,
+    `bo_use_cert` = '',
+    `bo_use_sns` = 0,
+    `bo_use_captcha` = 0,
+    `bo_sort_field` = '',
+    `bo_1_subj` = '', `bo_2_subj` = '', `bo_3_subj` = '', `bo_4_subj` = '', `bo_5_subj` = '',
+    `bo_6_subj` = '', `bo_7_subj` = '', `bo_8_subj` = '', `bo_9_subj` = '', `bo_10_subj` = '',
+    `bo_1` = '', `bo_2` = '', `bo_3` = '', `bo_4` = '', `bo_5` = '',
+    `bo_6` = '', `bo_7` = '', `bo_8` = '', `bo_9` = '', `bo_10` = ''
+ON DUPLICATE KEY UPDATE `bo_subject` = VALUES(`bo_subject`);
+
+-- 6.3 게시판별 글 테이블 (g5_write_*)
+CREATE TABLE IF NOT EXISTS `g5_write_notice` (
+    `wr_id` int(11) NOT NULL AUTO_INCREMENT,
+    `wr_num` int(11) NOT NULL DEFAULT '0',
+    `wr_reply` varchar(10) NOT NULL DEFAULT '',
+    `wr_parent` int(11) NOT NULL DEFAULT '0',
+    `wr_is_comment` tinyint(4) NOT NULL DEFAULT '0',
+    `wr_comment` int(11) NOT NULL DEFAULT '0',
+    `wr_comment_reply` varchar(5) NOT NULL DEFAULT '',
+    `ca_name` varchar(255) NOT NULL DEFAULT '',
+    `wr_option` set('html1','html2','secret','mail') NOT NULL DEFAULT '',
+    `wr_subject` varchar(255) NOT NULL DEFAULT '',
+    `wr_content` text NOT NULL,
+    `wr_seo_title` varchar(255) NOT NULL DEFAULT '',
+    `wr_link1` text NOT NULL,
+    `wr_link2` text NOT NULL,
+    `wr_link1_hit` int(11) NOT NULL DEFAULT '0',
+    `wr_link2_hit` int(11) NOT NULL DEFAULT '0',
+    `wr_hit` int(11) NOT NULL DEFAULT '0',
+    `wr_good` int(11) NOT NULL DEFAULT '0',
+    `wr_nogood` int(11) NOT NULL DEFAULT '0',
+    `mb_id` varchar(20) NOT NULL DEFAULT '',
+    `wr_password` varchar(255) NOT NULL DEFAULT '',
+    `wr_name` varchar(255) NOT NULL DEFAULT '',
+    `wr_email` varchar(255) NOT NULL DEFAULT '',
+    `wr_homepage` varchar(255) NOT NULL DEFAULT '',
+    `wr_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `wr_file` tinyint(4) NOT NULL DEFAULT '0',
+    `wr_last` varchar(19) NOT NULL DEFAULT '',
+    `wr_ip` varchar(255) NOT NULL DEFAULT '',
+    `wr_facebook_user` varchar(255) NOT NULL DEFAULT '',
+    `wr_twitter_user` varchar(255) NOT NULL DEFAULT '',
+    `wr_1` varchar(255) NOT NULL DEFAULT '',
+    `wr_2` varchar(255) NOT NULL DEFAULT '',
+    `wr_3` varchar(255) NOT NULL DEFAULT '',
+    `wr_4` varchar(255) NOT NULL DEFAULT '',
+    `wr_5` varchar(255) NOT NULL DEFAULT '',
+    `wr_6` varchar(255) NOT NULL DEFAULT '',
+    `wr_7` varchar(255) NOT NULL DEFAULT '',
+    `wr_8` varchar(255) NOT NULL DEFAULT '',
+    `wr_9` varchar(255) NOT NULL DEFAULT '',
+    `wr_10` varchar(255) NOT NULL DEFAULT '',
+    PRIMARY KEY (`wr_id`),
+    KEY `wr_seo_title` (`wr_seo_title`),
+    KEY `wr_num_reply_parent` (`wr_num`,`wr_reply`,`wr_parent`),
+    KEY `wr_is_comment` (`wr_is_comment`,`wr_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `g5_write_qna` (
+    `wr_id` int(11) NOT NULL AUTO_INCREMENT,
+    `wr_num` int(11) NOT NULL DEFAULT '0',
+    `wr_reply` varchar(10) NOT NULL DEFAULT '',
+    `wr_parent` int(11) NOT NULL DEFAULT '0',
+    `wr_is_comment` tinyint(4) NOT NULL DEFAULT '0',
+    `wr_comment` int(11) NOT NULL DEFAULT '0',
+    `wr_comment_reply` varchar(5) NOT NULL DEFAULT '',
+    `ca_name` varchar(255) NOT NULL DEFAULT '',
+    `wr_option` set('html1','html2','secret','mail') NOT NULL DEFAULT '',
+    `wr_subject` varchar(255) NOT NULL DEFAULT '',
+    `wr_content` text NOT NULL,
+    `wr_seo_title` varchar(255) NOT NULL DEFAULT '',
+    `wr_link1` text NOT NULL,
+    `wr_link2` text NOT NULL,
+    `wr_link1_hit` int(11) NOT NULL DEFAULT '0',
+    `wr_link2_hit` int(11) NOT NULL DEFAULT '0',
+    `wr_hit` int(11) NOT NULL DEFAULT '0',
+    `wr_good` int(11) NOT NULL DEFAULT '0',
+    `wr_nogood` int(11) NOT NULL DEFAULT '0',
+    `mb_id` varchar(20) NOT NULL DEFAULT '',
+    `wr_password` varchar(255) NOT NULL DEFAULT '',
+    `wr_name` varchar(255) NOT NULL DEFAULT '',
+    `wr_email` varchar(255) NOT NULL DEFAULT '',
+    `wr_homepage` varchar(255) NOT NULL DEFAULT '',
+    `wr_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `wr_file` tinyint(4) NOT NULL DEFAULT '0',
+    `wr_last` varchar(19) NOT NULL DEFAULT '',
+    `wr_ip` varchar(255) NOT NULL DEFAULT '',
+    `wr_facebook_user` varchar(255) NOT NULL DEFAULT '',
+    `wr_twitter_user` varchar(255) NOT NULL DEFAULT '',
+    `wr_1` varchar(255) NOT NULL DEFAULT '',
+    `wr_2` varchar(255) NOT NULL DEFAULT '',
+    `wr_3` varchar(255) NOT NULL DEFAULT '',
+    `wr_4` varchar(255) NOT NULL DEFAULT '',
+    `wr_5` varchar(255) NOT NULL DEFAULT '',
+    `wr_6` varchar(255) NOT NULL DEFAULT '',
+    `wr_7` varchar(255) NOT NULL DEFAULT '',
+    `wr_8` varchar(255) NOT NULL DEFAULT '',
+    `wr_9` varchar(255) NOT NULL DEFAULT '',
+    `wr_10` varchar(255) NOT NULL DEFAULT '',
+    PRIMARY KEY (`wr_id`),
+    KEY `wr_seo_title` (`wr_seo_title`),
+    KEY `wr_num_reply_parent` (`wr_num`,`wr_reply`,`wr_parent`),
+    KEY `wr_is_comment` (`wr_is_comment`,`wr_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `g5_write_owner` (
+    `wr_id` int(11) NOT NULL AUTO_INCREMENT,
+    `wr_num` int(11) NOT NULL DEFAULT '0',
+    `wr_reply` varchar(10) NOT NULL DEFAULT '',
+    `wr_parent` int(11) NOT NULL DEFAULT '0',
+    `wr_is_comment` tinyint(4) NOT NULL DEFAULT '0',
+    `wr_comment` int(11) NOT NULL DEFAULT '0',
+    `wr_comment_reply` varchar(5) NOT NULL DEFAULT '',
+    `ca_name` varchar(255) NOT NULL DEFAULT '',
+    `wr_option` set('html1','html2','secret','mail') NOT NULL DEFAULT '',
+    `wr_subject` varchar(255) NOT NULL DEFAULT '',
+    `wr_content` text NOT NULL,
+    `wr_seo_title` varchar(255) NOT NULL DEFAULT '',
+    `wr_link1` text NOT NULL,
+    `wr_link2` text NOT NULL,
+    `wr_link1_hit` int(11) NOT NULL DEFAULT '0',
+    `wr_link2_hit` int(11) NOT NULL DEFAULT '0',
+    `wr_hit` int(11) NOT NULL DEFAULT '0',
+    `wr_good` int(11) NOT NULL DEFAULT '0',
+    `wr_nogood` int(11) NOT NULL DEFAULT '0',
+    `mb_id` varchar(20) NOT NULL DEFAULT '',
+    `wr_password` varchar(255) NOT NULL DEFAULT '',
+    `wr_name` varchar(255) NOT NULL DEFAULT '',
+    `wr_email` varchar(255) NOT NULL DEFAULT '',
+    `wr_homepage` varchar(255) NOT NULL DEFAULT '',
+    `wr_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `wr_file` tinyint(4) NOT NULL DEFAULT '0',
+    `wr_last` varchar(19) NOT NULL DEFAULT '',
+    `wr_ip` varchar(255) NOT NULL DEFAULT '',
+    `wr_facebook_user` varchar(255) NOT NULL DEFAULT '',
+    `wr_twitter_user` varchar(255) NOT NULL DEFAULT '',
+    `wr_1` varchar(255) NOT NULL DEFAULT '',
+    `wr_2` varchar(255) NOT NULL DEFAULT '',
+    `wr_3` varchar(255) NOT NULL DEFAULT '',
+    `wr_4` varchar(255) NOT NULL DEFAULT '',
+    `wr_5` varchar(255) NOT NULL DEFAULT '',
+    `wr_6` varchar(255) NOT NULL DEFAULT '',
+    `wr_7` varchar(255) NOT NULL DEFAULT '',
+    `wr_8` varchar(255) NOT NULL DEFAULT '',
+    `wr_9` varchar(255) NOT NULL DEFAULT '',
+    `wr_10` varchar(255) NOT NULL DEFAULT '',
+    PRIMARY KEY (`wr_id`),
+    KEY `wr_seo_title` (`wr_seo_title`),
+    KEY `wr_num_reply_parent` (`wr_num`,`wr_reply`,`wr_parent`),
+    KEY `wr_is_comment` (`wr_is_comment`,`wr_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `g5_write_vent` (
+    `wr_id` int(11) NOT NULL AUTO_INCREMENT,
+    `wr_num` int(11) NOT NULL DEFAULT '0',
+    `wr_reply` varchar(10) NOT NULL DEFAULT '',
+    `wr_parent` int(11) NOT NULL DEFAULT '0',
+    `wr_is_comment` tinyint(4) NOT NULL DEFAULT '0',
+    `wr_comment` int(11) NOT NULL DEFAULT '0',
+    `wr_comment_reply` varchar(5) NOT NULL DEFAULT '',
+    `ca_name` varchar(255) NOT NULL DEFAULT '',
+    `wr_option` set('html1','html2','secret','mail') NOT NULL DEFAULT '',
+    `wr_subject` varchar(255) NOT NULL DEFAULT '',
+    `wr_content` text NOT NULL,
+    `wr_seo_title` varchar(255) NOT NULL DEFAULT '',
+    `wr_link1` text NOT NULL,
+    `wr_link2` text NOT NULL,
+    `wr_link1_hit` int(11) NOT NULL DEFAULT '0',
+    `wr_link2_hit` int(11) NOT NULL DEFAULT '0',
+    `wr_hit` int(11) NOT NULL DEFAULT '0',
+    `wr_good` int(11) NOT NULL DEFAULT '0',
+    `wr_nogood` int(11) NOT NULL DEFAULT '0',
+    `mb_id` varchar(20) NOT NULL DEFAULT '',
+    `wr_password` varchar(255) NOT NULL DEFAULT '',
+    `wr_name` varchar(255) NOT NULL DEFAULT '',
+    `wr_email` varchar(255) NOT NULL DEFAULT '',
+    `wr_homepage` varchar(255) NOT NULL DEFAULT '',
+    `wr_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `wr_file` tinyint(4) NOT NULL DEFAULT '0',
+    `wr_last` varchar(19) NOT NULL DEFAULT '',
+    `wr_ip` varchar(255) NOT NULL DEFAULT '',
+    `wr_facebook_user` varchar(255) NOT NULL DEFAULT '',
+    `wr_twitter_user` varchar(255) NOT NULL DEFAULT '',
+    `wr_1` varchar(255) NOT NULL DEFAULT '',
+    `wr_2` varchar(255) NOT NULL DEFAULT '',
+    `wr_3` varchar(255) NOT NULL DEFAULT '',
+    `wr_4` varchar(255) NOT NULL DEFAULT '',
+    `wr_5` varchar(255) NOT NULL DEFAULT '',
+    `wr_6` varchar(255) NOT NULL DEFAULT '',
+    `wr_7` varchar(255) NOT NULL DEFAULT '',
+    `wr_8` varchar(255) NOT NULL DEFAULT '',
+    `wr_9` varchar(255) NOT NULL DEFAULT '',
+    `wr_10` varchar(255) NOT NULL DEFAULT '',
+    PRIMARY KEY (`wr_id`),
+    KEY `wr_seo_title` (`wr_seo_title`),
+    KEY `wr_num_reply_parent` (`wr_num`,`wr_reply`,`wr_parent`),
+    KEY `wr_is_comment` (`wr_is_comment`,`wr_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `g5_write_log` (
+    `wr_id` int(11) NOT NULL AUTO_INCREMENT,
+    `wr_num` int(11) NOT NULL DEFAULT '0',
+    `wr_reply` varchar(10) NOT NULL DEFAULT '',
+    `wr_parent` int(11) NOT NULL DEFAULT '0',
+    `wr_is_comment` tinyint(4) NOT NULL DEFAULT '0',
+    `wr_comment` int(11) NOT NULL DEFAULT '0',
+    `wr_comment_reply` varchar(5) NOT NULL DEFAULT '',
+    `ca_name` varchar(255) NOT NULL DEFAULT '',
+    `wr_option` set('html1','html2','secret','mail') NOT NULL DEFAULT '',
+    `wr_subject` varchar(255) NOT NULL DEFAULT '',
+    `wr_content` text NOT NULL,
+    `wr_seo_title` varchar(255) NOT NULL DEFAULT '',
+    `wr_link1` text NOT NULL,
+    `wr_link2` text NOT NULL,
+    `wr_link1_hit` int(11) NOT NULL DEFAULT '0',
+    `wr_link2_hit` int(11) NOT NULL DEFAULT '0',
+    `wr_hit` int(11) NOT NULL DEFAULT '0',
+    `wr_good` int(11) NOT NULL DEFAULT '0',
+    `wr_nogood` int(11) NOT NULL DEFAULT '0',
+    `mb_id` varchar(20) NOT NULL DEFAULT '',
+    `wr_password` varchar(255) NOT NULL DEFAULT '',
+    `wr_name` varchar(255) NOT NULL DEFAULT '',
+    `wr_email` varchar(255) NOT NULL DEFAULT '',
+    `wr_homepage` varchar(255) NOT NULL DEFAULT '',
+    `wr_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `wr_file` tinyint(4) NOT NULL DEFAULT '0',
+    `wr_last` varchar(19) NOT NULL DEFAULT '',
+    `wr_ip` varchar(255) NOT NULL DEFAULT '',
+    `wr_facebook_user` varchar(255) NOT NULL DEFAULT '',
+    `wr_twitter_user` varchar(255) NOT NULL DEFAULT '',
+    `wr_1` varchar(255) NOT NULL DEFAULT '',
+    `wr_2` varchar(255) NOT NULL DEFAULT '',
+    `wr_3` varchar(255) NOT NULL DEFAULT '',
+    `wr_4` varchar(255) NOT NULL DEFAULT '',
+    `wr_5` varchar(255) NOT NULL DEFAULT '',
+    `wr_6` varchar(255) NOT NULL DEFAULT '',
+    `wr_7` varchar(255) NOT NULL DEFAULT '',
+    `wr_8` varchar(255) NOT NULL DEFAULT '',
+    `wr_9` varchar(255) NOT NULL DEFAULT '',
+    `wr_10` varchar(255) NOT NULL DEFAULT '',
+    PRIMARY KEY (`wr_id`),
+    KEY `wr_seo_title` (`wr_seo_title`),
+    KEY `wr_num_reply_parent` (`wr_num`,`wr_reply`,`wr_parent`),
+    KEY `wr_is_comment` (`wr_is_comment`,`wr_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- ======================================
+-- 8. 상점 아이템 타입 확장 (이모티콘 등록권)
+-- ======================================
+ALTER TABLE `mg_shop_item` MODIFY `si_type`
+    enum('title','badge','nick_color','nick_effect','profile_border','equip','emoticon_set','emoticon_reg','furniture','material','etc')
+    NOT NULL DEFAULT 'etc' COMMENT '타입';
+
+-- ======================================
+-- 9. 개척 시스템 (Pioneer System)
+-- ======================================
+
+-- 재료 종류 정의
+CREATE TABLE IF NOT EXISTS `mg_material_type` (
+    `mt_id` int(11) NOT NULL AUTO_INCREMENT,
+    `mt_name` varchar(50) NOT NULL COMMENT '재료 이름',
+    `mt_code` varchar(30) NOT NULL COMMENT '코드 (wood, stone 등)',
+    `mt_icon` varchar(200) NOT NULL DEFAULT '' COMMENT '아이콘 이미지/이모지',
+    `mt_desc` varchar(200) NOT NULL DEFAULT '' COMMENT '설명',
+    `mt_order` int(11) NOT NULL DEFAULT 0 COMMENT '정렬 순서',
+    PRIMARY KEY (`mt_id`),
+    UNIQUE KEY `mt_code` (`mt_code`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='개척 재료 종류';
+
+-- 기본 재료 데이터
+INSERT INTO `mg_material_type` (`mt_name`, `mt_code`, `mt_icon`, `mt_desc`, `mt_order`) VALUES
+('목재', 'wood', '🪵', '나무를 가공한 기본 건축 재료', 1),
+('석재', 'stone', '🪨', '돌을 다듬어 만든 기본 건축 재료', 2),
+('철광석', 'iron', '⛏️', '금속 가공에 필요한 광물', 3),
+('유리', 'glass', '🪟', '모래를 녹여 만든 투명한 재료', 4),
+('책', 'book', '📚', '지식이 담긴 서적', 5),
+('마법석', 'crystal', '💎', '마력이 깃든 희귀한 보석', 6);
+
+-- 유저별 재료 보유량
+CREATE TABLE IF NOT EXISTS `mg_user_material` (
+    `um_id` int(11) NOT NULL AUTO_INCREMENT,
+    `mb_id` varchar(20) NOT NULL COMMENT '회원 ID',
+    `mt_id` int(11) NOT NULL COMMENT '재료 종류',
+    `um_count` int(11) NOT NULL DEFAULT 0 COMMENT '보유 수량',
+    PRIMARY KEY (`um_id`),
+    UNIQUE KEY `mb_mt` (`mb_id`, `mt_id`),
+    KEY `mt_id` (`mt_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='유저별 재료 보유량';
+
+-- 유저별 노동력
+CREATE TABLE IF NOT EXISTS `mg_user_stamina` (
+    `us_id` int(11) NOT NULL AUTO_INCREMENT,
+    `mb_id` varchar(20) NOT NULL COMMENT '회원 ID',
+    `us_current` int(11) NOT NULL DEFAULT 10 COMMENT '현재 노동력',
+    `us_max` int(11) NOT NULL DEFAULT 10 COMMENT '일일 최대',
+    `us_last_reset` date DEFAULT NULL COMMENT '마지막 리셋 날짜',
+    PRIMARY KEY (`us_id`),
+    UNIQUE KEY `mb_id` (`mb_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='유저별 노동력';
+
+-- 시설 정의
+CREATE TABLE IF NOT EXISTS `mg_facility` (
+    `fc_id` int(11) NOT NULL AUTO_INCREMENT,
+    `fc_name` varchar(100) NOT NULL COMMENT '시설 이름',
+    `fc_desc` text COMMENT '설명',
+    `fc_image` varchar(500) NOT NULL DEFAULT '' COMMENT '시설 이미지',
+    `fc_icon` varchar(100) NOT NULL DEFAULT '' COMMENT '아이콘',
+    `fc_status` enum('locked','building','complete') NOT NULL DEFAULT 'locked' COMMENT '상태',
+    `fc_unlock_type` varchar(50) NOT NULL DEFAULT '' COMMENT '해금 대상 타입 (board, shop, gift, achievement, history, fountain)',
+    `fc_unlock_target` varchar(100) NOT NULL DEFAULT '' COMMENT '해금 대상 ID (게시판: bo_table, 그 외: 식별자)',
+    `fc_stamina_cost` int(11) NOT NULL DEFAULT 0 COMMENT '필요 총 노동력',
+    `fc_stamina_current` int(11) NOT NULL DEFAULT 0 COMMENT '현재 투입된 노동력',
+    `fc_order` int(11) NOT NULL DEFAULT 0 COMMENT '표시 순서',
+    `fc_complete_date` datetime DEFAULT NULL COMMENT '완공일',
+    PRIMARY KEY (`fc_id`),
+    KEY `fc_status` (`fc_status`),
+    KEY `fc_order` (`fc_order`),
+    KEY `fc_unlock` (`fc_unlock_type`, `fc_unlock_target`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='개척 시설';
+
+-- 시설별 필요 재료
+CREATE TABLE IF NOT EXISTS `mg_facility_material_cost` (
+    `fmc_id` int(11) NOT NULL AUTO_INCREMENT,
+    `fc_id` int(11) NOT NULL COMMENT '시설 ID',
+    `mt_id` int(11) NOT NULL COMMENT '재료 종류',
+    `fmc_required` int(11) NOT NULL DEFAULT 0 COMMENT '필요 수량',
+    `fmc_current` int(11) NOT NULL DEFAULT 0 COMMENT '현재 투입된 수량',
+    PRIMARY KEY (`fmc_id`),
+    UNIQUE KEY `fc_mt` (`fc_id`, `mt_id`),
+    KEY `mt_id` (`mt_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='시설별 필요 재료';
+
+-- 기여 기록
+CREATE TABLE IF NOT EXISTS `mg_facility_contribution` (
+    `fcn_id` int(11) NOT NULL AUTO_INCREMENT,
+    `fc_id` int(11) NOT NULL COMMENT '시설 ID',
+    `mb_id` varchar(20) NOT NULL COMMENT '회원 ID',
+    `fcn_type` enum('stamina','material') NOT NULL COMMENT '기여 유형',
+    `mt_id` int(11) DEFAULT NULL COMMENT '재료 종류 (type=material일 때)',
+    `fcn_amount` int(11) NOT NULL DEFAULT 0 COMMENT '투입량',
+    `fcn_datetime` datetime NOT NULL COMMENT '투입 시각',
+    PRIMARY KEY (`fcn_id`),
+    KEY `fc_id` (`fc_id`),
+    KEY `mb_id` (`mb_id`),
+    KEY `fcn_type` (`fcn_type`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='시설 기여 기록';
+
+-- 명예의 전당 (완공 후 확정)
+CREATE TABLE IF NOT EXISTS `mg_facility_honor` (
+    `fh_id` int(11) NOT NULL AUTO_INCREMENT,
+    `fc_id` int(11) NOT NULL COMMENT '시설 ID',
+    `fh_rank` int(11) NOT NULL COMMENT '순위 (1, 2, 3)',
+    `fh_category` varchar(30) NOT NULL COMMENT '카테고리 (stamina, wood, stone 등)',
+    `mb_id` varchar(20) NOT NULL COMMENT '회원 ID',
+    `fh_amount` int(11) NOT NULL DEFAULT 0 COMMENT '총 기여량',
+    PRIMARY KEY (`fh_id`),
+    KEY `fc_id` (`fc_id`),
+    KEY `fh_category` (`fh_category`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='시설 명예의 전당';
+
+-- ======================================
+-- 개척 시스템 기본 설정
+-- ======================================
+INSERT INTO `mg_config` (`cf_key`, `cf_value`, `cf_desc`) VALUES
+('pioneer_enabled', '1', '개척 시스템 활성화'),
+('pioneer_stamina_default', '10', '기본 일일 노동력'),
+('pioneer_write_reward', 'wood:1', '글 작성 시 재료 보상'),
+('pioneer_comment_reward', 'random:1:30', '댓글 작성 시 재료 보상 (30% 확률)'),
+('pioneer_rp_reward', 'stone:1', 'RP 이음 시 재료 보상'),
+('pioneer_attendance_reward', 'random:1:100', '출석 시 재료 보상')
+ON DUPLICATE KEY UPDATE `cf_key` = `cf_key`;
+
+-- 샘플 시설 (앓이란, 역극 게시판 해금)
+INSERT INTO `mg_facility` (`fc_name`, `fc_desc`, `fc_icon`, `fc_status`, `fc_unlock_type`, `fc_unlock_target`, `fc_stamina_cost`, `fc_order`) VALUES
+('앓이란 게시판', '캐릭터의 앓이를 공유하는 공간입니다. 개척을 완료하면 이용할 수 있습니다.', 'heart', 'locked', 'board', 'ailiran', 100, 1),
+('역극 게시판', '역할극을 진행하는 공간입니다. 개척을 완료하면 이용할 수 있습니다.', 'theater', 'locked', 'board', 'roleplay', 150, 2),
+('상점', '포인트로 아이템을 구매할 수 있는 상점입니다.', 'shopping-bag', 'locked', 'shop', '', 200, 3),
+('선물함', '다른 유저에게 선물을 보낼 수 있습니다.', 'gift', 'locked', 'gift', '', 120, 4)
+ON DUPLICATE KEY UPDATE `fc_name` = VALUES(`fc_name`);
+
+SET FOREIGN_KEY_CHECKS = 1;

@@ -1,0 +1,58 @@
+# Dependencies
+node_modules/
+
+# Build outputs (선택적 - 빌드 결과물 포함 여부)
+# theme/morgan/css/style.css
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Backup folder (제거된 파일들)
+_backup/
+
+# Gnuboard data (민감 정보)
+data/dbconfig.php
+data/session/
+data/cache/
+data/file/
+data/editor/
+data/member/
+data/member_image/
+data/qa/
+data/tmp/
+
+# Docker volumes
+docker/mysql/data/
+
+# Credentials
+*.pem
+*.key
+credentials.json
+
+# Temporary
+*.tmp
+*.temp
+*.bak
+
+# Claude Code
+.claude/
+
+# Windows special files
+nul
+NUL

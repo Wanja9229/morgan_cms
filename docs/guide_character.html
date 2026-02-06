@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Character Profile Detail</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&amp;family=Noto+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#5461f2",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101222",
+                        "surface-dark": "#1a1d33",
+                        "surface-border": "#2b2e4d"
+                    },
+                    fontFamily: {
+                        "display": ["Spline Sans", "Noto Sans", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: "Spline Sans", "Noto Sans", sans-serif;
+        }
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #101222; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2b2e4d; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #5461f2; 
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-[#111418] dark:text-white overflow-x-hidden min-h-screen flex flex-col">
+<!-- Top Navigation -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-surface-border px-4 py-3 bg-background-light dark:bg-background-dark sticky top-0 z-50 lg:px-10">
+<div class="flex items-center gap-4 lg:gap-8">
+<div class="flex items-center gap-4 text-[#111418] dark:text-white">
+<div class="size-8 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined !text-3xl">token</span>
+</div>
+<h2 class="text-[#111418] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] hidden sm:block">RP CMS</h2>
+</div>
+<label class="hidden md:flex flex-col min-w-40 !h-10 max-w-64">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full">
+<div class="text-[#9296c9] flex border-none bg-[#f0f2f4] dark:bg-surface-dark items-center justify-center pl-4 rounded-l-lg border-r-0">
+<span class="material-symbols-outlined" style="font-size: 20px;">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111418] dark:text-white focus:outline-0 focus:ring-0 border-none bg-[#f0f2f4] dark:bg-surface-dark focus:border-none h-full placeholder:text-[#9296c9] px-4 rounded-l-none border-l-0 pl-2 text-base font-normal leading-normal" placeholder="Search characters..." value=""/>
+</div>
+</label>
+</div>
+<div class="flex items-center gap-4 lg:gap-8">
+<div class="hidden lg:flex items-center gap-6">
+<a class="text-[#111418] dark:text-white text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Home</a>
+<a class="text-primary text-sm font-bold leading-normal" href="#">Characters</a>
+<a class="text-[#111418] dark:text-white text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Forums</a>
+<a class="text-[#111418] dark:text-white text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Wiki</a>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-dark text-[#9296c9] transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-surface-border cursor-pointer" data-alt="User avatar placeholder showing abstract silhouette" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBi3h4UJIGESuKhw5DHks2VB7ffQ4dfWS1Abf9PcAaSpv0tzBj9ybkD6iI-y_bTKYWUD2ATw3L9lPwZmXFUE6sELbmvqsupnZ37TksCvZOwKq1X21VTNA4G4GSpsO3tUaSDAyrN11QgW4eRTbjk9RLY6ro4HiAKiTmgz2Oh-3mBhOBVzkQqye2CJTClVg-0NVGrHVpr9D3YOwvuFPRIgE4ztXA2VQbxFHsoktaLdlXJt9ou4EHkcpOt0FBnY8zva0IsoI-iDGZmGg");'></div>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 flex justify-center py-6 px-4 md:px-8">
+<div class="w-full max-w-[1100px] flex flex-col gap-6">
+<!-- Breadcrumbs -->
+<div class="flex flex-wrap items-center gap-2 text-sm">
+<a class="text-[#9296c9] hover:text-white transition-colors font-medium" href="#">Home</a>
+<span class="text-[#9296c9] material-symbols-outlined !text-base">chevron_right</span>
+<a class="text-[#9296c9] hover:text-white transition-colors font-medium" href="#">Characters</a>
+<span class="text-[#9296c9] material-symbols-outlined !text-base">chevron_right</span>
+<a class="text-[#9296c9] hover:text-white transition-colors font-medium" href="#">Arcane Order</a>
+<span class="text-[#9296c9] material-symbols-outlined !text-base">chevron_right</span>
+<span class="text-white font-medium">Eldric Stormcaller</span>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- Left Column: Portrait & Quick Actions -->
+<div class="lg:col-span-4 flex flex-col gap-4">
+<div class="relative w-full aspect-[3/4] rounded-xl overflow-hidden shadow-2xl border border-surface-border group">
+<div class="absolute inset-0 bg-center bg-no-repeat bg-cover transition-transform duration-700 group-hover:scale-105" data-alt="Portrait of a male mage character with glowing blue eyes and dark robes" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA4DQstVhFZR2TWZyl8efQmsJ_c9BWxvPmnNziWb3s1zW9BStcSqNcr_uuCYZNh76I5PWNlEZjA4GTotQ6KBfr-6FsllEV4YrGDzF3TNsYdRzNZXKlEIfWVVM3OcdQuM0BUdfmqaagukqGA3Js7rVKQB2Wz8qXSLoB0A75lc-n2JvQzFBBYLToonj77cfNjtb5Yqu45B2yxT52e4ohoXVK1OiP5ZFvZMkTMuBq-p0e_sptrOWHGLvx8jk55ZUJ-h3OsDkoRd-7yVQ");'></div>
+<div class="absolute inset-0 bg-gradient-to-t from-background-dark/90 via-transparent to-transparent"></div>
+<div class="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+<div class="flex flex-col">
+<span class="text-xs font-bold text-primary uppercase tracking-wider mb-1">Status</span>
+<span class="flex items-center gap-2 text-white text-sm font-medium">
+<span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                                    Online
+                                </span>
+</div>
+<button class="bg-surface-dark/80 hover:bg-primary backdrop-blur-sm text-white p-2 rounded-lg transition-colors border border-surface-border hover:border-primary">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<button class="flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white py-3 px-4 rounded-lg font-medium transition-colors">
+<span class="material-symbols-outlined !text-xl">mail</span>
+                            Message
+                        </button>
+<button class="flex items-center justify-center gap-2 bg-surface-dark hover:bg-surface-border text-white border border-surface-border py-3 px-4 rounded-lg font-medium transition-colors">
+<span class="material-symbols-outlined !text-xl">person_add</span>
+                            Add Friend
+                        </button>
+</div>
+<!-- Additional Sidebar Info -->
+<div class="bg-surface-dark rounded-xl p-5 border border-surface-border mt-2">
+<h3 class="text-white font-bold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">groups</span>
+                            Guild
+                        </h3>
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-indigo-900 flex items-center justify-center text-indigo-300">
+<span class="material-symbols-outlined">shield</span>
+</div>
+<div>
+<div class="text-white font-medium">The Arcane Order</div>
+<div class="text-[#9296c9] text-xs">Rank: High Wizard</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Details & Stats -->
+<div class="lg:col-span-8 flex flex-col gap-8">
+<!-- Header Section -->
+<div class="flex flex-col gap-2 border-b border-surface-border pb-6">
+<div class="flex items-center justify-between">
+<div class="flex gap-3">
+<span class="px-2 py-1 bg-primary/20 text-primary text-xs font-bold uppercase rounded tracking-wide border border-primary/20">Mage</span>
+<span class="px-2 py-1 bg-purple-500/20 text-purple-400 text-xs font-bold uppercase rounded tracking-wide border border-purple-500/20">Human</span>
+</div>
+<div class="flex items-center gap-1 text-[#9296c9] text-sm">
+<span class="material-symbols-outlined !text-base">visibility</span>
+<span>12.4k views</span>
+</div>
+</div>
+<h1 class="text-white text-4xl md:text-5xl font-bold tracking-tight font-display">Eldric Stormcaller</h1>
+<p class="text-[#9296c9] text-lg font-light max-w-2xl">
+                            A wandering mage seeking the lost artifacts of the First Era. Currently investigating the disturbances in the northern peaks.
+                        </p>
+</div>
+<!-- Vitals Grid -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<div class="bg-surface-dark p-4 rounded-xl border border-surface-border">
+<div class="text-[#9296c9] text-xs font-bold uppercase tracking-wider mb-1">Age</div>
+<div class="text-white text-xl font-medium">28</div>
+</div>
+<div class="bg-surface-dark p-4 rounded-xl border border-surface-border">
+<div class="text-[#9296c9] text-xs font-bold uppercase tracking-wider mb-1">Height</div>
+<div class="text-white text-xl font-medium">6' 1"</div>
+</div>
+<div class="bg-surface-dark p-4 rounded-xl border border-surface-border">
+<div class="text-[#9296c9] text-xs font-bold uppercase tracking-wider mb-1">Alignment</div>
+<div class="text-white text-xl font-medium">Chaotic Good</div>
+</div>
+<div class="bg-surface-dark p-4 rounded-xl border border-surface-border">
+<div class="text-[#9296c9] text-xs font-bold uppercase tracking-wider mb-1">Level</div>
+<div class="text-white text-xl font-medium text-primary">50</div>
+</div>
+</div>
+<!-- Tabs/Sections Layout -->
+<div class="flex flex-col gap-6">
+<!-- Personality Block -->
+<div class="bg-surface-dark p-6 rounded-xl border border-surface-border">
+<h3 class="text-white font-bold text-xl mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">psychology</span>
+                                Personality
+                            </h3>
+<p class="text-gray-300 leading-relaxed">
+                                Eldric is often seen as aloof and distant, a trait born from years of solitary study in the high towers of the Arcane University. However, beneath his cold exterior lies a fierce loyalty to those he considers friends. He has a penchant for sarcastic remarks and a dangerously short temper when dealing with ignorance. His obsession with ancient history often leads him into dangerous ruins where others fear to tread.
+                            </p>
+<div class="mt-4 flex flex-wrap gap-2">
+<span class="px-3 py-1 bg-background-dark rounded-full text-xs text-gray-400 border border-surface-border">Intellectual</span>
+<span class="px-3 py-1 bg-background-dark rounded-full text-xs text-gray-400 border border-surface-border">Sarcastic</span>
+<span class="px-3 py-1 bg-background-dark rounded-full text-xs text-gray-400 border border-surface-border">Loyal</span>
+<span class="px-3 py-1 bg-background-dark rounded-full text-xs text-gray-400 border border-surface-border">Curious</span>
+</div>
+</div>
+<!-- Stats Section -->
+<div class="bg-surface-dark p-6 rounded-xl border border-surface-border">
+<h3 class="text-white font-bold text-xl mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">bar_chart</span>
+                                Attributes
+                            </h3>
+<div class="space-y-5">
+<!-- Stat Item -->
+<div>
+<div class="flex justify-between mb-2">
+<span class="text-sm font-medium text-gray-300">Strength</span>
+<span class="text-sm font-medium text-white">4/10</span>
+</div>
+<div class="w-full bg-background-dark rounded-full h-2.5 overflow-hidden">
+<div class="bg-blue-900 h-2.5 rounded-full" style="width: 40%">
+<div class="h-full bg-primary/80 w-full animate-[pulse_2s_infinite]"></div>
+</div>
+</div>
+</div>
+<!-- Stat Item -->
+<div>
+<div class="flex justify-between mb-2">
+<span class="text-sm font-medium text-gray-300">Agility</span>
+<span class="text-sm font-medium text-white">6/10</span>
+</div>
+<div class="w-full bg-background-dark rounded-full h-2.5 overflow-hidden">
+<div class="bg-blue-900 h-2.5 rounded-full" style="width: 60%">
+<div class="h-full bg-primary/80 w-full animate-[pulse_2s_infinite]"></div>
+</div>
+</div>
+</div>
+<!-- Stat Item -->
+<div>
+<div class="flex justify-between mb-2">
+<span class="text-sm font-medium text-gray-300">Intelligence</span>
+<span class="text-sm font-medium text-white">10/10</span>
+</div>
+<div class="w-full bg-background-dark rounded-full h-2.5 overflow-hidden">
+<div class="bg-blue-900 h-2.5 rounded-full" style="width: 100%">
+<div class="h-full bg-primary w-full shadow-[0_0_10px_rgba(84,97,242,0.5)]"></div>
+</div>
+</div>
+</div>
+<!-- Stat Item -->
+<div>
+<div class="flex justify-between mb-2">
+<span class="text-sm font-medium text-gray-300">Charisma</span>
+<span class="text-sm font-medium text-white">7/10</span>
+</div>
+<div class="w-full bg-background-dark rounded-full h-2.5 overflow-hidden">
+<div class="bg-blue-900 h-2.5 rounded-full" style="width: 70%">
+<div class="h-full bg-primary/80 w-full animate-[pulse_2s_infinite]"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Related Posts Feed -->
+<div>
+<h3 class="text-white font-bold text-xl mb-4 flex items-center justify-between">
+<span class="flex items-center gap-2"><span class="material-symbols-outlined text-primary">history_edu</span> Roleplay Logs</span>
+<a class="text-primary text-sm font-medium hover:underline" href="#">View All</a>
+</h3>
+<div class="flex flex-col gap-3">
+<!-- Post Item -->
+<div class="group bg-surface-dark p-4 rounded-xl border border-surface-border hover:border-primary/50 transition-colors cursor-pointer">
+<div class="flex gap-4">
+<div class="shrink-0 relative">
+<div class="w-12 h-12 rounded-full bg-cover bg-center" data-alt="Small avatar of Eldric" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAdYaHFD9WH7zfb0PDY8HRb-ozmRFmH7WgpAKSIxsA40YGnSuGw2ObFUGAq7sKMTZ_IBx8S31WwfXO6LbSv8UHgMR6KUvam886-GJRWmj9oHNwJ3yKl0YQkR94Zyhx6vmt548iNng8cPBW93ba4RAKyjRgTzx8AVo4SY3NJrcJbJ5Li3AJQP7nQqi45KbMIvmXljmkiGLbwHKdpyx39PFuyU1ItifPn-YDrLAscXIziYiu_TcseyJiFDFpz78zRj_MyTRkbWbgmmw");'></div>
+<div class="absolute -bottom-1 -right-1 bg-surface-dark rounded-full p-0.5">
+<div class="bg-green-500 w-3 h-3 rounded-full border-2 border-surface-dark"></div>
+</div>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<div>
+<span class="text-white font-medium group-hover:text-primary transition-colors">Eldric Stormcaller</span>
+<span class="text-[#9296c9] text-xs ml-2">in The Whispering Woods</span>
+</div>
+<span class="text-[#9296c9] text-xs">2h ago</span>
+</div>
+<p class="text-gray-400 text-sm line-clamp-2">
+                                                The magical residue here is ancient... far older than I anticipated. He knelt beside the glowing runes etched into the mossy stone, tracing the patterns with a gloved finger. "Curious," he muttered under his breath.
+                                            </p>
+</div>
+</div>
+</div>
+<!-- Post Item -->
+<div class="group bg-surface-dark p-4 rounded-xl border border-surface-border hover:border-primary/50 transition-colors cursor-pointer">
+<div class="flex gap-4">
+<div class="shrink-0 relative">
+<div class="w-12 h-12 rounded-full bg-cover bg-center" data-alt="Small avatar of a female rogue character" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA8xkw8ZIRJ-2GDFKfdAajlr0uyYIN1M7ugfIeJaNUpPvGZfO6eGXSo-VxsRgg4NIxy89l9HZVpRX5YN5wz8CmBTovMjInn_s56zqMS8_wC1jIv4n11g6E7dSwq4byAB303l204muy9ISd12tE0n1vBQrqgu8l2KyRMJhJedKUIadHWjvzVrccpzmazdg59WPxgkaKR-Hsc7Ci9yyiXn0Wa4iFsJ26y4eXBU3cnIIgQYAkISuS_S4A3uTBuPRKhR91te1XtIvqqpQ");'></div>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<div>
+<span class="text-white font-medium group-hover:text-primary transition-colors">Lyra Silvertongue</span>
+<span class="text-[#9296c9] text-xs ml-2">mentioned you in Tavern Talk</span>
+</div>
+<span class="text-[#9296c9] text-xs">5h ago</span>
+</div>
+<p class="text-gray-400 text-sm line-clamp-2">
+                                                "Has anyone seen our resident wizard? Eldric owes me a drink from that bet last night." She twirled a dagger idly, scanning the crowded room.
+                                            </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

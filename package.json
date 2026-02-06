@@ -1,0 +1,23 @@
+{
+  "name": "morgan-edition",
+  "version": "1.0.0",
+  "description": "Morgan Edition - 자캐 커뮤니티 특화형 CMS",
+  "private": true,
+  "scripts": {
+    "css:build": "tailwindcss -i ./src/css/input.css -o ./theme/morgan/css/style.css --minify",
+    "css:watch": "tailwindcss -i ./src/css/input.css -o ./theme/morgan/css/style.css --watch",
+    "css:dev": "tailwindcss -i ./src/css/input.css -o ./theme/morgan/css/style.css"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.18",
+    "tailwindcss": "^4.1.18"
+  },
+  "keywords": [
+    "gnuboard",
+    "cms",
+    "community",
+    "tailwindcss"
+  ],
+  "author": "",
+  "license": "MIT"
+}

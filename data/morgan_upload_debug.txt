@@ -1,0 +1,99 @@
+2026-02-04 13:47:28
+FILES: Array
+(
+    [bg_image] => Array
+        (
+            [name] => george-pagan-iii-dDmU72yV7g0-unsplash.jpg
+            [full_path] => george-pagan-iii-dDmU72yV7g0-unsplash.jpg
+            [type] => image/jpeg
+            [tmp_name] => /tmp/phpFO72Sq
+            [error] => 0
+            [size] => 5814491
+        )
+
+)
+
+upload_dir: /var/www/html/data/morgan
+is_dir: yes
+is_writable: yes
+File validation failed. ext=jpg, size=5814491
+2026-02-04 14:14:48
+FILES: Array
+(
+    [bg_image] => Array
+        (
+            [name] => george-pagan-iii-dDmU72yV7g0-unsplash.jpg
+            [full_path] => george-pagan-iii-dDmU72yV7g0-unsplash.jpg
+            [type] => image/jpeg
+            [tmp_name] => /tmp/phpWJ1iqn
+            [error] => 0
+            [size] => 5814491
+        )
+
+)
+
+upload_dir: /var/www/html/data/morgan
+is_dir: yes
+is_writable: yes
+File validation failed. ext=jpg, size=5814491
+2026-02-04 14:16:04
+FILES: Array
+(
+    [bg_image] => Array
+        (
+            [name] => magicpattern-KfFmwa7m5VQ-unsplash.jpg
+            [full_path] => magicpattern-KfFmwa7m5VQ-unsplash.jpg
+            [type] => image/jpeg
+            [tmp_name] => /tmp/phpDI1Noa
+            [error] => 0
+            [size] => 267541
+        )
+
+)
+
+upload_dir: /var/www/html/data/morgan
+is_dir: yes
+is_writable: yes
+Trying to move: /tmp/phpDI1Noa -> /var/www/html/data/morgan/bg_20260204_141604.jpg
+Move success! URL: http://localhost:8080/data/morgan/bg_20260204_141604.jpg
+DB saved!
+2026-02-04 14:16:12
+FILES: Array
+(
+    [bg_image] => Array
+        (
+            [name] => 
+            [full_path] => 
+            [type] => 
+            [tmp_name] => 
+            [error] => 4
+            [size] => 0
+        )
+
+)
+
+upload_dir: /var/www/html/data/morgan
+is_dir: yes
+is_writable: yes
+No file uploaded or error. Error code: 4
+2026-02-04 14:18:37
+FILES: Array
+(
+    [bg_image] => Array
+        (
+            [name] => george-pagan-iii-dDmU72yV7g0-unsplash.jpg
+            [full_path] => george-pagan-iii-dDmU72yV7g0-unsplash.jpg
+            [type] => image/jpeg
+            [tmp_name] => /tmp/phpbmIRsf
+            [error] => 0
+            [size] => 5814491
+        )
+
+)
+
+upload_dir: /var/www/html/data/morgan
+is_dir: yes
+is_writable: yes
+Trying to process: /tmp/phpbmIRsf -> /var/www/html/data/morgan/bg_20260204_141837.jpg
+Resize success! URL: http://localhost:8080/data/morgan/bg_20260204_141837.jpg, Size: 2185KB
+DB saved!
