@@ -19,7 +19,7 @@ if (!defined('_GNUBOARD_')) exit;
 
         <h2 class="text-xl font-bold text-mg-text-primary mb-2">가입을 환영합니다!</h2>
         <p class="text-mg-text-secondary mb-6">
-            <strong class="text-mg-accent"><?php echo $mb_nick; ?></strong>님, 회원가입이 완료되었습니다.
+            <strong class="text-mg-accent"><?php echo $mb['mb_nick']; ?></strong>님, 회원가입이 완료되었습니다.
         </p>
 
         <!-- 안내 메시지 -->

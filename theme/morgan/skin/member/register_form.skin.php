@@ -165,19 +165,20 @@ function check_mb_id() {
     msgEl.textContent = '확인 중...';
     msgEl.className = 'text-xs mt-1 text-mg-text-muted';
 
-    fetch('<?php echo G5_BBS_URL; ?>/ajax.member_check.php', {
+    fetch('<?php echo G5_BBS_URL; ?>/ajax.mb_id.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'what=mb_id&value=' + encodeURIComponent(mb_id)
+        body: 'reg_mb_id=' + encodeURIComponent(mb_id)
     })
     .then(res => res.text())
     .then(data => {
-        if (data.indexOf('사용할 수') > -1 || data === '0') {
+        data = data.trim();
+        if (data === '') {
             msgEl.textContent = '사용 가능한 아이디입니다.';
             msgEl.className = 'text-xs mt-1 text-mg-success';
             g5_check_mb_id = true;
         } else {
-            msgEl.textContent = '이미 사용 중인 아이디입니다.';
+            msgEl.textContent = data;
             msgEl.className = 'text-xs mt-1 text-mg-error';
             g5_check_mb_id = false;
         }
@@ -195,19 +196,22 @@ function check_mb_nick() {
     msgEl.textContent = '확인 중...';
     msgEl.className = 'text-xs mt-1 text-mg-text-muted';
 
-    fetch('<?php echo G5_BBS_URL; ?>/ajax.member_check.php', {
+    var mb_id = document.getElementById('reg_mb_id') ? document.getElementById('reg_mb_id').value.trim() : '';
+
+    fetch('<?php echo G5_BBS_URL; ?>/ajax.mb_nick.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'what=mb_nick&value=' + encodeURIComponent(mb_nick)
+        body: 'reg_mb_nick=' + encodeURIComponent(mb_nick) + '&reg_mb_id=' + encodeURIComponent(mb_id)
     })
     .then(res => res.text())
     .then(data => {
-        if (data.indexOf('사용할 수') > -1 || data === '0') {
+        data = data.trim();
+        if (data === '') {
             msgEl.textContent = '사용 가능한 닉네임입니다.';
             msgEl.className = 'text-xs mt-1 text-mg-success';
             g5_check_mb_nick = true;
         } else {
-            msgEl.textContent = '이미 사용 중인 닉네임입니다.';
+            msgEl.textContent = data;
             msgEl.className = 'text-xs mt-1 text-mg-error';
             g5_check_mb_nick = false;
         }

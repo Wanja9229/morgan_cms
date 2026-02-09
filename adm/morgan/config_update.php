@@ -98,6 +98,12 @@ $config_keys = array(
     'emoticon_max_count',
     'emoticon_image_max_size',
     'emoticon_image_size',
+    // 보안 설정 (reCAPTCHA)
+    'recaptcha_site_key',
+    'recaptcha_secret_key',
+    'captcha_register',
+    'captcha_write',
+    'captcha_comment',
     // 디자인 설정
     'color_accent',
     'color_button',

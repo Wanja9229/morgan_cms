@@ -238,6 +238,73 @@ require_once __DIR__.'/_head.php';
 
             <hr style="border:0;border-top:1px solid var(--mg-bg-tertiary);margin:1.5rem 0;">
 
+            <h3 style="font-size:1rem;font-weight:600;margin-bottom:1rem;color:var(--mg-accent);">보안 설정 (Google reCAPTCHA v3)</h3>
+
+            <div class="mg-alert mg-alert-info" style="margin-bottom:1.25rem;">
+                봇의 자동 가입/글쓰기를 방지합니다. 사이트 키와 시크릿 키를 입력하면 선택한 항목에 자동 적용되며, 비워두면 캡챠가 비활성화됩니다.<br><br>
+                <strong>키 발급 방법:</strong><br>
+                1. <a href="https://www.google.com/recaptcha/admin" target="_blank" style="color:var(--mg-accent);">Google reCAPTCHA 관리 콘솔</a> 접속 (Google 계정 필요)<br>
+                2. <code>+</code> 버튼 → 새 사이트 등록 → <strong>reCAPTCHA v3</strong> 유형 선택<br>
+                3. 도메인 입력 (예: example.com) → 등록 후 사이트 키 + 비밀 키 복사
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; max-width:700px; margin-bottom:1.25rem;">
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="recaptcha_site_key">reCAPTCHA 사이트 키</label>
+                    <input type="text" name="recaptcha_site_key" id="recaptcha_site_key" value="<?php echo isset($mg_configs['recaptcha_site_key']) ? htmlspecialchars($mg_configs['recaptcha_site_key']) : ''; ?>" class="mg-form-input" placeholder="6Lc..." autocomplete="off" oninput="updateCaptchaToggles()">
+                </div>
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="recaptcha_secret_key">reCAPTCHA 시크릿 키</label>
+                    <input type="password" name="recaptcha_secret_key" id="recaptcha_secret_key" value="<?php echo isset($mg_configs['recaptcha_secret_key']) ? htmlspecialchars($mg_configs['recaptcha_secret_key']) : ''; ?>" class="mg-form-input" placeholder="6Lc..." autocomplete="off" oninput="updateCaptchaToggles()">
+                </div>
+            </div>
+
+            <div id="captcha_toggles" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem; margin-bottom:1.5rem;">
+                <div class="mg-form-group">
+                    <label class="mg-form-label">회원가입</label>
+                    <div style="display:flex;gap:1rem;margin-top:0.5rem;">
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="captcha_register" value="1" <?php echo (!isset($mg_configs['captcha_register']) || $mg_configs['captcha_register'] == '1') ? 'checked' : ''; ?>>
+                            <span>사용</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="captcha_register" value="0" <?php echo (isset($mg_configs['captcha_register']) && $mg_configs['captcha_register'] == '0') ? 'checked' : ''; ?>>
+                            <span>사용안함</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mg-form-group">
+                    <label class="mg-form-label">글쓰기</label>
+                    <div style="display:flex;gap:1rem;margin-top:0.5rem;">
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="captcha_write" value="1" <?php echo (isset($mg_configs['captcha_write']) && $mg_configs['captcha_write'] == '1') ? 'checked' : ''; ?>>
+                            <span>사용</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="captcha_write" value="0" <?php echo (!isset($mg_configs['captcha_write']) || $mg_configs['captcha_write'] == '0') ? 'checked' : ''; ?>>
+                            <span>사용안함</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mg-form-group">
+                    <label class="mg-form-label">댓글</label>
+                    <div style="display:flex;gap:1rem;margin-top:0.5rem;">
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="captcha_comment" value="1" <?php echo (isset($mg_configs['captcha_comment']) && $mg_configs['captcha_comment'] == '1') ? 'checked' : ''; ?>>
+                            <span>사용</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="captcha_comment" value="0" <?php echo (!isset($mg_configs['captcha_comment']) || $mg_configs['captcha_comment'] == '0') ? 'checked' : ''; ?>>
+                            <span>사용안함</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <hr style="border:0;border-top:1px solid var(--mg-bg-tertiary);margin:1.5rem 0;">
+
             <h3 style="font-size:1rem;font-weight:600;margin-bottom:1rem;color:var(--mg-accent);">디자인 설정</h3>
 
             <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
@@ -303,6 +370,20 @@ require_once __DIR__.'/_head.php';
         </form>
 
         <script>
+        function updateCaptchaToggles() {
+            var siteKey = document.getElementById('recaptcha_site_key').value.trim();
+            var secretKey = document.getElementById('recaptcha_secret_key').value.trim();
+            var toggles = document.getElementById('captcha_toggles');
+            if (!siteKey || !secretKey) {
+                toggles.style.opacity = '0.4';
+                toggles.style.pointerEvents = 'none';
+            } else {
+                toggles.style.opacity = '1';
+                toggles.style.pointerEvents = '';
+            }
+        }
+        updateCaptchaToggles();
+
         document.getElementById('bg_opacity').addEventListener('input', function() {
             document.getElementById('bg_opacity_value').textContent = this.value + '%';
         });

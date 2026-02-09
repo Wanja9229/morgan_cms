@@ -205,7 +205,7 @@ include_once(G5_THEME_PATH.'/head.php');
     <?php if (count($characters) > 0) { ?>
     <div class="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
         <?php foreach ($characters as $char) { ?>
-        <a href="<?php echo G5_BBS_URL; ?>/character_view.php?ch_id=<?php echo $char['ch_id']; ?>" class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden hover:border-mg-accent/50 transition-all hover:-translate-y-1 group">
+        <a href="<?php echo G5_BBS_URL; ?>/character_view.php?ch_id=<?php echo $char['ch_id']; ?>&amp;from=list" class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden hover:border-mg-accent/50 transition-all hover:-translate-y-1 group">
             <!-- 썸네일 -->
             <div class="aspect-square bg-mg-bg-tertiary relative overflow-hidden">
                 <?php if ($char['ch_thumb']) { ?>

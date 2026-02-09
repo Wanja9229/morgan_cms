@@ -12,6 +12,11 @@ if (!$is_member) {
     alert('로그인이 필요합니다.', G5_BBS_URL.'/login.php');
 }
 
+// Morgan: 개척 시스템 해금 체크
+if (function_exists('mg_is_board_unlocked') && !mg_is_board_unlocked('roleplay')) {
+    alert('역극은 아직 개척되지 않았습니다.');
+}
+
 $rt_id = isset($_GET['rt_id']) ? (int)$_GET['rt_id'] : 0;
 if (!$rt_id) {
     alert('잘못된 접근입니다.');
@@ -29,7 +34,7 @@ if ($thread['mb_id'] !== $member['mb_id'] && $is_admin !== 'super') {
 
 // 이미 완결된 역극
 if ($thread['rt_status'] === 'closed') {
-    alert('이미 완결된 역극입니다.', G5_BBS_URL.'/rp_view.php?rt_id='.$rt_id);
+    alert('이미 완결된 역극입니다.', G5_BBS_URL.'/rp_list.php#rp-thread-'.$rt_id);
 }
 
 // 완결 처리
@@ -42,8 +47,8 @@ if ($thread['mb_id'] !== $member['mb_id'] && function_exists('mg_notify')) {
         'system',
         '역극 "' . mb_substr(strip_tags($thread['rt_title']), 0, 30) . '"이(가) 완결되었습니다.',
         '',
-        G5_BBS_URL.'/rp_view.php?rt_id='.$rt_id
+        G5_BBS_URL.'/rp_list.php#rp-thread-'.$rt_id
     );
 }
 
-goto_url(G5_BBS_URL.'/rp_view.php?rt_id='.$rt_id);
+goto_url(G5_BBS_URL.'/rp_list.php#rp-thread-'.$rt_id);

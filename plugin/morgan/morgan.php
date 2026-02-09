@@ -1907,6 +1907,35 @@ function mg_get_rp_replies($rt_id, $page = 0, $rows = 50) {
 }
 
 /**
+ * 캐릭터별 역극 이음 조회
+ *
+ * @param int $rt_id 역극 ID
+ * @param int $ch_id 캐릭터 ID
+ * @return array 이음 배열
+ */
+function mg_get_rp_replies_by_character($rt_id, $ch_id) {
+    global $mg, $g5;
+
+    $rt_id = (int)$rt_id;
+    $ch_id = (int)$ch_id;
+
+    $sql = "SELECT r.*, m.mb_nick, c.ch_name, c.ch_thumb
+            FROM {$mg['rp_reply_table']} r
+            LEFT JOIN {$g5['member_table']} m ON r.mb_id = m.mb_id
+            LEFT JOIN {$mg['character_table']} c ON r.ch_id = c.ch_id
+            WHERE r.rt_id = {$rt_id} AND ((r.ch_id = {$ch_id} AND r.rr_context_ch_id = 0) OR r.rr_context_ch_id = {$ch_id})
+            ORDER BY r.rr_id ASC";
+    $result = sql_query($sql);
+
+    $replies = array();
+    while ($row = sql_fetch_array($result)) {
+        $replies[] = $row;
+    }
+
+    return $replies;
+}
+
+/**
  * 역극 이음 작성
  *
  * @param array $data [rt_id, rr_content, rr_image, mb_id, ch_id]
@@ -1918,6 +1947,7 @@ function mg_create_rp_reply($data) {
     $rt_id = (int)$data['rt_id'];
     $mb_id = sql_real_escape_string($data['mb_id']);
     $ch_id = (int)$data['ch_id'];
+    $context_ch_id = isset($data['rr_context_ch_id']) ? (int)$data['rr_context_ch_id'] : 0;
     $content = sql_real_escape_string($data['rr_content']);
     $image = isset($data['rr_image']) ? sql_real_escape_string($data['rr_image']) : '';
 
@@ -1927,16 +1957,22 @@ function mg_create_rp_reply($data) {
         return array('success' => false, 'message' => '이음할 수 없는 역극입니다.');
     }
 
-    // 최소 글자 수 체크
+    // 최소 글자 수 체크 (이미지 첨부 시 내용 생략 가능)
     $min_len = (int)mg_config('rp_content_min', 20);
-    if (mb_strlen(strip_tags($data['rr_content'])) < $min_len) {
+    $content_len = mb_strlen(strip_tags($data['rr_content']));
+    if ($content_len > 0 && $content_len < $min_len && !$image) {
         return array('success' => false, 'message' => "내용을 {$min_len}자 이상 입력해주세요.");
+    }
+
+    // 대화 맥락: context_ch_id가 작성자 ch_id와 다르면 설정
+    if (!$context_ch_id || $context_ch_id == $ch_id) {
+        $context_ch_id = 0;
     }
 
     // 이음 삽입
     $sql = "INSERT INTO {$mg['rp_reply_table']}
-            (rt_id, rr_content, rr_image, mb_id, ch_id)
-            VALUES ({$rt_id}, '{$content}', '{$image}', '{$mb_id}', {$ch_id})";
+            (rt_id, rr_content, rr_image, mb_id, ch_id, rr_context_ch_id)
+            VALUES ({$rt_id}, '{$content}', '{$image}', '{$mb_id}', {$ch_id}, {$context_ch_id})";
     sql_query($sql);
     $rr_id = sql_insert_id();
 

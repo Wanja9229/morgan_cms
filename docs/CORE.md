@@ -200,4 +200,11 @@ docker exec morgan_mysql mysql -umorgan_user -pmorgan_pass morgan_db -e "DESCRIB
 
 ---
 
+## 작업 규칙
+
+- **Git push는 사용자가 요청할 때만** 실행. 커밋은 자유롭게 하되, push는 명시적 요청 시에만.
+- 작업 완료 후 work_logs에 기록
+
+---
+
 *이 파일은 작업 효율을 위한 요약본입니다. 상세 내용은 plans/ 폴더의 개별 문서를 참조하세요.*

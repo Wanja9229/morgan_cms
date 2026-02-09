@@ -403,7 +403,7 @@ if( $config['cf_cert_use'] || (defined('G5_YOUNGCART_VER') && G5_YOUNGCART_VER) 
 define('G5_HTTP_BBS_URL',  https_url(G5_BBS_DIR, false));
 define('G5_HTTPS_BBS_URL', https_url(G5_BBS_DIR, true));
 
-define('G5_CAPTCHA_DIR',    !empty($config['cf_captcha']) ? $config['cf_captcha'] : 'kcaptcha');
+define('G5_CAPTCHA_DIR',    'morgan_captcha');
 define('G5_CAPTCHA_URL',    G5_PLUGIN_URL.'/'.G5_CAPTCHA_DIR);
 define('G5_CAPTCHA_PATH',   G5_PLUGIN_PATH.'/'.G5_CAPTCHA_DIR);
 
@@ -805,6 +805,13 @@ if (G5_IS_MOBILE) {
     $connect_skin_url   = get_skin_url('connect', $config['cf_connect_skin']);
     $faq_skin_path      = get_skin_path('faq', $config['cf_faq_skin']);
     $faq_skin_url       = get_skin_url('faq', $config['cf_faq_skin']);
+}
+
+// Morgan: 테마 스킨 디렉토리가 있으면 테마 경로 우선 적용
+// (theme.config.php에서 설정한 경로를 get_skin_path가 덮어쓰는 문제 방지)
+if (defined('G5_THEME_PATH') && is_dir(G5_THEME_PATH.'/'.G5_SKIN_DIR.'/member')) {
+    $member_skin_path = G5_THEME_PATH.'/'.G5_SKIN_DIR.'/member';
+    $member_skin_url  = G5_THEME_URL.'/'.G5_SKIN_DIR.'/member';
 }
 //==============================================================================
 

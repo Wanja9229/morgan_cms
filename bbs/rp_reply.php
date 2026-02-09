@@ -15,12 +15,20 @@ if (!$is_member) {
     exit;
 }
 
+// Morgan: 개척 시스템 해금 체크
+if (function_exists('mg_is_board_unlocked') && !mg_is_board_unlocked('roleplay')) {
+    echo json_encode(array('success' => false, 'message' => '역극은 아직 개척되지 않았습니다.'));
+    exit;
+}
+
 $rt_id = isset($_POST['rt_id']) ? (int)$_POST['rt_id'] : 0;
 $rr_content = isset($_POST['rr_content']) ? trim($_POST['rr_content']) : '';
 $ch_id = isset($_POST['ch_id']) ? (int)$_POST['ch_id'] : 0;
+$context_ch_id = isset($_POST['context_ch_id']) ? (int)$_POST['context_ch_id'] : 0;
 
-if (!$rt_id || !$rr_content || !$ch_id) {
-    echo json_encode(array('success' => false, 'message' => '필수 항목을 입력해주세요.'));
+$has_image = (isset($_FILES['rr_image']) && $_FILES['rr_image']['error'] == 0);
+if (!$rt_id || !$ch_id || (!$rr_content && !$has_image)) {
+    echo json_encode(array('success' => false, 'message' => '내용 또는 이미지를 입력해주세요.'));
     exit;
 }
 
@@ -38,23 +46,39 @@ if (!$join_check['can_join']) {
     exit;
 }
 
+// Image upload
+$rr_image = '';
+if (isset($_FILES['rr_image']) && $_FILES['rr_image']['error'] == 0) {
+    $allowed = array('jpg', 'jpeg', 'png', 'gif', 'webp');
+    $ext = strtolower(pathinfo($_FILES['rr_image']['name'], PATHINFO_EXTENSION));
+    if (in_array($ext, $allowed)) {
+        $upload_dir = G5_DATA_PATH . '/rp/';
+        if (!is_dir($upload_dir)) @mkdir($upload_dir, 0755, true);
+        $filename = 'rp_' . time() . '_' . uniqid() . '.' . $ext;
+        if (move_uploaded_file($_FILES['rr_image']['tmp_name'], $upload_dir . $filename)) {
+            $rr_image = G5_DATA_URL . '/rp/' . $filename;
+        }
+    }
+}
+
 $result = mg_create_rp_reply(array(
     'rt_id' => $rt_id,
     'rr_content' => $rr_content,
-    'rr_image' => '',
+    'rr_image' => $rr_image,
     'mb_id' => $member['mb_id'],
     'ch_id' => $ch_id,
+    'rr_context_ch_id' => $context_ch_id,
 ));
 
 // Morgan: RP 이음 알림 (역극 생성자에게)
 if ($result['success']) {
     $thread = mg_get_rp_thread($rt_id);
     if ($thread && $thread['mb_id'] && $thread['mb_id'] !== $member['mb_id']) {
-        $noti_url = G5_BBS_URL . '/rp_view.php?rt_id=' . $rt_id;
+        $noti_url = G5_BBS_URL . '/rp_list.php#rp-thread-' . $rt_id;
         mg_notify(
             $thread['mb_id'],
             'rp_reply',
-            $char['ch_name'] . '님이 "' . mb_substr(strip_tags($thread['rt_title']), 0, 30) . '" 역극에 이음했습니다.',
+            $char['ch_name'] . '님이 "' . mb_substr(strip_tags($thread['rt_title']), 0, 30) . '" 역극에 댓글을 남겼습니다.',
             '',
             $noti_url
         );

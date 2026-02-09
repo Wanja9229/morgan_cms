@@ -109,6 +109,7 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
         /* 배경 이미지 */
         #main-content {
             position: relative;
+            isolation: isolate; /* stacking context 생성 (fixed 위치에 영향 없음) */
         }
         #main-content::before {
             content: '';
@@ -123,11 +124,7 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
             background-attachment: fixed;
             opacity: <?php echo $mg_theme_bg['opacity'] / 100; ?>;
             pointer-events: none;
-            z-index: 0;
-        }
-        #main-content > * {
-            position: relative;
-            z-index: 1;
+            z-index: -1; /* isolate 내에서 콘텐츠 뒤로 배치 */
         }
         <?php endif; ?>
     </style>

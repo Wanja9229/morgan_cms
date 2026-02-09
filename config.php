@@ -11,6 +11,7 @@ include_once($g5_path['path'].'/version.php');   // 설정 파일
 
 // 기본 시간대 설정
 date_default_timezone_set("Asia/Seoul");
+define('G5_TIMEZONE', '+09:00'); // MySQL 세션 타임존 (Asia/Seoul = UTC+9)
 
 /********************
     경로 상수

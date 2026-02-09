@@ -398,7 +398,89 @@
 
 ---
 
-## 12. TODO
+## 12. 꾸미기 아이템 확장 기획 (역극 + 게시판 공통)
+
+> 2026-02-09 가능성 확인 완료. 현재 인프라로 적용 가능.
+
+### 12.1 신규 상품 타입
+
+| 타입 코드 | 설명 | 적용 대상 | 소모 |
+|-----------|------|----------|------|
+| `rp_background` | 역극/게시판 배경 꾸미기 | 판 단위 | 영구 |
+| `chat_bubble` | 대화창(말풍선) 꾸미기 | 캐릭터별 | 영구 |
+
+> `si_type` enum에 추가 필요
+
+### 12.2 효과 데이터 (si_effect) 설계안
+
+```json
+// 역극/게시판 배경
+{
+  "type": "rp_background",
+  "bg_image": "/data/shop/bg_001.jpg",
+  "bg_color": "#1a1a2e",
+  "bg_opacity": 0.3
+}
+
+// 대화창 (말풍선) 꾸미기
+{
+  "type": "chat_bubble",
+  "bubble_color": "#2d1b69",
+  "bubble_border_image": "/data/shop/border_001.png",
+  "bubble_border_color": "#8b5cf6",
+  "text_color": "#e2e8f0"
+}
+
+// 프로필 아이콘 (기존 profile_border 확장)
+{
+  "type": "profile_border",
+  "style": "image",
+  "border_image": "/data/shop/frame_001.png",
+  "border_color": "#FFD700",
+  "border_style": "gradient",
+  "colors": ["#FF6B6B", "#4ECDC4"]
+}
+```
+
+### 12.3 적용 우선순위
+
+| 항목 | 우선순위 | 설명 |
+|------|---------|------|
+| 역극 배경 | 판장 > 댓글 작성자 | 판장 아이템이 있으면 판장 것 적용, 없으면 댓글 작성자 것 |
+| 게시판 배경 | 글 작성자 | 게시글 작성자의 아이템 적용 |
+| 말풍선 | 각자 본인 | 각 댓글 작성자의 아이템이 본인 말풍선에 적용 |
+| 프로필 아이콘 | 각자 본인 | 아바타 테두리/프레임에 적용 |
+
+### 12.4 기존 인프라 활용
+
+| 구성요소 | 현황 | 비고 |
+|---------|------|------|
+| `mg_item_active` | 장착 아이템 관리 테이블 | mb_id + si_id + ia_type + ch_id |
+| `mg_get_active_items($mb_id, $type)` | 장착 중 아이템 조회 | 타입별 필터링 지원 |
+| `si_effect` JSON | 효과 데이터 유연 저장 | 새 타입 추가만으로 확장 가능 |
+| 배타적 장착 로직 | 같은 타입 중복 장착 방지 | 이미 구현됨 |
+
+### 12.5 구현 시 필요 작업
+
+1. `si_type` enum에 `rp_background`, `chat_bubble` 추가 (DB 스키마)
+2. 관리자 상품 등록 폼에 새 타입별 효과 입력 필드 추가
+3. RP 댓글 API 응답에 작성자 활성 아이템 효과 데이터 포함
+4. `renderReply()` JS에서 아이템 효과를 inline style로 적용
+5. 게시판 스킨에도 동일 로직 적용 (게시글 배경, 댓글 말풍선)
+
+### 12.6 적용 지점 (CSS 클래스 참고)
+
+| 요소 | 현재 클래스 | 오버라이드 대상 |
+|------|-----------|---------------|
+| 메신저 배경 | `.rp-messenger-content` | background-image, background-color |
+| 원글 작성자 말풍선 | `bg-mg-accent/20 rounded-2xl` | background, border-image, color |
+| 참여자 말풍선 | `bg-mg-bg-tertiary rounded-2xl` | background, border-image, color |
+| 아바타 테두리 | `rounded-full border-2 border-mg-accent/30` | border-image, border-color |
+| 아바타 프레임 | 없음 (추가 필요) | 이미지 오버레이 wrapper |
+
+---
+
+## 13. TODO
 
 - [ ] 상품 타입별 효과 적용 로직 설계
 - [ ] 상점 UI 상세 설계
@@ -406,9 +488,12 @@
 - [ ] 선물 알림 시스템
 - [ ] 관리자 상품 등록 폼 설계
 - [ ] 캐릭터 장착 UI 설계
+- [ ] 꾸미기 아이템 신규 타입 추가 (`rp_background`, `chat_bubble`)
+- [ ] 역극/게시판 렌더링 시 활성 아이템 조회 + 스타일 적용
+- [ ] 게시판 스킨에 꾸미기 아이템 연동
 
 ---
 
 *작성일: 2026-02-03*
-*수정일: 2026-02-03*
-*상태: 1차 기획 완료, 문서 검토 완료*
+*수정일: 2026-02-09*
+*상태: 1차 기획 완료, 12절 꾸미기 확장 기획 추가*

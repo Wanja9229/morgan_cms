@@ -68,8 +68,8 @@ if (isset($is_ajax_request) && $is_ajax_request) {
             <a href="<?php echo G5_BBS_URL; ?>/character_view.php?ch_id=<?php echo $main_char['ch_id']; ?>" class="block group">
                 <div class="flex items-center gap-3">
                     <div class="w-14 h-14 rounded-lg bg-mg-bg-tertiary flex-shrink-0 overflow-hidden">
-                        <?php if (!empty($main_char['ch_image'])) { ?>
-                        <img src="<?php echo $main_char['ch_image']; ?>" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+                        <?php if (!empty($main_char['ch_thumb'])) { ?>
+                        <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.$main_char['ch_thumb']; ?>" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
                         <?php } else { ?>
                         <div class="w-full h-full flex items-center justify-center">
                             <svg class="w-6 h-6 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">

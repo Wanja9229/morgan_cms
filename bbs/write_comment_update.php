@@ -1,5 +1,6 @@
 <?php
 define('G5_CAPTCHA', true);
+$GLOBALS['mg_captcha_context'] = 'comment';
 include_once('./_common.php');
 include_once(G5_CAPTCHA_PATH.'/captcha.lib.php');
 

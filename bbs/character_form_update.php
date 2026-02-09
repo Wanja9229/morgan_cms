@@ -214,7 +214,7 @@ foreach ($profile as $pf_id => $pv_value) {
     // UPSERT
     $exists = sql_fetch("SELECT pv_id FROM {$g5['mg_profile_value_table']} WHERE ch_id = {$ch_id} AND pf_id = {$pf_id}");
 
-    if ($exists['pv_id']) {
+    if (isset($exists['pv_id']) && $exists['pv_id']) {
         sql_query("UPDATE {$g5['mg_profile_value_table']} SET pv_value = '".sql_real_escape_string($pv_value)."' WHERE pv_id = {$exists['pv_id']}");
     } else {
         sql_query("INSERT INTO {$g5['mg_profile_value_table']} (ch_id, pf_id, pv_value) VALUES ({$ch_id}, {$pf_id}, '".sql_real_escape_string($pv_value)."')");

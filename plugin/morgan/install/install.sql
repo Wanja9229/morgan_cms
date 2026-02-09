@@ -306,7 +306,7 @@ ON DUPLICATE KEY UPDATE `cf_value` = VALUES(`cf_value`);
 -- 5.1 역극 스레드
 CREATE TABLE IF NOT EXISTS `mg_rp_thread` (
     `rt_id` int NOT NULL AUTO_INCREMENT,
-    `rt_title` varchar(200) NOT NULL COMMENT '제목',
+    `rt_title` varchar(500) NOT NULL COMMENT '제목',
     `rt_content` text NOT NULL COMMENT '시작글',
     `rt_image` varchar(500) DEFAULT NULL COMMENT '첨부 이미지',
     `mb_id` varchar(20) NOT NULL COMMENT '판장 회원 ID',
@@ -330,9 +330,11 @@ CREATE TABLE IF NOT EXISTS `mg_rp_reply` (
     `rr_image` varchar(500) DEFAULT NULL COMMENT '첨부 이미지',
     `mb_id` varchar(20) NOT NULL COMMENT '작성자 회원 ID',
     `ch_id` int NOT NULL COMMENT '작성 캐릭터 ID',
+    `rr_context_ch_id` int NOT NULL DEFAULT 0 COMMENT '대화 맥락 캐릭터 ID',
     `rr_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '작성일',
     PRIMARY KEY (`rr_id`),
-    INDEX `idx_rt_id` (`rt_id`)
+    INDEX `idx_rt_id` (`rt_id`),
+    INDEX `idx_context_ch` (`rt_id`, `rr_context_ch_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='역극 이음';
 
 -- 5.3 역극 참여자

@@ -29,14 +29,15 @@ while ($row_b = sql_fetch_array($result_boards)) {
 
 // 현재 페이지 감지 (게시판/역극/기타)
 $_current_script = basename($_SERVER['SCRIPT_NAME'] ?? '');
-$_is_rp_page = in_array($_current_script, array('rp_list.php', 'rp_view.php', 'rp_write.php', 'rp_close.php', 'rp_reply.php'));
+$_is_rp_page = in_array($_current_script, array('rp_list.php', 'rp_close.php', 'rp_reply.php'));
 // 역극 페이지에서는 게시판 포커싱 제거
 $_current_bo_table = ($_is_rp_page || !isset($bo_table)) ? '' : $bo_table;
 $_is_board_page = !empty($_current_bo_table);
 $_is_community_section = $_is_board_page || $_is_rp_page;
 $_is_home = ($_current_script === 'index.php' || $_current_script === '' || $_SERVER['REQUEST_URI'] === '/' || $_SERVER['REQUEST_URI'] === G5_URL.'/');
-$_is_character_page = in_array($_current_script, array('character.php', 'character_view.php', 'character_edit.php'));
-$_is_character_list_page = ($_current_script === 'character_list.php');
+$_is_character_view_from_list = ($_current_script === 'character_view.php' && isset($_GET['from']) && $_GET['from'] === 'list');
+$_is_character_page = !$_is_character_view_from_list && in_array($_current_script, array('character.php', 'character_view.php', 'character_edit.php', 'character_form.php'));
+$_is_character_list_page = ($_current_script === 'character_list.php') || $_is_character_view_from_list;
 $_is_shop_page = ($_current_script === 'shop.php');
 $_is_new_page = ($_current_script === 'new.php');
 $_is_inventory_page = ($_current_script === 'inventory.php');

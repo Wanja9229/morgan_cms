@@ -1,4 +1,5 @@
 <?php
+$GLOBALS['mg_captcha_context'] = 'register';
 include_once('./_common.php');
 include_once(G5_CAPTCHA_PATH.'/captcha.lib.php');
 include_once(G5_LIB_PATH.'/register.lib.php');
@@ -151,6 +152,7 @@ $agree2 = isset($_REQUEST['agree2']) ? preg_replace('#[^0-9]#', '', $_REQUEST['a
 if ($config['cf_use_addr'])
     add_javascript(G5_POSTCODE_JS, 0);    //다음 주소 js
 
+$captcha_html = captcha_html();
 include_once($member_skin_path.'/register_form.skin.php');
 
 run_event('register_form_after', $w, $agree, $agree2);

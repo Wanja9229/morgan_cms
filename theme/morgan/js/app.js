@@ -175,7 +175,8 @@
                     const excludePatterns = [
                         '/logout.php',
                         '/download.php',
-                        '/formmail.php'
+                        '/formmail.php',
+                        '/rp_api.php'
                     ];
                     for (const pattern of excludePatterns) {
                         if (linkUrl.pathname.includes(pattern)) return false;
@@ -325,17 +326,19 @@
                     } else if (script === 'board.php' || script === 'write.php' || script === 'view.php') {
                         activeId = 'board';
                         isCommunity = true;
-                    } else if (script === 'rp_list.php' || script === 'rp_view.php' || script === 'rp_write.php') {
+                    } else if (script === 'rp_list.php') {
                         activeId = 'board';
                         isCommunity = true;
-                    } else if (script === 'character.php' || script === 'character_view.php' || script === 'character_edit.php') {
+                    } else if (script === 'character.php' || script === 'character_edit.php' || script === 'character_form.php') {
                         activeId = 'character';
+                    } else if (script === 'character_view.php') {
+                        activeId = (params.get('from') === 'list') ? 'character_list' : 'character';
                     } else if (script === 'character_list.php') {
                         activeId = 'character_list';
                     } else if (script === 'shop.php') {
                         activeId = 'shop';
                     } else if (script === 'inventory.php') {
-                        activeId = 'shop'; // 인벤토리도 상점 계열
+                        activeId = 'inventory';
                     } else if (script === 'new.php') {
                         activeId = 'new';
                     }
@@ -418,7 +421,7 @@
                     }
 
                     // RP 링크 활성 상태
-                    var isRp = (script === 'rp_list.php' || script === 'rp_view.php' || script === 'rp_write.php');
+                    var isRp = (script === 'rp_list.php');
                     var rpLinks = document.querySelectorAll('#sidebar-board-panel nav a[href*="rp_list"]');
                     rpLinks.forEach(function(link) {
                         var rpIcon = link.querySelector('svg');

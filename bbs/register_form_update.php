@@ -1,4 +1,5 @@
 <?php
+$GLOBALS['mg_captcha_context'] = 'register';
 include_once('./_common.php');
 include_once(G5_CAPTCHA_PATH.'/captcha.lib.php');
 include_once(G5_LIB_PATH.'/register.lib.php');
@@ -85,12 +86,7 @@ if ($w == '' || $w == 'u') {
     if ($msg = valid_mb_id($mb_id))         alert($msg, "", true, true);
     if ($msg = count_mb_id($mb_id))         alert($msg, "", true, true);
 
-    // 이름, 닉네임에 utf-8 이외의 문자가 포함됐다면 오류
-    // 서버환경에 따라 정상적으로 체크되지 않을 수 있음.
-    $tmp_mb_name = iconv('UTF-8', 'UTF-8//IGNORE', $mb_name);
-    if($tmp_mb_name != $mb_name) {
-        alert('이름을 올바르게 입력해 주십시오.');
-    }
+    // 닉네임에 utf-8 이외의 문자가 포함됐다면 오류
     $tmp_mb_nick = iconv('UTF-8', 'UTF-8//IGNORE', $mb_nick);
     if($tmp_mb_nick != $mb_nick) {
         alert('닉네임을 올바르게 입력해 주십시오.');
@@ -106,16 +102,15 @@ if ($w == '' || $w == 'u') {
             alert('비밀번호가 일치하지 않습니다.');
     }
 
-    if ($msg = empty_mb_name($mb_name))       alert($msg, "", true, true);
     if ($msg = empty_mb_nick($mb_nick))     alert($msg, "", true, true);
-    if ($msg = empty_mb_email($mb_email))   alert($msg, "", true, true);
     if ($msg = reserve_mb_id($mb_id))       alert($msg, "", true, true);
     if ($msg = reserve_mb_nick($mb_nick))   alert($msg, "", true, true);
-    // 이름에 한글명 체크를 하지 않는다.
-    //if ($msg = valid_mb_name($mb_name))     alert($msg, "", true, true);
     if ($msg = valid_mb_nick($mb_nick))     alert($msg, "", true, true);
-    if ($msg = valid_mb_email($mb_email))   alert($msg, "", true, true);
-    if ($msg = prohibit_mb_email($mb_email))alert($msg, "", true, true);
+    // 이메일이 입력된 경우에만 검증
+    if ($mb_email) {
+        if ($msg = valid_mb_email($mb_email))   alert($msg, "", true, true);
+        if ($msg = prohibit_mb_email($mb_email))alert($msg, "", true, true);
+    }
 
     // 휴대폰 필수입력일 경우 휴대폰번호 유효성 체크
     if (($config['cf_use_hp'] || $config['cf_cert_hp'] || $config['cf_cert_simple']) && $config['cf_req_hp']) {
@@ -125,10 +120,9 @@ if ($w == '' || $w == 'u') {
     if ($w=='') {
         if ($msg = exist_mb_id($mb_id))     alert($msg);
 
-        if (get_session('ss_check_mb_id') != $mb_id || get_session('ss_check_mb_nick') != $mb_nick || get_session('ss_check_mb_email') != $mb_email) {
+        if (get_session('ss_check_mb_id') != $mb_id || get_session('ss_check_mb_nick') != $mb_nick) {
             set_session('ss_check_mb_id', '');
             set_session('ss_check_mb_nick', '');
-            set_session('ss_check_mb_email', '');
 
             alert('올바른 방법으로 이용해 주십시오.');
         }
@@ -160,7 +154,9 @@ if ($w == '' || $w == 'u') {
     run_event('register_form_update_valid', $w, $mb_id, $mb_nick, $mb_email);
 
     if ($msg = exist_mb_nick($mb_nick, $mb_id))     alert($msg, "", true, true);
-    if ($msg = exist_mb_email($mb_email, $mb_id))   alert($msg, "", true, true);
+    if ($mb_email) {
+        if ($msg = exist_mb_email($mb_email, $mb_id))   alert($msg, "", true, true);
+    }
 }
 
 // 사용자 코드 실행

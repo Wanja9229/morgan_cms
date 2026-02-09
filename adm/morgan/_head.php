@@ -110,38 +110,78 @@ if (isset($menu)) {
         }
 
         .mg-nav-section {
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.25rem;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .mg-nav-section:last-of-type {
+            border-bottom: none;
         }
 
         .mg-nav-title {
-            padding: 0.75rem 1rem 0.5rem;
-            font-size: 0.75rem;
-            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.625rem 1rem;
+            font-size: 0.7rem;
+            font-weight: 700;
             color: var(--mg-text-muted);
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.15s;
+        }
+
+        .mg-nav-title:hover {
+            color: var(--mg-text-primary);
+        }
+
+        .mg-nav-title .mg-nav-arrow {
+            width: 14px;
+            height: 14px;
+            transition: transform 0.2s;
+            flex-shrink: 0;
+            opacity: 0.5;
+        }
+
+        .mg-nav-section.collapsed .mg-nav-arrow {
+            transform: rotate(-90deg);
+        }
+
+        .mg-nav-items {
+            overflow: hidden;
+            transition: max-height 0.25s ease;
+        }
+
+        .mg-nav-section.collapsed .mg-nav-items {
+            max-height: 0 !important;
         }
 
         .mg-nav-item {
             display: block;
-            padding: 0.625rem 1rem;
+            padding: 0.5rem 1rem 0.5rem 1.25rem;
             color: var(--mg-text-secondary);
-            transition: all 0.2s;
-            font-size: 0.875rem;
+            transition: all 0.15s;
+            font-size: 0.8125rem;
+            border-left: 2px solid transparent;
         }
 
         .mg-nav-item:hover {
             background: var(--mg-bg-tertiary);
             color: var(--mg-text-primary);
+            border-left-color: var(--mg-bg-tertiary);
         }
 
         .mg-nav-item.active {
-            background: var(--mg-accent);
-            color: #000;
+            background: rgba(245, 159, 10, 0.12);
+            color: var(--mg-accent);
+            border-left-color: var(--mg-accent);
+            font-weight: 500;
         }
 
         .mg-nav-item.active:hover {
-            background: var(--mg-accent-hover);
+            background: rgba(245, 159, 10, 0.18);
         }
 
         /* Main Content */
@@ -659,7 +699,7 @@ if (isset($menu)) {
         <!-- Sidebar -->
         <aside class="mg-admin-sidebar" id="adminSidebar">
             <div class="mg-sidebar-header">
-                <a href="<?php echo G5_ADMIN_URL; ?>/morgan/config.php" class="mg-sidebar-logo">Morgan Admin</a>
+                <a href="<?php echo G5_ADMIN_URL; ?>/morgan/dashboard.php" class="mg-sidebar-logo">Morgan Admin</a>
                 <button type="button" class="mg-menu-toggle" onclick="toggleSidebar()" style="display:none;">
                     <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -668,24 +708,52 @@ if (isset($menu)) {
             </div>
 
             <nav class="mg-sidebar-nav">
-                <!-- Morgan Edition 메뉴만 표시 -->
+                <!-- Morgan Edition 메뉴 (그룹별, 여닫기) -->
                 <?php if (isset($admin_menu['menu800']) && !empty($admin_menu['menu800'])) {
                     $items = $admin_menu['menu800'];
-                ?>
-                <div class="mg-nav-section">
-                    <div class="mg-nav-title">Morgan Edition</div>
-                    <?php
+                    $section_open = false;
+                    $items_open = false;
+                    $section_idx = 0;
+                    // 현재 활성 메뉴가 속한 그룹 찾기
+                    $active_group = '';
+                    $cur_grp = '';
+                    for ($i = 1; $i < count($items); $i++) {
+                        if (isset($items[$i][4]) && $items[$i][4]) $cur_grp = $items[$i][4];
+                        if (isset($sub_menu) && $items[$i][0] == $sub_menu) { $active_group = $cur_grp; break; }
+                    }
+                    $cur_grp = '';
                     for ($i = 1; $i < count($items); $i++) {
                         $item = $items[$i];
                         $item_id = $item[0] ?? '';
                         $item_name = $item[1] ?? '';
                         $item_url = $item[2] ?? '';
+                        $item_group = isset($item[4]) ? $item[4] : '';
                         $is_active = (isset($sub_menu) && $sub_menu == $item_id) ? 'active' : '';
-                    ?>
+
+                        if ($item_group) {
+                            // 이전 섹션 닫기
+                            if ($items_open) { echo '</div>'; $items_open = false; }
+                            if ($section_open) { echo '</div>'; $section_open = false; }
+                            $cur_grp = $item_group;
+                            $section_idx++;
+                            $is_section_active = ($cur_grp === $active_group);
+                ?>
+                <div class="mg-nav-section<?php echo $is_section_active ? '' : ' collapsed'; ?>" data-section="<?php echo $section_idx; ?>">
+                    <div class="mg-nav-title" onclick="toggleNavSection(this)">
+                        <span><?php echo $item_group; ?></span>
+                        <svg class="mg-nav-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                    <div class="mg-nav-items" style="<?php echo $is_section_active ? '' : 'max-height:0;'; ?>">
+                <?php
+                            $section_open = true;
+                            $items_open = true;
+                        }
+                ?>
                     <a href="<?php echo $item_url; ?>" class="mg-nav-item <?php echo $is_active; ?>"><?php echo $item_name; ?></a>
-                    <?php } ?>
-                </div>
-                <?php } ?>
+                <?php } // end for
+                    if ($items_open) echo '</div>';
+                    if ($section_open) echo '</div>';
+                } ?>
 
                 <!-- 구분선 + 바로가기 -->
                 <div class="mg-nav-section" style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--mg-bg-tertiary);">

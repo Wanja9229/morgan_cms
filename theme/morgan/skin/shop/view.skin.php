@@ -18,8 +18,8 @@ $item_type_names = array(
     'etc' => '기타'
 );
 
-// 효과 데이터
-$effect = json_decode($item['si_effect'], true) ?: array();
+// 효과 데이터 (mg_get_shop_item()에서 이미 디코딩됨)
+$effect = is_array($item['si_effect']) ? $item['si_effect'] : (json_decode($item['si_effect'], true) ?: array());
 
 // 재고 표시
 $stock_text = '무제한';

@@ -207,7 +207,7 @@ include_once(G5_THEME_PATH.'/head.php');
                         </div>
                         <div class="flex-1">
                             <input type="file" name="ch_image" id="ch_image" accept="image/*"
-                                   class="block w-full text-sm text-mg-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-mg-bg-tertiary file:text-mg-text-secondary hover:file:bg-mg-bg-primary file:cursor-pointer cursor-pointer">
+                                   class="block w-full text-sm text-mg-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-mg-accent file:text-white hover:file:bg-mg-accent-hover file:cursor-pointer cursor-pointer">
                             <p class="text-xs text-mg-text-muted mt-2">캐릭터 상세 페이지에 표시됩니다.</p>
                             <?php if ($is_edit && ($char['ch_image'] ?? '')) { ?>
                             <label class="flex items-center gap-2 mt-2 cursor-pointer">

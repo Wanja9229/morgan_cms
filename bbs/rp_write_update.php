@@ -8,6 +8,11 @@ include_once(G5_PATH.'/plugin/morgan/morgan.php');
 
 if (!$is_member) { alert_close('로그인이 필요합니다.'); }
 
+// Morgan: 개척 시스템 해금 체크
+if (function_exists('mg_is_board_unlocked') && !mg_is_board_unlocked('roleplay')) {
+    alert('역극은 아직 개척되지 않았습니다.');
+}
+
 $can_create = mg_can_create_rp($member['mb_id']);
 if (!$can_create['can_create']) { alert_close($can_create['message']); }
 
@@ -52,7 +57,7 @@ $result = mg_create_rp_thread(array(
 ));
 
 if ($result['success']) {
-    goto_url(G5_BBS_URL . '/rp_view.php?rt_id=' . $result['rt_id']);
+    goto_url(G5_BBS_URL . '/rp_list.php#rp-thread-' . $result['rt_id']);
 } else {
     alert($result['message']);
 }
