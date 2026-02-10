@@ -16,6 +16,14 @@ if (function_exists('mg_is_board_unlocked') && !mg_is_board_unlocked('roleplay')
 $can_create = mg_can_create_rp($member['mb_id']);
 if (!$can_create['can_create']) { alert_close($can_create['message']); }
 
+// Morgan: 판 세우기 비용 차감
+if (function_exists('mg_rp_deduct_create_cost')) {
+    $cost_result = mg_rp_deduct_create_cost($member['mb_id']);
+    if (!$cost_result['success']) {
+        alert($cost_result['message']);
+    }
+}
+
 // Validate
 $rt_title = isset($_POST['rt_title']) ? trim(clean_xss_tags($_POST['rt_title'])) : '';
 $rt_content = isset($_POST['rt_content']) ? trim($_POST['rt_content']) : '';

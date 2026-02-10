@@ -99,9 +99,24 @@ if(isset($_POST['js']) && $_POST['js'] === "on") {
                 );
             }
 
+            // Morgan: 좋아요 보상
+            $_mg_like_result = null;
+            if ($good === 'good' && function_exists('mg_like_apply_reward') && !empty($write['mb_id'])) {
+                $_mg_like_result = mg_like_apply_reward($member['mb_id'], $write['mb_id'], $bo_table, $wr_id);
+            }
+
 			run_event('bbs_increase_good_json', $bo_table, $wr_id, $good);
 
-            print_result($error, $count);
+            // 보상 정보 포함 응답
+            if ($_mg_like_result && $_mg_like_result['success']) {
+                echo json_encode(array(
+                    'error' => '',
+                    'count' => (string)$count,
+                    'like_reward' => $_mg_like_result
+                ));
+            } else {
+                print_result($error, $count);
+            }
         }
     }
 } else {
@@ -175,6 +190,11 @@ if(isset($_POST['js']) && $_POST['js'] === "on") {
                     $noti_subject,
                     $href
                 );
+            }
+
+            // Morgan: 좋아요 보상
+            if ($good === 'good' && function_exists('mg_like_apply_reward') && !empty($write['mb_id'])) {
+                mg_like_apply_reward($member['mb_id'], $write['mb_id'], $bo_table, $wr_id);
             }
 
 			run_event('bbs_increase_good_html', $bo_table, $wr_id, $good, $href);

@@ -350,6 +350,37 @@ CREATE TABLE IF NOT EXISTS `mg_rp_member` (
     INDEX `idx_mb_id` (`mb_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='역극 참여자';
 
+-- 5.4 역극 완결 기록
+CREATE TABLE IF NOT EXISTS `mg_rp_completion` (
+    `rc_id` int NOT NULL AUTO_INCREMENT,
+    `rt_id` int NOT NULL COMMENT '역극 스레드 ID',
+    `ch_id` int NOT NULL COMMENT '완결 캐릭터 ID',
+    `mb_id` varchar(20) NOT NULL COMMENT '캐릭터 소유자',
+    `rc_mutual_count` int NOT NULL DEFAULT 0 COMMENT '판장과의 상호 이음 수',
+    `rc_total_replies` int NOT NULL DEFAULT 0 COMMENT '해당 캐릭터 총 이음 수',
+    `rc_rewarded` tinyint NOT NULL DEFAULT 0 COMMENT '보상 지급 여부 (1=지급)',
+    `rc_point` int NOT NULL DEFAULT 0 COMMENT '지급된 포인트',
+    `rc_status` enum('completed','revoked') NOT NULL DEFAULT 'completed',
+    `rc_type` enum('manual','auto') NOT NULL DEFAULT 'manual',
+    `rc_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `rc_by` varchar(20) DEFAULT NULL COMMENT '처리자 (수동시 판장 mb_id, 자동시 NULL)',
+    PRIMARY KEY (`rc_id`),
+    UNIQUE KEY `idx_rt_ch` (`rt_id`, `ch_id`),
+    INDEX `idx_mb_id` (`mb_id`),
+    INDEX `idx_datetime` (`rc_datetime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='역극 완결 기록';
+
+-- 5.5 잇기 누적 보상 추적
+CREATE TABLE IF NOT EXISTS `mg_rp_reply_reward_log` (
+    `rrl_id` int NOT NULL AUTO_INCREMENT,
+    `rt_id` int NOT NULL COMMENT '스레드 ID',
+    `rrl_reply_count` int NOT NULL COMMENT '보상 지급 시점 누적 이음 수',
+    `rrl_point` int NOT NULL COMMENT '지급 포인트 (인당)',
+    `rrl_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`rrl_id`),
+    INDEX `idx_rt_id` (`rt_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='잇기 누적 보상 추적';
+
 -- ======================================
 -- 7. 이모티콘 관련 테이블
 -- ======================================
@@ -1182,6 +1213,87 @@ CREATE TABLE IF NOT EXISTS `mg_facility_honor` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='시설 명예의 전당';
 
 -- ======================================
+-- ======================================
+-- 10. 보상 시스템
+-- ======================================
+
+-- 10.1 게시판별 보상 설정
+CREATE TABLE IF NOT EXISTS `mg_board_reward` (
+    `br_id` int NOT NULL AUTO_INCREMENT,
+    `bo_table` varchar(20) NOT NULL,
+    `br_mode` enum('auto','request','off') NOT NULL DEFAULT 'off',
+    `br_point` int NOT NULL DEFAULT 0 COMMENT '기본 포인트',
+    `br_bonus_500` int NOT NULL DEFAULT 0 COMMENT '500자 이상 보너스',
+    `br_bonus_1000` int NOT NULL DEFAULT 0 COMMENT '1000자 이상 보너스',
+    `br_bonus_image` int NOT NULL DEFAULT 0 COMMENT '이미지 첨부 보너스',
+    `br_material_use` tinyint NOT NULL DEFAULT 0 COMMENT '재료 드롭 사용',
+    `br_material_chance` int NOT NULL DEFAULT 30 COMMENT '드롭 확률 (0~100)',
+    `br_material_list` text COMMENT '드롭 대상 재료 JSON ["wood","stone"]',
+    `br_daily_limit` int NOT NULL DEFAULT 0 COMMENT '일일 보상 횟수 (0=무제한)',
+    `br_like_use` tinyint NOT NULL DEFAULT 1 COMMENT '좋아요 보상 활성화 (0=비활성)',
+    PRIMARY KEY (`br_id`),
+    UNIQUE KEY `idx_bo_table` (`bo_table`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='게시판별 보상 설정';
+
+-- 10.2 좋아요 보상 로그
+CREATE TABLE IF NOT EXISTS `mg_like_log` (
+    `ll_id` int NOT NULL AUTO_INCREMENT,
+    `mb_id` varchar(20) NOT NULL COMMENT '좋아요 누른 회원',
+    `target_mb_id` varchar(20) NOT NULL COMMENT '좋아요 받은 회원',
+    `bo_table` varchar(20) NOT NULL COMMENT '게시판',
+    `wr_id` int NOT NULL COMMENT '게시글 ID',
+    `ll_giver_point` int NOT NULL DEFAULT 0 COMMENT '누른 사람 보상',
+    `ll_receiver_point` int NOT NULL DEFAULT 0 COMMENT '받은 사람 보상',
+    `ll_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`ll_id`),
+    INDEX `idx_mb_id` (`mb_id`),
+    INDEX `idx_target` (`target_mb_id`),
+    INDEX `idx_datetime` (`ll_datetime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='좋아요 보상 로그';
+
+-- 10.3 일일 좋아요 카운터
+CREATE TABLE IF NOT EXISTS `mg_like_daily` (
+    `ld_id` int NOT NULL AUTO_INCREMENT,
+    `mb_id` varchar(20) NOT NULL,
+    `ld_date` date NOT NULL,
+    `ld_count` int NOT NULL DEFAULT 0 COMMENT '오늘 사용 횟수',
+    `ld_targets` text COMMENT '오늘 좋아요 준 대상 JSON',
+    PRIMARY KEY (`ld_id`),
+    UNIQUE KEY `idx_mb_date` (`mb_id`, `ld_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='일일 좋아요 카운터';
+
+-- 10.4 보상 요청 유형 (request 모드용)
+CREATE TABLE IF NOT EXISTS `mg_reward_type` (
+    `rwt_id` int NOT NULL AUTO_INCREMENT,
+    `bo_table` varchar(20) DEFAULT NULL COMMENT '게시판 (NULL=전체 적용)',
+    `rwt_name` varchar(100) NOT NULL COMMENT '유형 이름',
+    `rwt_point` int NOT NULL DEFAULT 0 COMMENT '포인트 보상',
+    `rwt_material` text COMMENT '재료 보상 JSON',
+    `rwt_desc` varchar(255) DEFAULT '' COMMENT '유저 가이드 텍스트',
+    `rwt_order` int NOT NULL DEFAULT 0 COMMENT '정렬 순서',
+    `rwt_use` tinyint NOT NULL DEFAULT 1 COMMENT '사용 여부',
+    PRIMARY KEY (`rwt_id`),
+    INDEX `idx_bo_table` (`bo_table`, `rwt_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='보상 요청 유형';
+
+-- 10.5 정산 대기열
+CREATE TABLE IF NOT EXISTS `mg_reward_queue` (
+    `rq_id` int NOT NULL AUTO_INCREMENT,
+    `mb_id` varchar(20) NOT NULL COMMENT '요청 회원',
+    `bo_table` varchar(20) NOT NULL COMMENT '게시판',
+    `wr_id` int NOT NULL COMMENT '게시글 ID',
+    `rwt_id` int NOT NULL COMMENT '보상 유형 ID',
+    `rq_status` enum('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+    `rq_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `rq_process_datetime` datetime DEFAULT NULL COMMENT '처리일',
+    `rq_process_mb_id` varchar(20) DEFAULT NULL COMMENT '처리 스탭',
+    `rq_reject_reason` varchar(255) DEFAULT NULL COMMENT '반려 사유',
+    PRIMARY KEY (`rq_id`),
+    INDEX `idx_status` (`rq_status`, `rq_datetime`),
+    INDEX `idx_mb_id` (`mb_id`),
+    INDEX `idx_bo_wr` (`bo_table`, `wr_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='정산 대기열';
+
 -- 개척 시스템 기본 설정
 -- ======================================
 INSERT INTO `mg_config` (`cf_key`, `cf_value`, `cf_desc`) VALUES
@@ -1200,5 +1312,95 @@ INSERT INTO `mg_facility` (`fc_name`, `fc_desc`, `fc_icon`, `fc_status`, `fc_unl
 ('상점', '포인트로 아이템을 구매할 수 있는 상점입니다.', 'shopping-bag', 'locked', 'shop', '', 200, 3),
 ('선물함', '다른 유저에게 선물을 보낼 수 있습니다.', 'gift', 'locked', 'gift', '', 120, 4)
 ON DUPLICATE KEY UPDATE `fc_name` = VALUES(`fc_name`);
+
+-- ======================================
+-- 11. 업적 시스템 (Achievement System)
+-- ======================================
+
+-- 11.1 업적 정의
+CREATE TABLE IF NOT EXISTS `mg_achievement` (
+    `ac_id` int NOT NULL AUTO_INCREMENT,
+    `ac_name` varchar(100) NOT NULL COMMENT '업적 이름',
+    `ac_desc` text COMMENT '설명',
+    `ac_icon` varchar(500) DEFAULT NULL COMMENT '아이콘 이미지 경로',
+    `ac_category` varchar(30) NOT NULL DEFAULT 'activity' COMMENT '카테고리 (activity, rp, pioneer, social, collection, special)',
+    `ac_type` enum('progressive','onetime') NOT NULL DEFAULT 'onetime' COMMENT '유형',
+    `ac_condition` text COMMENT '달성 조건 JSON {"type":"write_count","target":100}',
+    `ac_reward` text COMMENT '일회성 업적 보상 JSON {"type":"point","amount":500}',
+    `ac_rarity` enum('common','uncommon','rare','epic','legendary') DEFAULT NULL COMMENT '희귀도 (NULL=자동산정)',
+    `ac_hidden` tinyint NOT NULL DEFAULT 0 COMMENT '숨겨진 업적 (조건 ???)',
+    `ac_order` int NOT NULL DEFAULT 0 COMMENT '표시 순서',
+    `ac_use` tinyint NOT NULL DEFAULT 1 COMMENT '사용 여부',
+    `ac_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`ac_id`),
+    INDEX `idx_category` (`ac_category`, `ac_order`),
+    INDEX `idx_use` (`ac_use`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='업적 정의';
+
+-- 11.2 단계형 업적의 각 단계
+CREATE TABLE IF NOT EXISTS `mg_achievement_tier` (
+    `at_id` int NOT NULL AUTO_INCREMENT,
+    `ac_id` int NOT NULL COMMENT '업적 ID',
+    `at_level` int NOT NULL COMMENT '단계 (1, 2, 3...)',
+    `at_name` varchar(100) NOT NULL COMMENT '단계 이름 (글쟁이 I, 글쟁이 II...)',
+    `at_target` int NOT NULL COMMENT '목표 수치 (10, 50, 100...)',
+    `at_icon` varchar(500) DEFAULT NULL COMMENT '단계별 아이콘 (NULL=업적 기본 아이콘)',
+    `at_reward` text COMMENT '단계별 보상 JSON',
+    PRIMARY KEY (`at_id`),
+    UNIQUE KEY `idx_ac_level` (`ac_id`, `at_level`),
+    INDEX `idx_ac_id` (`ac_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='업적 단계';
+
+-- 11.3 유저별 달성 상태
+CREATE TABLE IF NOT EXISTS `mg_user_achievement` (
+    `ua_id` int NOT NULL AUTO_INCREMENT,
+    `mb_id` varchar(20) NOT NULL COMMENT '회원 ID',
+    `ac_id` int NOT NULL COMMENT '업적 ID',
+    `ua_progress` int NOT NULL DEFAULT 0 COMMENT '현재 진행값',
+    `ua_tier` int NOT NULL DEFAULT 0 COMMENT '달성한 최고 단계 (0=미달성)',
+    `ua_completed` tinyint NOT NULL DEFAULT 0 COMMENT '완전 달성 여부',
+    `ua_granted_by` varchar(20) DEFAULT NULL COMMENT '수동 부여자 (NULL=자동)',
+    `ua_grant_memo` varchar(255) DEFAULT NULL COMMENT '부여 사유',
+    `ua_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '최종 갱신 시각',
+    PRIMARY KEY (`ua_id`),
+    UNIQUE KEY `idx_mb_ac` (`mb_id`, `ac_id`),
+    INDEX `idx_mb_id` (`mb_id`),
+    INDEX `idx_ac_id` (`ac_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='유저별 업적 달성';
+
+-- 11.4 프로필 쇼케이스
+CREATE TABLE IF NOT EXISTS `mg_user_achievement_display` (
+    `mb_id` varchar(20) NOT NULL COMMENT '회원 ID',
+    `slot_1` int DEFAULT NULL COMMENT '업적 ID',
+    `slot_2` int DEFAULT NULL,
+    `slot_3` int DEFAULT NULL,
+    `slot_4` int DEFAULT NULL,
+    `slot_5` int DEFAULT NULL,
+    PRIMARY KEY (`mb_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='업적 쇼케이스';
+
+-- ======================================
+-- 12. 인장 시스템 (Seal / Signature Card)
+-- ======================================
+
+CREATE TABLE IF NOT EXISTS `mg_seal` (
+    `seal_id` int NOT NULL AUTO_INCREMENT,
+    `mb_id` varchar(20) NOT NULL COMMENT '회원 ID',
+    `seal_use` tinyint NOT NULL DEFAULT 1 COMMENT '인장 사용 여부',
+    `seal_tagline` varchar(100) DEFAULT NULL COMMENT '한마디',
+    `seal_content` text COMMENT '자유 영역 텍스트',
+    `seal_image` varchar(500) DEFAULT NULL COMMENT '이미지 경로',
+    `seal_link` varchar(500) DEFAULT NULL COMMENT '링크 URL',
+    `seal_link_text` varchar(100) DEFAULT NULL COMMENT '링크 텍스트',
+    `seal_text_color` varchar(7) DEFAULT NULL COMMENT '텍스트 색상',
+    `seal_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '최종 수정일',
+    PRIMARY KEY (`seal_id`),
+    UNIQUE KEY `idx_mb_id` (`mb_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='인장 (시그니처 카드)';
+
+-- 상점 아이템 타입 확장 (인장 배경/프레임)
+ALTER TABLE `mg_shop_item` MODIFY `si_type`
+    enum('title','badge','nick_color','nick_effect','profile_border','equip','emoticon_set','emoticon_reg','furniture','material','seal_bg','seal_frame','etc')
+    NOT NULL DEFAULT 'etc' COMMENT '타입';
 
 SET FOREIGN_KEY_CHECKS = 1;

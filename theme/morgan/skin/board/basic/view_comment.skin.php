@@ -156,8 +156,6 @@ if ($is_member) {
         </label>
         <?php } ?>
     </form>
-    <?php } else { ?>
-    <p class="text-center text-mg-text-muted py-4">댓글을 작성하려면 로그인이 필요합니다.</p>
     <?php } ?>
 </section>
 

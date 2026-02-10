@@ -1,4 +1,6 @@
-# Phase 8: 개척 시스템 (Pioneer / Construction System)
+# Phase 9: 개척 시스템 (Pioneer / Construction System)
+
+> **구현 완료** (Phase 9, 2026-02-07)
 
 ## 기획 의도
 

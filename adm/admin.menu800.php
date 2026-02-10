@@ -22,6 +22,7 @@ $menu["menu800"] = array(
     // 활동
     array('800500', '출석 관리', $mg_admin_url . '/attendance.php', 'mg_attendance', '활동'),
     array('800550', '포인트 관리', $mg_admin_url . '/point_manage.php', 'mg_point'),
+    array('800570', '보상 관리', $mg_admin_url . '/reward.php', 'mg_reward'),
     array('800600', '알림 관리', $mg_admin_url . '/notification.php', 'mg_notification'),
     // 콘텐츠
     array('800650', '역극 관리', $mg_admin_url . '/rp_list.php', 'mg_rp', '콘텐츠'),
@@ -33,4 +34,8 @@ $menu["menu800"] = array(
     // 개척
     array('801000', '시설 관리', $mg_admin_url . '/pioneer_facility.php', 'mg_pioneer', '개척'),
     array('801100', '재료 관리', $mg_admin_url . '/pioneer_material.php', 'mg_pioneer_material'),
+    // 업적
+    array('801200', '업적 관리', $mg_admin_url . '/achievement.php', 'mg_achievement', '업적'),
+    // 인장
+    array('801300', '인장 관리', $mg_admin_url . '/seal.php', 'mg_seal', '인장'),
 );

@@ -52,6 +52,21 @@ $g5['mg_facility_table'] = 'mg_facility';
 $g5['mg_facility_material_cost_table'] = 'mg_facility_material_cost';
 $g5['mg_facility_contribution_table'] = 'mg_facility_contribution';
 $g5['mg_facility_honor_table'] = 'mg_facility_honor';
+// 업적 시스템
+$g5['mg_achievement_table'] = 'mg_achievement';
+$g5['mg_achievement_tier_table'] = 'mg_achievement_tier';
+$g5['mg_user_achievement_table'] = 'mg_user_achievement';
+$g5['mg_user_achievement_display_table'] = 'mg_user_achievement_display';
+// 인장 시스템
+$g5['mg_seal_table'] = 'mg_seal';
+// 보상 시스템
+$g5['mg_board_reward_table'] = 'mg_board_reward';
+$g5['mg_rp_completion_table'] = 'mg_rp_completion';
+$g5['mg_rp_reply_reward_log_table'] = 'mg_rp_reply_reward_log';
+$g5['mg_like_log_table'] = 'mg_like_log';
+$g5['mg_like_daily_table'] = 'mg_like_daily';
+$g5['mg_reward_type_table'] = 'mg_reward_type';
+$g5['mg_reward_queue_table'] = 'mg_reward_queue';
 
 // 캐릭터 이미지 저장 경로
 define('MG_CHAR_IMAGE_PATH', G5_DATA_PATH.'/character');
@@ -103,6 +118,20 @@ $mg['facility_table'] = $g5['mg_facility_table'];
 $mg['facility_material_cost_table'] = $g5['mg_facility_material_cost_table'];
 $mg['facility_contribution_table'] = $g5['mg_facility_contribution_table'];
 $mg['facility_honor_table'] = $g5['mg_facility_honor_table'];
+// 업적 시스템
+$mg['achievement_table'] = $g5['mg_achievement_table'];
+$mg['achievement_tier_table'] = $g5['mg_achievement_tier_table'];
+$mg['user_achievement_table'] = $g5['mg_user_achievement_table'];
+$mg['user_achievement_display_table'] = $g5['mg_user_achievement_display_table'];
+// 인장 시스템
+$mg['seal_table'] = $g5['mg_seal_table'];
+// 보상 시스템
+$mg['rp_completion_table'] = $g5['mg_rp_completion_table'];
+$mg['rp_reply_reward_log_table'] = $g5['mg_rp_reply_reward_log_table'];
+$mg['like_log_table'] = $g5['mg_like_log_table'];
+$mg['like_daily_table'] = $g5['mg_like_daily_table'];
+$mg['reward_type_table'] = $g5['mg_reward_type_table'];
+$mg['reward_queue_table'] = $g5['mg_reward_queue_table'];
 
 // 상점 이미지 저장 경로
 define('MG_SHOP_IMAGE_PATH', G5_DATA_PATH.'/shop');
@@ -111,6 +140,10 @@ define('MG_SHOP_IMAGE_URL', G5_DATA_URL.'/shop');
 // 이모티콘 이미지 저장 경로
 define('MG_EMOTICON_PATH', G5_DATA_PATH.'/emoticon');
 define('MG_EMOTICON_URL', G5_DATA_URL.'/emoticon');
+
+// 인장 이미지 저장 경로
+define('MG_SEAL_IMAGE_PATH', G5_DATA_PATH.'/seal');
+define('MG_SEAL_IMAGE_URL', G5_DATA_URL.'/seal');
 
 // 썸네일 사이즈
 define('MG_THUMB_SIZE', 200);
@@ -1297,7 +1330,7 @@ function mg_use_item($mb_id, $si_id, $ch_id = null) {
     }
 
     // 같은 타입의 다른 아이템 해제 (칭호, 닉네임색상 등은 하나만)
-    $exclusive_types = array('title', 'nick_color', 'nick_effect');
+    $exclusive_types = array('title', 'nick_color', 'nick_effect', 'seal_bg', 'seal_frame');
     if (in_array($item['si_type'], $exclusive_types)) {
         sql_query("DELETE FROM {$mg['item_active_table']}
                    WHERE mb_id = '{$mb_id}' AND ia_type = '{$item['si_type']}'");
@@ -2083,6 +2116,249 @@ function mg_can_create_rp($mb_id) {
     }
 
     return array('can_create' => true, 'message' => '');
+}
+
+// ======================================
+// 역극 재화 시스템
+// ======================================
+
+/**
+ * 역극 판 세우기 비용 차감
+ *
+ * @param string $mb_id 회원 ID
+ * @return array ['success' => bool, 'message' => string]
+ */
+function mg_rp_deduct_create_cost($mb_id) {
+    global $g5;
+
+    $cost = (int)mg_config('rp_create_cost', 500);
+    if ($cost <= 0) {
+        return array('success' => true);
+    }
+
+    // 현재 포인트 조회
+    $mb = sql_fetch("SELECT mb_point FROM {$g5['member_table']} WHERE mb_id = '".sql_real_escape_string($mb_id)."'");
+    if ((int)$mb['mb_point'] < $cost) {
+        return array('success' => false, 'message' => "포인트가 부족합니다. (필요: {$cost}P, 보유: {$mb['mb_point']}P)");
+    }
+
+    insert_point($mb_id, -$cost, '역극 판 세우기 비용', 'mg_rp_thread', 0, '차감');
+    return array('success' => true);
+}
+
+/**
+ * 잇기 누적 보상 체크 + 지급
+ *
+ * 스레드 전체 이음 수 기준으로 N개당 참여자 전원에게 보상
+ *
+ * @param int $rt_id 역극 스레드 ID
+ */
+function mg_rp_check_reply_reward($rt_id) {
+    global $g5, $mg;
+
+    $batch_count = (int)mg_config('rp_reply_batch_count', 10);
+    $batch_point = (int)mg_config('rp_reply_batch_point', 30);
+
+    if ($batch_point <= 0 || $batch_count <= 0) return;
+
+    $rt_id = (int)$rt_id;
+
+    // 현재 이음 수
+    $thread = sql_fetch("SELECT rt_reply_count, rt_title FROM {$mg['rp_thread_table']} WHERE rt_id = {$rt_id}");
+    if (!$thread) return;
+
+    $current_count = (int)$thread['rt_reply_count'];
+
+    // 마지막 보상 시점
+    $last = sql_fetch("SELECT MAX(rrl_reply_count) as last_count FROM {$g5['mg_rp_reply_reward_log_table']} WHERE rt_id = {$rt_id}");
+    $last_rewarded = (int)($last['last_count'] ?? 0);
+
+    // 다음 보상 기준
+    $next_threshold = $last_rewarded + $batch_count;
+
+    if ($current_count < $next_threshold) return;
+
+    // 참여자 전원 조회
+    $members = mg_get_rp_members($rt_id);
+    if (!$members) return;
+
+    $title_short = mb_substr(strip_tags($thread['rt_title']), 0, 20);
+
+    foreach ($members as $mem) {
+        if (!$mem['mb_id']) continue;
+        insert_point($mem['mb_id'], $batch_point, "역극 \"{$title_short}\" 이음 {$next_threshold}회 보상", 'mg_rp_thread', $rt_id, '이음보상');
+
+        // 알림
+        if (function_exists('mg_notify')) {
+            mg_notify(
+                $mem['mb_id'],
+                'reward',
+                "역극 \"{$title_short}\" 이음 {$next_threshold}회 달성! +{$batch_point}P",
+                '',
+                G5_BBS_URL . '/rp_list.php#rp-thread-' . $rt_id
+            );
+        }
+    }
+
+    // 보상 로그 기록
+    sql_query("INSERT INTO {$g5['mg_rp_reply_reward_log_table']}
+               (rt_id, rrl_reply_count, rrl_point)
+               VALUES ({$rt_id}, {$next_threshold}, {$batch_point})");
+}
+
+/**
+ * 캐릭터별 완결 처리
+ *
+ * @param int $rt_id 역극 스레드 ID
+ * @param int $ch_id 완결할 캐릭터 ID
+ * @param string $type 'manual' 또는 'auto'
+ * @param string|null $by_mb_id 처리자 (수동시 판장 mb_id)
+ * @param bool $force 조건 미충족 시에도 강제 완결
+ * @return array ['success' => bool, 'message' => string, ...]
+ */
+function mg_rp_complete_character($rt_id, $ch_id, $type = 'manual', $by_mb_id = null, $force = false) {
+    global $g5, $mg;
+
+    $rt_id = (int)$rt_id;
+    $ch_id = (int)$ch_id;
+
+    // 이미 완결인지 확인
+    $existing = sql_fetch("SELECT rc_id FROM {$g5['mg_rp_completion_table']} WHERE rt_id = {$rt_id} AND ch_id = {$ch_id}");
+    if ($existing['rc_id']) {
+        return array('success' => false, 'message' => '이미 완결 처리된 캐릭터입니다.');
+    }
+
+    // 스레드 조회
+    $thread = sql_fetch("SELECT * FROM {$mg['rp_thread_table']} WHERE rt_id = {$rt_id}");
+    if (!$thread) {
+        return array('success' => false, 'message' => '존재하지 않는 역극입니다.');
+    }
+
+    $owner_ch_id = (int)$thread['ch_id'];
+    $owner_mb_id = $thread['mb_id'];
+
+    // 참여자 정보 조회
+    $participant = sql_fetch("SELECT * FROM {$mg['rp_member_table']} WHERE rt_id = {$rt_id} AND ch_id = {$ch_id}");
+    if (!$participant) {
+        return array('success' => false, 'message' => '해당 캐릭터는 이 역극의 참여자가 아닙니다.');
+    }
+
+    $target_mb_id = $participant['mb_id'];
+    $total_replies = (int)$participant['rm_reply_count'];
+
+    // 상호 이음 수 계산
+    // 판장 → 해당 캐릭터 방향
+    $owner_to_char = sql_fetch("SELECT COUNT(*) as cnt FROM {$mg['rp_reply_table']}
+        WHERE rt_id = {$rt_id} AND ch_id = {$owner_ch_id} AND rr_context_ch_id = {$ch_id}");
+    $count_owner_to_char = (int)$owner_to_char['cnt'];
+
+    // 해당 캐릭터 → 판장 방향 (context가 판장이거나 기본 대화)
+    $char_to_owner = sql_fetch("SELECT COUNT(*) as cnt FROM {$mg['rp_reply_table']}
+        WHERE rt_id = {$rt_id} AND ch_id = {$ch_id}
+        AND (rr_context_ch_id = {$owner_ch_id} OR rr_context_ch_id = 0)");
+    $count_char_to_owner = (int)$char_to_owner['cnt'];
+
+    $mutual_count = min($count_owner_to_char, $count_char_to_owner);
+
+    // 완결 조건 체크
+    $min_mutual = (int)mg_config('rp_complete_min_mutual', 5);
+    $complete_point = (int)mg_config('rp_complete_point', 200);
+    $condition_met = ($mutual_count >= $min_mutual);
+
+    // 조건 미충족이고 강제도 아니면 확인 필요
+    if (!$condition_met && !$force && $type === 'manual') {
+        return array(
+            'success' => false,
+            'need_confirm' => true,
+            'mutual_count' => $mutual_count,
+            'min_mutual' => $min_mutual,
+            'message' => "상호 이음 조건을 충족하지 않았습니다. ({$mutual_count}/{$min_mutual}회)"
+        );
+    }
+
+    // 보상 결정
+    $rewarded = ($condition_met && $complete_point > 0) ? 1 : 0;
+    $point_given = $rewarded ? $complete_point : 0;
+
+    // 포인트 지급
+    if ($rewarded) {
+        $title_short = mb_substr(strip_tags($thread['rt_title']), 0, 20);
+        insert_point($target_mb_id, $complete_point, "역극 \"{$title_short}\" 완결 보상", 'mg_rp_completion', $rt_id, '완결');
+    }
+
+    // 완결 기록
+    $by_esc = $by_mb_id ? "'".sql_real_escape_string($by_mb_id)."'" : 'NULL';
+    sql_query("INSERT INTO {$g5['mg_rp_completion_table']}
+        (rt_id, ch_id, mb_id, rc_mutual_count, rc_total_replies, rc_rewarded, rc_point, rc_type, rc_by)
+        VALUES ({$rt_id}, {$ch_id}, '".sql_real_escape_string($target_mb_id)."',
+                {$mutual_count}, {$total_replies}, {$rewarded}, {$point_given}, '{$type}', {$by_esc})");
+
+    // 알림
+    if (function_exists('mg_notify')) {
+        $title_short = mb_substr(strip_tags($thread['rt_title']), 0, 20);
+        $noti_msg = "역극 \"{$title_short}\"에서 완결 처리되었습니다.";
+        if ($rewarded) {
+            $noti_msg .= " (+{$point_given}P)";
+        }
+        mg_notify(
+            $target_mb_id,
+            'reward',
+            $noti_msg,
+            '',
+            G5_BBS_URL . '/rp_list.php#rp-thread-' . $rt_id
+        );
+    }
+
+    // 모든 참여자(판장 제외)가 완결되었으면 스레드도 closed
+    $uncompleted = sql_fetch("SELECT COUNT(*) as cnt FROM {$mg['rp_member_table']} rm
+        WHERE rm.rt_id = {$rt_id} AND rm.ch_id != {$owner_ch_id}
+        AND NOT EXISTS (SELECT 1 FROM {$g5['mg_rp_completion_table']} rc WHERE rc.rt_id = rm.rt_id AND rc.ch_id = rm.ch_id)");
+    if ((int)$uncompleted['cnt'] === 0) {
+        sql_query("UPDATE {$mg['rp_thread_table']} SET rt_status = 'closed' WHERE rt_id = {$rt_id}");
+    }
+
+    return array(
+        'success' => true,
+        'message' => '완결 처리되었습니다.' . ($rewarded ? " (+{$point_given}P)" : ' (보상 없음)'),
+        'rewarded' => $rewarded,
+        'point' => $point_given,
+        'mutual_count' => $mutual_count,
+        'thread_closed' => ((int)$uncompleted['cnt'] === 0)
+    );
+}
+
+/**
+ * 자동 완결 체크 (패시브)
+ *
+ * @param int $rt_id 역극 스레드 ID
+ */
+function mg_rp_auto_complete_check($rt_id) {
+    global $g5, $mg;
+
+    $rt_id = (int)$rt_id;
+    $auto_days = (int)mg_config('rp_auto_complete_days', 7);
+    if ($auto_days <= 0) return;
+
+    $thread = sql_fetch("SELECT * FROM {$mg['rp_thread_table']} WHERE rt_id = {$rt_id} AND rt_status = 'open'");
+    if (!$thread) return;
+
+    // 기한 초과 확인
+    $deadline = date('Y-m-d H:i:s', strtotime("-{$auto_days} days"));
+    if ($thread['rt_update'] > $deadline) return;
+
+    $owner_ch_id = (int)$thread['ch_id'];
+
+    // 미완결 참여자 (판장 제외) 순회
+    $result = sql_query("SELECT rm.* FROM {$mg['rp_member_table']} rm
+        WHERE rm.rt_id = {$rt_id} AND rm.ch_id != {$owner_ch_id}
+        AND NOT EXISTS (SELECT 1 FROM {$g5['mg_rp_completion_table']} rc WHERE rc.rt_id = rm.rt_id AND rc.ch_id = rm.ch_id)");
+
+    while ($mem = sql_fetch_array($result)) {
+        mg_rp_complete_character($rt_id, (int)$mem['ch_id'], 'auto', null, true);
+    }
+
+    // 스레드 closed (mg_rp_complete_character에서 처리되지만 안전장치)
+    sql_query("UPDATE {$mg['rp_thread_table']} SET rt_status = 'closed' WHERE rt_id = {$rt_id} AND rt_status = 'open'");
 }
 
 // ======================================
@@ -3013,6 +3289,9 @@ function mg_contribute_stamina($fc_id, $mb_id, $amount) {
                (fc_id, mb_id, fcn_type, fcn_amount, fcn_datetime)
                VALUES ({$fc_id}, '{$mb_id_esc}', 'stamina', {$actual_amount}, '{$now}')");
 
+    // 업적 트리거 (개척 노동력)
+    mg_trigger_achievement($mb_id, 'pioneer_stamina_total', $actual_amount);
+
     // 완공 체크
     mg_check_facility_complete($fc_id);
 
@@ -3081,6 +3360,9 @@ function mg_contribute_material($fc_id, $mb_id, $mt_id, $amount) {
                (fc_id, mb_id, fcn_type, mt_id, fcn_amount, fcn_datetime)
                VALUES ({$fc_id}, '{$mb_id_esc}', 'material', {$mt_id}, {$actual_amount}, '{$now}')");
 
+    // 업적 트리거 (개척 재료 투입)
+    mg_trigger_achievement($mb_id, 'pioneer_material_total', $actual_amount);
+
     // 완공 체크
     mg_check_facility_complete($fc_id);
 
@@ -3132,6 +3414,12 @@ function mg_check_facility_complete($fc_id) {
 
     // 명예의 전당 기록
     mg_record_facility_honor($fc_id);
+
+    // 업적 트리거: 시설 참여자 전원에게 시설 참여 업적
+    $contribs = sql_query("SELECT DISTINCT mb_id FROM {$mg['facility_contribution_table']} WHERE fc_id = {$fc_id}");
+    while ($c = sql_fetch_array($contribs)) {
+        mg_trigger_achievement($c['mb_id'], 'pioneer_facility_count');
+    }
 
     return true;
 }
@@ -3294,6 +3582,87 @@ function mg_pioneer_enabled() {
     return mg_config('pioneer_enabled', '1') === '1';
 }
 
+// ======================================
+// 보상 시스템
+// ======================================
+
+/**
+ * 게시판별 보상 설정 조회
+ */
+function mg_get_board_reward($bo_table) {
+    global $g5;
+    static $cache = array();
+
+    if (!isset($cache[$bo_table])) {
+        $bo_table_esc = sql_real_escape_string($bo_table);
+        $cache[$bo_table] = sql_fetch("SELECT * FROM {$g5['mg_board_reward_table']} WHERE bo_table = '{$bo_table_esc}'");
+    }
+
+    return $cache[$bo_table] ?: null;
+}
+
+/**
+ * 게시판별 보상 적용 (Auto 모드)
+ *
+ * @param string $mb_id 회원 ID
+ * @param string $bo_table 게시판
+ * @param int $content_len 글자수 (strip_tags 후)
+ * @param bool $has_image 이미지 첨부 여부
+ * @param int $wr_id 게시글 ID
+ * @return bool 보상 적용 여부
+ */
+function mg_apply_board_reward($mb_id, $bo_table, $content_len, $has_image, $wr_id) {
+    global $g5;
+
+    $br = mg_get_board_reward($bo_table);
+    if (!$br || $br['br_mode'] !== 'auto') return false;
+
+    // 일일 제한 체크
+    if ($br['br_daily_limit'] > 0) {
+        $today = date('Y-m-d');
+        $cnt = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['point_table']}
+            WHERE mb_id = '".sql_real_escape_string($mb_id)."'
+            AND po_rel_table = '".sql_real_escape_string($bo_table)."'
+            AND po_rel_action = '쓰기'
+            AND po_datetime >= '{$today} 00:00:00'");
+        if (($cnt['cnt'] ?? 0) >= $br['br_daily_limit']) return true; // 적용됨 (but 제한 도달)
+    }
+
+    // 포인트 계산
+    $point = (int)$br['br_point'];
+    if ($content_len >= 1000 && (int)$br['br_bonus_1000'] > 0) {
+        $point += (int)$br['br_bonus_1000'];
+    } elseif ($content_len >= 500 && (int)$br['br_bonus_500'] > 0) {
+        $point += (int)$br['br_bonus_500'];
+    }
+    if ($has_image && (int)$br['br_bonus_image'] > 0) {
+        $point += (int)$br['br_bonus_image'];
+    }
+
+    // 포인트 지급
+    if ($point > 0) {
+        $board = sql_fetch("SELECT bo_subject FROM {$g5['board_table']} WHERE bo_table = '".sql_real_escape_string($bo_table)."'");
+        $bo_subject = $board['bo_subject'] ?? $bo_table;
+        insert_point($mb_id, $point, "{$bo_subject} {$wr_id} 글쓰기", $bo_table, $wr_id, '쓰기');
+    }
+
+    // 재료 드롭
+    if ($br['br_material_use'] && (int)$br['br_material_chance'] > 0) {
+        if (mt_rand(1, 100) <= (int)$br['br_material_chance']) {
+            $mat_list = $br['br_material_list'] ? json_decode($br['br_material_list'], true) : array();
+            if (!empty($mat_list)) {
+                $code = $mat_list[array_rand($mat_list)];
+                $mt = mg_get_material_type_by_code($code);
+                if ($mt) {
+                    mg_add_material($mb_id, $mt['mt_id'], 1);
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
 /**
  * 컨텐츠 해금 여부 체크
  *
@@ -3387,4 +3756,1051 @@ function mg_get_unlock_info($type, $target = '') {
     $facility['progress'] = mg_get_facility_progress($facility);
 
     return $facility;
+}
+
+// ======================================
+// 좋아요 보상 함수
+// ======================================
+
+/**
+ * 일일 좋아요 현황 조회
+ * @param string $mb_id
+ * @return array ['count' => int, 'targets' => array]
+ */
+function mg_like_get_daily($mb_id) {
+    global $g5;
+
+    $today = date('Y-m-d');
+    $row = sql_fetch("SELECT * FROM {$g5['mg_like_daily_table']}
+        WHERE mb_id = '".sql_real_escape_string($mb_id)."' AND ld_date = '{$today}'");
+
+    if (!$row['ld_id']) {
+        return array('count' => 0, 'targets' => array());
+    }
+
+    $targets = json_decode($row['ld_targets'], true);
+    if (!is_array($targets)) $targets = array();
+
+    return array('count' => (int)$row['ld_count'], 'targets' => $targets);
+}
+
+/**
+ * 좋아요 보상 처리
+ * @param string $mb_id 좋아요 누른 회원
+ * @param string $target_mb_id 좋아요 받은 회원
+ * @param string $bo_table 게시판
+ * @param int $wr_id 게시글 ID
+ * @return array
+ */
+function mg_like_apply_reward($mb_id, $target_mb_id, $bo_table, $wr_id) {
+    global $g5;
+
+    // 게시판별 좋아요 보상 비활성화 체크
+    $_br = sql_fetch("SELECT br_like_use FROM {$g5['mg_board_reward_table']}
+        WHERE bo_table = '".sql_real_escape_string($bo_table)."'");
+    if ($_br && !$_br['br_like_use']) {
+        return array('success' => false, 'message' => '이 게시판은 좋아요 보상이 비활성화되어 있습니다.', 'remaining' => 0);
+    }
+
+    $limit = (int)mg_config('like_daily_limit', 5);
+    $giver_point = (int)mg_config('like_giver_point', 10);
+    $receiver_point = (int)mg_config('like_receiver_point', 30);
+
+    // 보상 비활성화 (한도 0 또는 양쪽 포인트 모두 0)
+    if ($limit <= 0 || ($giver_point <= 0 && $receiver_point <= 0)) {
+        return array('success' => false, 'message' => '좋아요 보상이 비활성화되어 있습니다.', 'remaining' => 0);
+    }
+
+    // 자기 글 좋아요 보상 없음
+    if ($mb_id === $target_mb_id) {
+        return array('success' => false, 'message' => '자기 글에는 보상이 지급되지 않습니다.', 'remaining' => 0);
+    }
+
+    $daily = mg_like_get_daily($mb_id);
+    $remaining = $limit - $daily['count'];
+
+    // 일일 횟수 소진
+    if ($remaining <= 0) {
+        return array('success' => false, 'message' => '일일 좋아요 보상 횟수를 모두 사용했습니다.', 'remaining' => 0);
+    }
+
+    // 동일 대상 1일 1회 (보상만 skip, 횟수 미소모)
+    if (in_array($target_mb_id, $daily['targets'])) {
+        return array('success' => false, 'message' => '같은 회원에게는 하루 1회만 보상이 지급됩니다.', 'remaining' => $remaining, 'already_target' => true);
+    }
+
+    // 포인트 지급
+    if ($giver_point > 0) {
+        insert_point($mb_id, $giver_point, '좋아요 보상 (누른 사람)', 'mg_like_log', $wr_id, '좋아요');
+    }
+    if ($receiver_point > 0) {
+        insert_point($target_mb_id, $receiver_point, '좋아요 보상 (받은 사람)', 'mg_like_log', $wr_id, '좋아요');
+    }
+
+    // 로그 기록
+    $mb_esc = sql_real_escape_string($mb_id);
+    $target_esc = sql_real_escape_string($target_mb_id);
+    $bo_esc = sql_real_escape_string($bo_table);
+    sql_query("INSERT INTO {$g5['mg_like_log_table']}
+        (mb_id, target_mb_id, bo_table, wr_id, ll_giver_point, ll_receiver_point)
+        VALUES ('{$mb_esc}', '{$target_esc}', '{$bo_esc}', {$wr_id}, {$giver_point}, {$receiver_point})");
+
+    // 일일 카운터 업데이트
+    $daily['targets'][] = $target_mb_id;
+    $targets_json = sql_real_escape_string(json_encode($daily['targets']));
+    $new_count = $daily['count'] + 1;
+    $today = date('Y-m-d');
+    sql_query("INSERT INTO {$g5['mg_like_daily_table']} (mb_id, ld_date, ld_count, ld_targets)
+        VALUES ('{$mb_esc}', '{$today}', {$new_count}, '{$targets_json}')
+        ON DUPLICATE KEY UPDATE ld_count = {$new_count}, ld_targets = '{$targets_json}'");
+
+    // 업적 트리거 (좋아요)
+    mg_trigger_achievement($mb_id, 'like_count');
+
+    $remaining = $limit - $new_count;
+
+    return array(
+        'success' => true,
+        'giver_point' => $giver_point,
+        'receiver_point' => $receiver_point,
+        'remaining' => $remaining
+    );
+}
+
+// ======================================
+// 정산 시스템 (Request 모드) 함수
+// ======================================
+
+/**
+ * 게시판용 보상 유형 목록 조회
+ * @param string $bo_table 게시판 (해당 게시판 + 공통 유형)
+ * @return array
+ */
+function mg_get_reward_types($bo_table) {
+    global $g5;
+
+    $bo_esc = sql_real_escape_string($bo_table);
+    $result = sql_query("SELECT * FROM {$g5['mg_reward_type_table']}
+        WHERE (bo_table = '{$bo_esc}' OR bo_table IS NULL) AND rwt_use = 1
+        ORDER BY rwt_order, rwt_id");
+
+    $types = array();
+    if ($result) {
+        while ($row = sql_fetch_array($result)) {
+            $types[] = $row;
+        }
+    }
+    return $types;
+}
+
+/**
+ * 정산 큐에 보상 요청 등록
+ * @param string $mb_id
+ * @param string $bo_table
+ * @param int $wr_id
+ * @param int $rwt_id
+ * @return array
+ */
+function mg_add_reward_queue($mb_id, $bo_table, $wr_id, $rwt_id) {
+    global $g5;
+
+    // 유형 유효성 체크
+    $rwt = sql_fetch("SELECT * FROM {$g5['mg_reward_type_table']} WHERE rwt_id = {$rwt_id} AND rwt_use = 1");
+    if (!$rwt['rwt_id']) {
+        return array('success' => false, 'message' => '유효하지 않은 보상 유형입니다.');
+    }
+
+    $mb_esc = sql_real_escape_string($mb_id);
+    $bo_esc = sql_real_escape_string($bo_table);
+    sql_query("INSERT INTO {$g5['mg_reward_queue_table']}
+        (mb_id, bo_table, wr_id, rwt_id)
+        VALUES ('{$mb_esc}', '{$bo_esc}', {$wr_id}, {$rwt_id})");
+
+    return array('success' => true);
+}
+
+/**
+ * 보상 요청 승인
+ * @param int $rq_id
+ * @param string $admin_mb_id
+ * @return array
+ */
+function mg_approve_reward($rq_id, $admin_mb_id) {
+    global $g5;
+
+    $rq = sql_fetch("SELECT * FROM {$g5['mg_reward_queue_table']} WHERE rq_id = {$rq_id}");
+    if (!$rq['rq_id']) {
+        return array('success' => false, 'message' => '요청을 찾을 수 없습니다.');
+    }
+    if ($rq['rq_status'] !== 'pending') {
+        return array('success' => false, 'message' => '이미 처리된 요청입니다.');
+    }
+
+    // 보상 유형 조회
+    $rwt = sql_fetch("SELECT * FROM {$g5['mg_reward_type_table']} WHERE rwt_id = {$rq['rwt_id']}");
+    if (!$rwt['rwt_id']) {
+        return array('success' => false, 'message' => '보상 유형을 찾을 수 없습니다.');
+    }
+
+    $point = (int)$rwt['rwt_point'];
+
+    // 포인트 지급
+    if ($point > 0) {
+        $board = sql_fetch("SELECT bo_subject FROM {$g5['board_table']} WHERE bo_table = '".sql_real_escape_string($rq['bo_table'])."'");
+        $bo_subject = $board['bo_subject'] ?: $rq['bo_table'];
+        insert_point($rq['mb_id'], $point, "{$bo_subject} {$rq['wr_id']} 보상 승인 ({$rwt['rwt_name']})", $rq['bo_table'], $rq['wr_id'], '보상');
+    }
+
+    // 재료 지급
+    if ($rwt['rwt_material']) {
+        $materials = json_decode($rwt['rwt_material'], true);
+        if (is_array($materials) && function_exists('mg_add_material')) {
+            foreach ($materials as $mat) {
+                $mt_code = isset($mat['mt_code']) ? $mat['mt_code'] : '';
+                $amount = isset($mat['amount']) ? (int)$mat['amount'] : 0;
+                if ($mt_code && $amount > 0) {
+                    $mt = mg_get_material_type_by_code($mt_code);
+                    if ($mt) {
+                        mg_add_material($rq['mb_id'], $mt['mt_id'], $amount);
+                    }
+                }
+            }
+        }
+    }
+
+    // 상태 업데이트
+    $admin_esc = sql_real_escape_string($admin_mb_id);
+    sql_query("UPDATE {$g5['mg_reward_queue_table']}
+        SET rq_status = 'approved', rq_process_datetime = NOW(), rq_process_mb_id = '{$admin_esc}'
+        WHERE rq_id = {$rq_id}");
+
+    // 알림
+    if (function_exists('mg_notify')) {
+        $url = get_pretty_url($rq['bo_table'], $rq['wr_id']);
+        $extra = $rwt['rwt_name'];
+        if ($point > 0) $extra .= " (+{$point}P)";
+        mg_notify($rq['mb_id'], 'reward', '보상이 승인되었습니다', $extra, $url);
+    }
+
+    return array('success' => true, 'point' => $point, 'message' => "승인 완료 (+{$point}P)");
+}
+
+/**
+ * 보상 요청 반려
+ * @param int $rq_id
+ * @param string $admin_mb_id
+ * @param string $reason
+ * @return array
+ */
+function mg_reject_reward($rq_id, $admin_mb_id, $reason = '') {
+    global $g5;
+
+    $rq = sql_fetch("SELECT * FROM {$g5['mg_reward_queue_table']} WHERE rq_id = {$rq_id}");
+    if (!$rq['rq_id']) {
+        return array('success' => false, 'message' => '요청을 찾을 수 없습니다.');
+    }
+    if ($rq['rq_status'] !== 'pending') {
+        return array('success' => false, 'message' => '이미 처리된 요청입니다.');
+    }
+
+    $admin_esc = sql_real_escape_string($admin_mb_id);
+    $reason_esc = sql_real_escape_string($reason);
+    sql_query("UPDATE {$g5['mg_reward_queue_table']}
+        SET rq_status = 'rejected', rq_process_datetime = NOW(),
+            rq_process_mb_id = '{$admin_esc}', rq_reject_reason = '{$reason_esc}'
+        WHERE rq_id = {$rq_id}");
+
+    // 알림
+    if (function_exists('mg_notify')) {
+        $url = get_pretty_url($rq['bo_table'], $rq['wr_id']);
+        $extra = $reason ? '사유: '.$reason : '';
+        mg_notify($rq['mb_id'], 'reward', '보상 요청이 반려되었습니다', $extra, $url);
+    }
+
+    return array('success' => true, 'message' => '반려 처리되었습니다.');
+}
+
+// ======================================
+// 업적 시스템 (Achievement System)
+// ======================================
+
+/**
+ * 업적 목록 조회 (카테고리 필터, 사용 중인 것만)
+ */
+function mg_get_achievements($category = '', $include_disabled = false)
+{
+    global $g5;
+    $where = $include_disabled ? '1' : 'ac_use = 1';
+    if ($category) {
+        $where .= " AND ac_category = '".sql_real_escape_string($category)."'";
+    }
+    $sql = "SELECT * FROM {$g5['mg_achievement_table']} WHERE {$where} ORDER BY ac_category, ac_order, ac_id";
+    $result = sql_query($sql);
+    $list = array();
+    while ($row = sql_fetch_array($result)) {
+        $list[] = $row;
+    }
+    return $list;
+}
+
+/**
+ * 업적 단계 목록 조회
+ */
+function mg_get_achievement_tiers($ac_id)
+{
+    global $g5;
+    $ac_id = (int)$ac_id;
+    $sql = "SELECT * FROM {$g5['mg_achievement_tier_table']} WHERE ac_id = {$ac_id} ORDER BY at_level";
+    $result = sql_query($sql);
+    $list = array();
+    while ($row = sql_fetch_array($result)) {
+        $list[] = $row;
+    }
+    return $list;
+}
+
+/**
+ * 유저의 전체 업적 달성 현황 조회
+ */
+function mg_get_user_achievements($mb_id)
+{
+    global $g5;
+    $mb_esc = sql_real_escape_string($mb_id);
+    $sql = "SELECT a.*, ua.ua_progress, ua.ua_tier, ua.ua_completed, ua.ua_granted_by, ua.ua_grant_memo, ua.ua_datetime AS ua_datetime
+            FROM {$g5['mg_achievement_table']} a
+            LEFT JOIN {$g5['mg_user_achievement_table']} ua ON a.ac_id = ua.ac_id AND ua.mb_id = '{$mb_esc}'
+            WHERE a.ac_use = 1
+            ORDER BY a.ac_category, a.ac_order, a.ac_id";
+    $result = sql_query($sql);
+    $list = array();
+    while ($row = sql_fetch_array($result)) {
+        $row['ua_progress'] = (int)($row['ua_progress'] ?? 0);
+        $row['ua_tier'] = (int)($row['ua_tier'] ?? 0);
+        $row['ua_completed'] = (int)($row['ua_completed'] ?? 0);
+        $list[] = $row;
+    }
+    return $list;
+}
+
+/**
+ * 유저의 프로필 쇼케이스 조회
+ */
+function mg_get_achievement_display($mb_id)
+{
+    global $g5;
+    $mb_esc = sql_real_escape_string($mb_id);
+    $row = sql_fetch("SELECT * FROM {$g5['mg_user_achievement_display_table']} WHERE mb_id = '{$mb_esc}'");
+    if (!$row['mb_id']) return array();
+
+    $slots = array();
+    for ($i = 1; $i <= 5; $i++) {
+        $ac_id = (int)($row['slot_'.$i] ?? 0);
+        if ($ac_id) {
+            $ac = sql_fetch("SELECT a.*, at2.at_name AS tier_name, at2.at_icon AS tier_icon
+                FROM {$g5['mg_achievement_table']} a
+                LEFT JOIN {$g5['mg_user_achievement_table']} ua ON a.ac_id = ua.ac_id AND ua.mb_id = '{$mb_esc}'
+                LEFT JOIN {$g5['mg_achievement_tier_table']} at2 ON a.ac_id = at2.ac_id AND at2.at_level = ua.ua_tier
+                WHERE a.ac_id = {$ac_id}");
+            if ($ac['ac_id']) {
+                $slots[] = $ac;
+            }
+        }
+    }
+    return $slots;
+}
+
+/**
+ * 프로필 쇼케이스 저장
+ */
+function mg_save_achievement_display($mb_id, $slot_ids)
+{
+    global $g5;
+    $mb_esc = sql_real_escape_string($mb_id);
+    $slots = array();
+    for ($i = 0; $i < 5; $i++) {
+        $v = isset($slot_ids[$i]) ? (int)$slot_ids[$i] : 0;
+        $slots[] = $v ? $v : 'NULL';
+    }
+    sql_query("INSERT INTO {$g5['mg_user_achievement_display_table']}
+        (mb_id, slot_1, slot_2, slot_3, slot_4, slot_5)
+        VALUES ('{$mb_esc}', {$slots[0]}, {$slots[1]}, {$slots[2]}, {$slots[3]}, {$slots[4]})
+        ON DUPLICATE KEY UPDATE
+        slot_1 = {$slots[0]}, slot_2 = {$slots[1]}, slot_3 = {$slots[2]},
+        slot_4 = {$slots[3]}, slot_5 = {$slots[4]}");
+}
+
+/**
+ * 업적 쇼케이스 렌더링 HTML
+ */
+function mg_render_achievement_showcase($mb_id)
+{
+    $slots = mg_get_achievement_display($mb_id);
+    if (empty($slots)) return '';
+
+    $html = '<div class="mg-achievement-showcase flex gap-2 mt-2">';
+    foreach ($slots as $ac) {
+        $icon = $ac['tier_icon'] ?: ($ac['ac_icon'] ?: '');
+        $name = $ac['tier_name'] ?: $ac['ac_name'];
+        $rarity = $ac['ac_rarity'] ?: 'common';
+        $html .= '<div class="mg-trophy mg-trophy-'.$rarity.'" title="'.htmlspecialchars($name).'">';
+        if ($icon) {
+            $html .= '<img src="'.htmlspecialchars($icon).'" alt="'.htmlspecialchars($name).'" class="w-8 h-8">';
+        } else {
+            $html .= '<span class="text-xl">🏆</span>';
+        }
+        $html .= '<span class="text-xs truncate block text-center mt-1">'.htmlspecialchars($name).'</span>';
+        $html .= '</div>';
+    }
+    $html .= '</div>';
+    return $html;
+}
+
+/**
+ * 업적 트리거 - 이벤트 발생 시 관련 업적 진행도 갱신 + 달성 판정
+ *
+ * @param string $mb_id 회원 ID
+ * @param string $event_type 이벤트 타입 (write_count, comment_count, rp_reply_count, ...)
+ * @param int $increment 증가량 (기본 1)
+ * @param array $context 추가 컨텍스트 (board, facility_id 등)
+ */
+function mg_trigger_achievement($mb_id, $event_type, $increment = 1, $context = array())
+{
+    global $g5;
+    if (!$mb_id) return;
+
+    $mb_esc = sql_real_escape_string($mb_id);
+
+    // 해당 event_type에 관련된 활성 업적 목록 조회
+    $sql = "SELECT * FROM {$g5['mg_achievement_table']}
+            WHERE ac_use = 1 AND ac_condition LIKE '%\"type\":\"{$event_type}\"%'";
+    $result = sql_query($sql);
+
+    while ($ac = sql_fetch_array($result)) {
+        $condition = json_decode($ac['ac_condition'], true);
+        if (!$condition || ($condition['type'] ?? '') !== $event_type) continue;
+
+        // 게시판 한정 체크
+        if (!empty($condition['board']) && (!isset($context['board']) || $context['board'] !== $condition['board'])) {
+            continue;
+        }
+
+        // 현재 유저 진행 상태 조회/생성
+        $ua = sql_fetch("SELECT * FROM {$g5['mg_user_achievement_table']}
+            WHERE mb_id = '{$mb_esc}' AND ac_id = {$ac['ac_id']}");
+
+        $progress = (int)($ua['ua_progress'] ?? 0);
+        $current_tier = (int)($ua['ua_tier'] ?? 0);
+        $completed = (int)($ua['ua_completed'] ?? 0);
+
+        // 이미 완전 달성 → 스킵
+        if ($completed) continue;
+
+        // 진행도 갱신
+        $new_progress = $progress + $increment;
+
+        if ($ac['ac_type'] === 'onetime') {
+            // 일회성: target 도달 시 달성
+            $target = (int)($condition['target'] ?? 1);
+            $newly_completed = ($new_progress >= $target) ? 1 : 0;
+
+            if ($ua['ua_id']) {
+                sql_query("UPDATE {$g5['mg_user_achievement_table']}
+                    SET ua_progress = {$new_progress}, ua_completed = {$newly_completed},
+                        ua_tier = ".($newly_completed ? 1 : 0).", ua_datetime = NOW()
+                    WHERE ua_id = {$ua['ua_id']}");
+            } else {
+                sql_query("INSERT INTO {$g5['mg_user_achievement_table']}
+                    (mb_id, ac_id, ua_progress, ua_tier, ua_completed, ua_datetime)
+                    VALUES ('{$mb_esc}', {$ac['ac_id']}, {$new_progress}, ".($newly_completed ? 1 : 0).", {$newly_completed}, NOW())");
+            }
+
+            if ($newly_completed) {
+                mg_achievement_give_reward($mb_id, $ac, null);
+                mg_achievement_notify($mb_id, $ac, null);
+            }
+
+        } else {
+            // 단계형: 다음 단계 도달 여부 체크
+            $tiers = mg_get_achievement_tiers($ac['ac_id']);
+            $new_tier = $current_tier;
+            $newly_completed = 0;
+            $reached_tier = null;
+
+            foreach ($tiers as $tier) {
+                if ((int)$tier['at_level'] <= $current_tier) continue;
+                if ($new_progress >= (int)$tier['at_target']) {
+                    $new_tier = (int)$tier['at_level'];
+                    $reached_tier = $tier;
+                } else {
+                    break;
+                }
+            }
+
+            // 최종 단계 달성 여부
+            if ($reached_tier && !empty($tiers)) {
+                $last_tier = end($tiers);
+                if ($new_tier >= (int)$last_tier['at_level']) {
+                    $newly_completed = 1;
+                }
+            }
+
+            if ($ua['ua_id']) {
+                sql_query("UPDATE {$g5['mg_user_achievement_table']}
+                    SET ua_progress = {$new_progress}, ua_tier = {$new_tier},
+                        ua_completed = {$newly_completed}, ua_datetime = NOW()
+                    WHERE ua_id = {$ua['ua_id']}");
+            } else {
+                sql_query("INSERT INTO {$g5['mg_user_achievement_table']}
+                    (mb_id, ac_id, ua_progress, ua_tier, ua_completed, ua_datetime)
+                    VALUES ('{$mb_esc}', {$ac['ac_id']}, {$new_progress}, {$new_tier}, {$newly_completed}, NOW())");
+            }
+
+            // 새 단계 달성 시 보상 + 알림 (여러 단계 한번에 넘을 수 있으므로 차이만큼)
+            if ($reached_tier && $new_tier > $current_tier) {
+                foreach ($tiers as $tier) {
+                    if ((int)$tier['at_level'] > $current_tier && (int)$tier['at_level'] <= $new_tier) {
+                        mg_achievement_give_reward($mb_id, $ac, $tier);
+                        mg_achievement_notify($mb_id, $ac, $tier);
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 업적 보상 지급
+ */
+function mg_achievement_give_reward($mb_id, $ac, $tier = null)
+{
+    global $g5;
+    $reward_json = $tier ? ($tier['at_reward'] ?? '') : ($ac['ac_reward'] ?? '');
+    if (!$reward_json) return;
+
+    $rewards = json_decode($reward_json, true);
+    if (!$rewards) return;
+
+    // 단일 보상이면 배열로 감싸기
+    if (isset($rewards['type'])) {
+        $rewards = array($rewards);
+    }
+
+    $name = $tier ? $tier['at_name'] : $ac['ac_name'];
+
+    foreach ($rewards as $r) {
+        $type = $r['type'] ?? '';
+        switch ($type) {
+            case 'point':
+                $amount = (int)($r['amount'] ?? 0);
+                if ($amount > 0) {
+                    insert_point($mb_id, $amount, "업적 달성: {$name}", 'mg_achievement', $ac['ac_id'], 'achievement');
+                }
+                break;
+
+            case 'material':
+                $mt_code = $r['mt_code'] ?? '';
+                $amount = (int)($r['amount'] ?? 1);
+                if ($mt_code && $amount > 0 && function_exists('mg_add_material')) {
+                    mg_add_material($mb_id, $mt_code, $amount);
+                }
+                break;
+
+            case 'item':
+                $si_id = (int)($r['si_id'] ?? 0);
+                if ($si_id > 0) {
+                    $mb_esc = sql_real_escape_string($mb_id);
+                    $existing = sql_fetch("SELECT iv_id, iv_count FROM {$g5['mg_inventory_table']}
+                        WHERE mb_id = '{$mb_esc}' AND si_id = {$si_id}");
+                    if ($existing['iv_id']) {
+                        sql_query("UPDATE {$g5['mg_inventory_table']} SET iv_count = iv_count + 1 WHERE iv_id = {$existing['iv_id']}");
+                    } else {
+                        sql_query("INSERT INTO {$g5['mg_inventory_table']} (mb_id, si_id, iv_count, iv_datetime)
+                            VALUES ('{$mb_esc}', {$si_id}, 1, NOW())");
+                    }
+                }
+                break;
+        }
+    }
+}
+
+/**
+ * 업적 달성 알림 발송
+ */
+function mg_achievement_notify($mb_id, $ac, $tier = null)
+{
+    if (!function_exists('mg_notify')) return;
+    $name = $tier ? $tier['at_name'] : $ac['ac_name'];
+    $desc = $ac['ac_desc'] ?: '';
+    mg_notify($mb_id, 'achievement', '업적 달성: '.$name, $desc, G5_BBS_URL.'/achievement.php');
+
+    // 토스트 알림용 세션 저장 (다음 페이지 로드 시 표시)
+    if (isset($_SESSION) && isset($_SESSION['ss_mb_id']) && $_SESSION['ss_mb_id'] === $mb_id) {
+        $reward_desc = '';
+        $reward_json = $tier ? ($tier['at_reward'] ?? '{}') : ($ac['ac_reward'] ?? '{}');
+        $reward = json_decode($reward_json, true);
+        if (!empty($reward['type'])) {
+            if ($reward['type'] === 'point') $reward_desc = '+' . number_format($reward['amount'] ?? 0) . 'P';
+            elseif ($reward['type'] === 'material') $reward_desc = ($reward['mt_code'] ?? '') . ' x' . ($reward['amount'] ?? 0);
+        }
+        $_SESSION['mg_achievement_toast'] = array(
+            'name' => $name,
+            'desc' => $desc,
+            'icon' => ($tier && !empty($tier['at_icon'])) ? $tier['at_icon'] : ($ac['ac_icon'] ?? ''),
+            'rarity' => $ac['ac_rarity'] ?? 'common',
+            'reward' => $reward_desc,
+        );
+    }
+}
+
+/**
+ * 관리자 수동 업적 부여
+ *
+ * @param string|array $mb_ids 회원 ID 또는 배열
+ * @param int $ac_id 업적 ID
+ * @param string $admin_mb_id 부여자
+ * @param string $memo 부여 사유
+ * @param bool $give_reward 보상 지급 여부
+ * @return array ['success', 'message', 'granted', 'skipped']
+ */
+function mg_grant_achievement($mb_ids, $ac_id, $admin_mb_id, $memo = '', $give_reward = true)
+{
+    global $g5;
+    $ac_id = (int)$ac_id;
+    $ac = sql_fetch("SELECT * FROM {$g5['mg_achievement_table']} WHERE ac_id = {$ac_id}");
+    if (!$ac['ac_id']) {
+        return array('success' => false, 'message' => '업적을 찾을 수 없습니다.');
+    }
+
+    if (!is_array($mb_ids)) $mb_ids = array($mb_ids);
+
+    $admin_esc = sql_real_escape_string($admin_mb_id);
+    $memo_esc = sql_real_escape_string($memo);
+    $granted = 0;
+    $skipped = 0;
+
+    foreach ($mb_ids as $mb_id) {
+        $mb_esc = sql_real_escape_string($mb_id);
+
+        // 이미 완전 달성 여부 확인
+        $ua = sql_fetch("SELECT * FROM {$g5['mg_user_achievement_table']}
+            WHERE mb_id = '{$mb_esc}' AND ac_id = {$ac_id}");
+
+        if ($ua['ua_id'] && (int)$ua['ua_completed']) {
+            $skipped++;
+            continue;
+        }
+
+        // 단계형이면 최종 단계로, 일회성이면 바로 완료
+        $target_tier = 0;
+        $target_progress = 0;
+        if ($ac['ac_type'] === 'progressive') {
+            $tiers = mg_get_achievement_tiers($ac_id);
+            if (!empty($tiers)) {
+                $last = end($tiers);
+                $target_tier = (int)$last['at_level'];
+                $target_progress = (int)$last['at_target'];
+            }
+        } else {
+            $cond = json_decode($ac['ac_condition'], true);
+            $target_tier = 1;
+            $target_progress = (int)($cond['target'] ?? 1);
+        }
+
+        if ($ua['ua_id']) {
+            sql_query("UPDATE {$g5['mg_user_achievement_table']}
+                SET ua_progress = {$target_progress}, ua_tier = {$target_tier}, ua_completed = 1,
+                    ua_granted_by = '{$admin_esc}', ua_grant_memo = '{$memo_esc}', ua_datetime = NOW()
+                WHERE ua_id = {$ua['ua_id']}");
+        } else {
+            sql_query("INSERT INTO {$g5['mg_user_achievement_table']}
+                (mb_id, ac_id, ua_progress, ua_tier, ua_completed, ua_granted_by, ua_grant_memo, ua_datetime)
+                VALUES ('{$mb_esc}', {$ac_id}, {$target_progress}, {$target_tier}, 1,
+                        '{$admin_esc}', '{$memo_esc}', NOW())");
+        }
+
+        // 보상 지급
+        if ($give_reward) {
+            if ($ac['ac_type'] === 'progressive') {
+                $tiers = mg_get_achievement_tiers($ac_id);
+                $old_tier = (int)($ua['ua_tier'] ?? 0);
+                foreach ($tiers as $tier) {
+                    if ((int)$tier['at_level'] > $old_tier) {
+                        mg_achievement_give_reward($mb_id, $ac, $tier);
+                    }
+                }
+            } else {
+                mg_achievement_give_reward($mb_id, $ac, null);
+            }
+        }
+
+        // 알림
+        mg_achievement_notify($mb_id, $ac, null);
+        $granted++;
+    }
+
+    return array('success' => true, 'message' => "{$granted}명 부여, {$skipped}명 건너뜀", 'granted' => $granted, 'skipped' => $skipped);
+}
+
+/**
+ * 관리자 업적 회수
+ */
+function mg_revoke_achievement($mb_id, $ac_id, $admin_mb_id)
+{
+    global $g5;
+    $ac_id = (int)$ac_id;
+    $mb_esc = sql_real_escape_string($mb_id);
+
+    $ua = sql_fetch("SELECT * FROM {$g5['mg_user_achievement_table']}
+        WHERE mb_id = '{$mb_esc}' AND ac_id = {$ac_id}");
+    if (!$ua['ua_id']) {
+        return array('success' => false, 'message' => '달성 기록이 없습니다.');
+    }
+
+    // 진행도 초기화
+    sql_query("UPDATE {$g5['mg_user_achievement_table']}
+        SET ua_progress = 0, ua_tier = 0, ua_completed = 0,
+            ua_granted_by = NULL, ua_grant_memo = NULL, ua_datetime = NOW()
+        WHERE ua_id = {$ua['ua_id']}");
+
+    // 쇼케이스에서 제거
+    sql_query("UPDATE {$g5['mg_user_achievement_display_table']}
+        SET slot_1 = IF(slot_1={$ac_id}, NULL, slot_1),
+            slot_2 = IF(slot_2={$ac_id}, NULL, slot_2),
+            slot_3 = IF(slot_3={$ac_id}, NULL, slot_3),
+            slot_4 = IF(slot_4={$ac_id}, NULL, slot_4),
+            slot_5 = IF(slot_5={$ac_id}, NULL, slot_5)
+        WHERE mb_id = '{$mb_esc}'");
+
+    return array('success' => true, 'message' => '업적이 회수되었습니다.');
+}
+
+/**
+ * 업적 카테고리 목록
+ */
+function mg_achievement_categories()
+{
+    return array(
+        'activity'   => '활동',
+        'rp'         => '역극',
+        'pioneer'    => '개척',
+        'social'     => '소셜',
+        'collection' => '수집',
+        'special'    => '특수',
+    );
+}
+
+/**
+ * 업적 통계 (전체 유저 대비 달성률)
+ */
+function mg_get_achievement_stats($ac_id)
+{
+    global $g5;
+    $ac_id = (int)$ac_id;
+    $total = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['member_table']} WHERE mb_level >= 2");
+    $achieved = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_user_achievement_table']}
+        WHERE ac_id = {$ac_id} AND (ua_completed = 1 OR ua_tier > 0)");
+    $total_cnt = max(1, (int)$total['cnt']);
+    $achieved_cnt = (int)$achieved['cnt'];
+    return array(
+        'total' => $total_cnt,
+        'achieved' => $achieved_cnt,
+        'rate' => round($achieved_cnt / $total_cnt * 100, 1)
+    );
+}
+
+// ======================================
+// 인장 시스템 (Seal / Signature Card)
+// ======================================
+
+/**
+ * 인장 데이터 조회 (렌더링에 필요한 모든 데이터)
+ */
+function mg_get_seal($mb_id)
+{
+    global $g5, $mg;
+
+    if (!$mb_id) return null;
+    if (!mg_config('seal_enable', 1)) return null;
+
+    $mb_esc = sql_real_escape_string($mb_id);
+
+    // 인장 데이터
+    $seal = sql_fetch("SELECT * FROM {$g5['mg_seal_table']} WHERE mb_id = '{$mb_esc}'");
+    if (!$seal || !$seal['seal_use']) return null;
+
+    // 회원 닉네임
+    $member = sql_fetch("SELECT mb_nick FROM {$g5['member_table']} WHERE mb_id = '{$mb_esc}'");
+    $seal['mb_nick'] = $member['mb_nick'] ?? $mb_id;
+
+    // 대표 캐릭터
+    $seal['main_char'] = mg_get_main_character($mb_id);
+
+    // 활성 칭호
+    $title_items = mg_get_active_items($mb_id, 'title');
+    $seal['title_item'] = !empty($title_items) ? $title_items[0] : null;
+
+    // 배경/프레임 스킨
+    $seal_bg = mg_get_active_items($mb_id, 'seal_bg');
+    $seal['bg_item'] = !empty($seal_bg) ? $seal_bg[0] : null;
+    $seal_frame = mg_get_active_items($mb_id, 'seal_frame');
+    $seal['frame_item'] = !empty($seal_frame) ? $seal_frame[0] : null;
+
+    // 트로피 (업적 쇼케이스)
+    $seal['trophies'] = array();
+    if (function_exists('mg_get_achievement_display')) {
+        $seal['trophies'] = mg_get_achievement_display($mb_id);
+    }
+
+    return $seal;
+}
+
+/**
+ * 인장 렌더링
+ *
+ * @param string $mb_id 회원 ID
+ * @param string $mode 'full' 또는 'compact'
+ * @return string HTML
+ */
+function mg_render_seal($mb_id, $mode = 'full')
+{
+    // 캐싱 (같은 페이지 내 동일 유저)
+    static $cache = array();
+    $cache_key = $mb_id . '_' . $mode;
+    if (isset($cache[$cache_key])) return $cache[$cache_key];
+
+    $seal = mg_get_seal($mb_id);
+    if (!$seal) {
+        $cache[$cache_key] = '';
+        return '';
+    }
+
+    // 배경/프레임 스타일
+    $bg_style = 'background:#2b2d31;';
+    $border_style = 'border:1px solid #3f4147;';
+    if ($seal['bg_item']) {
+        $effect = is_string($seal['bg_item']['si_effect']) ? json_decode($seal['bg_item']['si_effect'], true) : $seal['bg_item']['si_effect'];
+        if (!empty($effect['bg_image'])) {
+            $bg_style = "background:url('" . htmlspecialchars($effect['bg_image']) . "') center/cover no-repeat;";
+        } elseif (!empty($effect['bg_color'])) {
+            $bg_style = "background:" . htmlspecialchars($effect['bg_color']) . ";";
+        }
+    }
+    if ($seal['frame_item']) {
+        $effect = is_string($seal['frame_item']['si_effect']) ? json_decode($seal['frame_item']['si_effect'], true) : $seal['frame_item']['si_effect'];
+        if (!empty($effect['border_color'])) {
+            $border_style = "border:2px solid " . htmlspecialchars($effect['border_color']) . ";";
+        }
+    }
+
+    // 칭호 렌더링
+    $title_html = '';
+    if ($seal['title_item']) {
+        $te = is_string($seal['title_item']['si_effect']) ? json_decode($seal['title_item']['si_effect'], true) : $seal['title_item']['si_effect'];
+        $tc = !empty($te['color']) ? ' style="color:' . htmlspecialchars($te['color']) . '"' : '';
+        $title_html = '<span class="mg-seal-title"' . $tc . '>' . htmlspecialchars($te['text'] ?? $seal['title_item']['si_name']) . '</span>';
+    }
+
+    // 텍스트 색상
+    $text_color = '';
+    if (!empty($seal['seal_text_color'])) {
+        $text_color = ' style="color:' . htmlspecialchars($seal['seal_text_color']) . '"';
+    }
+
+    // 캐릭터 썸네일
+    $char_thumb = '';
+    if ($seal['main_char'] && !empty($seal['main_char']['ch_thumb'])) {
+        $char_thumb = '<img src="' . MG_CHAR_IMAGE_URL . '/' . htmlspecialchars($seal['main_char']['ch_thumb']) . '" alt="" class="w-full h-full object-cover">';
+    } else {
+        $char_thumb = '<svg class="w-6 h-6 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>';
+    }
+
+    // 트로피 HTML
+    $trophy_html = '';
+    $rarity_colors = array('common' => '#949ba4', 'uncommon' => '#22c55e', 'rare' => '#3b82f6', 'epic' => '#a855f7', 'legendary' => '#f59e0b');
+    $trophy_slots = (int)mg_config('seal_trophy_slots', 3);
+    $shown = 0;
+    if (!empty($seal['trophies'])) {
+        foreach ($seal['trophies'] as $tr) {
+            if (!$tr || $shown >= $trophy_slots) break;
+            $t_name = $tr['tier_name'] ?: $tr['ac_name'];
+            $t_icon = $tr['tier_icon'] ?: ($tr['ac_icon'] ?: '');
+            $t_rarity = $tr['ac_rarity'] ?? 'common';
+            $t_color = $rarity_colors[$t_rarity] ?? '#949ba4';
+            $icon_html = $t_icon
+                ? '<img src="' . htmlspecialchars($t_icon) . '" alt="" class="w-6 h-6 object-contain">'
+                : '<span class="text-sm">&#127942;</span>';
+            $trophy_html .= '<div class="flex flex-col items-center" title="' . htmlspecialchars($t_name) . '" style="border:1.5px solid ' . $t_color . ';border-radius:6px;padding:3px 4px;min-width:40px;">'
+                . $icon_html
+                . '<span class="text-[9px] leading-tight text-center truncate max-w-[50px]" style="color:' . $t_color . ';">' . htmlspecialchars(mb_strimwidth($t_name, 0, 12, '..')) . '</span>'
+                . '</div>';
+            $shown++;
+        }
+    }
+
+    $html = '';
+
+    if ($mode === 'compact') {
+        // === COMPACT 모드 ===
+        $html .= '<div class="mg-seal mg-seal-compact flex items-center gap-2 px-3 py-1.5 rounded-lg mt-1" style="' . $bg_style . $border_style . 'max-width:100%;">';
+        $html .= '<div class="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 bg-mg-bg-tertiary flex items-center justify-center">' . $char_thumb . '</div>';
+        $html .= '<span class="text-xs font-medium text-mg-text-primary truncate">' . htmlspecialchars($seal['mb_nick']) . '</span>';
+        if ($title_html) $html .= '<span class="text-[10px]">' . $title_html . '</span>';
+        if (!empty($seal['seal_tagline'])) {
+            $html .= '<span class="text-[10px] text-mg-text-muted truncate"' . $text_color . '>"' . htmlspecialchars(mb_strimwidth($seal['seal_tagline'], 0, 30, '..')) . '"</span>';
+        }
+        $html .= '</div>';
+    } else {
+        // === FULL 모드 ===
+        $html .= '<div class="mg-seal mg-seal-full rounded-xl overflow-hidden mt-4" style="' . $bg_style . $border_style . '">';
+        $html .= '<div class="flex gap-4 p-4">';
+
+        // 좌측: 캐릭터 썸네일
+        $html .= '<div class="flex-shrink-0">';
+        $html .= '<div class="w-16 h-16 rounded-lg overflow-hidden bg-mg-bg-tertiary flex items-center justify-center">' . $char_thumb . '</div>';
+        $html .= '</div>';
+
+        // 중앙: 정보
+        $html .= '<div class="flex-1 min-w-0"' . $text_color . '>';
+        $html .= '<div class="flex items-center gap-2 flex-wrap">';
+        $html .= '<span class="font-semibold text-sm text-mg-text-primary">' . htmlspecialchars($seal['mb_nick']) . '</span>';
+        if ($title_html) $html .= $title_html;
+        $html .= '</div>';
+
+        if (!empty($seal['seal_tagline'])) {
+            $html .= '<p class="text-xs text-mg-text-secondary mt-0.5">"' . htmlspecialchars($seal['seal_tagline']) . '"</p>';
+        }
+
+        // 자유 영역
+        if (!empty($seal['seal_content'])) {
+            $html .= '<div class="text-xs text-mg-text-muted mt-2 leading-relaxed">' . nl2br(htmlspecialchars(mb_strimwidth($seal['seal_content'], 0, 300, '...'))) . '</div>';
+        }
+
+        // 이미지
+        if (!empty($seal['seal_image'])) {
+            $img_url = $seal['seal_image'];
+            if (strpos($img_url, 'http') !== 0) {
+                $img_url = MG_SEAL_IMAGE_URL . '/' . $seal['seal_image'];
+            }
+            $html .= '<div class="mt-2"><img src="' . htmlspecialchars($img_url) . '" alt="" class="max-w-full max-h-[100px] rounded object-contain" loading="lazy"></div>';
+        }
+
+        // 링크
+        if (!empty($seal['seal_link']) && mg_config('seal_link_allow', 1)) {
+            $link_text = !empty($seal['seal_link_text']) ? htmlspecialchars($seal['seal_link_text']) : htmlspecialchars(mb_strimwidth($seal['seal_link'], 0, 40, '...'));
+            $html .= '<div class="mt-1"><a href="' . htmlspecialchars($seal['seal_link']) . '" target="_blank" rel="noopener" class="text-[11px] text-mg-accent hover:underline inline-flex items-center gap-1">';
+            $html .= '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
+            $html .= $link_text . '</a></div>';
+        }
+
+        $html .= '</div>'; // 중앙 끝
+
+        // 우측: 트로피
+        if ($trophy_html) {
+            $html .= '<div class="flex-shrink-0 flex flex-col gap-1.5">' . $trophy_html . '</div>';
+        }
+
+        $html .= '</div>'; // flex 끝
+        $html .= '</div>'; // seal 끝
+    }
+
+    $cache[$cache_key] = $html;
+    return $html;
+}
+
+/**
+ * 인장 이미지 업로드
+ */
+function mg_upload_seal_image($file, $mb_id)
+{
+    $allowed_ext = array('jpg', 'jpeg', 'png', 'gif', 'webp');
+    $max_size = (int)mg_config('seal_image_max_size', 500) * 1024;
+
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        return array('success' => false, 'message' => '파일 업로드 오류입니다.');
+    }
+    if ($file['size'] > $max_size) {
+        return array('success' => false, 'message' => '파일 크기가 제한(' . round($max_size/1024) . 'KB)을 초과했습니다.');
+    }
+
+    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    if (!in_array($ext, $allowed_ext)) {
+        return array('success' => false, 'message' => '허용되지 않는 파일 형식입니다.');
+    }
+
+    $dir = MG_SEAL_IMAGE_PATH . '/' . $mb_id;
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0755, true);
+    }
+
+    $filename = 'seal_' . uniqid() . '.' . $ext;
+    $filepath = $dir . '/' . $filename;
+
+    if (!move_uploaded_file($file['tmp_name'], $filepath)) {
+        return array('success' => false, 'message' => '파일 저장에 실패했습니다.');
+    }
+
+    // 리사이즈 (600x200 초과 시)
+    $img_info = @getimagesize($filepath);
+    if ($img_info && ($img_info[0] > 600 || $img_info[1] > 200)) {
+        mg_resize_image($filepath, $filepath, 600, 200);
+    }
+
+    return array('success' => true, 'filename' => $mb_id . '/' . $filename);
+}
+
+/**
+ * 이미지 리사이즈 (비율 유지)
+ */
+function mg_resize_image($source, $dest, $max_w, $max_h)
+{
+    $info = @getimagesize($source);
+    if (!$info) return false;
+
+    $src_w = $info[0];
+    $src_h = $info[1];
+    $ratio = min($max_w / $src_w, $max_h / $src_h);
+    if ($ratio >= 1) return true;
+
+    $new_w = (int)($src_w * $ratio);
+    $new_h = (int)($src_h * $ratio);
+
+    switch ($info[2]) {
+        case IMAGETYPE_JPEG: $src = @imagecreatefromjpeg($source); break;
+        case IMAGETYPE_PNG:  $src = @imagecreatefrompng($source); break;
+        case IMAGETYPE_GIF:  $src = @imagecreatefromgif($source); break;
+        case IMAGETYPE_WEBP: $src = @imagecreatefromwebp($source); break;
+        default: return false;
+    }
+    if (!$src) return false;
+
+    $dst = imagecreatetruecolor($new_w, $new_h);
+    if ($info[2] == IMAGETYPE_PNG || $info[2] == IMAGETYPE_WEBP) {
+        imagealphablending($dst, false);
+        imagesavealpha($dst, true);
+    }
+    imagecopyresampled($dst, $src, 0, 0, 0, 0, $new_w, $new_h, $src_w, $src_h);
+
+    switch ($info[2]) {
+        case IMAGETYPE_JPEG: imagejpeg($dst, $dest, 85); break;
+        case IMAGETYPE_PNG:  imagepng($dst, $dest, 8); break;
+        case IMAGETYPE_GIF:  imagegif($dst, $dest); break;
+        case IMAGETYPE_WEBP: imagewebp($dst, $dest, 85); break;
+    }
+
+    imagedestroy($src);
+    imagedestroy($dst);
+    return true;
+}
+
+/**
+ * 인장 텍스트 새니타이징
+ */
+function mg_sanitize_seal_text($text, $max_len = 300)
+{
+    $text = strip_tags($text);
+    $text = trim($text);
+    if (mb_strlen($text) > $max_len) {
+        $text = mb_substr($text, 0, $max_len);
+    }
+    return $text;
 }

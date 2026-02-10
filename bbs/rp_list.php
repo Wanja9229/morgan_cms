@@ -18,6 +18,21 @@ if (function_exists('mg_is_board_unlocked') && !mg_is_board_unlocked('roleplay')
     alert("역극은 아직 개척되지 않았습니다.\\n\\n'{$facility_name}' 개척에 참여해주세요!", G5_BBS_URL.'/pioneer.php');
 }
 
+// Morgan: 자동 완결 패시브 체크
+if (function_exists('mg_rp_auto_complete_check')) {
+    $auto_days = (int)mg_config('rp_auto_complete_days', 7);
+    if ($auto_days > 0) {
+        $stale = sql_query("SELECT rt_id FROM {$g5['mg_rp_thread_table']}
+            WHERE rt_status = 'open' AND rt_update < DATE_SUB(NOW(), INTERVAL {$auto_days} DAY)
+            LIMIT 5");
+        if ($stale) {
+            while ($row = sql_fetch_array($stale)) {
+                mg_rp_auto_complete_check((int)$row['rt_id']);
+            }
+        }
+    }
+}
+
 // Params
 $status = isset($_GET['status']) ? clean_xss_tags($_GET['status']) : 'all';
 $my = isset($_GET['my']) ? 1 : 0;

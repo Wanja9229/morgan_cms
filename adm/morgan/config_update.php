@@ -104,6 +104,17 @@ $config_keys = array(
     'captcha_register',
     'captcha_write',
     'captcha_comment',
+    // 인장 설정
+    'seal_enable',
+    'seal_tagline_max',
+    'seal_content_max',
+    'seal_image_upload',
+    'seal_image_url',
+    'seal_image_max_size',
+    'seal_link_allow',
+    'seal_trophy_slots',
+    'seal_show_in_rp',
+    'seal_show_in_comment',
     // 디자인 설정
     'color_accent',
     'color_button',

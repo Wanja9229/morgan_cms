@@ -10,6 +10,17 @@ include_once(G5_PATH.'/plugin/morgan/morgan.php');
 
 // 글에 연결된 캐릭터 조회
 $mg_view_char = mg_get_write_character($bo_table, $wr_id);
+
+// 좋아요 보상 잔여 횟수
+$_mg_like_daily = array('count' => 0, 'targets' => array());
+$_mg_like_limit = (int)mg_config('like_daily_limit', 5);
+$_mg_like_giver = (int)mg_config('like_giver_point', 10);
+$_mg_like_receiver = (int)mg_config('like_receiver_point', 30);
+$_mg_like_remaining = $_mg_like_limit;
+if ($is_member && function_exists('mg_like_get_daily') && $_mg_like_limit > 0) {
+    $_mg_like_daily = mg_like_get_daily($member['mb_id']);
+    $_mg_like_remaining = max(0, $_mg_like_limit - $_mg_like_daily['count']);
+}
 ?>
 
 <div id="bo_view" class="max-w-4xl mx-auto">
@@ -71,6 +82,9 @@ $mg_view_char = mg_get_write_character($bo_table, $wr_id);
         </div>
         <?php } ?>
 
+        <!-- 인장 (시그니처 카드) -->
+        <?php if (function_exists('mg_render_seal')) { echo mg_render_seal($view['mb_id'], 'full'); } ?>
+
         <!-- 추천/비추천 -->
         <?php if ($is_good || $is_nogood) { ?>
         <div class="flex items-center justify-center gap-4 border-t border-mg-bg-tertiary pt-4 mt-4">
@@ -91,6 +105,13 @@ $mg_view_char = mg_get_write_character($bo_table, $wr_id);
             </button>
             <?php } ?>
         </div>
+        <?php if ($is_good && $_mg_like_limit > 0 && $_mg_like_giver + $_mg_like_receiver > 0) { ?>
+        <div id="like-reward-info" class="text-center text-xs text-mg-text-muted mt-1 mb-2">
+            좋아요: 나 +<?php echo $_mg_like_giver; ?>P, 작성자 +<?php echo $_mg_like_receiver; ?>P
+            <span class="mx-1">|</span>
+            남은 횟수: <span id="like-remaining" class="<?php echo $_mg_like_remaining <= 0 ? 'text-mg-error' : 'text-mg-accent'; ?>"><?php echo $_mg_like_remaining; ?></span>/<?php echo $_mg_like_limit; ?>
+        </div>
+        <?php } ?>
         <form id="good_form">
             <input type="hidden" name="bo_table" value="<?php echo $bo_table; ?>">
             <input type="hidden" name="wr_id" value="<?php echo $wr_id; ?>">
@@ -147,12 +168,33 @@ $mg_view_char = mg_get_write_character($bo_table, $wr_id);
 
 <script>
 function good_choice(f, good) {
-    var href = '<?php echo G5_BBS_URL; ?>/good.php?bo_table=' + f.bo_table.value + '&wr_id=' + f.wr_id.value + '&good=' + good;
-    fetch(href)
-        .then(res => res.text())
-        .then(data => {
-            if (data) alert(data);
-            else location.reload();
-        });
+    var fd = new FormData();
+    fd.append('bo_table', f.bo_table.value);
+    fd.append('wr_id', f.wr_id.value);
+    fd.append('good', good);
+    fd.append('js', 'on');
+
+    fetch('<?php echo G5_BBS_URL; ?>/good.php', { method: 'POST', body: fd })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+            // 카운트 업데이트
+            var btn = f.parentNode.querySelector(good === 'good' ? '.text-mg-success.font-medium' : '.text-mg-error.font-medium');
+            if (btn && data.count) btn.textContent = data.count;
+
+            // 보상 정보 표시
+            if (data.like_reward && data.like_reward.success) {
+                var r = data.like_reward;
+                var remainEl = document.getElementById('like-remaining');
+                if (remainEl) {
+                    remainEl.textContent = r.remaining;
+                    remainEl.className = r.remaining <= 0 ? 'text-mg-error' : 'text-mg-accent';
+                }
+            }
+        })
+        .catch(function() { location.reload(); });
 }
 </script>

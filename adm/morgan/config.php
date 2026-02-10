@@ -305,6 +305,122 @@ require_once __DIR__.'/_head.php';
 
             <hr style="border:0;border-top:1px solid var(--mg-bg-tertiary);margin:1.5rem 0;">
 
+            <h3 style="font-size:1rem;font-weight:600;margin-bottom:1rem;color:var(--mg-accent);">인장 설정</h3>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem; margin-bottom:1.5rem;">
+                <div class="mg-form-group">
+                    <label class="mg-form-label">인장 시스템</label>
+                    <div style="display:flex;gap:1rem;margin-top:0.5rem;">
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="seal_enable" value="1" <?php echo (!isset($mg_configs['seal_enable']) || $mg_configs['seal_enable'] == '1') ? 'checked' : ''; ?>>
+                            <span>사용</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="seal_enable" value="0" <?php echo (isset($mg_configs['seal_enable']) && $mg_configs['seal_enable'] == '0') ? 'checked' : ''; ?>>
+                            <span>사용안함</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mg-form-group">
+                    <label class="mg-form-label">이미지 업로드 허용</label>
+                    <div style="display:flex;gap:1rem;margin-top:0.5rem;">
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="seal_image_upload" value="1" <?php echo (!isset($mg_configs['seal_image_upload']) || $mg_configs['seal_image_upload'] == '1') ? 'checked' : ''; ?>>
+                            <span>허용</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="seal_image_upload" value="0" <?php echo (isset($mg_configs['seal_image_upload']) && $mg_configs['seal_image_upload'] == '0') ? 'checked' : ''; ?>>
+                            <span>비허용</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mg-form-group">
+                    <label class="mg-form-label">외부 이미지 URL 허용</label>
+                    <div style="display:flex;gap:1rem;margin-top:0.5rem;">
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="seal_image_url" value="1" <?php echo (!isset($mg_configs['seal_image_url']) || $mg_configs['seal_image_url'] == '1') ? 'checked' : ''; ?>>
+                            <span>허용</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="seal_image_url" value="0" <?php echo (isset($mg_configs['seal_image_url']) && $mg_configs['seal_image_url'] == '0') ? 'checked' : ''; ?>>
+                            <span>비허용</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mg-form-group">
+                    <label class="mg-form-label">링크 허용</label>
+                    <div style="display:flex;gap:1rem;margin-top:0.5rem;">
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="seal_link_allow" value="1" <?php echo (!isset($mg_configs['seal_link_allow']) || $mg_configs['seal_link_allow'] == '1') ? 'checked' : ''; ?>>
+                            <span>허용</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="seal_link_allow" value="0" <?php echo (isset($mg_configs['seal_link_allow']) && $mg_configs['seal_link_allow'] == '0') ? 'checked' : ''; ?>>
+                            <span>비허용</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="seal_tagline_max">한마디 최대 글자수</label>
+                    <input type="number" name="seal_tagline_max" id="seal_tagline_max" value="<?php echo isset($mg_configs['seal_tagline_max']) ? $mg_configs['seal_tagline_max'] : '50'; ?>" class="mg-form-input" min="10" max="200">
+                </div>
+
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="seal_content_max">자유 영역 최대 글자수</label>
+                    <input type="number" name="seal_content_max" id="seal_content_max" value="<?php echo isset($mg_configs['seal_content_max']) ? $mg_configs['seal_content_max'] : '300'; ?>" class="mg-form-input" min="50" max="1000">
+                </div>
+
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="seal_image_max_size">이미지 최대 크기 (KB)</label>
+                    <input type="number" name="seal_image_max_size" id="seal_image_max_size" value="<?php echo isset($mg_configs['seal_image_max_size']) ? $mg_configs['seal_image_max_size'] : '500'; ?>" class="mg-form-input" min="100" max="5000">
+                </div>
+
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="seal_trophy_slots">트로피 슬롯 수</label>
+                    <input type="number" name="seal_trophy_slots" id="seal_trophy_slots" value="<?php echo isset($mg_configs['seal_trophy_slots']) ? $mg_configs['seal_trophy_slots'] : '3'; ?>" class="mg-form-input" min="0" max="10">
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem; margin-bottom:1.5rem;">
+                <div class="mg-form-group">
+                    <label class="mg-form-label">역극 이음에 표시</label>
+                    <div style="display:flex;gap:1rem;margin-top:0.5rem;">
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="seal_show_in_rp" value="1" <?php echo (!isset($mg_configs['seal_show_in_rp']) || $mg_configs['seal_show_in_rp'] == '1') ? 'checked' : ''; ?>>
+                            <span>표시</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="seal_show_in_rp" value="0" <?php echo (isset($mg_configs['seal_show_in_rp']) && $mg_configs['seal_show_in_rp'] == '0') ? 'checked' : ''; ?>>
+                            <span>미표시</span>
+                        </label>
+                    </div>
+                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">역극 이음에 compact 인장 표시</small>
+                </div>
+
+                <div class="mg-form-group">
+                    <label class="mg-form-label">댓글에 표시</label>
+                    <div style="display:flex;gap:1rem;margin-top:0.5rem;">
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="seal_show_in_comment" value="1" <?php echo (isset($mg_configs['seal_show_in_comment']) && $mg_configs['seal_show_in_comment'] == '1') ? 'checked' : ''; ?>>
+                            <span>표시</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="seal_show_in_comment" value="0" <?php echo (!isset($mg_configs['seal_show_in_comment']) || $mg_configs['seal_show_in_comment'] == '0') ? 'checked' : ''; ?>>
+                            <span>미표시</span>
+                        </label>
+                    </div>
+                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">게시글 댓글에 인장 표시 (부하 주의)</small>
+                </div>
+            </div>
+
+            <hr style="border:0;border-top:1px solid var(--mg-bg-tertiary);margin:1.5rem 0;">
+
             <h3 style="font-size:1rem;font-weight:600;margin-bottom:1rem;color:var(--mg-accent);">디자인 설정</h3>
 
             <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:1.5rem;">

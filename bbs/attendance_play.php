@@ -37,6 +37,11 @@ if ($result['success'] && function_exists('mg_pioneer_enabled') && mg_pioneer_en
     }
 }
 
+// Morgan: 업적 트리거 (출석)
+if ($result['success'] && function_exists('mg_trigger_achievement')) {
+    mg_trigger_achievement($member['mb_id'], 'attendance_total');
+}
+
 // 결과에 렌더링된 HTML 추가
 $result['html'] = $game->renderResult($result);
 

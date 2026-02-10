@@ -35,6 +35,17 @@ $list_href = isset($list_href) ? $list_href : '';
 $is_edit = $w === 'u';
 $form_title = $is_edit ? '포스트잇 수정' : '새 포스트잇';
 
+// 보상 유형 (request 모드)
+$_mg_br_mode = '';
+$_mg_reward_types = array();
+if ($is_member && !$is_edit && function_exists('mg_get_board_reward')) {
+    $_mg_br = mg_get_board_reward($bo_table);
+    if ($_mg_br && $_mg_br['br_mode'] === 'request') {
+        $_mg_br_mode = 'request';
+        $_mg_reward_types = mg_get_reward_types($bo_table);
+    }
+}
+
 // 자동 제목 생성 (날짜 기반)
 $auto_subject = $is_edit ? $subject : date('Y-m-d H:i') . ' 포스트잇';
 ?>
@@ -77,6 +88,23 @@ $auto_subject = $is_edit ? $subject : date('Y-m-d H:i') . ' 포스트잇';
             <div class="mb-4">
                 <label for="wr_password" class="block text-sm font-medium text-mg-text-secondary mb-2">비밀번호 <span class="text-mg-error">*</span></label>
                 <input type="password" name="wr_password" id="wr_password" class="input" <?php echo $is_edit ? '' : 'required'; ?> placeholder="비밀번호를 입력하세요">
+            </div>
+            <?php } ?>
+
+            <!-- 보상 유형 (request 모드) -->
+            <?php if ($_mg_br_mode === 'request' && !empty($_mg_reward_types)) { ?>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-mg-text-secondary mb-2">보상 요청</label>
+                <select name="reward_type" class="input">
+                    <option value="">보상 요청 안 함</option>
+                    <?php foreach ($_mg_reward_types as $rwt) { ?>
+                    <option value="<?php echo $rwt['rwt_id']; ?>">
+                        <?php echo htmlspecialchars($rwt['rwt_name']); ?> - <?php echo number_format($rwt['rwt_point']); ?>P
+                        <?php if ($rwt['rwt_desc']) echo '(' . htmlspecialchars($rwt['rwt_desc']) . ')'; ?>
+                    </option>
+                    <?php } ?>
+                </select>
+                <p class="text-xs text-mg-text-muted mt-1">보상을 요청하면 관리자 검토 후 지급됩니다.</p>
             </div>
             <?php } ?>
 

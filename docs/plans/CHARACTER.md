@@ -1,10 +1,12 @@
 # 캐릭터 시스템 기획
 
+> **구현 완료** (Phase 2)
+
 > Morgan Edition - 캐릭터 시스템 설계
 > 참고: vn_engine(아보카도) 캐릭터 시스템
 
-> ⚠️ **스키마 참조**: 최종 테이블 구조는 [PLAN_DB.md](./PLAN_DB.md) 참조
-> 이 문서의 테이블/필드명은 설계 참고용이며, 실제 구현 시 PLAN_DB.md 기준
+> ⚠️ **스키마 참조**: 최종 테이블 구조는 [DB.md](./DB.md) 참조
+> 이 문서의 테이블/필드명은 설계 참고용이며, 실제 구현 시 DB.md 기준
 > (예: ch_side → side_id, side.si_id → side.side_id, class.cl_id → class.class_id)
 
 ---

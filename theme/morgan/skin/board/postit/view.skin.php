@@ -10,6 +10,17 @@ if (!defined('_GNUBOARD_')) exit;
 // Morgan 플러그인 로드
 include_once(G5_PATH.'/plugin/morgan/morgan.php');
 
+// 좋아요 보상 잔여 횟수
+$_mg_like_daily = array('count' => 0, 'targets' => array());
+$_mg_like_limit = (int)mg_config('like_daily_limit', 5);
+$_mg_like_giver = (int)mg_config('like_giver_point', 10);
+$_mg_like_receiver = (int)mg_config('like_receiver_point', 30);
+$_mg_like_remaining = $_mg_like_limit;
+if ($is_member && function_exists('mg_like_get_daily') && $_mg_like_limit > 0) {
+    $_mg_like_daily = mg_like_get_daily($member['mb_id']);
+    $_mg_like_remaining = max(0, $_mg_like_limit - $_mg_like_daily['count']);
+}
+
 // 포스트잇 배경색/악센트색 (list 스킨과 동일)
 $postit_colors = array(
     'bg-amber-900/30',
@@ -74,6 +85,9 @@ $postit_accent = $postit_accents[$color_index];
         </div>
         <?php } ?>
 
+        <!-- 인장 (시그니처 카드) -->
+        <?php if (function_exists('mg_render_seal')) { echo mg_render_seal($view['mb_id'], 'full'); } ?>
+
         <!-- 추천/비추천 -->
         <?php if ($is_good || $is_nogood) { ?>
         <div class="flex items-center justify-center gap-4 border-t border-white/10 p-4">
@@ -94,6 +108,13 @@ $postit_accent = $postit_accents[$color_index];
             </button>
             <?php } ?>
         </div>
+        <?php if ($is_good && $_mg_like_limit > 0 && $_mg_like_giver + $_mg_like_receiver > 0) { ?>
+        <div id="like-reward-info" class="text-center text-xs text-mg-text-muted mt-1 mb-2 px-4">
+            좋아요: 나 +<?php echo $_mg_like_giver; ?>P, 작성자 +<?php echo $_mg_like_receiver; ?>P
+            <span class="mx-1">|</span>
+            남은 횟수: <span id="like-remaining" class="<?php echo $_mg_like_remaining <= 0 ? 'text-mg-error' : 'text-mg-accent'; ?>"><?php echo $_mg_like_remaining; ?></span>/<?php echo $_mg_like_limit; ?>
+        </div>
+        <?php } ?>
         <form id="good_form">
             <input type="hidden" name="bo_table" value="<?php echo $bo_table; ?>">
             <input type="hidden" name="wr_id" value="<?php echo $wr_id; ?>">
@@ -150,12 +171,31 @@ $postit_accent = $postit_accents[$color_index];
 
 <script>
 function good_choice(f, good) {
-    var href = '<?php echo G5_BBS_URL; ?>/good.php?bo_table=' + f.bo_table.value + '&wr_id=' + f.wr_id.value + '&good=' + good;
-    fetch(href)
-        .then(res => res.text())
-        .then(data => {
-            if (data) alert(data);
-            else location.reload();
-        });
+    var fd = new FormData();
+    fd.append('bo_table', f.bo_table.value);
+    fd.append('wr_id', f.wr_id.value);
+    fd.append('good', good);
+    fd.append('js', 'on');
+
+    fetch('<?php echo G5_BBS_URL; ?>/good.php', { method: 'POST', body: fd })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+            var btn = f.parentNode.querySelector(good === 'good' ? '.text-mg-success.font-medium' : '.text-mg-error.font-medium');
+            if (btn && data.count) btn.textContent = data.count;
+
+            if (data.like_reward && data.like_reward.success) {
+                var r = data.like_reward;
+                var remainEl = document.getElementById('like-remaining');
+                if (remainEl) {
+                    remainEl.textContent = r.remaining;
+                    remainEl.className = r.remaining <= 0 ? 'text-mg-error' : 'text-mg-accent';
+                }
+            }
+        })
+        .catch(function() { location.reload(); });
 }
 </script>

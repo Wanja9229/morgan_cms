@@ -1,9 +1,11 @@
 # 상점 시스템 기획
 
+> **구현 완료** (Phase 5)
+
 > Morgan Edition - 상점 시스템 설계
 > 참고: vn_engine 상점 + 커뮤니티 특화 확장
 
-> ⚠️ **스키마 참조**: 최종 테이블 구조는 [PLAN_DB.md](./PLAN_DB.md) 참조
+> ⚠️ **스키마 참조**: 최종 테이블 구조는 [DB.md](./DB.md) 참조
 > 이 문서의 테이블명은 설계 참고용이며, 실제 구현 시 mg_ 접두사 사용
 > (예: shop_item → mg_shop_item, inventory → mg_inventory)
 

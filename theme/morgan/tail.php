@@ -248,7 +248,53 @@ if (isset($is_ajax_request) && $is_ajax_request) {
 if (function_exists('get_javascript_file')) {
     echo get_javascript_file();
 }
+
+// 업적 달성 토스트
+if (!empty($_SESSION['mg_achievement_toast'])) {
+    $toast = $_SESSION['mg_achievement_toast'];
+    unset($_SESSION['mg_achievement_toast']);
+    $toast_rarity_colors = array(
+        'common' => '#949ba4', 'uncommon' => '#22c55e', 'rare' => '#3b82f6',
+        'epic' => '#a855f7', 'legendary' => '#f59e0b',
+    );
+    $toast_rarity_labels = array(
+        'common' => 'Common', 'uncommon' => 'Uncommon', 'rare' => 'Rare',
+        'epic' => 'Epic', 'legendary' => 'Legendary',
+    );
+    $toast_color = $toast_rarity_colors[$toast['rarity'] ?? 'common'] ?? '#949ba4';
+    $toast_label = $toast_rarity_labels[$toast['rarity'] ?? 'common'] ?? '';
 ?>
+<div id="mg-achievement-toast" style="position:fixed;bottom:-200px;left:50%;transform:translateX(-50%);z-index:9999;min-width:320px;max-width:420px;background:#1e1f22;border:2px solid <?php echo $toast_color; ?>;border-radius:12px;padding:16px 20px;box-shadow:0 0 30px <?php echo $toast_color; ?>40,0 8px 32px rgba(0,0,0,.5);transition:bottom .6s cubic-bezier(.34,1.56,.64,1);pointer-events:auto;">
+    <div style="display:flex;align-items:center;gap:14px;">
+        <div style="flex-shrink:0;width:48px;height:48px;border-radius:8px;border:2px solid <?php echo $toast_color; ?>;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.3);">
+            <?php if (!empty($toast['icon'])) { ?>
+            <img src="<?php echo htmlspecialchars($toast['icon']); ?>" alt="" style="width:36px;height:36px;object-fit:contain;">
+            <?php } else { ?>
+            <span style="font-size:24px;">&#127942;</span>
+            <?php } ?>
+        </div>
+        <div style="flex:1;min-width:0;">
+            <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:<?php echo $toast_color; ?>;margin-bottom:2px;"><?php echo $toast_label; ?> Achievement Unlocked!</div>
+            <div style="font-size:15px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?php echo htmlspecialchars($toast['name']); ?></div>
+            <?php if (!empty($toast['desc'])) { ?>
+            <div style="font-size:12px;color:#b5bac1;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?php echo htmlspecialchars($toast['desc']); ?></div>
+            <?php } ?>
+            <?php if (!empty($toast['reward'])) { ?>
+            <div style="font-size:11px;color:<?php echo $toast_color; ?>;margin-top:4px;font-weight:500;">&#127873; <?php echo htmlspecialchars($toast['reward']); ?></div>
+            <?php } ?>
+        </div>
+        <button onclick="document.getElementById('mg-achievement-toast').style.bottom='-200px'" style="flex-shrink:0;background:none;border:none;color:#949ba4;cursor:pointer;padding:4px;font-size:18px;line-height:1;">&times;</button>
+    </div>
+</div>
+<script>
+(function(){
+    var t = document.getElementById('mg-achievement-toast');
+    if (!t) return;
+    setTimeout(function(){ t.style.bottom = '24px'; }, 300);
+    setTimeout(function(){ t.style.bottom = '-200px'; }, 6000);
+})();
+</script>
+<?php } ?>
 
 </body>
 </html>

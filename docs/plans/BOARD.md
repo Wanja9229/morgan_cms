@@ -1,9 +1,11 @@
 # 게시판 시스템 기획
 
+> **구현 완료** (Phase 6/11)
+
 > Morgan Edition - 게시판 시스템 설계
 > 기반: 그누보드5 게시판 + 커뮤니티 특화 확장
 
-> ⚠️ **스키마 참조**: 최종 테이블 구조는 [PLAN_DB.md](./PLAN_DB.md) 참조
+> ⚠️ **스키마 참조**: 최종 테이블 구조는 [DB.md](./DB.md) 참조
 > 이 문서의 테이블명은 설계 참고용이며, 실제 구현 시 mg_ 접두사 사용
 > (예: rp_thread → mg_rp_thread, rp_reply → mg_rp_reply)
 

@@ -44,9 +44,9 @@ if (!$item) {
 }
 
 // 구매 가능 여부 체크
-$can_buy = mg_can_buy_item($member['mb_id'], $si_id);
-if ($can_buy !== true) {
-    echo json_encode(['success' => false, 'message' => $can_buy]);
+$_can_buy = mg_can_buy_item($member['mb_id'], $si_id);
+if (!$_can_buy['can_buy']) {
+    echo json_encode(['success' => false, 'message' => $_can_buy['message']]);
     exit;
 }
 
@@ -56,6 +56,11 @@ $result = mg_buy_item($member['mb_id'], $si_id);
 if ($result === true) {
     // 회원 정보 다시 조회
     $member = get_member($member['mb_id']);
+
+    // Morgan: 업적 트리거 (상점 구매)
+    if (function_exists('mg_trigger_achievement')) {
+        mg_trigger_achievement($member['mb_id'], 'shop_buy_count');
+    }
 
     echo json_encode([
         'success' => true,

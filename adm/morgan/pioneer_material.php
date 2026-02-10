@@ -33,14 +33,14 @@ require_once __DIR__.'/_head.php';
         <div class="mg-stat-label">총 유저 보유량</div>
         <div class="mg-stat-value"><?php
             global $mg;
-            $total = sql_fetch("SELECT COALESCE(SUM(um_amount), 0) as total FROM {$mg['user_material_table']}");
+            $total = sql_fetch("SELECT COALESCE(SUM(um_count), 0) as total FROM {$mg['user_material_table']}");
             echo number_format($total['total'] ?? 0);
         ?></div>
     </div>
     <div class="mg-stat-card">
         <div class="mg-stat-label">재료 보유 유저</div>
         <div class="mg-stat-value"><?php
-            $users = sql_fetch("SELECT COUNT(DISTINCT mb_id) as cnt FROM {$mg['user_material_table']} WHERE um_amount > 0");
+            $users = sql_fetch("SELECT COUNT(DISTINCT mb_id) as cnt FROM {$mg['user_material_table']} WHERE um_count > 0");
             echo number_format($users['cnt'] ?? 0);
         ?></div>
     </div>
@@ -68,7 +68,7 @@ require_once __DIR__.'/_head.php';
             </thead>
             <tbody>
                 <?php foreach ($material_types as $mt) {
-                    $mat_total = sql_fetch("SELECT COALESCE(SUM(um_amount), 0) as total FROM {$mg['user_material_table']} WHERE mt_id = {$mt['mt_id']}");
+                    $mat_total = sql_fetch("SELECT COALESCE(SUM(um_count), 0) as total FROM {$mg['user_material_table']} WHERE mt_id = {$mt['mt_id']}");
                 ?>
                 <tr>
                     <td style="text-align:center;"><?php echo $mt['mt_order']; ?></td>

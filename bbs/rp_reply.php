@@ -88,6 +88,16 @@ if ($result['success']) {
     if (function_exists('mg_pioneer_enabled') && mg_pioneer_enabled()) {
         mg_reward_material($member['mb_id'], 'rp');
     }
+
+    // Morgan: 잇기 누적 보상 체크
+    if (function_exists('mg_rp_check_reply_reward')) {
+        mg_rp_check_reply_reward($rt_id);
+    }
+
+    // Morgan: 업적 트리거 (RP 이음)
+    if (function_exists('mg_trigger_achievement')) {
+        mg_trigger_achievement($member['mb_id'], 'rp_reply_count');
+    }
 }
 
 echo json_encode($result);

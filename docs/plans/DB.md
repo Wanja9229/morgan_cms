@@ -66,6 +66,22 @@
 | mg_emoticon_set | 이모티콘 셋 |
 | mg_emoticon | 이모티콘 개별 이미지 |
 | mg_emoticon_own | 이모티콘 보유 |
+| mg_main_row | 메인 페이지 행 |
+| mg_main_widget | 메인 페이지 위젯 |
+| mg_rp_completion | **역극 완결 기록** |
+| mg_rp_reply_reward_log | **잇기 누적 보상 추적** |
+| mg_material_type | **재료 종류** |
+| mg_user_material | **유저 재료 보유** |
+| mg_user_stamina | **유저 노동력** |
+| mg_facility | **시설 정의** |
+| mg_facility_material_cost | **시설별 필요 재료** |
+| mg_facility_contribution | **시설 기여 기록** |
+| mg_facility_honor | **명예의 전당** |
+| mg_board_reward | **게시판별 보상 설정** |
+| mg_like_log | **좋아요 보상 로그** |
+| mg_like_daily | **일일 좋아요 카운터** |
+| mg_reward_type | **보상 유형 (request용)** |
+| mg_reward_queue | **정산 대기열** |
 | mg_furniture_category | 가구 카테고리 (2차) |
 | mg_furniture | 가구 아이템 (2차) |
 | mg_furniture_own | 가구 보유 (2차) |
@@ -1050,7 +1066,268 @@ hp_full_recovery_cost      # HP 완전회복 비용 (기본 300)
 
 ---
 
-## 12. ER 다이어그램 (관계)
+## 12. 메인 빌더
+
+### 12.1 mg_main_row (메인 페이지 행)
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| row_id | int AUTO_INCREMENT | PK |
+| row_order | int | 정렬 순서 |
+| row_use | tinyint(1) | 사용 여부 |
+
+### 12.2 mg_main_widget (메인 페이지 위젯)
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| widget_id | int AUTO_INCREMENT | PK |
+| row_id | int | 행 ID (FK → mg_main_row) |
+| widget_type | varchar(50) | 위젯 타입 |
+| widget_order | int | 정렬 순서 |
+| widget_cols | int | 컬럼 너비 (1-12) |
+| widget_config | text | 위젯 설정 (JSON) |
+| widget_use | tinyint(1) | 사용 여부 |
+
+**인덱스**
+- PRIMARY KEY (widget_id)
+- INDEX idx_row_id (row_id)
+- FK: row_id → mg_main_row(row_id) ON DELETE CASCADE
+
+---
+
+## 13. 역극 보상 (RP Reward)
+
+### 13.1 mg_rp_completion (역극 완결 기록)
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| rc_id | int AUTO_INCREMENT | PK |
+| rt_id | int | 역극 스레드 ID (FK) |
+| ch_id | int | 완결 캐릭터 ID |
+| mb_id | varchar(20) | 캐릭터 소유자 |
+| rc_mutual_count | int | 판장과의 상호 이음 수 |
+| rc_total_replies | int | 해당 캐릭터 총 이음 수 |
+| rc_rewarded | tinyint | 보상 지급 여부 (1=지급) |
+| rc_point | int | 지급된 포인트 |
+| rc_status | enum('completed','revoked') | 상태 |
+| rc_type | enum('manual','auto') | 처리 방식 |
+| rc_datetime | datetime | 처리일 |
+| rc_by | varchar(20) | 처리자 (수동: 판장 mb_id, 자동: NULL) |
+
+**인덱스**
+- PRIMARY KEY (rc_id)
+- UNIQUE INDEX idx_rt_ch (rt_id, ch_id)
+- INDEX idx_mb_id (mb_id)
+- INDEX idx_datetime (rc_datetime)
+
+### 13.2 mg_rp_reply_reward_log (잇기 누적 보상 추적)
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| rrl_id | int AUTO_INCREMENT | PK |
+| rt_id | int | 스레드 ID (FK) |
+| rrl_reply_count | int | 보상 지급 시점 누적 이음 수 |
+| rrl_point | int | 지급 포인트 (인당) |
+| rrl_datetime | datetime | 지급일 |
+
+**인덱스**
+- PRIMARY KEY (rrl_id)
+- INDEX idx_rt_id (rt_id)
+
+---
+
+## 14. 개척 시스템 (Pioneer System)
+
+### 14.1 mg_material_type (재료 종류)
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| mt_id | int AUTO_INCREMENT | PK |
+| mt_name | varchar(50) | 재료 이름 |
+| mt_code | varchar(30) | 코드 (wood, stone 등) UNIQUE |
+| mt_icon | varchar(200) | 아이콘 이미지/이모지 |
+| mt_desc | varchar(200) | 설명 |
+| mt_order | int | 정렬 순서 |
+
+### 14.2 mg_user_material (유저 재료 보유량)
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| um_id | int AUTO_INCREMENT | PK |
+| mb_id | varchar(20) | 회원 ID |
+| mt_id | int | 재료 종류 (FK) |
+| um_count | int | 보유 수량 |
+
+**인덱스**
+- UNIQUE KEY mb_mt (mb_id, mt_id)
+
+### 14.3 mg_user_stamina (유저 노동력)
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| us_id | int AUTO_INCREMENT | PK |
+| mb_id | varchar(20) | 회원 ID (UNIQUE) |
+| us_current | int | 현재 노동력 (기본 10) |
+| us_max | int | 일일 최대 |
+| us_last_reset | date | 마지막 리셋 날짜 |
+
+### 14.4 mg_facility (시설 정의)
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| fc_id | int AUTO_INCREMENT | PK |
+| fc_name | varchar(100) | 시설 이름 |
+| fc_desc | text | 설명 |
+| fc_image | varchar(500) | 시설 이미지 |
+| fc_icon | varchar(100) | 아이콘 |
+| fc_status | enum('locked','building','complete') | 상태 |
+| fc_unlock_type | varchar(50) | 해금 대상 (board, shop, gift, achievement, history, fountain) |
+| fc_unlock_target | varchar(100) | 해금 대상 ID |
+| fc_stamina_cost | int | 필요 총 노동력 |
+| fc_stamina_current | int | 현재 투입된 노동력 |
+| fc_order | int | 표시 순서 |
+| fc_complete_date | datetime | 완공일 |
+
+**인덱스**
+- INDEX fc_status (fc_status)
+- INDEX fc_order (fc_order)
+- INDEX fc_unlock (fc_unlock_type, fc_unlock_target)
+
+### 14.5 mg_facility_material_cost (시설별 필요 재료)
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| fmc_id | int AUTO_INCREMENT | PK |
+| fc_id | int | 시설 ID (FK) |
+| mt_id | int | 재료 종류 (FK) |
+| fmc_required | int | 필요 수량 |
+| fmc_current | int | 현재 투입된 수량 |
+
+**인덱스**
+- UNIQUE KEY fc_mt (fc_id, mt_id)
+
+### 14.6 mg_facility_contribution (기여 기록)
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| fcn_id | int AUTO_INCREMENT | PK |
+| fc_id | int | 시설 ID (FK) |
+| mb_id | varchar(20) | 회원 ID |
+| fcn_type | enum('stamina','material') | 기여 유형 |
+| mt_id | int | 재료 종류 (type=material일 때, nullable) |
+| fcn_amount | int | 투입량 |
+| fcn_datetime | datetime | 투입 시각 |
+
+**인덱스**
+- INDEX fc_id (fc_id)
+- INDEX mb_id (mb_id)
+
+### 14.7 mg_facility_honor (명예의 전당)
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| fh_id | int AUTO_INCREMENT | PK |
+| fc_id | int | 시설 ID (FK) |
+| fh_rank | int | 순위 (1, 2, 3) |
+| fh_category | varchar(30) | 카테고리 (stamina, wood, stone 등) |
+| mb_id | varchar(20) | 회원 ID |
+| fh_amount | int | 총 기여량 |
+
+**인덱스**
+- INDEX fc_id (fc_id)
+- INDEX fh_category (fh_category)
+
+---
+
+## 15. 보상 시스템 (Reward System)
+
+### 15.1 mg_board_reward (게시판별 보상 설정)
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| br_id | int AUTO_INCREMENT | PK |
+| bo_table | varchar(20) | 게시판 (UNIQUE) |
+| br_mode | enum('auto','request','off') | 보상 모드 |
+| br_point | int | 기본 포인트 |
+| br_bonus_500 | int | 500자 이상 보너스 |
+| br_bonus_1000 | int | 1000자 이상 보너스 |
+| br_bonus_image | int | 이미지 첨부 보너스 |
+| br_material_use | tinyint | 재료 드롭 사용 |
+| br_material_chance | int | 드롭 확률 (0~100) |
+| br_material_list | text | 드롭 대상 재료 JSON |
+| br_daily_limit | int | 일일 보상 횟수 (0=무제한) |
+| br_like_use | tinyint | 좋아요 보상 활성화 (0=비활성) |
+
+### 15.2 mg_like_log (좋아요 보상 로그)
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| ll_id | int AUTO_INCREMENT | PK |
+| mb_id | varchar(20) | 좋아요 누른 회원 |
+| target_mb_id | varchar(20) | 좋아요 받은 회원 |
+| bo_table | varchar(20) | 게시판 |
+| wr_id | int | 게시글 ID |
+| ll_giver_point | int | 누른 사람 보상 |
+| ll_receiver_point | int | 받은 사람 보상 |
+| ll_datetime | datetime | 일시 |
+
+**인덱스**
+- INDEX idx_mb_id (mb_id)
+- INDEX idx_target (target_mb_id)
+- INDEX idx_datetime (ll_datetime)
+
+### 15.3 mg_like_daily (일일 좋아요 카운터)
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| ld_id | int AUTO_INCREMENT | PK |
+| mb_id | varchar(20) | 회원 ID |
+| ld_date | date | 날짜 |
+| ld_count | int | 오늘 사용 횟수 |
+| ld_targets | text | 오늘 좋아요 준 대상 JSON |
+
+**인덱스**
+- UNIQUE KEY idx_mb_date (mb_id, ld_date)
+
+### 15.4 mg_reward_type (보상 요청 유형)
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| rwt_id | int AUTO_INCREMENT | PK |
+| bo_table | varchar(20) | 게시판 (NULL=전체 적용) |
+| rwt_name | varchar(100) | 유형 이름 |
+| rwt_point | int | 포인트 보상 |
+| rwt_material | text | 재료 보상 JSON |
+| rwt_desc | varchar(255) | 유저 가이드 텍스트 |
+| rwt_order | int | 정렬 순서 |
+| rwt_use | tinyint | 사용 여부 |
+
+**인덱스**
+- INDEX idx_bo_table (bo_table, rwt_order)
+
+### 15.5 mg_reward_queue (정산 대기열)
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| rq_id | int AUTO_INCREMENT | PK |
+| mb_id | varchar(20) | 요청 회원 |
+| bo_table | varchar(20) | 게시판 |
+| wr_id | int | 게시글 ID |
+| rwt_id | int | 보상 유형 ID (FK) |
+| rq_status | enum('pending','approved','rejected') | 상태 |
+| rq_datetime | datetime | 요청일 |
+| rq_process_datetime | datetime | 처리일 |
+| rq_process_mb_id | varchar(20) | 처리 스탭 |
+| rq_reject_reason | varchar(255) | 반려 사유 |
+
+**인덱스**
+- INDEX idx_status (rq_status, rq_datetime)
+- INDEX idx_mb_id (mb_id)
+- INDEX idx_bo_wr (bo_table, wr_id)
+
+---
+
+## 16. ER 다이어그램 (관계)
 
 ```
 g5_member (1) ─────┬───── (N) mg_character
@@ -1058,13 +1335,10 @@ g5_member (1) ─────┬───── (N) mg_character
                    │              ├── (1) mg_character_ruleset ── (1) mg_trpg_ruleset
                    │              │                                       │
                    │              │                                       └── (N) mg_trpg_stat_field
-                   │              │                                               (관리자 sf_use 토글)
                    │              │
                    │              ├── (N) mg_character_stat_value ── (1) mg_trpg_stat_field
-                   │              │       (캐릭터별 스탯/스킬 값)
                    │              │
                    │              ├── (N) mg_profile_value ── (1) mg_profile_field
-                   │              │       (RP용 프로필: 성격, 배경 등)
                    │              │
                    │              ├── (N) mg_character_log
                    │              │
@@ -1073,25 +1347,28 @@ g5_member (1) ─────┬───── (N) mg_character
                    ├───── (N) mg_rp_thread
                    │              │
                    │              ├── (N) mg_rp_reply
-                   │              │
-                   │              └── (N) mg_rp_member
+                   │              ├── (N) mg_rp_member
+                   │              ├── (N) mg_rp_completion
+                   │              └── (N) mg_rp_reply_reward_log
                    │
                    ├───── (N) g5_point
-                   │
                    ├───── (1) mg_attendance (per day)
-                   │
                    ├───── (1) mg_game_lottery_user
-                   │
                    ├───── (N) mg_inventory ── (1) mg_shop_item
-                   │
                    ├───── (N) mg_item_active
-                   │
                    ├───── (N) mg_gift (from/to)
-                   │
                    ├───── (N) mg_notification
+                   ├───── (1) mg_staff_auth
                    │
-                   └───── (1) mg_staff_auth
-
+                   │  [개척]
+                   ├───── (N) mg_user_material ── (1) mg_material_type
+                   ├───── (1) mg_user_stamina
+                   ├───── (N) mg_facility_contribution ── (1) mg_facility
+                   │
+                   │  [보상]
+                   ├───── (N) mg_like_log
+                   ├───── (1) mg_like_daily (per day)
+                   └───── (N) mg_reward_queue ── (1) mg_reward_type
 
 mg_side (1) ────── (N) mg_character
 mg_class (1) ───── (N) mg_character
@@ -1102,26 +1379,29 @@ mg_emoticon_set (1) ── (N) mg_emoticon
                 │
                 └── (N) mg_emoticon_own ── (1) g5_member
 
-mg_furniture_category (1) ── (N) mg_furniture
-                                    │
-                                    ├── (N) mg_furniture_own ── (1) g5_member
-                                    │
-                                    └── (N) mg_room.room_data (JSON 참조)
+mg_facility (1) ── (N) mg_facility_material_cost ── (1) mg_material_type
+             │
+             └── (N) mg_facility_honor
 
-mg_character (1) ── (1) mg_room
+mg_board_reward (1 per board) ── g5_board.bo_table
+
+mg_main_row (1) ── (N) mg_main_widget
 ```
 
 ---
 
-## 13. TODO
+## 17. TODO
 
 - [x] 불명확 사항 결정
-- [ ] SQL 생성 스크립트 작성
+- [x] SQL 생성 스크립트 작성 → `plugin/morgan/install/install.sql`
+- [x] Phase 1~8 테이블 확정
+- [x] Phase 9 개척 시스템 테이블 추가
+- [x] Phase 12 보상 시스템 테이블 추가
 - [ ] 샘플 데이터 스크립트 작성
 - [ ] 마이그레이션 스크립트 (그누보드 기본 → 수정)
 
 ---
 
 *작성일: 2026-02-03*
-*수정일: 2026-02-03*
-*상태: 스키마 확정, 문서 검토 완료*
+*수정일: 2026-02-10*
+*상태: Phase 1~12 스키마 확정, Phase 13~18 미반영*

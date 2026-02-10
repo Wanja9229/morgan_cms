@@ -324,11 +324,42 @@ if ($w == '' || $w == 'r') {
             sql_query(" update {$g5['board_table']} set bo_notice = '{$bo_notice}' where bo_table = '{$bo_table}' ");
         }
 
-        insert_point($member['mb_id'], $board['bo_write_point'], "{$board['bo_subject']} {$wr_id} 글쓰기", $bo_table, $wr_id, '쓰기');
+        // Morgan: 게시판별 보상 시스템
+        $_mg_reward_applied = false;
 
-        // Morgan: 글쓰기 재료 보상
-        if (function_exists('mg_pioneer_enabled') && mg_pioneer_enabled() && $member['mb_id']) {
+        // Morgan: request 모드 → 정산 큐 등록
+        $_mg_reward_type = isset($_POST['reward_type']) ? (int)$_POST['reward_type'] : 0;
+        $_br = function_exists('mg_get_board_reward') ? mg_get_board_reward($bo_table) : null;
+        if ($_br && $_br['br_mode'] === 'request' && $_mg_reward_type > 0
+            && function_exists('mg_add_reward_queue') && $member['mb_id']) {
+            mg_add_reward_queue($member['mb_id'], $bo_table, $wr_id, $_mg_reward_type);
+            $_mg_reward_applied = true;
+        }
+
+        if (!$_mg_reward_applied && function_exists('mg_apply_board_reward') && $member['mb_id']) {
+            $_content_len = mb_strlen(strip_tags($wr_content));
+            $_has_image = false;
+            if (isset($_FILES['bf_file']['name']) && is_array($_FILES['bf_file']['name'])) {
+                foreach ($_FILES['bf_file']['name'] as $_fn) {
+                    if ($_fn && preg_match("/\.({$config['cf_image_extension']})$/i", $_fn)) {
+                        $_has_image = true; break;
+                    }
+                }
+            }
+            $_mg_reward_applied = mg_apply_board_reward($member['mb_id'], $bo_table, $_content_len, $_has_image, $wr_id);
+        }
+        if (!$_mg_reward_applied) {
+            insert_point($member['mb_id'], $board['bo_write_point'], "{$board['bo_subject']} {$wr_id} 글쓰기", $bo_table, $wr_id, '쓰기');
+        }
+
+        // Morgan: 글쓰기 재료 보상 (전역 - mg_board_reward에서 재료 미사용 시)
+        if (!$_mg_reward_applied && function_exists('mg_pioneer_enabled') && mg_pioneer_enabled() && $member['mb_id']) {
             mg_reward_material($member['mb_id'], 'write');
+        }
+
+        // Morgan: 업적 트리거 (글 작성)
+        if (function_exists('mg_trigger_achievement')) {
+            mg_trigger_achievement($member['mb_id'], 'write_count', 1, array('board' => $bo_table));
         }
     } else {
         // 답변은 코멘트 포인트를 부여함
@@ -338,6 +369,11 @@ if ($w == '' || $w == 'r') {
         // Morgan: 답글 재료 보상
         if (function_exists('mg_pioneer_enabled') && mg_pioneer_enabled() && $member['mb_id']) {
             mg_reward_material($member['mb_id'], 'write');
+        }
+
+        // Morgan: 업적 트리거 (댓글 작성)
+        if (function_exists('mg_trigger_achievement')) {
+            mg_trigger_achievement($member['mb_id'], 'comment_count', 1, array('board' => $bo_table));
         }
     }
 }  else if ($w == 'u') {

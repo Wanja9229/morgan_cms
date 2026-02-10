@@ -128,6 +128,14 @@ function rp_time_ago($datetime) {
                 }
             }
             $is_full = ($thread['rt_max_member'] > 0 && count($thread_members) >= $thread['rt_max_member']);
+            // 완결 기록 로딩
+            $completions_map = array();
+            $comp_q = sql_query("SELECT * FROM {$g5['mg_rp_completion_table']} WHERE rt_id = ".(int)$thread['rt_id']);
+            if ($comp_q) {
+                while ($comp_row = sql_fetch_array($comp_q)) {
+                    $completions_map[(int)$comp_row['ch_id']] = $comp_row;
+                }
+            }
         ?>
         <div class="card" id="rp-thread-<?php echo $thread['rt_id']; ?>" data-rt-id="<?php echo $thread['rt_id']; ?>" data-status="<?php echo $is_open ? 'open' : 'closed'; ?>" data-owner="<?php echo htmlspecialchars($thread['mb_id']); ?>" data-owner-ch="<?php echo (int)$thread['ch_id']; ?>">
 
@@ -167,13 +175,13 @@ function rp_time_ago($datetime) {
                 </div>
 
                 <div class="flex items-center gap-2 flex-shrink-0">
-                    <!-- 완결 버튼 (작성자 + open일 때만) -->
+                    <!-- 전체 완결 버튼 (작성자 + open일 때만) -->
                     <?php if ($is_owner && $is_open) { ?>
                     <a href="<?php echo G5_BBS_URL; ?>/rp_close.php?rt_id=<?php echo $thread['rt_id']; ?>"
-                       onclick="return confirm('이 역극을 완결하시겠습니까?');"
+                       onclick="return confirm('모든 참여자를 완결 처리하고 역극을 종료하시겠습니까?\n(보상 조건 미충족 캐릭터는 보상 없이 완결됩니다)');"
                        class="text-xs px-3 py-1.5 rounded bg-mg-bg-tertiary text-mg-text-muted hover:bg-red-500/20 hover:text-red-400 transition-colors"
                        data-no-spa>
-                        완결
+                        전체 완결
                     </a>
                     <?php } ?>
                     <!-- 관리자: 판 삭제 버튼 -->
@@ -213,21 +221,38 @@ function rp_time_ago($datetime) {
 
                 <div class="rp-participants space-y-1" id="rp-participants-<?php echo $thread['rt_id']; ?>">
                     <?php if (count($thread_members) > 0) { ?>
-                    <?php foreach ($thread_members as $mem) { ?>
-                    <div class="rp-participant" data-rt-id="<?php echo $thread['rt_id']; ?>" data-ch-id="<?php echo $mem['ch_id']; ?>">
+                    <?php foreach ($thread_members as $mem) {
+                        $mem_ch_id = (int)$mem['ch_id'];
+                        $is_completed = isset($completions_map[$mem_ch_id]);
+                        $is_owner_char = ($mem_ch_id === (int)$thread['ch_id']); // 판장 캐릭터
+                        $comp_data = $is_completed ? $completions_map[$mem_ch_id] : null;
+                    ?>
+                    <div class="rp-participant" data-rt-id="<?php echo $thread['rt_id']; ?>" data-ch-id="<?php echo $mem['ch_id']; ?>" data-completed="<?php echo $is_completed ? '1' : '0'; ?>">
                         <!-- 참여자 행 (클릭 가능) -->
                         <button type="button" onclick="toggleMessenger(this)"
                                 class="w-full flex items-center gap-2 py-2 px-3 rounded-lg hover:bg-mg-bg-tertiary/50 transition-colors text-left">
                             <?php if (!empty($mem['ch_thumb'])) { ?>
                             <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.$mem['ch_thumb']; ?>" alt=""
-                                 class="w-7 h-7 rounded-full object-cover flex-shrink-0">
+                                 class="w-7 h-7 rounded-full object-cover flex-shrink-0<?php echo $is_completed ? ' opacity-60' : ''; ?>">
                             <?php } else { ?>
-                            <div class="w-7 h-7 rounded-full bg-mg-bg-tertiary flex items-center justify-center flex-shrink-0">
+                            <div class="w-7 h-7 rounded-full bg-mg-bg-tertiary flex items-center justify-center flex-shrink-0<?php echo $is_completed ? ' opacity-60' : ''; ?>">
                                 <span class="text-xs font-bold text-mg-accent"><?php echo mb_substr($mem['ch_name'] ?: $mem['mb_nick'], 0, 1); ?></span>
                             </div>
                             <?php } ?>
-                            <span class="text-sm font-medium text-mg-text-primary"><?php echo htmlspecialchars($mem['ch_name'] ?: $mem['mb_nick']); ?></span>
+                            <span class="text-sm font-medium text-mg-text-primary<?php echo $is_completed ? ' opacity-60' : ''; ?>"><?php echo htmlspecialchars($mem['ch_name'] ?: $mem['mb_nick']); ?></span>
                             <span class="text-xs text-mg-text-muted rp-reply-count">(댓글 <?php echo (int)$mem['rm_reply_count']; ?>개)</span>
+                            <?php if ($is_completed && !$is_owner_char) { ?>
+                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] rounded-full <?php echo $comp_data['rc_rewarded'] ? 'bg-green-500/20 text-green-400' : 'bg-mg-bg-tertiary text-mg-text-muted'; ?>">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                완결<?php if ($comp_data['rc_rewarded']) echo ' +' . (int)$comp_data['rc_point'] . 'P'; ?>
+                            </span>
+                            <?php } elseif (!$is_owner_char && $is_owner && $is_open) { ?>
+                            <button type="button" onclick="event.stopPropagation();completeCharacter(<?php echo $thread['rt_id']; ?>,<?php echo $mem_ch_id; ?>,'<?php echo htmlspecialchars($mem['ch_name'] ?: $mem['mb_nick']); ?>')"
+                                    class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] rounded-full bg-mg-bg-tertiary text-mg-text-muted hover:bg-amber-500/20 hover:text-amber-400 transition-colors rp-complete-btn">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                완결
+                            </button>
+                            <?php } ?>
                             <!-- 토글 화살표 -->
                             <svg class="w-4 h-4 ml-auto text-mg-text-muted rp-toggle-arrow transition-transform duration-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -241,8 +266,8 @@ function rp_time_ago($datetime) {
                                 <div class="text-center text-mg-text-muted text-xs py-4">불러오는 중...</div>
                             </div>
                             <?php
-                            // 메신저 내 댓글 폼: 해당 캐릭터 소유자 OR 원글 작성자
-                            $show_messenger_form = ($is_open && $is_member && count($my_characters) > 0
+                            // 메신저 내 댓글 폼: 해당 캐릭터 소유자 OR 원글 작성자 (완결된 캐릭터는 잠금)
+                            $show_messenger_form = ($is_open && !$is_completed && $is_member && count($my_characters) > 0
                                 && ($mem['mb_id'] == $member['mb_id'] || $is_owner));
                             if ($show_messenger_form) { ?>
                             <div class="border-t border-mg-bg-tertiary p-2">
@@ -272,6 +297,13 @@ function rp_time_ago($datetime) {
                                         </button>
                                     </div>
                                 </form>
+                            </div>
+                            <?php } elseif ($is_completed && !$is_owner_char) { ?>
+                            <div class="border-t border-mg-bg-tertiary p-2">
+                                <p class="text-center text-xs text-mg-text-muted py-1 flex items-center justify-center gap-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    완결된 캐릭터입니다<?php if ($comp_data['rc_rewarded']) echo ' (+' . (int)$comp_data['rc_point'] . 'P)'; ?>
+                                </p>
                             </div>
                             <?php } ?>
                         </div>
@@ -564,6 +596,7 @@ function rp_time_ago($datetime) {
         if (reply.rr_image) {
             imageHtml = '<div class="mt-1.5"><img src="' + escapeHtml(reply.rr_image) + '" class="rounded-lg max-h-40 object-cover cursor-pointer hover:opacity-80 transition-opacity" onclick="openImageModal(this.src)" alt=""></div>';
         }
+        var sealHtml = reply.seal_html ? '<div class="mt-1.5">' + reply.seal_html + '</div>' : '';
 
         var isOwner = reply.mb_id === ownerMbId;
         var canEdit = IS_MEMBER && reply.mb_id === CURRENT_MB_ID;
@@ -617,6 +650,7 @@ function rp_time_ago($datetime) {
                     '<div class="bg-mg-accent/20 rounded-2xl' + tailClass + ' px-3 py-2" style="max-width:80%;">' +
                         '<div class="rp-reply-content text-sm text-mg-text-secondary leading-relaxed">' + content + '</div>' +
                         imageHtml +
+                        sealHtml +
                     '</div>' +
                 '</div>' +
             '</div>';
@@ -631,6 +665,7 @@ function rp_time_ago($datetime) {
                     '<div class="bg-mg-bg-tertiary rounded-2xl' + tailClass + ' px-3 py-2" style="max-width:80%;">' +
                         '<div class="rp-reply-content text-sm text-mg-text-secondary leading-relaxed">' + content + '</div>' +
                         imageHtml +
+                        sealHtml +
                     '</div>' +
                     '<span class="text-[10px] text-mg-text-muted/50 flex items-center gap-0.5 flex-shrink-0 pb-0.5">' + clockIcon + time + '</span>' +
                     actionsHtml +
@@ -1102,6 +1137,71 @@ function rp_time_ago($datetime) {
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') closeImageModal();
     });
+
+    // === 캐릭터별 완결 처리 ===
+    window.completeCharacter = function(rtId, chId, charName) {
+        var formData = new FormData();
+        formData.append('action', 'complete_character');
+        formData.append('rt_id', rtId);
+        formData.append('ch_id', chId);
+
+        fetch(RP_API_URL, { method: 'POST', body: formData })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                // 완결 성공 - UI 업데이트
+                var participant = document.querySelector('.rp-participant[data-rt-id="'+rtId+'"][data-ch-id="'+chId+'"]');
+                if (participant) {
+                    participant.dataset.completed = '1';
+                    // 완결 버튼을 배지로 교체
+                    var btn = participant.querySelector('.rp-complete-btn');
+                    if (btn) {
+                        var badgeClass = data.rewarded
+                            ? 'bg-green-500/20 text-green-400'
+                            : 'bg-mg-bg-tertiary text-mg-text-muted';
+                        var pointText = data.rewarded ? ' +' + data.point + 'P' : '';
+                        btn.outerHTML = '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] rounded-full ' + badgeClass + '">' +
+                            '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>' +
+                            '완결' + pointText + '</span>';
+                    }
+                    // 메신저 내 댓글 폼 제거 + 완결 메시지 추가
+                    var messenger = participant.querySelector('.rp-messenger');
+                    if (messenger) {
+                        var formArea = messenger.querySelector('.border-t.border-mg-bg-tertiary.p-2');
+                        if (formArea) {
+                            var pointInfo = data.rewarded ? ' (+' + data.point + 'P)' : '';
+                            formArea.innerHTML = '<p class="text-center text-xs text-mg-text-muted py-1 flex items-center justify-center gap-1">' +
+                                '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>' +
+                                '완결된 캐릭터입니다' + pointInfo + '</p>';
+                        }
+                    }
+                }
+                // 스레드가 closed 되었으면 페이지 새로고침
+                if (data.thread_closed) {
+                    location.reload();
+                }
+            } else if (data.need_confirm) {
+                // 보상 조건 미충족 - 확인 필요
+                if (confirm(charName + ' 캐릭터의 상호 이음이 부족합니다. (' + data.mutual_count + '/' + data.min_mutual + '회)\n보상 없이 완결 처리하시겠습니까?')) {
+                    // force=1로 재시도
+                    var fd = new FormData();
+                    fd.append('action', 'complete_character');
+                    fd.append('rt_id', rtId);
+                    fd.append('ch_id', chId);
+                    fd.append('force', 1);
+                    fetch(RP_API_URL, { method: 'POST', body: fd })
+                    .then(function(r) { return r.json(); })
+                    .then(function(d) {
+                        if (d.success) { location.reload(); }
+                        else { alert(d.message || '오류가 발생했습니다.'); }
+                    });
+                }
+            } else {
+                alert(data.message || '오류가 발생했습니다.');
+            }
+        })
+        .catch(function() { alert('요청 중 오류가 발생했습니다.'); });
+    };
 
     // URL hash로 스크롤
     if (window.location.hash) {

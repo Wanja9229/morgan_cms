@@ -43,7 +43,8 @@ $category = sql_fetch("SELECT * FROM {$g5['mg_shop_category_table']} WHERE sc_id
 $status = mg_get_item_status($item);
 
 // 구매 가능 여부
-$can_buy = mg_can_buy_item($member['mb_id'], $si_id);
+$_can_buy = mg_can_buy_item($member['mb_id'], $si_id);
+$can_buy = $_can_buy['can_buy'] ? true : $_can_buy['message'];
 
 // 보유 수량
 $my_count = mg_get_inventory_count($member['mb_id'], $si_id);

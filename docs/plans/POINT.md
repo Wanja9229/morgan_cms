@@ -1,9 +1,11 @@
 # 포인트 시스템 기획
 
+> **구현 완료** (Phase 3)
+
 > Morgan Edition - 포인트 시스템 설계
 > 참고: 그누보드5 포인트 + 출석체크/미니게임 확장
 
-> ⚠️ **스키마 참조**: 최종 테이블 구조는 [PLAN_DB.md](./PLAN_DB.md) 참조
+> ⚠️ **스키마 참조**: 최종 테이블 구조는 [DB.md](./DB.md) 참조
 > 이 문서의 테이블명은 설계 참고용이며, 실제 구현 시 mg_ 접두사 사용
 > (예: attendance → mg_attendance, game_dice → mg_game_dice)
 

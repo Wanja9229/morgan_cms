@@ -42,6 +42,7 @@ $_is_shop_page = ($_current_script === 'shop.php');
 $_is_new_page = ($_current_script === 'new.php');
 $_is_inventory_page = ($_current_script === 'inventory.php');
 $_is_pioneer_page = ($_current_script === 'pioneer.php');
+$_is_mypage = in_array($_current_script, array('mypage.php', 'seal_edit.php'));
 
 // 개척 시스템: 유저 노동력
 $_user_stamina = null;
@@ -183,6 +184,15 @@ if (isset($is_ajax_request) && $is_ajax_request) {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
             </svg>
         </a>
+
+        <!-- 마이 페이지 -->
+        <?php if ($is_member) { ?>
+        <a href="<?php echo G5_BBS_URL; ?>/mypage.php" class="sidebar-icon group <?php echo in_array($_current_script, array('mypage.php', 'seal_edit.php')) ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="마이 페이지" data-sidebar-id="mypage">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+        </a>
+        <?php } ?>
 
         <!-- 새글 -->
         <a href="<?php echo G5_BBS_URL; ?>/new.php" class="sidebar-icon group <?php echo $_is_new_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="새글" data-sidebar-id="new">

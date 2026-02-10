@@ -4,9 +4,11 @@
  *
  * GET  ?action=replies&rt_id=X&ch_id=Y  - 캐릭터별 이음 목록
  * GET  ?action=members&rt_id=X           - 참여자 목록
+ * GET  ?action=completion_status&rt_id=X - 스레드 완결 현황
  * POST ?action=edit_reply                - 이음 수정
  * POST ?action=delete_reply              - 이음 삭제
  * POST ?action=delete_thread             - 판 삭제 (관리자)
+ * POST ?action=complete_character        - 캐릭터별 완결 처리
  */
 
 include_once('./_common.php');
@@ -39,7 +41,9 @@ switch ($action) {
 
         $replies = mg_get_rp_replies_by_character($rt_id, $ch_id);
 
-        // 이모티콘 렌더링 적용
+        // 이모티콘 렌더링 + 인장 적용
+        $seal_cache = array();
+        $show_seal = function_exists('mg_render_seal') && mg_config('seal_show_in_rp', 1);
         foreach ($replies as &$r) {
             $content_html = htmlspecialchars($r['rr_content']);
             $content_html = nl2br($content_html);
@@ -47,6 +51,13 @@ switch ($action) {
                 $content_html = mg_render_emoticons($content_html);
             }
             $r['rr_content_html'] = $content_html;
+            // compact 인장
+            if ($show_seal && !empty($r['mb_id'])) {
+                if (!isset($seal_cache[$r['mb_id']])) {
+                    $seal_cache[$r['mb_id']] = mg_render_seal($r['mb_id'], 'compact');
+                }
+                $r['seal_html'] = $seal_cache[$r['mb_id']];
+            }
         }
         unset($r);
 
@@ -164,6 +175,101 @@ switch ($action) {
         sql_query("DELETE FROM {$g5['mg_rp_thread_table']} WHERE rt_id = {$rt_id}");
 
         echo json_encode(array('success' => true, 'message' => '역극이 삭제되었습니다.'));
+        break;
+
+    case 'complete_character':
+        $rt_id = isset($_POST['rt_id']) ? (int)$_POST['rt_id'] : 0;
+        $ch_id = isset($_POST['ch_id']) ? (int)$_POST['ch_id'] : 0;
+        $force = isset($_POST['force']) ? (int)$_POST['force'] : 0;
+
+        if (!$rt_id || !$ch_id) {
+            echo json_encode(array('success' => false, 'message' => '잘못된 요청입니다.'));
+            exit;
+        }
+
+        // 스레드 조회 + 권한 체크
+        $thread = sql_fetch("SELECT * FROM {$g5['mg_rp_thread_table']} WHERE rt_id = {$rt_id}");
+        if (!$thread['rt_id']) {
+            echo json_encode(array('success' => false, 'message' => '존재하지 않는 역극입니다.'));
+            exit;
+        }
+
+        if ($thread['mb_id'] !== $member['mb_id'] && $is_admin !== 'super') {
+            echo json_encode(array('success' => false, 'message' => '판장 또는 관리자만 완결할 수 있습니다.'));
+            exit;
+        }
+
+        if ($thread['rt_status'] === 'closed') {
+            echo json_encode(array('success' => false, 'message' => '이미 완결된 역극입니다.'));
+            exit;
+        }
+
+        $result = mg_rp_complete_character($rt_id, $ch_id, 'manual', $member['mb_id'], (bool)$force);
+        echo json_encode($result);
+        break;
+
+    case 'completion_status':
+        $rt_id = isset($_GET['rt_id']) ? (int)$_GET['rt_id'] : 0;
+
+        if (!$rt_id) {
+            echo json_encode(array('success' => false, 'message' => '잘못된 요청입니다.'));
+            exit;
+        }
+
+        // 스레드 조회 + 권한 체크 (판장 또는 관리자)
+        $thread = sql_fetch("SELECT * FROM {$g5['mg_rp_thread_table']} WHERE rt_id = {$rt_id}");
+        if (!$thread['rt_id']) {
+            echo json_encode(array('success' => false, 'message' => '존재하지 않는 역극입니다.'));
+            exit;
+        }
+
+        $owner_ch_id = (int)$thread['ch_id'];
+        $members = mg_get_rp_members($rt_id);
+        $completions = array();
+
+        // 완결 기록 전체 조회
+        $comp_result = sql_query("SELECT * FROM {$g5['mg_rp_completion_table']} WHERE rt_id = {$rt_id}");
+        $comp_map = array();
+        while ($c = sql_fetch_array($comp_result)) {
+            $comp_map[(int)$c['ch_id']] = $c;
+        }
+
+        foreach ($members as $mem) {
+            $mem_ch_id = (int)$mem['ch_id'];
+            if ($mem_ch_id === $owner_ch_id) continue; // 판장 제외
+
+            $status = array(
+                'ch_id' => $mem_ch_id,
+                'ch_name' => $mem['ch_name'],
+                'mb_id' => $mem['mb_id'],
+                'mb_nick' => $mem['mb_nick'],
+                'reply_count' => (int)$mem['rm_reply_count'],
+                'completed' => false,
+            );
+
+            if (isset($comp_map[$mem_ch_id])) {
+                $comp = $comp_map[$mem_ch_id];
+                $status['completed'] = true;
+                $status['mutual_count'] = (int)$comp['rc_mutual_count'];
+                $status['rewarded'] = (int)$comp['rc_rewarded'];
+                $status['point'] = (int)$comp['rc_point'];
+                $status['type'] = $comp['rc_type'];
+                $status['datetime'] = $comp['rc_datetime'];
+            } else {
+                // 미완결: 현재 상호 이음 수 계산
+                $owner_to_char = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_rp_reply_table']}
+                    WHERE rt_id = {$rt_id} AND ch_id = {$owner_ch_id} AND rr_context_ch_id = {$mem_ch_id}");
+                $char_to_owner = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_rp_reply_table']}
+                    WHERE rt_id = {$rt_id} AND ch_id = {$mem_ch_id}
+                    AND (rr_context_ch_id = {$owner_ch_id} OR rr_context_ch_id = 0)");
+                $status['mutual_count'] = min((int)$owner_to_char['cnt'], (int)$char_to_owner['cnt']);
+            }
+
+            $completions[] = $status;
+        }
+
+        $min_mutual = (int)mg_config('rp_complete_min_mutual', 5);
+        echo json_encode(array('success' => true, 'completions' => $completions, 'min_mutual' => $min_mutual));
         break;
 
     default:

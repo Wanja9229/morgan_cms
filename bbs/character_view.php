@@ -59,6 +59,12 @@ foreach ($profile_fields as $field) {
     $grouped_fields[$category][] = $field;
 }
 
+// 업적 쇼케이스 데이터
+$achievement_showcase = array();
+if (function_exists('mg_get_achievement_display')) {
+    $achievement_showcase = mg_get_achievement_display($char['mb_id']);
+}
+
 $g5['title'] = $char['ch_name'].' - 캐릭터 프로필';
 
 include_once(G5_THEME_PATH.'/head.php');
@@ -158,6 +164,43 @@ include_once(G5_THEME_PATH.'/head.php');
         </div>
     </div>
 
+    <!-- 업적 쇼케이스 -->
+    <?php if (!empty($achievement_showcase)) {
+        $ach_rarity_colors = array(
+            'common' => '#949ba4', 'uncommon' => '#22c55e', 'rare' => '#3b82f6',
+            'epic' => '#a855f7', 'legendary' => '#f59e0b',
+        );
+        $ach_rarity_labels = array(
+            'common' => 'Common', 'uncommon' => 'Uncommon', 'rare' => 'Rare',
+            'epic' => 'Epic', 'legendary' => 'Legendary',
+        );
+    ?>
+    <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden mb-6">
+        <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary flex items-center justify-between">
+            <h2 class="font-medium text-mg-text-primary">업적 쇼케이스</h2>
+            <a href="<?php echo G5_BBS_URL; ?>/achievement.php" class="text-xs text-mg-accent hover:underline">전체보기</a>
+        </div>
+        <div class="p-4 flex gap-3 flex-wrap justify-center">
+            <?php foreach ($achievement_showcase as $acd) {
+                $a_icon = $acd['tier_icon'] ?: ($acd['ac_icon'] ?: '');
+                $a_name = $acd['tier_name'] ?: $acd['ac_name'];
+                $a_rarity = $acd['ac_rarity'] ?: 'common';
+                $a_color = $ach_rarity_colors[$a_rarity] ?? '#949ba4';
+            ?>
+            <div class="flex flex-col items-center p-3 rounded-lg min-w-[80px]" style="border:2px solid <?php echo $a_color; ?>;" title="<?php echo htmlspecialchars($a_name); ?>">
+                <?php if ($a_icon) { ?>
+                <img src="<?php echo htmlspecialchars($a_icon); ?>" alt="<?php echo htmlspecialchars($a_name); ?>" class="w-10 h-10 object-contain">
+                <?php } else { ?>
+                <span class="text-2xl">🏆</span>
+                <?php } ?>
+                <span class="text-xs text-mg-text-secondary mt-1 text-center leading-tight max-w-[70px] truncate"><?php echo htmlspecialchars($a_name); ?></span>
+                <span class="text-[10px] mt-0.5" style="color:<?php echo $a_color; ?>;"><?php echo $ach_rarity_labels[$a_rarity] ?? ''; ?></span>
+            </div>
+            <?php } ?>
+        </div>
+    </div>
+    <?php } ?>
+
     <!-- 프로필 상세 -->
     <?php if (count($grouped_fields) > 0) { ?>
     <div class="space-y-4">
@@ -190,6 +233,9 @@ include_once(G5_THEME_PATH.'/head.php');
         <?php } ?>
     </div>
     <?php } ?>
+
+    <!-- 소유자 인장 -->
+    <?php if (function_exists('mg_render_seal')) { echo mg_render_seal($char['mb_id'], 'full'); } ?>
 
     <!-- 활동 내역 (추후 구현) -->
     <!--
