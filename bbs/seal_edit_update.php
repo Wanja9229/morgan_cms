@@ -70,4 +70,36 @@ $sql = "INSERT INTO {$g5['mg_seal_table']}
 
 sql_query($sql);
 
+// 대표 캐릭터 변경
+$main_ch_id = isset($_POST['main_ch_id']) ? (int)$_POST['main_ch_id'] : 0;
+if ($main_ch_id > 0) {
+    // 본인 소유 & 승인된 캐릭터인지 확인
+    $ch_check = sql_fetch("SELECT ch_id, ch_main FROM {$g5['mg_character_table']}
+                           WHERE ch_id = {$main_ch_id} AND mb_id = '{$mb_esc}' AND ch_state = 'approved'");
+    if ($ch_check['ch_id'] && !$ch_check['ch_main']) {
+        // 기존 대표 해제 → 새 대표 설정
+        sql_query("UPDATE {$g5['mg_character_table']} SET ch_main = 0 WHERE mb_id = '{$mb_esc}'");
+        sql_query("UPDATE {$g5['mg_character_table']} SET ch_main = 1 WHERE ch_id = {$main_ch_id}");
+    }
+}
+
+// 칭호 변경
+$title_si_id = isset($_POST['title_si_id']) ? (int)$_POST['title_si_id'] : -1;
+if ($title_si_id >= 0) {
+    if ($title_si_id === 0) {
+        // 칭호 해제
+        sql_query("DELETE FROM {$g5['mg_item_active_table']} WHERE mb_id = '{$mb_esc}' AND ia_type = 'title'");
+    } else {
+        // 보유 확인
+        $own_check = sql_fetch("SELECT v.iv_id FROM {$g5['mg_inventory_table']} v
+                                JOIN {$g5['mg_shop_item_table']} i ON v.si_id = i.si_id
+                                WHERE v.mb_id = '{$mb_esc}' AND v.si_id = {$title_si_id} AND i.si_type = 'title'");
+        if ($own_check['iv_id']) {
+            // 기존 칭호 해제 → 새 칭호 적용
+            sql_query("DELETE FROM {$g5['mg_item_active_table']} WHERE mb_id = '{$mb_esc}' AND ia_type = 'title'");
+            sql_query("INSERT INTO {$g5['mg_item_active_table']} (mb_id, si_id, ia_type) VALUES ('{$mb_esc}', {$title_si_id}, 'title')");
+        }
+    }
+}
+
 echo json_encode(array('success' => true, 'message' => '인장이 저장되었습니다.'));

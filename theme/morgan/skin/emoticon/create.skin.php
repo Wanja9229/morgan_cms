@@ -2,7 +2,7 @@
 if (!defined('_GNUBOARD_')) exit;
 ?>
 
-<div class="max-w-3xl mx-auto">
+<div class="mg-inner">
     <div class="flex items-center justify-between mb-6">
         <h2 class="text-xl font-bold text-mg-text-primary"><?php echo $g5['title']; ?></h2>
         <a href="<?php echo G5_BBS_URL; ?>/inventory.php?tab=emoticon" class="btn btn-secondary text-sm">돌아가기</a>

@@ -39,7 +39,7 @@ $postit_accents = array(
 );
 ?>
 
-<div id="bo_list" class="max-w-7xl mx-auto">
+<div id="bo_list" class="mg-inner">
 
     <!-- 게시판 헤더 -->
     <div class="card mb-4">

@@ -30,12 +30,30 @@ if (!$seal) {
     );
 }
 
-// 대표 캐릭터
+// 대표 캐릭터 + 캐릭터 목록
 $main_char = mg_get_main_character($mb_id);
+$my_characters = array();
+$sql_ch = "SELECT ch_id, ch_name, ch_thumb, ch_main FROM {$g5['mg_character_table']}
+           WHERE mb_id = '".sql_real_escape_string($mb_id)."' AND ch_state = 'approved'
+           ORDER BY ch_main DESC, ch_name ASC";
+$res_ch = sql_query($sql_ch);
+while ($rch = sql_fetch_array($res_ch)) {
+    $my_characters[] = $rch;
+}
 
-// 활성 칭호
+// 활성 칭호 + 보유 칭호 목록
 $title_items = mg_get_active_items($mb_id, 'title');
 $active_title = !empty($title_items) ? $title_items[0] : null;
+$my_titles = array();
+$sql_tt = "SELECT i.si_id, i.si_name, i.si_effect
+           FROM {$g5['mg_inventory_table']} v
+           JOIN {$g5['mg_shop_item_table']} i ON v.si_id = i.si_id
+           WHERE v.mb_id = '".sql_real_escape_string($mb_id)."' AND i.si_type = 'title'";
+$res_tt = sql_query($sql_tt);
+while ($rtt = sql_fetch_array($res_tt)) {
+    $rtt['si_effect'] = json_decode($rtt['si_effect'], true);
+    $my_titles[] = $rtt;
+}
 
 // 보유 인장 스킨 (인벤토리)
 $seal_bg_items = array();
@@ -84,7 +102,7 @@ if (!empty($seal['seal_image'])) {
 }
 ?>
 
-<div class="max-w-3xl mx-auto">
+<div class="mg-inner">
     <!-- 뒤로가기 -->
     <a href="javascript:history.back();" class="inline-flex items-center gap-1 text-sm text-mg-text-muted hover:text-mg-accent transition-colors mb-4">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,30 +131,72 @@ if (!empty($seal['seal_image'])) {
             </label>
         </div>
 
-        <!-- 기본 정보 (자동) -->
+        <!-- 대표 캐릭터 -->
         <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
             <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary">
-                <h2 class="font-medium text-mg-text-primary">기본 정보 (자동)</h2>
+                <h2 class="font-medium text-mg-text-primary">대표 캐릭터</h2>
             </div>
-            <div class="p-4 space-y-3">
-                <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 rounded-lg bg-mg-bg-tertiary overflow-hidden flex items-center justify-center">
-                        <?php if ($main_char && !empty($main_char['ch_thumb'])) { ?>
-                        <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.$main_char['ch_thumb']; ?>" alt="" class="w-full h-full object-cover">
-                        <?php } else { ?>
-                        <svg class="w-6 h-6 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            <div class="p-4">
+                <?php if (!empty($my_characters)) { ?>
+                <div class="space-y-1.5">
+                    <?php foreach ($my_characters as $mc) {
+                        $is_main = $mc['ch_main'] ? true : false;
+                    ?>
+                    <label class="flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors hover:bg-mg-bg-tertiary/50 <?php echo $is_main ? 'bg-mg-accent/10 ring-1 ring-mg-accent/30' : ''; ?>">
+                        <input type="radio" name="main_ch_id" value="<?php echo $mc['ch_id']; ?>" <?php echo $is_main ? 'checked' : ''; ?> class="sr-only peer">
+                        <div class="w-10 h-10 rounded-lg bg-mg-bg-tertiary overflow-hidden flex-shrink-0 flex items-center justify-center peer-checked:ring-2 peer-checked:ring-mg-accent">
+                            <?php if (!empty($mc['ch_thumb'])) { ?>
+                            <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.$mc['ch_thumb']; ?>" alt="" class="w-full h-full object-cover">
+                            <?php } else { ?>
+                            <svg class="w-5 h-5 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                            <?php } ?>
+                        </div>
+                        <span class="text-sm text-mg-text-primary font-medium peer-checked:text-mg-accent"><?php echo htmlspecialchars($mc['ch_name']); ?></span>
+                        <?php if ($is_main) { ?>
+                        <span class="ml-auto text-[10px] text-mg-accent bg-mg-accent/15 px-1.5 py-0.5 rounded">현재</span>
                         <?php } ?>
-                    </div>
-                    <div>
-                        <p class="text-sm text-mg-text-primary font-medium"><?php echo htmlspecialchars($member['mb_nick']); ?></p>
-                        <?php if ($active_title) {
-                            $te = is_string($active_title['si_effect']) ? json_decode($active_title['si_effect'], true) : $active_title['si_effect'];
-                        ?>
-                        <p class="text-xs" style="<?php echo !empty($te['color']) ? 'color:'.$te['color'] : ''; ?>"><?php echo htmlspecialchars($te['text'] ?? $active_title['si_name']); ?></p>
-                        <?php } ?>
-                    </div>
+                    </label>
+                    <?php } ?>
                 </div>
-                <p class="text-xs text-mg-text-muted">대표 캐릭터는 <a href="<?php echo G5_BBS_URL; ?>/character.php" class="text-mg-accent hover:underline">캐릭터 관리</a>에서, 칭호는 <a href="<?php echo G5_BBS_URL; ?>/inventory.php" class="text-mg-accent hover:underline">인벤토리</a>에서 변경할 수 있습니다.</p>
+                <?php } else { ?>
+                <p class="text-xs text-mg-text-muted">승인된 캐릭터가 없습니다. <a href="<?php echo G5_BBS_URL; ?>/character_form.php" class="text-mg-accent hover:underline">캐릭터 만들기</a></p>
+                <?php } ?>
+            </div>
+        </div>
+
+        <!-- 칭호 -->
+        <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
+            <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary">
+                <h2 class="font-medium text-mg-text-primary">칭호</h2>
+            </div>
+            <div class="p-4">
+                <?php if (!empty($my_titles)) { ?>
+                <div class="space-y-1.5">
+                    <label class="flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors hover:bg-mg-bg-tertiary/50 <?php echo !$active_title ? 'bg-mg-accent/10 ring-1 ring-mg-accent/30' : ''; ?>">
+                        <input type="radio" name="title_si_id" value="0" <?php echo !$active_title ? 'checked' : ''; ?> class="sr-only peer">
+                        <span class="text-sm text-mg-text-muted peer-checked:text-mg-accent">칭호 없음</span>
+                        <?php if (!$active_title) { ?>
+                        <span class="ml-auto text-[10px] text-mg-accent bg-mg-accent/15 px-1.5 py-0.5 rounded">현재</span>
+                        <?php } ?>
+                    </label>
+                    <?php foreach ($my_titles as $mt) {
+                        $is_active_t = ($active_title && (int)$active_title['si_id'] === (int)$mt['si_id']);
+                        $te = $mt['si_effect'];
+                        $t_text = $te['text'] ?? $mt['si_name'];
+                        $t_color = $te['color'] ?? '';
+                    ?>
+                    <label class="flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors hover:bg-mg-bg-tertiary/50 <?php echo $is_active_t ? 'bg-mg-accent/10 ring-1 ring-mg-accent/30' : ''; ?>">
+                        <input type="radio" name="title_si_id" value="<?php echo $mt['si_id']; ?>" <?php echo $is_active_t ? 'checked' : ''; ?> class="sr-only peer">
+                        <span class="text-sm font-medium" style="<?php echo $t_color ? 'color:'.$t_color : 'color:var(--mg-text-primary)'; ?>"><?php echo htmlspecialchars($t_text); ?></span>
+                        <?php if ($is_active_t) { ?>
+                        <span class="ml-auto text-[10px] text-mg-accent bg-mg-accent/15 px-1.5 py-0.5 rounded">현재</span>
+                        <?php } ?>
+                    </label>
+                    <?php } ?>
+                </div>
+                <?php } else { ?>
+                <p class="text-xs text-mg-text-muted">보유한 칭호가 없습니다. <a href="<?php echo G5_BBS_URL; ?>/shop.php" class="text-mg-accent hover:underline">상점에서 구매</a></p>
+                <?php } ?>
             </div>
         </div>
 

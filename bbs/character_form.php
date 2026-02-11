@@ -79,7 +79,7 @@ $g5['title'] = $is_edit ? '캐릭터 수정' : '캐릭터 생성';
 include_once(G5_THEME_PATH.'/head.php');
 ?>
 
-<div class="max-w-2xl mx-auto">
+<div class="mg-inner">
     <!-- 페이지 헤더 -->
     <div class="mb-6">
         <a href="<?php echo G5_BBS_URL; ?>/character.php" class="inline-flex items-center gap-1 text-sm text-mg-text-muted hover:text-mg-accent transition-colors mb-2">

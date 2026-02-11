@@ -8,7 +8,7 @@
 if (!defined('_GNUBOARD_')) exit;
 ?>
 
-<div class="max-w-4xl mx-auto">
+<div class="mg-inner">
     <!-- 포인트 요약 -->
     <div class="card mb-6">
         <div class="flex items-center justify-between">

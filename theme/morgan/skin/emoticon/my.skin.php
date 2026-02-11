@@ -2,7 +2,7 @@
 if (!defined('_GNUBOARD_')) exit;
 ?>
 
-<div class="max-w-4xl mx-auto">
+<div class="mg-inner">
     <div class="flex items-center justify-between mb-6">
         <h2 class="text-xl font-bold text-mg-text-primary">내 이모티콘</h2>
         <a href="<?php echo G5_BBS_URL; ?>/shop.php?tab=emoticon" class="btn btn-secondary text-sm">이모티콘 상점</a>

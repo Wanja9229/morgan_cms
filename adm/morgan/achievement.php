@@ -175,12 +175,12 @@ $rarity_colors = array(
                     <th style="width:50px;">ID</th>
                     <th>업적명</th>
                     <th style="width:80px;">카테고리</th>
-                    <th style="width:70px;">유형</th>
+                    <th style="width:100px;">유형</th>
                     <th style="width:70px;">단계</th>
                     <th style="width:80px;">희귀도</th>
                     <th style="width:80px;">달성자</th>
                     <th style="width:60px;">상태</th>
-                    <th style="width:160px;">관리</th>
+                    <th style="width:200px;">관리</th>
                 </tr>
             </thead>
             <tbody>

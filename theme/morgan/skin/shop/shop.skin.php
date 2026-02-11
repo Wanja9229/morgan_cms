@@ -9,7 +9,7 @@ if (!defined('_GNUBOARD_')) exit;
 $item_type_names = $type_labels;
 ?>
 
-<div class="max-w-6xl mx-auto">
+<div class="mg-inner">
     <!-- 상단: 내 포인트 & 제목 -->
     <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
         <h1 class="text-2xl font-bold text-mg-text-primary flex items-center gap-2">

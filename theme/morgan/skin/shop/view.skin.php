@@ -29,7 +29,7 @@ if ($item['si_stock'] > 0) {
 }
 ?>
 
-<div class="max-w-4xl mx-auto">
+<div class="mg-inner">
     <!-- 뒤로가기 -->
     <div class="mb-4">
         <a href="<?php echo G5_BBS_URL; ?>/shop.php<?php echo $item['sc_id'] ? '?sc_id='.$item['sc_id'] : ''; ?>" class="text-mg-text-muted hover:text-mg-accent transition-colors flex items-center gap-1">

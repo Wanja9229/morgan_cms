@@ -8,7 +8,7 @@
 if (!defined('_GNUBOARD_')) exit;
 ?>
 
-<div class="max-w-md mx-auto">
+<div class="mg-inner">
     <div class="card text-center">
         <!-- 아이콘 -->
         <div class="w-20 h-20 rounded-full bg-mg-success/20 mx-auto mb-4 flex items-center justify-center">

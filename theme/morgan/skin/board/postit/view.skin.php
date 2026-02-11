@@ -45,7 +45,7 @@ $postit_bg = $postit_colors[$color_index];
 $postit_accent = $postit_accents[$color_index];
 ?>
 
-<div id="bo_view" class="max-w-2xl mx-auto">
+<div id="bo_view" class="mg-inner">
 
     <!-- 포스트잇 카드 -->
     <article class="<?php echo $postit_bg; ?> rounded-lg shadow-lg overflow-hidden mb-4">

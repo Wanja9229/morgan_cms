@@ -14,6 +14,10 @@ $menu["menu800"] = array(
     array('800050', '대시보드', $mg_admin_url . '/dashboard.php', 'mg_dashboard', '설정'),
     array('800100', '기본 설정', $mg_admin_url . '/config.php', 'mg_config'),
     array('800150', '메인 페이지 빌더', $mg_admin_url . '/main_builder.php', 'mg_main_builder'),
+    // 세계관
+    array('800160', '위키 카테고리', $mg_admin_url . '/lore_category.php', 'mg_lore', '세계관'),
+    array('800170', '위키 문서', $mg_admin_url . '/lore_article.php', 'mg_lore'),
+    array('800175', '타임라인', $mg_admin_url . '/lore_timeline.php', 'mg_lore'),
     // 회원 / 캐릭터
     array('800190', '회원 관리', $mg_admin_url . '/member_list.php', 'mg_member', '회원 / 캐릭터'),
     array('800200', '캐릭터 관리', $mg_admin_url . '/character_list.php', 'mg_character'),
@@ -38,4 +42,6 @@ $menu["menu800"] = array(
     array('801200', '업적 관리', $mg_admin_url . '/achievement.php', 'mg_achievement', '업적'),
     // 인장
     array('801300', '인장 관리', $mg_admin_url . '/seal.php', 'mg_seal', '인장'),
+    // 프롬프트 미션
+    array('801500', '프롬프트 관리', $mg_admin_url . '/prompt.php', 'mg_prompt', '프롬프트'),
 );

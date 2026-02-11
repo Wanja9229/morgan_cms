@@ -17,7 +17,7 @@ include_once(G5_THEME_PATH.'/head.php');
 ?>
 
 <!-- 메인 페이지 콘텐츠 -->
-<div class="max-w-6xl mx-auto">
+<div class="mg-inner">
     <?php echo mg_render_main(); ?>
 </div>
 

@@ -59,6 +59,15 @@ $g5['mg_user_achievement_table'] = 'mg_user_achievement';
 $g5['mg_user_achievement_display_table'] = 'mg_user_achievement_display';
 // 인장 시스템
 $g5['mg_seal_table'] = 'mg_seal';
+// 세계관 위키
+$g5['mg_lore_category_table'] = 'mg_lore_category';
+$g5['mg_lore_article_table'] = 'mg_lore_article';
+$g5['mg_lore_section_table'] = 'mg_lore_section';
+$g5['mg_lore_era_table'] = 'mg_lore_era';
+$g5['mg_lore_event_table'] = 'mg_lore_event';
+// 프롬프트 미션
+$g5['mg_prompt_table'] = 'mg_prompt';
+$g5['mg_prompt_entry_table'] = 'mg_prompt_entry';
 // 보상 시스템
 $g5['mg_board_reward_table'] = 'mg_board_reward';
 $g5['mg_rp_completion_table'] = 'mg_rp_completion';
@@ -125,6 +134,15 @@ $mg['user_achievement_table'] = $g5['mg_user_achievement_table'];
 $mg['user_achievement_display_table'] = $g5['mg_user_achievement_display_table'];
 // 인장 시스템
 $mg['seal_table'] = $g5['mg_seal_table'];
+// 세계관 위키
+$mg['lore_category_table'] = $g5['mg_lore_category_table'];
+$mg['lore_article_table'] = $g5['mg_lore_article_table'];
+$mg['lore_section_table'] = $g5['mg_lore_section_table'];
+$mg['lore_era_table'] = $g5['mg_lore_era_table'];
+$mg['lore_event_table'] = $g5['mg_lore_event_table'];
+// 프롬프트 미션
+$mg['prompt_table'] = $g5['mg_prompt_table'];
+$mg['prompt_entry_table'] = $g5['mg_prompt_entry_table'];
 // 보상 시스템
 $mg['rp_completion_table'] = $g5['mg_rp_completion_table'];
 $mg['rp_reply_reward_log_table'] = $g5['mg_rp_reply_reward_log_table'];
@@ -144,6 +162,14 @@ define('MG_EMOTICON_URL', G5_DATA_URL.'/emoticon');
 // 인장 이미지 저장 경로
 define('MG_SEAL_IMAGE_PATH', G5_DATA_PATH.'/seal');
 define('MG_SEAL_IMAGE_URL', G5_DATA_URL.'/seal');
+
+// 위키 이미지 저장 경로
+define('MG_LORE_IMAGE_PATH', G5_DATA_PATH.'/lore');
+define('MG_LORE_IMAGE_URL', G5_DATA_URL.'/lore');
+
+// 프롬프트 배너 이미지 저장 경로
+define('MG_PROMPT_IMAGE_PATH', G5_DATA_PATH.'/prompt');
+define('MG_PROMPT_IMAGE_URL', G5_DATA_URL.'/prompt');
 
 // 썸네일 사이즈
 define('MG_THUMB_SIZE', 200);
@@ -4803,4 +4829,460 @@ function mg_sanitize_seal_text($text, $max_len = 300)
         $text = mb_substr($text, 0, $max_len);
     }
     return $text;
+}
+
+// ======================================
+// 세계관 위키 (Lore Wiki) 함수
+// ======================================
+
+/**
+ * 활성 카테고리 목록 조회
+ */
+function mg_get_lore_categories()
+{
+    global $g5;
+    $sql = "SELECT * FROM {$g5['mg_lore_category_table']} WHERE lc_use = 1 ORDER BY lc_order, lc_id";
+    $result = sql_query($sql);
+    $categories = array();
+    while ($row = sql_fetch_array($result)) {
+        $categories[] = $row;
+    }
+    return $categories;
+}
+
+/**
+ * 카테고리별 문서 목록 조회
+ * @param int $lc_id 카테고리 ID (0=전체)
+ * @param int $page 페이지 번호
+ * @param int $per_page 페이지당 문서 수
+ * @return array ['articles' => [], 'total' => int]
+ */
+function mg_get_lore_articles($lc_id = 0, $page = 1, $per_page = 12)
+{
+    global $g5;
+
+    $where = "la_use = 1";
+    if ($lc_id > 0) {
+        $lc_id = (int)$lc_id;
+        $where .= " AND lc_id = {$lc_id}";
+    }
+
+    // 총 개수
+    $sql = "SELECT COUNT(*) as cnt FROM {$g5['mg_lore_article_table']} WHERE {$where}";
+    $row = sql_fetch($sql);
+    $total = (int)$row['cnt'];
+
+    // 문서 목록
+    $offset = ($page - 1) * $per_page;
+    $sql = "SELECT a.*, c.lc_name
+            FROM {$g5['mg_lore_article_table']} a
+            LEFT JOIN {$g5['mg_lore_category_table']} c ON a.lc_id = c.lc_id
+            WHERE a.la_use = 1
+            " . ($lc_id > 0 ? "AND a.lc_id = {$lc_id}" : "") . "
+            ORDER BY a.la_order, a.la_id DESC
+            LIMIT {$offset}, {$per_page}";
+    $result = sql_query($sql);
+    $articles = array();
+    while ($row = sql_fetch_array($result)) {
+        $articles[] = $row;
+    }
+
+    return array('articles' => $articles, 'total' => $total);
+}
+
+/**
+ * 문서 + 섹션 전체 조회
+ * @param int $la_id 문서 ID
+ * @return array|null
+ */
+function mg_get_lore_article($la_id)
+{
+    global $g5;
+    $la_id = (int)$la_id;
+
+    $sql = "SELECT a.*, c.lc_name
+            FROM {$g5['mg_lore_article_table']} a
+            LEFT JOIN {$g5['mg_lore_category_table']} c ON a.lc_id = c.lc_id
+            WHERE a.la_id = {$la_id}";
+    $article = sql_fetch($sql);
+    if (!$article || !$article['la_id']) return null;
+
+    // 섹션
+    $sql = "SELECT * FROM {$g5['mg_lore_section_table']} WHERE la_id = {$la_id} ORDER BY ls_order, ls_id";
+    $result = sql_query($sql);
+    $sections = array();
+    while ($row = sql_fetch_array($result)) {
+        $sections[] = $row;
+    }
+    $article['sections'] = $sections;
+
+    return $article;
+}
+
+/**
+ * 타임라인 전체 조회 (시대 + 이벤트 2중 배열)
+ * @return array
+ */
+function mg_get_lore_timeline()
+{
+    global $g5;
+
+    $sql = "SELECT * FROM {$g5['mg_lore_era_table']} WHERE le_use = 1 ORDER BY le_order, le_id";
+    $result = sql_query($sql);
+    $eras = array();
+    while ($row = sql_fetch_array($result)) {
+        $row['events'] = array();
+        $eras[$row['le_id']] = $row;
+    }
+
+    if (!empty($eras)) {
+        $era_ids = implode(',', array_keys($eras));
+        $sql = "SELECT * FROM {$g5['mg_lore_event_table']}
+                WHERE le_id IN ({$era_ids}) AND lv_use = 1
+                ORDER BY lv_order, lv_id";
+        $result = sql_query($sql);
+        while ($row = sql_fetch_array($result)) {
+            if (isset($eras[$row['le_id']])) {
+                $eras[$row['le_id']]['events'][] = $row;
+            }
+        }
+    }
+
+    return array_values($eras);
+}
+
+/**
+ * 위키 이미지 업로드
+ * @param array $file $_FILES 배열 요소
+ * @param string $type 'article', 'section', 'event'
+ * @param int $id 해당 ID
+ * @return array ['success' => bool, 'url' => string, 'filename' => string]
+ */
+function mg_upload_lore_image($file, $type = 'article', $id = 0)
+{
+    $allowed_ext = array('jpg', 'jpeg', 'png', 'gif', 'webp');
+    $max_size = (int)mg_config('lore_image_max_size', 2048) * 1024;
+
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        return array('success' => false, 'message' => '파일 업로드 오류');
+    }
+
+    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    if (!in_array($ext, $allowed_ext)) {
+        return array('success' => false, 'message' => '허용되지 않는 파일 형식');
+    }
+
+    if ($file['size'] > $max_size) {
+        return array('success' => false, 'message' => '파일 크기 초과');
+    }
+
+    // 저장 디렉토리
+    $dir = MG_LORE_IMAGE_PATH . '/' . $type;
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0755, true);
+        @chmod($dir, 0755);
+    }
+
+    $filename = $type . '_' . $id . '_' . date('YmdHis') . '_' . mt_rand(100, 999) . '.' . $ext;
+    $filepath = $dir . '/' . $filename;
+
+    if (!move_uploaded_file($file['tmp_name'], $filepath)) {
+        return array('success' => false, 'message' => '파일 저장 실패');
+    }
+
+    @chmod($filepath, 0644);
+    $url = MG_LORE_IMAGE_URL . '/' . $type . '/' . $filename;
+
+    return array('success' => true, 'url' => $url, 'filename' => $filename);
+}
+
+// ======================================
+// 프롬프트 미션 함수
+// ======================================
+
+/**
+ * 기한 만료 프롬프트 자동 종료 (패시브 체크)
+ */
+function mg_prompt_check_expired()
+{
+    global $g5;
+    sql_query("UPDATE {$g5['mg_prompt_table']}
+        SET pm_status = 'closed'
+        WHERE pm_status = 'active'
+        AND pm_end_date IS NOT NULL
+        AND pm_end_date < NOW()");
+}
+
+/**
+ * 게시판의 활성 프롬프트 목록
+ */
+function mg_get_active_prompts($bo_table)
+{
+    global $g5;
+    mg_prompt_check_expired();
+
+    $sql = "SELECT * FROM {$g5['mg_prompt_table']}
+        WHERE bo_table = '".sql_real_escape_string($bo_table)."'
+        AND pm_status = 'active'
+        ORDER BY pm_end_date ASC";
+    $result = sql_query($sql);
+    $list = array();
+    while ($row = sql_fetch_array($result)) {
+        $list[] = $row;
+    }
+    return $list;
+}
+
+/**
+ * 프롬프트 단건 조회
+ */
+function mg_get_prompt($pm_id)
+{
+    global $g5;
+    $pm_id = (int)$pm_id;
+    return sql_fetch("SELECT * FROM {$g5['mg_prompt_table']} WHERE pm_id = {$pm_id}");
+}
+
+/**
+ * 프롬프트 제출 수
+ */
+function mg_get_prompt_entry_count($pm_id, $status = '')
+{
+    global $g5;
+    $pm_id = (int)$pm_id;
+    $where = "pm_id = {$pm_id}";
+    if ($status) {
+        $where .= " AND pe_status = '".sql_real_escape_string($status)."'";
+    }
+    $row = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_prompt_entry_table']} WHERE {$where}");
+    return (int)$row['cnt'];
+}
+
+/**
+ * 내 제출 내역
+ */
+function mg_get_my_entries($pm_id, $mb_id)
+{
+    global $g5;
+    $pm_id = (int)$pm_id;
+    $mb_id = sql_real_escape_string($mb_id);
+    $sql = "SELECT * FROM {$g5['mg_prompt_entry_table']}
+        WHERE pm_id = {$pm_id} AND mb_id = '{$mb_id}'
+        ORDER BY pe_datetime DESC";
+    $result = sql_query($sql);
+    $list = array();
+    while ($row = sql_fetch_array($result)) {
+        $list[] = $row;
+    }
+    return $list;
+}
+
+/**
+ * 게시글 ID로 엔트리 조회
+ */
+function mg_get_entry_by_write($bo_table, $wr_id)
+{
+    global $g5;
+    $bo_table = sql_real_escape_string($bo_table);
+    $wr_id = (int)$wr_id;
+    return sql_fetch("SELECT e.*, p.pm_title, p.pm_mode, p.pm_point, p.pm_bonus_point
+        FROM {$g5['mg_prompt_entry_table']} e
+        JOIN {$g5['mg_prompt_table']} p ON e.pm_id = p.pm_id
+        WHERE e.bo_table = '{$bo_table}' AND e.wr_id = {$wr_id}");
+}
+
+/**
+ * 글 저장 후 프롬프트 엔트리 생성 훅
+ */
+function mg_prompt_after_write($bo_table, $wr_id, $mb_id, $wr_content = '')
+{
+    global $g5;
+
+    $pm_id = (int)(isset($_POST['pm_id']) ? $_POST['pm_id'] : 0);
+    if (!$pm_id) return false;
+
+    $prompt = mg_get_prompt($pm_id);
+    if (!$prompt || !$prompt['pm_id']) return false;
+    if ($prompt['pm_status'] != 'active') return false;
+    if ($prompt['bo_table'] != $bo_table) return false;
+
+    $mb_id = sql_real_escape_string($mb_id);
+
+    // 중복 제출 체크
+    $existing = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_prompt_entry_table']}
+        WHERE pm_id = {$pm_id} AND mb_id = '{$mb_id}'");
+    if ((int)$existing['cnt'] >= (int)$prompt['pm_max_entry']) return false;
+
+    // 글자수 체크
+    if ($prompt['pm_min_chars'] > 0) {
+        $content_len = mb_strlen(strip_tags($wr_content));
+        if ($content_len < $prompt['pm_min_chars']) return false;
+    }
+
+    // 엔트리 생성
+    $status = ($prompt['pm_mode'] == 'auto') ? 'approved' : 'submitted';
+    sql_query("INSERT INTO {$g5['mg_prompt_entry_table']}
+        (pm_id, mb_id, wr_id, bo_table, pe_status, pe_datetime)
+        VALUES ({$pm_id}, '{$mb_id}', {$wr_id}, '".sql_real_escape_string($bo_table)."', '{$status}', NOW())");
+
+    $pe_id = sql_insert_id();
+
+    // auto 모드면 즉시 보상
+    if ($prompt['pm_mode'] == 'auto' && $pe_id) {
+        mg_prompt_give_reward($pm_id, $pe_id);
+    }
+
+    // 관리자 알림
+    if (mg_config('prompt_notify_submit', '1') == '1') {
+        if (function_exists('mg_notify')) {
+            mg_notify('admin', 'prompt_submit', "프롬프트 \"{$prompt['pm_title']}\"에 새 제출이 있습니다.", '', G5_ADMIN_URL.'/morgan/prompt.php?mode=review&pm_id='.$pm_id);
+        }
+    }
+
+    return $pe_id;
+}
+
+/**
+ * 보상 지급
+ */
+function mg_prompt_give_reward($pm_id, $pe_id, $is_bonus = false)
+{
+    global $g5;
+
+    $prompt = mg_get_prompt($pm_id);
+    if (!$prompt || !$prompt['pm_id']) return false;
+
+    $entry = sql_fetch("SELECT * FROM {$g5['mg_prompt_entry_table']} WHERE pe_id = ".(int)$pe_id);
+    if (!$entry || !$entry['pe_id']) return false;
+    if ($entry['pe_status'] == 'rewarded') return false;
+
+    $point = (int)$prompt['pm_point'];
+    if ($is_bonus) {
+        $point += (int)$prompt['pm_bonus_point'];
+        sql_query("UPDATE {$g5['mg_prompt_entry_table']} SET pe_is_bonus = 1 WHERE pe_id = {$pe_id}");
+    }
+
+    // 포인트 지급
+    if ($point > 0 && function_exists('insert_point')) {
+        $desc = "[미션] {$prompt['pm_title']}" . ($is_bonus ? ' (우수작)' : '');
+        insert_point($entry['mb_id'], $point, $desc, 'prompt', $pm_id, 'reward');
+    }
+
+    // 재료 보상
+    if ((int)$prompt['pm_material_id'] > 0 && (int)$prompt['pm_material_qty'] > 0 && function_exists('mg_add_user_material')) {
+        mg_add_user_material($entry['mb_id'], $prompt['pm_material_id'], $prompt['pm_material_qty']);
+    }
+
+    // 상태 업데이트
+    sql_query("UPDATE {$g5['mg_prompt_entry_table']}
+        SET pe_status = 'rewarded', pe_point = {$point}, pe_review_date = NOW()
+        WHERE pe_id = {$pe_id}");
+
+    // 유저 알림
+    if (mg_config('prompt_notify_approve', '1') == '1' && function_exists('mg_notify')) {
+        $msg = "프롬프트 \"{$prompt['pm_title']}\" 보상이 지급되었습니다. (+{$point}P)";
+        mg_notify($entry['mb_id'], 'prompt_reward', $msg);
+    }
+
+    return true;
+}
+
+/**
+ * 제출 승인
+ */
+function mg_prompt_approve($pe_id, $admin_id)
+{
+    global $g5;
+    $pe_id = (int)$pe_id;
+    $admin_id = sql_real_escape_string($admin_id);
+
+    $entry = sql_fetch("SELECT * FROM {$g5['mg_prompt_entry_table']} WHERE pe_id = {$pe_id}");
+    if (!$entry || !$entry['pe_id']) return false;
+    if ($entry['pe_status'] != 'submitted') return false;
+
+    sql_query("UPDATE {$g5['mg_prompt_entry_table']}
+        SET pe_status = 'approved', pe_admin_id = '{$admin_id}', pe_review_date = NOW()
+        WHERE pe_id = {$pe_id}");
+
+    return true;
+}
+
+/**
+ * 제출 반려
+ */
+function mg_prompt_reject($pe_id, $admin_id, $memo = '')
+{
+    global $g5;
+    $pe_id = (int)$pe_id;
+    $admin_id = sql_real_escape_string($admin_id);
+    $memo = sql_real_escape_string($memo);
+
+    $entry = sql_fetch("SELECT * FROM {$g5['mg_prompt_entry_table']} WHERE pe_id = {$pe_id}");
+    if (!$entry || !$entry['pe_id']) return false;
+    if ($entry['pe_status'] != 'submitted') return false;
+
+    sql_query("UPDATE {$g5['mg_prompt_entry_table']}
+        SET pe_status = 'rejected', pe_admin_id = '{$admin_id}', pe_admin_memo = '{$memo}', pe_review_date = NOW()
+        WHERE pe_id = {$pe_id}");
+
+    // 반려 알림
+    if (mg_config('prompt_notify_reject', '1') == '1' && function_exists('mg_notify')) {
+        $prompt = mg_get_prompt($entry['pm_id']);
+        $msg = "프롬프트 \"{$prompt['pm_title']}\" 제출이 반려되었습니다.";
+        if ($memo) $msg .= " 사유: {$memo}";
+        mg_notify($entry['mb_id'], 'prompt_reject', $msg);
+    }
+
+    return true;
+}
+
+/**
+ * 프롬프트 종료
+ */
+function mg_prompt_close($pm_id)
+{
+    global $g5;
+    $pm_id = (int)$pm_id;
+    sql_query("UPDATE {$g5['mg_prompt_table']} SET pm_status = 'closed' WHERE pm_id = {$pm_id}");
+    return true;
+}
+
+/**
+ * 프롬프트 배너 이미지 업로드
+ */
+function mg_upload_prompt_banner($file, $pm_id = 0)
+{
+    $allowed_ext = array('jpg', 'jpeg', 'png', 'gif', 'webp');
+    $max_size = (int)mg_config('prompt_banner_max_size', 1024) * 1024;
+
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        return array('success' => false, 'message' => '파일 업로드 오류');
+    }
+
+    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    if (!in_array($ext, $allowed_ext)) {
+        return array('success' => false, 'message' => '허용되지 않는 파일 형식');
+    }
+
+    if ($file['size'] > $max_size) {
+        return array('success' => false, 'message' => '파일 크기 초과');
+    }
+
+    $dir = MG_PROMPT_IMAGE_PATH;
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0755, true);
+        @chmod($dir, 0755);
+    }
+
+    $filename = 'banner_' . $pm_id . '_' . date('YmdHis') . '_' . mt_rand(100, 999) . '.' . $ext;
+    $filepath = $dir . '/' . $filename;
+
+    if (!move_uploaded_file($file['tmp_name'], $filepath)) {
+        return array('success' => false, 'message' => '파일 저장 실패');
+    }
+
+    @chmod($filepath, 0644);
+    $url = MG_PROMPT_IMAGE_URL . '/' . $filename;
+
+    return array('success' => true, 'url' => $url, 'filename' => $filename);
 }

@@ -23,7 +23,7 @@ if ($is_member && function_exists('mg_like_get_daily') && $_mg_like_limit > 0) {
 }
 ?>
 
-<div id="bo_view" class="max-w-4xl mx-auto">
+<div id="bo_view" class="mg-inner">
 
     <!-- 게시글 카드 -->
     <article class="card mb-4">

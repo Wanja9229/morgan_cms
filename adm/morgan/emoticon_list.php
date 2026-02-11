@@ -124,7 +124,7 @@ require_once __DIR__.'/_head.php';
                 <thead>
                     <tr>
                         <th style="width:40px;"><input type="checkbox" onclick="checkAll(this);"></th>
-                        <th style="width:60px;">미리보기</th>
+                        <th style="width:100px;">미리보기</th>
                         <th>셋 이름</th>
                         <th style="width:100px;">제작자</th>
                         <th style="width:80px;">상태</th>

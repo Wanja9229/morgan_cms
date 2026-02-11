@@ -8,7 +8,7 @@
 if (!defined('_GNUBOARD_')) exit;
 ?>
 
-<div class="max-w-md mx-auto">
+<div class="mg-inner">
     <div class="card">
         <h2 class="text-xl font-bold text-mg-text-primary mb-2 text-center">본인 확인</h2>
         <p class="text-sm text-mg-text-muted mb-6 text-center">

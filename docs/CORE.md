@@ -23,11 +23,12 @@
 - [x] Phase 13: 업적 시스템 (DB 4테이블, 트리거, 관리자CRUD, 프론트, 쇼케이스, 토스트)
 - [x] Phase 14: 인장 시스템 (DB, 편집/미리보기, 렌더링, 관리자, 마이 페이지)
 
-### 미구현 (Phase 15~18)
-- [ ] Phase 15: 정기 프롬프트 (주간/월간 미션) → `plans/PROMPT_MISSION.md`
-- [ ] Phase 16: 캐릭터 관계 (관계도, vis.js) → `plans/CHARACTER_RELATION.md`
-- [ ] Phase 17: 연구 트리 (공동 투자, 버프) → `plans/RESEARCH_TREE.md`
-- [ ] Phase 18: SS Engine / TRPG 세션 → `plans/SS_ENGINE.md`
+### 미구현 (Phase 15~19)
+- [ ] Phase 15: 세계관 위키 (위키형 설정집 + 타임라인) → 기획 필요
+- [ ] Phase 16: 정기 프롬프트 (주간/월간 미션) → `plans/PROMPT_MISSION.md`
+- [ ] Phase 17: 캐릭터 관계 (관계도, vis.js) → `plans/CHARACTER_RELATION.md`
+- [ ] Phase 18: 연구 트리 (공동 투자, 버프) → `plans/RESEARCH_TREE.md`
+- [ ] Phase 19: SS Engine / TRPG 세션 → `plans/SS_ENGINE.md`
 
 ### 2차 (별도 패키지)
 - [ ] VN Engine (역극→비주얼노벨 변환) → `MODULES.md`

@@ -27,6 +27,29 @@ while ($row_b = sql_fetch_array($result_boards)) {
     $sidebar_boards[] = $row_b;
 }
 
+// 사이드바 세계관 위키용 - 카테고리별 문서 목록
+$sidebar_lore_categories = array();
+$sidebar_lore_uncategorized = array();
+if (function_exists('mg_config') && mg_config('lore_use', '1') == '1') {
+    // 카테고리 목록
+    $sql_lc = "SELECT lc_id, lc_name FROM {$g5['mg_lore_category_table']} WHERE lc_use = 1 ORDER BY lc_order, lc_id";
+    $result_lc = sql_query($sql_lc);
+    while ($row_lc = sql_fetch_array($result_lc)) {
+        $row_lc['articles'] = array();
+        $sidebar_lore_categories[$row_lc['lc_id']] = $row_lc;
+    }
+    // 문서 → 카테고리별 분배
+    $sql_lore = "SELECT la_id, la_title, lc_id FROM {$g5['mg_lore_article_table']} WHERE la_use = 1 ORDER BY la_order ASC, la_id ASC";
+    $result_lore = sql_query($sql_lore);
+    while ($row_l = sql_fetch_array($result_lore)) {
+        if (isset($sidebar_lore_categories[$row_l['lc_id']])) {
+            $sidebar_lore_categories[$row_l['lc_id']]['articles'][] = $row_l;
+        } else {
+            $sidebar_lore_uncategorized[] = $row_l;
+        }
+    }
+}
+
 // 현재 페이지 감지 (게시판/역극/기타)
 $_current_script = basename($_SERVER['SCRIPT_NAME'] ?? '');
 $_is_rp_page = in_array($_current_script, array('rp_list.php', 'rp_close.php', 'rp_reply.php'));
@@ -43,6 +66,8 @@ $_is_new_page = ($_current_script === 'new.php');
 $_is_inventory_page = ($_current_script === 'inventory.php');
 $_is_pioneer_page = ($_current_script === 'pioneer.php');
 $_is_mypage = in_array($_current_script, array('mypage.php', 'seal_edit.php'));
+$_is_lore_page = in_array($_current_script, array('lore.php', 'lore_view.php', 'lore_timeline.php'));
+$_current_la_id = ($_current_script === 'lore_view.php' && isset($_GET['la_id'])) ? (int)$_GET['la_id'] : 0;
 
 // 개척 시스템: 유저 노동력
 $_user_stamina = null;
@@ -153,21 +178,21 @@ if (isset($is_ajax_request) && $is_ajax_request) {
 
         <div class="w-8 h-px bg-mg-bg-tertiary my-1"></div>
 
+        <!-- 세계관 위키 (2뎁스) -->
+        <?php if (mg_config('lore_use', '1') == '1') { ?>
+        <button id="sidebar-lore-toggle" class="sidebar-icon group <?php echo $_is_lore_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="세계관 위키" type="button" data-sidebar-id="lore">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+            </svg>
+        </button>
+        <?php } ?>
+
         <!-- 게시판 메뉴 (2뎁스) -->
         <button id="sidebar-board-toggle" class="sidebar-icon group <?php echo $_is_community_section ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="게시판" type="button" data-sidebar-id="board">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
             </svg>
         </button>
-
-        <!-- 내 캐릭터 -->
-        <?php if ($is_member) { ?>
-        <a href="<?php echo G5_BBS_URL; ?>/character.php" class="sidebar-icon group <?php echo $_is_character_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="내 캐릭터" data-sidebar-id="character">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-            </svg>
-        </a>
-        <?php } ?>
 
         <!-- 캐릭터 목록 -->
         <a href="<?php echo G5_BBS_URL; ?>/character_list.php" class="sidebar-icon group <?php echo $_is_character_list_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="캐릭터 목록" data-sidebar-id="character_list">
@@ -184,15 +209,6 @@ if (isset($is_ajax_request) && $is_ajax_request) {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
             </svg>
         </a>
-
-        <!-- 마이 페이지 -->
-        <?php if ($is_member) { ?>
-        <a href="<?php echo G5_BBS_URL; ?>/mypage.php" class="sidebar-icon group <?php echo in_array($_current_script, array('mypage.php', 'seal_edit.php')) ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="마이 페이지" data-sidebar-id="mypage">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-        </a>
-        <?php } ?>
 
         <!-- 새글 -->
         <a href="<?php echo G5_BBS_URL; ?>/new.php" class="sidebar-icon group <?php echo $_is_new_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="새글" data-sidebar-id="new">
@@ -233,7 +249,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
     </aside>
 
     <!-- Board Submenu Panel (2뎁스) -->
-    <div id="sidebar-board-panel" class="fixed left-14 top-12 bottom-0 w-48 bg-mg-bg-secondary border-r border-mg-bg-tertiary z-30 transform -translate-x-full opacity-0 transition-all duration-200 ease-in-out pointer-events-none flex flex-col">
+    <div id="sidebar-board-panel" class="fixed left-14 top-12 bottom-0 w-48 bg-mg-bg-secondary border-r border-mg-bg-tertiary z-30 transform <?php echo $_is_community_section ? 'translate-x-0 opacity-100 pointer-events-auto' : '-translate-x-full opacity-0 pointer-events-none'; ?> transition-all duration-200 ease-in-out flex flex-col">
         <div class="px-3 pt-3 pb-2">
             <h3 class="text-xs font-semibold text-mg-text-muted uppercase tracking-wider">게시판</h3>
         </div>
@@ -276,24 +292,20 @@ if (isset($is_ajax_request) && $is_ajax_request) {
         </nav>
     </div>
 
-    <!-- Board Panel Backdrop -->
-    <div id="sidebar-board-backdrop" class="fixed inset-0 z-20 hidden"></div>
-
     <script>
     (function() {
         var toggle = document.getElementById('sidebar-board-toggle');
         var panel = document.getElementById('sidebar-board-panel');
-        var backdrop = document.getElementById('sidebar-board-backdrop');
-        if (!toggle || !panel || !backdrop) return;
+        if (!toggle || !panel) return;
 
-        var isOpen = false;
         var isCommunityPage = <?php echo $_is_community_section ? 'true' : 'false'; ?>;
+        var isOpen = isCommunityPage;
 
         function openPanel() {
+            if (window.MG_LorePanel) window.MG_LorePanel.close();
             isOpen = true;
             panel.classList.remove('-translate-x-full', 'opacity-0', 'pointer-events-none');
             panel.classList.add('translate-x-0', 'opacity-100', 'pointer-events-auto');
-            backdrop.classList.remove('hidden');
             toggle.classList.add('!bg-mg-accent', '!text-white', '!rounded-xl');
         }
 
@@ -301,7 +313,6 @@ if (isset($is_ajax_request) && $is_ajax_request) {
             isOpen = false;
             panel.classList.add('-translate-x-full', 'opacity-0', 'pointer-events-none');
             panel.classList.remove('translate-x-0', 'opacity-100', 'pointer-events-auto');
-            backdrop.classList.add('hidden');
             if (!isCommunityPage) {
                 toggle.classList.remove('!bg-mg-accent', '!text-white', '!rounded-xl');
             }
@@ -312,29 +323,173 @@ if (isset($is_ajax_request) && $is_ajax_request) {
             isOpen ? closePanel() : openPanel();
         });
 
-        backdrop.addEventListener('click', closePanel);
-
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && isOpen) closePanel();
-        });
-
-        // 패널 내 링크 클릭 시 패널 닫기
-        panel.querySelectorAll('a').forEach(function(link) {
-            link.addEventListener('click', function() {
-                closePanel();
-            });
-        });
-
-        // SPA 라우터용 글로벌 함수
         window.MG_BoardPanel = {
             open: openPanel,
             close: closePanel,
-            setCommunityPage: function(val) {
-                isCommunityPage = val;
-            }
+            setCommunityPage: function(val) { isCommunityPage = val; }
         };
     })();
     </script>
+
+    <!-- Lore Submenu Panel (2뎁스) -->
+    <?php if (mg_config('lore_use', '1') == '1') { ?>
+    <div id="sidebar-lore-panel" class="fixed left-14 top-12 bottom-0 w-48 bg-mg-bg-secondary border-r border-mg-bg-tertiary z-30 transform <?php echo $_is_lore_page ? 'translate-x-0 opacity-100 pointer-events-auto' : '-translate-x-full opacity-0 pointer-events-none'; ?> transition-all duration-200 ease-in-out flex flex-col">
+        <div class="px-3 pt-3 pb-2">
+            <h3 class="text-xs font-semibold text-mg-text-muted uppercase tracking-wider">세계관</h3>
+        </div>
+        <nav class="flex-1 overflow-y-auto px-2 pb-3">
+            <!-- #전체 -->
+            <div class="space-y-0.5">
+                <?php
+                $lore_all_active = ($_current_script === 'lore.php')
+                    ? 'bg-mg-accent/15 text-mg-text-primary font-medium'
+                    : 'text-mg-text-secondary hover:bg-mg-bg-tertiary/50 hover:text-mg-text-primary';
+                ?>
+                <a href="<?php echo G5_BBS_URL; ?>/lore.php" data-lore-page="lore.php"
+                   class="lp-item flex items-center gap-2 px-2 py-1.5 rounded text-sm transition-colors <?php echo $lore_all_active; ?>">
+                    <span class="lp-icon <?php echo ($_current_script === 'lore.php') ? 'text-mg-accent' : 'text-mg-text-muted'; ?> text-xs font-bold">#</span>
+                    <span class="truncate">전체</span>
+                    <span class="lp-dot ml-auto w-1 h-1 rounded-full bg-mg-accent <?php echo ($_current_script !== 'lore.php') ? 'hidden' : ''; ?>"></span>
+                </a>
+            </div>
+
+            <!-- 카테고리별 문서 -->
+            <?php foreach ($sidebar_lore_categories as $slc) {
+                if (empty($slc['articles'])) continue;
+            ?>
+            <div class="my-2 mx-1 border-t border-mg-bg-tertiary"></div>
+            <div class="space-y-0.5">
+                <h4 class="text-[10px] font-semibold text-mg-text-muted uppercase tracking-wider px-2 py-1"><?php echo htmlspecialchars($slc['lc_name']); ?></h4>
+                <?php foreach ($slc['articles'] as $sla) {
+                    $is_current_lore = ($_current_la_id == (int)$sla['la_id']);
+                    $lore_active_class = $is_current_lore
+                        ? 'bg-mg-accent/15 text-mg-text-primary font-medium'
+                        : 'text-mg-text-secondary hover:bg-mg-bg-tertiary/50 hover:text-mg-text-primary';
+                ?>
+                <a href="<?php echo G5_BBS_URL; ?>/lore_view.php?la_id=<?php echo $sla['la_id']; ?>" data-lore-page="lore_view.php" data-lore-id="<?php echo $sla['la_id']; ?>"
+                   class="lp-item flex items-center gap-2 px-2 py-1.5 rounded text-sm transition-colors <?php echo $lore_active_class; ?>">
+                    <svg class="lp-icon w-3.5 h-3.5 flex-shrink-0 <?php echo $is_current_lore ? 'text-mg-accent' : 'text-mg-text-muted'; ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span class="truncate"><?php echo htmlspecialchars($sla['la_title']); ?></span>
+                    <span class="lp-dot ml-auto w-1 h-1 rounded-full bg-mg-accent <?php echo !$is_current_lore ? 'hidden' : ''; ?>"></span>
+                </a>
+                <?php } ?>
+            </div>
+            <?php } ?>
+
+            <!-- 타임라인 -->
+            <div class="my-2 mx-1 border-t border-mg-bg-tertiary"></div>
+            <div class="space-y-0.5">
+                <h4 class="text-[10px] font-semibold text-mg-text-muted uppercase tracking-wider px-2 py-1">타임라인</h4>
+                <?php
+                $tl_active = ($_current_script === 'lore_timeline.php')
+                    ? 'bg-mg-accent/15 text-mg-text-primary font-medium'
+                    : 'text-mg-text-secondary hover:bg-mg-bg-tertiary/50 hover:text-mg-text-primary';
+                ?>
+                <a href="<?php echo G5_BBS_URL; ?>/lore_timeline.php" data-lore-page="lore_timeline.php"
+                   class="lp-item flex items-center gap-2 px-2 py-1.5 rounded text-sm transition-colors <?php echo $tl_active; ?>">
+                    <svg class="lp-icon w-3.5 h-3.5 flex-shrink-0 <?php echo ($_current_script === 'lore_timeline.php') ? 'text-mg-accent' : 'text-mg-text-muted'; ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span class="truncate">연대기</span>
+                    <span class="lp-dot ml-auto w-1 h-1 rounded-full bg-mg-accent <?php echo ($_current_script !== 'lore_timeline.php') ? 'hidden' : ''; ?>"></span>
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <script>
+    (function() {
+        var loreToggle = document.getElementById('sidebar-lore-toggle');
+        var lorePanel = document.getElementById('sidebar-lore-panel');
+        if (!loreToggle || !lorePanel) return;
+
+        var isLorePage = <?php echo $_is_lore_page ? 'true' : 'false'; ?>;
+        var isLoreOpen = isLorePage;
+
+        var ACTIVE_LINK = ['bg-mg-accent/15', 'text-mg-text-primary', 'font-medium'];
+        var INACTIVE_LINK = ['text-mg-text-secondary', 'hover:bg-mg-bg-tertiary/50', 'hover:text-mg-text-primary'];
+
+        // URL 기반으로 패널 포커스 동기화
+        function updateLorePanelFocus() {
+            var path = window.location.pathname;
+            var script = path.substring(path.lastIndexOf('/') + 1);
+            var params = new URLSearchParams(window.location.search);
+            var laId = parseInt(params.get('la_id') || '0');
+            var onLorePage = ['lore.php', 'lore_view.php', 'lore_timeline.php'].indexOf(script) !== -1;
+
+            isLorePage = onLorePage;
+
+            if (onLorePage) {
+                loreToggle.classList.add('!bg-mg-accent', '!text-white', '!rounded-xl');
+            } else {
+                loreToggle.classList.remove('!bg-mg-accent', '!text-white', '!rounded-xl');
+            }
+
+            lorePanel.querySelectorAll('.lp-item').forEach(function(link) {
+                var linkPage = link.getAttribute('data-lore-page');
+                var linkId = parseInt(link.getAttribute('data-lore-id') || '0');
+                var isActive = false;
+
+                if (linkPage === script) {
+                    if (linkPage === 'lore_view.php') {
+                        isActive = (linkId === laId && laId > 0);
+                    } else {
+                        isActive = true;
+                    }
+                }
+
+                var icon = link.querySelector('.lp-icon');
+                var dot = link.querySelector('.lp-dot');
+
+                ACTIVE_LINK.forEach(function(c) { link.classList.remove(c); });
+                INACTIVE_LINK.forEach(function(c) { link.classList.remove(c); });
+
+                if (isActive) {
+                    ACTIVE_LINK.forEach(function(c) { link.classList.add(c); });
+                    if (icon) { icon.classList.add('text-mg-accent'); icon.classList.remove('text-mg-text-muted'); }
+                    if (dot) dot.classList.remove('hidden');
+                } else {
+                    INACTIVE_LINK.forEach(function(c) { link.classList.add(c); });
+                    if (icon) { icon.classList.remove('text-mg-accent'); icon.classList.add('text-mg-text-muted'); }
+                    if (dot) dot.classList.add('hidden');
+                }
+            });
+        }
+
+        function openLore() {
+            if (window.MG_BoardPanel) window.MG_BoardPanel.close();
+            isLoreOpen = true;
+            lorePanel.classList.remove('-translate-x-full', 'opacity-0', 'pointer-events-none');
+            lorePanel.classList.add('translate-x-0', 'opacity-100', 'pointer-events-auto');
+            loreToggle.classList.add('!bg-mg-accent', '!text-white', '!rounded-xl');
+        }
+
+        function closeLore() {
+            isLoreOpen = false;
+            lorePanel.classList.add('-translate-x-full', 'opacity-0', 'pointer-events-none');
+            lorePanel.classList.remove('translate-x-0', 'opacity-100', 'pointer-events-auto');
+            if (!isLorePage) {
+                loreToggle.classList.remove('!bg-mg-accent', '!text-white', '!rounded-xl');
+            }
+        }
+
+        loreToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            isLoreOpen ? closeLore() : openLore();
+        });
+
+        window.MG_LorePanel = { open: openLore, close: closeLore };
+
+        // 매 페이지 로드 시 URL 기반 포커스 동기화 (캐시/bfcache 대응)
+        updateLorePanelFocus();
+        window.addEventListener('pageshow', function(e) {
+            if (e.persisted) updateLorePanelFocus();
+        });
+    })();
+    </script>
+    <?php } ?>
 
     <!-- Main Content Area -->
     <main id="main-content" class="flex-1 ml-14 p-4 md:p-6 lg:mr-72">

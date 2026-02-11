@@ -6,7 +6,7 @@
 if (!defined('_GNUBOARD_')) exit;
 ?>
 
-<div class="max-w-6xl mx-auto">
+<div class="mg-inner">
     <!-- 헤더 -->
     <div class="mb-6">
         <h1 class="text-2xl font-bold text-mg-text-primary mb-2">개척 현황</h1>

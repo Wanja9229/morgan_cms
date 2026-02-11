@@ -6,7 +6,7 @@
 if (!defined('_GNUBOARD_')) exit;
 ?>
 
-<div class="max-w-2xl mx-auto">
+<div class="mg-inner">
     <!-- 출석 요약 -->
     <div class="card mb-6">
         <div class="flex items-center justify-between flex-wrap gap-4">

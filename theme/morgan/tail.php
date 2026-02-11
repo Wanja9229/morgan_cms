@@ -45,6 +45,14 @@ if (isset($is_ajax_request) && $is_ajax_request) {
                 </svg>
                 출석체크
             </a>
+
+            <!-- 마이 페이지 버튼 -->
+            <a href="<?php echo G5_BBS_URL; ?>/mypage.php" class="flex items-center justify-center gap-2 w-full py-2 mt-2 bg-mg-bg-tertiary hover:bg-mg-bg-tertiary/80 text-mg-text-secondary hover:text-mg-text-primary rounded-md text-sm font-medium transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                마이 페이지
+            </a>
         </div>
 
         <!-- 대표 캐릭터 -->

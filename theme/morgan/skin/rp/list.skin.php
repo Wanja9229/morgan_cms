@@ -52,7 +52,7 @@ function rp_time_ago($datetime) {
 }
 ?>
 
-<div id="rp_list" class="max-w-4xl mx-auto">
+<div id="rp_list" class="mg-inner">
 
     <!-- 헤더 -->
     <div class="card mb-4">

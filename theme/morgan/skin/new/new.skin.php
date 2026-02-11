@@ -2,7 +2,7 @@
 if (!defined("_GNUBOARD_")) exit;
 ?>
 
-<div class="max-w-4xl mx-auto">
+<div class="mg-inner">
     <!-- 헤더 -->
     <div class="flex items-center justify-between mb-6">
         <h2 class="text-xl font-bold text-mg-text-primary">새글</h2>

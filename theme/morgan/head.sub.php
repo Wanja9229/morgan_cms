@@ -97,7 +97,9 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
             --mg-accent-hover: <?php echo $mg_theme_colors['accent-hover']; ?>;
             --mg-button: <?php echo isset($mg_theme_colors['button']) ? $mg_theme_colors['button'] : $mg_theme_colors['accent']; ?>;
             --mg-button-hover: <?php echo isset($mg_theme_colors['button-hover']) ? $mg_theme_colors['button-hover'] : $mg_theme_colors['accent-hover']; ?>;
+            --mg-content-width: <?php echo function_exists('mg_config') ? mg_config('content_max_width', '72rem') : '72rem'; ?>;
         }
+        .mg-inner { max-width: var(--mg-content-width); margin-left: auto; margin-right: auto; }
         /* 버튼 색상 오버라이드 */
         .btn-primary, .mg-btn-primary {
             background-color: var(--mg-button) !important;

@@ -38,7 +38,7 @@ $can_create = $current_count < $max_characters;
 include_once(G5_THEME_PATH.'/head.php');
 ?>
 
-<div class="max-w-4xl mx-auto">
+<div class="mg-inner">
     <!-- 페이지 헤더 -->
     <div class="flex items-center justify-between mb-6">
         <div>

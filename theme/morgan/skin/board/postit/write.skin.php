@@ -50,7 +50,7 @@ if ($is_member && !$is_edit && function_exists('mg_get_board_reward')) {
 $auto_subject = $is_edit ? $subject : date('Y-m-d H:i') . ' 포스트잇';
 ?>
 
-<div id="bo_write" class="max-w-lg mx-auto">
+<div id="bo_write" class="mg-inner">
     <div class="card">
         <h2 class="text-xl font-bold text-mg-text-primary mb-6 flex items-center gap-2">
             <svg class="w-6 h-6 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">

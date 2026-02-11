@@ -127,7 +127,7 @@ include_once('./_head.php');
                     <th style="width:60px;">ID</th>
                     <th>회원</th>
                     <th>한마디</th>
-                    <th style="width:60px;">이미지</th>
+                    <th style="width:80px;">이미지</th>
                     <th style="width:70px;">상태</th>
                     <th style="width:130px;">수정일</th>
                     <th style="width:160px;">관리</th>

@@ -33,7 +33,7 @@ if (count($list) > 0) {
 }
 ?>
 
-<div id="bo_list" class="max-w-6xl mx-auto">
+<div id="bo_list" class="mg-inner">
 
     <!-- 게시판 헤더 -->
     <div class="card mb-4">

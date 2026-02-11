@@ -6,7 +6,7 @@
 if (!defined('_GNUBOARD_')) exit;
 ?>
 
-<div class="max-w-md mx-auto">
+<div class="mg-inner">
     <div class="card">
         <h2 class="text-xl font-bold text-mg-text-primary mb-6 text-center">로그인</h2>
 

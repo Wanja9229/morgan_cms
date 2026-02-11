@@ -421,6 +421,127 @@ require_once __DIR__.'/_head.php';
 
             <hr style="border:0;border-top:1px solid var(--mg-bg-tertiary);margin:1.5rem 0;">
 
+            <h3 style="font-size:1rem;font-weight:600;margin-bottom:1rem;color:var(--mg-accent);">위키 설정</h3>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem; margin-bottom:1.5rem;">
+                <div class="mg-form-group">
+                    <label class="mg-form-label">세계관 위키</label>
+                    <div style="display:flex;gap:1rem;margin-top:0.5rem;">
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="lore_use" value="1" <?php echo (!isset($mg_configs['lore_use']) || $mg_configs['lore_use'] == '1') ? 'checked' : ''; ?>>
+                            <span>사용</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="lore_use" value="0" <?php echo (isset($mg_configs['lore_use']) && $mg_configs['lore_use'] == '0') ? 'checked' : ''; ?>>
+                            <span>사용안함</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="lore_image_max_size">이미지 최대 크기 (KB)</label>
+                    <input type="number" name="lore_image_max_size" id="lore_image_max_size" value="<?php echo isset($mg_configs['lore_image_max_size']) ? $mg_configs['lore_image_max_size'] : '2048'; ?>" class="mg-form-input" min="100" max="10000">
+                </div>
+
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="lore_thumbnail_max_size">썸네일 최대 크기 (KB)</label>
+                    <input type="number" name="lore_thumbnail_max_size" id="lore_thumbnail_max_size" value="<?php echo isset($mg_configs['lore_thumbnail_max_size']) ? $mg_configs['lore_thumbnail_max_size'] : '500'; ?>" class="mg-form-input" min="100" max="5000">
+                </div>
+
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="lore_articles_per_page">페이지당 문서 수</label>
+                    <input type="number" name="lore_articles_per_page" id="lore_articles_per_page" value="<?php echo isset($mg_configs['lore_articles_per_page']) ? $mg_configs['lore_articles_per_page'] : '12'; ?>" class="mg-form-input" min="4" max="48">
+                </div>
+            </div>
+
+            <hr style="border:0;border-top:1px solid var(--mg-bg-tertiary);margin:1.5rem 0;">
+
+            <h3 style="font-size:1rem;font-weight:600;margin-bottom:1rem;color:var(--mg-accent);">프롬프트 미션 설정</h3>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem; margin-bottom:1.5rem;">
+                <div class="mg-form-group">
+                    <label class="mg-form-label">프롬프트 시스템</label>
+                    <div style="display:flex;gap:1rem;">
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="prompt_enable" value="1" <?php echo (!isset($mg_configs['prompt_enable']) || $mg_configs['prompt_enable'] == '1') ? 'checked' : ''; ?>>
+                            <span>사용</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="prompt_enable" value="0" <?php echo (isset($mg_configs['prompt_enable']) && $mg_configs['prompt_enable'] == '0') ? 'checked' : ''; ?>>
+                            <span>사용안함</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="prompt_show_closed">종료 프롬프트 표시 수</label>
+                    <input type="number" name="prompt_show_closed" id="prompt_show_closed" value="<?php echo isset($mg_configs['prompt_show_closed']) ? $mg_configs['prompt_show_closed'] : '3'; ?>" class="mg-form-input" min="0" max="20">
+                </div>
+
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="prompt_banner_max_size">배너 이미지 최대 크기 (KB)</label>
+                    <input type="number" name="prompt_banner_max_size" id="prompt_banner_max_size" value="<?php echo isset($mg_configs['prompt_banner_max_size']) ? $mg_configs['prompt_banner_max_size'] : '1024'; ?>" class="mg-form-input" min="100" max="5000">
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem; margin-bottom:1.5rem;">
+                <div class="mg-form-group">
+                    <label class="mg-form-label">제출 시 관리자 알림</label>
+                    <div style="display:flex;gap:1rem;">
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="prompt_notify_submit" value="1" <?php echo (!isset($mg_configs['prompt_notify_submit']) || $mg_configs['prompt_notify_submit'] == '1') ? 'checked' : ''; ?>>
+                            <span>사용</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="prompt_notify_submit" value="0" <?php echo (isset($mg_configs['prompt_notify_submit']) && $mg_configs['prompt_notify_submit'] == '0') ? 'checked' : ''; ?>>
+                            <span>사용안함</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mg-form-group">
+                    <label class="mg-form-label">승인 시 유저 알림</label>
+                    <div style="display:flex;gap:1rem;">
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="prompt_notify_approve" value="1" <?php echo (!isset($mg_configs['prompt_notify_approve']) || $mg_configs['prompt_notify_approve'] == '1') ? 'checked' : ''; ?>>
+                            <span>사용</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="prompt_notify_approve" value="0" <?php echo (isset($mg_configs['prompt_notify_approve']) && $mg_configs['prompt_notify_approve'] == '0') ? 'checked' : ''; ?>>
+                            <span>사용안함</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mg-form-group">
+                    <label class="mg-form-label">반려 시 유저 알림</label>
+                    <div style="display:flex;gap:1rem;">
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="prompt_notify_reject" value="1" <?php echo (!isset($mg_configs['prompt_notify_reject']) || $mg_configs['prompt_notify_reject'] == '1') ? 'checked' : ''; ?>>
+                            <span>사용</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="prompt_notify_reject" value="0" <?php echo (isset($mg_configs['prompt_notify_reject']) && $mg_configs['prompt_notify_reject'] == '0') ? 'checked' : ''; ?>>
+                            <span>사용안함</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <hr style="border:0;border-top:1px solid var(--mg-bg-tertiary);margin:1.5rem 0;">
+
+            <h3 style="font-size:1rem;font-weight:600;margin-bottom:1rem;color:var(--mg-accent);">레이아웃 설정</h3>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem; margin-bottom:1.5rem;">
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="content_max_width">콘텐츠 최대 너비</label>
+                    <input type="text" name="content_max_width" id="content_max_width" value="<?php echo isset($mg_configs['content_max_width']) ? htmlspecialchars($mg_configs['content_max_width']) : '72rem'; ?>" class="mg-form-input" placeholder="72rem">
+                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">모든 페이지 콘텐츠 영역의 최대 너비 (예: 72rem, 1200px, 100%)</small>
+                </div>
+            </div>
+
+            <hr style="border:0;border-top:1px solid var(--mg-bg-tertiary);margin:1.5rem 0;">
+
             <h3 style="font-size:1rem;font-weight:600;margin-bottom:1rem;color:var(--mg-accent);">디자인 설정</h3>
 
             <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:1.5rem;">

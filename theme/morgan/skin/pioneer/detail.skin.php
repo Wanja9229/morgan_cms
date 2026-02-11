@@ -9,7 +9,7 @@ $is_building = $facility['fc_status'] === 'building';
 $is_complete = $facility['fc_status'] === 'complete';
 ?>
 
-<div class="max-w-4xl mx-auto">
+<div class="mg-inner">
     <!-- 뒤로 가기 -->
     <div class="mb-4">
         <a href="<?php echo G5_BBS_URL; ?>/pioneer.php" class="inline-flex items-center text-mg-text-secondary hover:text-mg-accent">

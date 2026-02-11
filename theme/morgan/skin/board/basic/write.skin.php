@@ -82,7 +82,7 @@ if ($is_member) {
 }
 ?>
 
-<div id="bo_write" class="max-w-4xl mx-auto">
+<div id="bo_write" class="mg-inner">
     <div class="card">
         <h2 class="text-xl font-bold text-mg-text-primary mb-6"><?php echo $form_title; ?></h2>
 

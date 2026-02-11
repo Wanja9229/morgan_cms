@@ -96,7 +96,7 @@ $g5['title'] = '업적';
 include_once(G5_THEME_PATH.'/head.php');
 ?>
 
-<div class="max-w-4xl mx-auto">
+<div class="mg-inner">
     <!-- 헤더: 전체 진행도 -->
     <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary p-6 mb-6">
         <div class="flex items-center justify-between mb-3">

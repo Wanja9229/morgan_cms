@@ -70,7 +70,7 @@ $g5['title'] = $char['ch_name'].' - 캐릭터 프로필';
 include_once(G5_THEME_PATH.'/head.php');
 ?>
 
-<div class="max-w-4xl mx-auto">
+<div class="mg-inner">
     <!-- 뒤로가기 -->
     <a href="javascript:history.back();" class="inline-flex items-center gap-1 text-sm text-mg-text-muted hover:text-mg-accent transition-colors mb-4">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

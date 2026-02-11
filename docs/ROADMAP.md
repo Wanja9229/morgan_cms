@@ -417,7 +417,25 @@
 
 ---
 
-## Phase 15: 정기 프롬프트 (Prompt Mission)
+## Phase 15: 세계관 위키 (Lore Wiki)
+
+> 세계관 설정을 위키형으로 관리 + 타임라인 연표.
+> 상세 기획 필요 — `plans/LORE_WIKI.md` (미작성)
+
+### 15.1 위키 기본
+- [ ] 기획서 작성 (plans/LORE_WIKI.md)
+- [ ] DB 설계 + 구현
+- [ ] 위키 문서 CRUD (카테고리, 상호 링크)
+- [ ] 프론트 열람 페이지
+- [ ] 관리자 페이지
+
+### 15.2 타임라인
+- [ ] 세계관 연표 (타임라인) 관리
+- [ ] 프론트 타임라인 시각화
+
+---
+
+## Phase 16: 정기 프롬프트 (Prompt Mission)
 
 > 주간/월간 미션 게시판 스킨. 포인트 수급처 + 스토리 진행용.
 > 상세: plans/PROMPT_MISSION.md
@@ -445,7 +463,7 @@
 
 ---
 
-## Phase 16: 캐릭터 관계 시스템 (Character Relation)
+## Phase 17: 캐릭터 관계 시스템 (Character Relation)
 
 > 캐릭터 간 관계를 신청→승인으로 맺고, vis.js Network로 시각화.
 > 상세: plans/CHARACTER_RELATION.md
@@ -471,7 +489,7 @@
 
 ---
 
-## Phase 17: 연구 트리 (Research Tree)
+## Phase 18: 연구 트리 (Research Tree)
 
 > 재화 공동 투입으로 커뮤니티 영구 버프 + 시설 해금 전제조건.
 > 상세: plans/RESEARCH_TREE.md
@@ -502,7 +520,7 @@
 
 ---
 
-## Phase 18: SS Engine (TRPG 세션 툴)
+## Phase 19: SS Engine (TRPG 세션 툴)
 
 > Supabase 실시간 연동, 별도 패키지. 대형 작업으로 마지막 진행.
 > 상세: plans/SS_ENGINE.md

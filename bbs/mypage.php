@@ -98,7 +98,7 @@ $ach_rarity_colors = array(
 );
 ?>
 
-<div class="max-w-4xl mx-auto">
+<div class="mg-inner">
 
     <!-- 프로필 헤더 -->
     <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden mb-6">

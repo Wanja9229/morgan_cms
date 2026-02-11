@@ -118,7 +118,7 @@ require_once __DIR__.'/_head.php';
                 <tr>
                     <th style="width:60px;">번호</th>
                     <th>제목</th>
-                    <th style="width:180px;">판장</th>
+                    <th style="width:240px;">작성자</th>
                     <th style="width:90px;">상태</th>
                     <th style="width:80px;">이음수</th>
                     <th style="width:80px;">참여자</th>

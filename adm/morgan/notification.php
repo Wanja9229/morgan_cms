@@ -100,9 +100,9 @@ require_once __DIR__.'/_head.php';
                         <th style="width:60px;">번호</th>
                         <th style="width:100px;">회원ID</th>
                         <th style="width:100px;">닉네임</th>
-                        <th style="width:80px;">타입</th>
+                        <th style="width:110px;">타입</th>
                         <th>내용</th>
-                        <th style="width:60px;">상태</th>
+                        <th style="width:100px;">상태</th>
                         <th style="width:150px;">일시</th>
                     </tr>
                 </thead>

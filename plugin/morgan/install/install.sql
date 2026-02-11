@@ -1098,6 +1098,89 @@ CREATE TABLE IF NOT EXISTS `g5_write_log` (
     KEY `wr_is_comment` (`wr_is_comment`,`wr_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+-- mission (프롬프트 미션) - prompt 스킨, 회원 글쓰기/댓글, 추천 활성화
+INSERT INTO `g5_board` SET
+    `bo_table` = 'mission',
+    `gr_id` = 'community',
+    `bo_subject` = '프롬프트 미션',
+    `bo_device` = 'both',
+    `bo_admin` = '',
+    `bo_list_level` = 1,
+    `bo_read_level` = 1,
+    `bo_write_level` = 2,
+    `bo_reply_level` = 2,
+    `bo_comment_level` = 2,
+    `bo_upload_level` = 2,
+    `bo_download_level` = 1,
+    `bo_html_level` = 1,
+    `bo_link_level` = 1,
+    `bo_count_modify` = 1,
+    `bo_count_delete` = 1,
+    `bo_read_point` = 0,
+    `bo_write_point` = 0,
+    `bo_comment_point` = 1,
+    `bo_download_point` = 0,
+    `bo_use_category` = 0,
+    `bo_category_list` = '',
+    `bo_use_sideview` = 0,
+    `bo_use_file_content` = 0,
+    `bo_use_secret` = 0,
+    `bo_use_dhtml_editor` = 1,
+    `bo_select_editor` = '',
+    `bo_use_rss_view` = 0,
+    `bo_use_good` = 1,
+    `bo_use_nogood` = 0,
+    `bo_use_name` = 0,
+    `bo_use_signature` = 0,
+    `bo_use_ip_view` = 0,
+    `bo_use_list_view` = 0,
+    `bo_use_list_file` = 0,
+    `bo_use_list_content` = 0,
+    `bo_table_width` = 100,
+    `bo_subject_len` = 60,
+    `bo_mobile_subject_len` = 30,
+    `bo_page_rows` = 15,
+    `bo_mobile_page_rows` = 15,
+    `bo_new` = 24,
+    `bo_hot` = 100,
+    `bo_image_width` = 835,
+    `bo_skin` = 'theme/prompt',
+    `bo_mobile_skin` = 'theme/prompt',
+    `bo_include_head` = '_head.php',
+    `bo_include_tail` = '_tail.php',
+    `bo_content_head` = '',
+    `bo_mobile_content_head` = '',
+    `bo_content_tail` = '',
+    `bo_mobile_content_tail` = '',
+    `bo_insert_content` = '',
+    `bo_gallery_cols` = 4,
+    `bo_gallery_width` = 202,
+    `bo_gallery_height` = 150,
+    `bo_mobile_gallery_width` = 125,
+    `bo_mobile_gallery_height` = 100,
+    `bo_upload_count` = 2,
+    `bo_upload_size` = 2097152,
+    `bo_reply_order` = 1,
+    `bo_use_search` = 1,
+    `bo_order` = 10,
+    `bo_count_write` = 0,
+    `bo_count_comment` = 0,
+    `bo_write_min` = 0,
+    `bo_write_max` = 0,
+    `bo_comment_min` = 0,
+    `bo_comment_max` = 0,
+    `bo_notice` = '',
+    `bo_use_email` = 0,
+    `bo_use_cert` = '',
+    `bo_use_sns` = 0,
+    `bo_use_captcha` = 0,
+    `bo_sort_field` = '',
+    `bo_1_subj` = '', `bo_2_subj` = '', `bo_3_subj` = '', `bo_4_subj` = '', `bo_5_subj` = '',
+    `bo_6_subj` = '', `bo_7_subj` = '', `bo_8_subj` = '', `bo_9_subj` = '', `bo_10_subj` = '',
+    `bo_1` = '', `bo_2` = '', `bo_3` = '', `bo_4` = '', `bo_5` = '',
+    `bo_6` = '', `bo_7` = '', `bo_8` = '', `bo_9` = '', `bo_10` = ''
+ON DUPLICATE KEY UPDATE `bo_subject` = VALUES(`bo_subject`);
+
 -- ======================================
 -- 8. 상점 아이템 타입 확장 (이모티콘 등록권)
 -- ======================================
@@ -1402,5 +1485,144 @@ CREATE TABLE IF NOT EXISTS `mg_seal` (
 ALTER TABLE `mg_shop_item` MODIFY `si_type`
     enum('title','badge','nick_color','nick_effect','profile_border','equip','emoticon_set','emoticon_reg','furniture','material','seal_bg','seal_frame','etc')
     NOT NULL DEFAULT 'etc' COMMENT '타입';
+
+-- ======================================
+-- 13. 세계관 위키 (Lore Wiki)
+-- ======================================
+
+-- 13.1 위키 카테고리
+CREATE TABLE IF NOT EXISTS `mg_lore_category` (
+    `lc_id` int NOT NULL AUTO_INCREMENT,
+    `lc_name` varchar(100) NOT NULL COMMENT '카테고리명',
+    `lc_order` int NOT NULL DEFAULT 0 COMMENT '정렬 순서',
+    `lc_use` tinyint NOT NULL DEFAULT 1 COMMENT '사용 여부',
+    PRIMARY KEY (`lc_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='위키 카테고리';
+
+-- 13.2 위키 문서
+CREATE TABLE IF NOT EXISTS `mg_lore_article` (
+    `la_id` int NOT NULL AUTO_INCREMENT,
+    `lc_id` int NOT NULL COMMENT '카테고리 ID',
+    `la_title` varchar(200) NOT NULL COMMENT '문서 제목',
+    `la_subtitle` varchar(300) DEFAULT NULL COMMENT '부제목',
+    `la_thumbnail` varchar(500) DEFAULT NULL COMMENT '썸네일 이미지',
+    `la_summary` text DEFAULT NULL COMMENT '한줄 요약',
+    `la_order` int NOT NULL DEFAULT 0 COMMENT '정렬 순서',
+    `la_use` tinyint NOT NULL DEFAULT 1 COMMENT '공개 여부',
+    `la_hit` int NOT NULL DEFAULT 0 COMMENT '조회수',
+    `la_created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '작성일',
+    `la_updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일',
+    PRIMARY KEY (`la_id`),
+    INDEX `idx_lc_id` (`lc_id`, `la_order`),
+    INDEX `idx_use` (`la_use`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='위키 문서';
+
+-- 13.3 위키 섹션
+CREATE TABLE IF NOT EXISTS `mg_lore_section` (
+    `ls_id` int NOT NULL AUTO_INCREMENT,
+    `la_id` int NOT NULL COMMENT '문서 ID',
+    `ls_name` varchar(200) NOT NULL COMMENT '섹션 제목',
+    `ls_type` enum('text','image') NOT NULL DEFAULT 'text' COMMENT '콘텐츠 타입',
+    `ls_content` text DEFAULT NULL COMMENT '텍스트 내용',
+    `ls_image` varchar(500) DEFAULT NULL COMMENT '이미지 경로',
+    `ls_image_caption` varchar(300) DEFAULT NULL COMMENT '이미지 캡션',
+    `ls_order` int NOT NULL DEFAULT 0 COMMENT '섹션 순서',
+    PRIMARY KEY (`ls_id`),
+    INDEX `idx_la_id` (`la_id`, `ls_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='위키 섹션';
+
+-- 13.4 타임라인 시대
+CREATE TABLE IF NOT EXISTS `mg_lore_era` (
+    `le_id` int NOT NULL AUTO_INCREMENT,
+    `le_name` varchar(200) NOT NULL COMMENT '시대명',
+    `le_period` varchar(100) DEFAULT NULL COMMENT '기간 표기',
+    `le_order` int NOT NULL DEFAULT 0 COMMENT '정렬 순서',
+    `le_use` tinyint NOT NULL DEFAULT 1 COMMENT '사용 여부',
+    PRIMARY KEY (`le_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='타임라인 시대';
+
+-- 13.5 타임라인 이벤트
+CREATE TABLE IF NOT EXISTS `mg_lore_event` (
+    `lv_id` int NOT NULL AUTO_INCREMENT,
+    `le_id` int NOT NULL COMMENT '시대 ID',
+    `lv_year` varchar(50) DEFAULT NULL COMMENT '연도 표기',
+    `lv_title` varchar(200) NOT NULL COMMENT '이벤트 제목',
+    `lv_content` text DEFAULT NULL COMMENT '이벤트 설명',
+    `lv_image` varchar(500) DEFAULT NULL COMMENT '이벤트 이미지',
+    `lv_is_major` tinyint NOT NULL DEFAULT 0 COMMENT '주요 이벤트 여부',
+    `lv_order` int NOT NULL DEFAULT 0 COMMENT '시대 내 순서',
+    `lv_use` tinyint NOT NULL DEFAULT 1 COMMENT '사용 여부',
+    PRIMARY KEY (`lv_id`),
+    INDEX `idx_le_id` (`le_id`, `lv_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='타임라인 이벤트';
+
+-- 13.6 위키 기본 설정
+INSERT INTO `mg_config` (`cf_key`, `cf_value`, `cf_desc`) VALUES
+('lore_use', '1', '세계관 위키 사용 여부'),
+('lore_image_max_size', '2048', '위키 이미지 최대 크기 (KB)'),
+('lore_thumbnail_max_size', '500', '위키 썸네일 최대 크기 (KB)'),
+('lore_articles_per_page', '12', '위키 페이지당 문서 수')
+ON DUPLICATE KEY UPDATE `cf_key` = `cf_key`;
+
+-- ======================================
+-- 14. 프롬프트 미션 시스템
+-- ======================================
+
+-- 14.1 프롬프트(미션) 정의
+CREATE TABLE IF NOT EXISTS `mg_prompt` (
+    `pm_id` int NOT NULL AUTO_INCREMENT,
+    `bo_table` varchar(20) NOT NULL COMMENT '대상 게시판',
+    `pm_title` varchar(200) NOT NULL COMMENT '미션 제목',
+    `pm_content` text DEFAULT NULL COMMENT '미션 설명',
+    `pm_cycle` enum('weekly','monthly','event') NOT NULL DEFAULT 'weekly' COMMENT '주기',
+    `pm_mode` enum('auto','review','vote') NOT NULL DEFAULT 'review' COMMENT '보상 모드',
+    `pm_point` int NOT NULL DEFAULT 0 COMMENT '기본 참여 보상 (포인트)',
+    `pm_bonus_point` int NOT NULL DEFAULT 0 COMMENT '우수작 추가 보상',
+    `pm_bonus_count` int NOT NULL DEFAULT 0 COMMENT '우수작 선정 인원',
+    `pm_material_id` int DEFAULT NULL COMMENT '재료 보상 ID',
+    `pm_material_qty` int NOT NULL DEFAULT 0 COMMENT '재료 보상 수량',
+    `pm_min_chars` int NOT NULL DEFAULT 0 COMMENT '최소 글자수 (0=제한없음)',
+    `pm_max_entry` int NOT NULL DEFAULT 1 COMMENT '인당 최대 제출 수',
+    `pm_banner` varchar(500) DEFAULT NULL COMMENT '배너 이미지 경로',
+    `pm_tags` varchar(200) DEFAULT NULL COMMENT '태그 (쉼표 구분)',
+    `pm_status` enum('draft','active','closed','archived') NOT NULL DEFAULT 'draft' COMMENT '상태',
+    `pm_start_date` datetime DEFAULT NULL COMMENT '시작일',
+    `pm_end_date` datetime DEFAULT NULL COMMENT '종료일',
+    `pm_created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '등록일',
+    `pm_admin_id` varchar(20) DEFAULT NULL COMMENT '등록 관리자',
+    PRIMARY KEY (`pm_id`),
+    INDEX `idx_prompt_board` (`bo_table`, `pm_status`, `pm_end_date`),
+    INDEX `idx_prompt_status` (`pm_status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='프롬프트 미션';
+
+-- 14.2 제출(참여) 기록
+CREATE TABLE IF NOT EXISTS `mg_prompt_entry` (
+    `pe_id` int NOT NULL AUTO_INCREMENT,
+    `pm_id` int NOT NULL COMMENT '프롬프트 ID',
+    `mb_id` varchar(20) NOT NULL COMMENT '제출 회원',
+    `wr_id` int NOT NULL DEFAULT 0 COMMENT '연결된 게시글 ID',
+    `bo_table` varchar(20) NOT NULL COMMENT '게시판',
+    `pe_status` enum('submitted','approved','rejected','rewarded') NOT NULL DEFAULT 'submitted' COMMENT '상태',
+    `pe_point` int NOT NULL DEFAULT 0 COMMENT '지급된 포인트',
+    `pe_is_bonus` tinyint NOT NULL DEFAULT 0 COMMENT '우수작 선정 여부',
+    `pe_admin_id` varchar(20) DEFAULT NULL COMMENT '검수 관리자',
+    `pe_admin_memo` varchar(300) DEFAULT NULL COMMENT '검수 메모',
+    `pe_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '제출일',
+    `pe_review_date` datetime DEFAULT NULL COMMENT '검수일',
+    PRIMARY KEY (`pe_id`),
+    INDEX `idx_entry_prompt` (`pm_id`, `pe_status`),
+    INDEX `idx_entry_member` (`mb_id`, `pm_id`),
+    INDEX `idx_entry_write` (`bo_table`, `wr_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='프롬프트 제출';
+
+-- 14.3 프롬프트 기본 설정
+INSERT INTO `mg_config` (`cf_key`, `cf_value`, `cf_desc`) VALUES
+('prompt_enable', '1', '프롬프트 시스템 사용 여부'),
+('prompt_show_closed', '3', '종료된 프롬프트 표시 개수'),
+('prompt_notify_submit', '1', '제출 시 관리자 알림'),
+('prompt_notify_approve', '1', '승인 시 유저 알림'),
+('prompt_notify_reject', '1', '반려 시 유저 알림'),
+('prompt_banner_max_size', '1024', '배너 이미지 최대 크기 (KB)')
+ON DUPLICATE KEY UPDATE `cf_key` = `cf_key`;
 
 SET FOREIGN_KEY_CHECKS = 1;

@@ -14,7 +14,7 @@ $form_title = $is_update ? '회원정보 수정' : '회원가입';
 $submit_text = $is_update ? '정보 수정' : '가입하기';
 ?>
 
-<div class="max-w-lg mx-auto">
+<div class="mg-inner">
     <div class="card">
         <h2 class="text-xl font-bold text-mg-text-primary mb-6 text-center"><?php echo $form_title; ?></h2>
 
