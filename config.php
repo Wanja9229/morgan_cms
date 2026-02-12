@@ -24,7 +24,9 @@ define('G5_TIMEZONE', '+09:00'); // MySQL 세션 타임존 (Asia/Seoul = UTC+9)
 보안서버주소가 없다면 공란으로 두시면 되며 보안서버주소 뒤에 / 는 붙이지 않습니다.
 입력 예) https://www.domain.com:443/gnuboard5
 */
-define('G5_DOMAIN', 'http://localhost:8080');
+define('G5_DOMAIN', (isset($_SERVER['HTTP_HOST'])
+    ? ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://') . $_SERVER['HTTP_HOST']
+    : 'http://localhost:8080'));
 define('G5_HTTPS_DOMAIN', '');
 
 // 그누보드 디버그바 설정입니다, 실제 서버운영시 false 로 설정해 주세요.
