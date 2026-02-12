@@ -1,7 +1,7 @@
 # Morgan Edition - 개발 로드맵
 
 > 작성일: 2026-02-04
-> 최종 업데이트: 2026-02-10
+> 최종 업데이트: 2026-02-12
 
 ---
 
@@ -420,18 +420,21 @@
 ## Phase 15: 세계관 위키 (Lore Wiki)
 
 > 세계관 설정을 위키형으로 관리 + 타임라인 연표.
-> 상세 기획 필요 — `plans/LORE_WIKI.md` (미작성)
+> 상세: plans/LORE_WIKI.md
 
 ### 15.1 위키 기본
-- [ ] 기획서 작성 (plans/LORE_WIKI.md)
-- [ ] DB 설계 + 구현
-- [ ] 위키 문서 CRUD (카테고리, 상호 링크)
-- [ ] 프론트 열람 페이지
-- [ ] 관리자 페이지
+- [x] DB 테이블 (mg_lore_article, mg_lore_section, mg_lore_era, mg_lore_event, mg_lore_link)
+- [x] 위키 문서 CRUD (섹션별 분류, 상호 링크)
+- [x] 프론트 열람 페이지 (wiki.php, wiki_view.php)
+- [x] 관리자 페이지 (lore.php, lore_update.php)
 
 ### 15.2 타임라인
-- [ ] 세계관 연표 (타임라인) 관리
-- [ ] 프론트 타임라인 시각화
+- [x] 세계관 연대기 관리 (시대 + 사건)
+- [x] 프론트 타임라인 시각화 (timeline.php)
+
+### 15.3 부가
+- [x] 사이드바 세계관 아이콘 + 2뎁스 패널
+- [x] 콘텐츠 최대 폭 통일 (72rem)
 
 ---
 
@@ -440,22 +443,23 @@
 > 주간/월간 미션 게시판 스킨. 포인트 수급처 + 스토리 진행용.
 > 상세: plans/PROMPT_MISSION.md
 
-### 15.1 프롬프트 기본
-- [ ] DB 테이블 (mg_prompt, mg_prompt_entry)
-- [ ] 관리자 프롬프트 CRUD (등록/수정/종료/삭제)
-- [ ] prompt 게시판 스킨 (list/write/view)
-- [ ] 글 작성 시 프롬프트 선택 + 엔트리 자동 생성
-- [ ] auto 모드: 제출 즉시 보상 지급
+### 16.1 프롬프트 기본
+- [x] DB 테이블 (mg_prompt, mg_prompt_entry)
+- [x] 관리자 프롬프트 CRUD (등록/수정/종료/삭제)
+- [x] prompt 게시판 스킨 (list/write/view)
+- [x] 글 작성 시 프롬프트 선택 + 엔트리 자동 생성
+- [x] auto 모드: 제출 즉시 보상 지급
 
-### 15.2 검수/투표 모드
-- [ ] review 모드: 관리자 승인/반려 + 사유 알림
+### 16.2 검수 모드
+- [x] review 모드: 관리자 승인/반려 + 사유 알림
+- [x] 일괄 승인 + 우수작 선정
+- [x] 보상 일괄 지급 (포인트 + 재료)
 - [ ] vote 모드: 추천수 기준 상위 N명 보상
-- [ ] 일괄 승인 + 우수작 선정
-- [ ] 보상 일괄 지급 (포인트 + 재료)
 
-### 15.3 프롬프트 부가
+### 16.3 프롬프트 부가
+- [x] 배너 이미지 업로드
+- [x] 달그늘 예시 프롬프트 5개 (시드 데이터)
 - [ ] 기한 만료 자동 종료 (패시브)
-- [ ] 배너 이미지 업로드
 - [ ] 태그 필터링
 - [ ] 프롬프트 복제 (재활용)
 - [ ] 대시보드 위젯 (활성 미션, 검수 대기)
@@ -468,20 +472,20 @@
 > 캐릭터 간 관계를 신청→승인으로 맺고, vis.js Network로 시각화.
 > 상세: plans/CHARACTER_RELATION.md
 
-### 16.1 관계 기본
+### 17.1 관계 기본
 - [ ] DB 테이블 (mg_relation, mg_relation_icon)
 - [ ] 기본 아이콘 세트 (애정/우정/가족/적대/사제/기타)
 - [ ] 관계 신청 폼 (캐릭터 검색, 아이콘 팔레트, 양방향 라벨)
 - [ ] 승인/거절 + 알림 시스템 연동
 - [ ] 관계 수정/해제
 
-### 16.2 관계도 시각화
+### 17.2 관계도 시각화
 - [ ] vis.js Network 개인 관계도 (캐릭터 프로필 탭)
 - [ ] 전체 관계도 페이지 (커뮤니티)
 - [ ] 카테고리/세력 필터
 - [ ] 노드 클릭 → 프로필, 엣지 클릭 → 관계 상세
 
-### 16.3 관계 관리자
+### 17.3 관계 관리자
 - [ ] 아이콘 관리 CRUD (커스텀 카테고리)
 - [ ] 관계 목록/강제 해제
 - [ ] 관계도 설정 (depth, 물리 시뮬레이션, 최대 노드)
@@ -489,30 +493,72 @@
 
 ---
 
-## Phase 18: 연구 트리 (Research Tree)
+## Phase 18: 댓글 주사위 (Comment Dice)
+
+> 댓글 영역 🎲 버튼으로 서버사이드 랜덤 생성. 역극 모집, 이벤트, TRPG 판정용.
+> 상세: plans/DICE_SYSTEM.md
+
+### 18.1 주사위 기본
+- [ ] DB 컬럼 추가 (mg_comment: cm_is_dice, cm_dice_value)
+- [ ] 🎲 버튼 + 서버사이드 rand() 댓글 자동 등록
+- [ ] 주사위 댓글 별도 스타일 (수정/삭제 불가)
+- [ ] 최고값 하이라이트 표시
+
+### 18.2 옵션
+- [ ] 게시판별 주사위 ON/OFF 토글 (관리자)
+- [ ] 1인 1회 제한 (한 글에서 한 번)
+- [ ] 범위 커스텀 (글 작성자가 0~N 범위 지정)
+
+---
+
+## Phase 19: 탐색 파견 (Pioneer Expedition)
+
+> 개척 시스템 확장. 스태미나로 파견 보내 재료 수급 — 자원 배분 딜레마.
+> 상세: plans/PIONEER_EXPEDITION.md
+
+### 19.1 파견 기본
+- [ ] DB 테이블 (mg_expedition_area, mg_expedition_drop, mg_expedition_log)
+- [ ] 파견지 관리 + 드롭 테이블 설정 (관리자)
+- [ ] 파견 보내기 / 수령 로직 (타이머 기반)
+- [ ] 스태미나 소모 + 확률 기반 보상
+
+### 19.2 파트너 시스템
+- [ ] 파견 시 파트너 선택 (동의 없이, 1일 1회 제한)
+- [ ] 파트너 보상 포인트 + 알림
+- [ ] "나를 선택한 사람" 조회
+
+### 19.3 프론트/관리자
+- [ ] 파견 페이지 (진행 중 타이머, STEP 형 파견 UI)
+- [ ] 수령 화면 (드롭 결과, 레어 강조)
+- [ ] 개척 메인 탭 추가 (시설 건설 / 탐색 파견 / 기여 랭킹)
+- [ ] 관리자 파견 로그 조회
+
+---
+
+## Phase 20: 연구 트리 (Research Tree)
 
 > 재화 공동 투입으로 커뮤니티 영구 버프 + 시설 해금 전제조건.
 > 상세: plans/RESEARCH_TREE.md
 
-### 17.1 인벤토리 슬롯 제한
+### 20.1 인벤토리 슬롯 제한
 - [ ] 재료 종류 슬롯 한도 도입 (기본 8종)
 - [ ] 슬롯 초과 시 획득 차단 로직
 - [ ] 인벤토리 UI 수정 (슬롯 표시)
 - [ ] 관리자 기본/최대 슬롯 설정
 
-### 17.2 연구 CRUD
+### 20.2 연구 CRUD
 - [ ] DB 테이블 (mg_research, mg_research_require, mg_research_reward, mg_research_contrib)
 - [ ] 관리자 연구 등록/수정/삭제
 - [ ] 선행 조건 설정 (복수 AND 조건)
 - [ ] 보상 타입 설정 (슬롯 확장, 효율 버프, 해금)
 
-### 17.3 연구 투입/완료
+### 20.3 연구 투입/완료
 - [ ] 재화 투입 AJAX 처리
 - [ ] 완료 시 보상 적용 (전역 설정값 변경)
 - [ ] 선행 조건 자동 해금 체크
 - [ ] 기여 랭킹 산출 + 명예의 전당 연동
 
-### 17.4 연구 트리 UI
+### 20.4 연구 트리 UI
 - [ ] 티어별 트리 시각화 페이지
 - [ ] 연구 상세 + 투입 UI + 진행률 바
 - [ ] 개척 메인에서 "연구소" 탭 추가
@@ -520,23 +566,23 @@
 
 ---
 
-## Phase 19: SS Engine (TRPG 세션 툴)
+## Phase 21: SS Engine (TRPG 세션 툴)
 
 > Supabase 실시간 연동, 별도 패키지. 대형 작업으로 마지막 진행.
 > 상세: plans/SS_ENGINE.md
 
-### 18.1 세션 기본
+### 21.1 세션 기본
 - [ ] 세션 생성/참여
 - [ ] 실시간 채팅
 - [ ] 캐릭터 연결
 
-### 18.2 TRPG 기능
+### 21.2 TRPG 기능
 - [ ] 주사위 굴림 (룰셋별)
 - [ ] 스탯 판정
 - [ ] 전투 관리
 - [ ] 맵/토큰
 
-### 18.3 세션 보상
+### 21.3 세션 보상
 - [ ] 참여 포인트
 - [ ] 완주 포인트
 - [ ] GM 보상
@@ -557,13 +603,25 @@ new_cms/
 │   ├── attendance.php          # 출석 통계
 │   ├── notification.php        # 알림 관리
 │   ├── reward.php              # 보상 관리 (5탭)
-│   └── reward_update.php       # 보상 설정 저장/AJAX
+│   ├── reward_update.php       # 보상 설정 저장/AJAX
+│   ├── achievement.php         # 업적 관리
+│   ├── seal.php                # 인장 관리
+│   ├── lore.php                # 세계관 위키 관리
+│   ├── lore_update.php         # 위키 처리
+│   ├── prompt.php              # 프롬프트 미션 관리
+│   └── prompt_update.php       # 프롬프트 처리
 │
 ├── bbs/                        # 프론트 페이지
 │   ├── character*.php          # 캐릭터 관련
 │   ├── attendance*.php         # 출석 관련
 │   ├── rp_*.php                # 역극 관련
-│   └── good.php                # 좋아요 (보상 연동)
+│   ├── good.php                # 좋아요 (보상 연동)
+│   ├── achievement.php         # 업적 목록
+│   ├── mypage.php              # 마이 페이지 허브
+│   ├── wiki.php                # 세계관 위키
+│   ├── wiki_view.php           # 위키 문서 보기
+│   ├── timeline.php            # 세계관 타임라인
+│   └── notification.php        # 알림 목록
 │
 ├── plugin/morgan/              # Morgan 플러그인
 │   ├── morgan.php              # 메인 플러그인
@@ -574,11 +632,25 @@ new_cms/
 ├── theme/morgan/               # Morgan 테마
 │   ├── head.php, tail.php      # 메인 레이아웃
 │   ├── index.php               # 메인 페이지
+│   ├── js/app.js               # SPA 라우터 + 사이드바
 │   └── skin/                   # 스킨
 │       ├── member/             # 회원 스킨
-│       ├── board/basic/        # 게시판 스킨
+│       ├── board/basic/        # 기본 게시판
+│       ├── board/gallery/      # 갤러리형
+│       ├── board/memo/         # 방명록형
+│       ├── board/postit/       # 포스트잇형
+│       ├── board/prompt/       # 프롬프트 미션
+│       ├── shop/               # 상점/인벤토리/선물
+│       ├── rp/                 # 역극
+│       ├── notification/       # 알림
+│       ├── pioneer/            # 개척
+│       ├── emoticon/           # 이모티콘
+│       ├── mypage/             # 마이 페이지
+│       ├── new/                # 새글
 │       ├── widget/             # 위젯 스킨
 │       └── attendance/         # 출석 스킨
+│
+├── CLAUDE.md                   # AI 에이전트 프로젝트 컨텍스트
 │
 └── docs/                       # 기획 문서
     ├── CORE.md                 # 핵심 참조 (DB요약, 인덱스)
@@ -586,12 +658,14 @@ new_cms/
     ├── MODULES.md              # 2차 모듈 전략
     ├── plans/                  # 상세 기획
     │   ├── DB.md, API.md, UI.md
-    │   ├── CHARACTER.md, BOARD.md, SHOP.md
+    │   ├── CHARACTER.md, MEMBER.md, POINT.md
+    │   ├── BOARD.md, SHOP.md, ADMIN.md
     │   ├── PIONEER.md, PIONEER_EXPEDITION.md
     │   ├── REWARD.md, ACHIEVEMENT.md
-    │   ├── PROMPT_MISSION.md
+    │   ├── SEAL.md, LORE_WIKI.md
+    │   ├── PROMPT_MISSION.md, DICE_SYSTEM.md
     │   ├── CHARACTER_RELATION.md
-    │   ├── SEAL.md, RESEARCH_TREE.md
+    │   ├── RESEARCH_TREE.md, SS_ENGINE.md
     │   └── DESIGN_ASSETS.md
     └── archive/                # 작업 로그 보관
 ```
@@ -610,6 +684,10 @@ new_cms/
 | 2026-02-10 | Phase 15~18 추가 (정기 프롬프트, 캐릭터 관계, 인장, 연구 트리) |
 | 2026-02-10 | Phase 13 업적 시스템 완료, Phase 14~18 순서 변경 (인장→프롬프트→관계→연구→SS Engine) |
 | 2026-02-10 | Phase 14 인장 시스템 완료 (DB, 편집, 렌더링, 관리자, 설정), 마이 페이지 추가, 업적 테스트 데이터 인코딩 수정 |
+| 2026-02-12 | Phase 15 세계관 위키 완료, Phase 16 프롬프트 미션 완료 반영 |
+| 2026-02-12 | Phase 18 댓글 주사위 추가, Research Tree→19, SS Engine→20 번호 조정 |
+| 2026-02-12 | Phase 19 탐색 파견 추가, Research Tree→20, SS Engine→21 번호 조정 |
+| 2026-02-12 | 섹션 번호 오류 수정 (16.x→17.x 등), 파일 구조 부록 최신화 |
 
 ---
 

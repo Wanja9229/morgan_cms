@@ -535,4 +535,4 @@ if (isset($is_ajax_request) && $is_ajax_request) {
     <?php } ?>
 
     <!-- Main Content Area -->
-    <main id="main-content" class="flex-1 ml-0 lg:ml-14 p-4 md:p-6 lg:mr-72">
+    <main id="main-content" class="flex-1 min-w-0 ml-0 lg:ml-14 p-4 md:p-6 lg:mr-72">

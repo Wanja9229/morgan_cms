@@ -175,6 +175,19 @@ define('MG_PROMPT_IMAGE_URL', G5_DATA_URL.'/prompt');
 define('MG_THUMB_SIZE', 200);
 
 /**
+ * Gnuboard에 누락된 sql_affected_rows() 래퍼
+ * UPDATE/DELETE 후 영향 받은 행 수 반환
+ */
+if (!function_exists('sql_affected_rows')) {
+    function sql_affected_rows($link = null) {
+        if ($link === null) {
+            $link = $GLOBALS['connect_db'];
+        }
+        return mysqli_affected_rows($link);
+    }
+}
+
+/**
  * 이미지 썸네일 생성
  *
  * @param string $source_path 원본 이미지 경로

@@ -72,10 +72,12 @@ Morgan 자체 시스템(캐릭터, 상점, 역극, 개척, 보상, 업적, 인�
 15. 세계관 위키 (DB 5테이블: lore_category/article/section/era/event, admin CRUD, 프론트, 타임라인)
 16. 프롬프트 미션 (DB 2테이블: prompt/prompt_entry, admin CRUD+리뷰, 게시판 스킨, write hook)
 
-### 미구현 (Phase 17~19)
+### 미구현 (Phase 17~21)
 - **Phase 17**: 캐릭터 관계 (request→approve, vis.js 그래프) → `docs/plans/CHARACTER_RELATION.md`
-- **Phase 18**: 연구 트리 (공동 투자, 시설 해금) → `docs/plans/RESEARCH_TREE.md`
-- **Phase 19**: SS Engine / TRPG 세션 → `docs/plans/SS_ENGINE.md`
+- **Phase 18**: 댓글 주사위 (서버사이드 rand, 역극/이벤트용) → `docs/plans/DICE_SYSTEM.md`
+- **Phase 19**: 탐색 파견 (개척 확장, 파트너 시스템) → `docs/plans/PIONEER_EXPEDITION.md`
+- **Phase 20**: 연구 트리 (공동 투자, 시설 해금) → `docs/plans/RESEARCH_TREE.md`
+- **Phase 21**: SS Engine / TRPG 세션 → `docs/plans/SS_ENGINE.md`
 
 ### 2차 패키지 (별도)
 - VN Engine, 익명망, 마이룸, TRPG 스탯 → `docs/MODULES.md`
