@@ -18,38 +18,14 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y -qq git-ftp
 
       - name: Deploy via git-ftp
-        env:
-          FTP_HOST: ${{ secrets.FTP_HOST }}
-          FTP_USER: ${{ secrets.FTP_USER }}
-          FTP_PASS: ${{ secrets.FTP_PASS }}
         run: |
-          # .git-ftp-ignore 생성 (업로드 제외 목록)
-          cat > .git-ftp-ignore << 'IGNORE'
-          .github/
-          .claude/
-          _backup/
-          node_modules/
-          docker/
-          docs/
-          src/
-          data/
-          package.json
-          package-lock.json
-          tailwind.config.*
-          morgan_db_*.sql
-          *.tmp
-          *.bak
-          *.log
-          .ftp-deploy-sync-state.json
-          .git-ftp-ignore
-          IGNORE
-
-          # 첫 배포면 init, 이후엔 push
           git ftp init \
-            --user "${FTP_USER}" \
-            --passwd "${FTP_PASS}" \
-            "ftp://${FTP_HOST}" \
+            --user "${{ secrets.FTP_USER }}" \
+            --passwd "${{ secrets.FTP_PASS }}" \
+            --insecure \
+            "ftp://${{ secrets.FTP_HOST }}" \
           || git ftp push \
-            --user "${FTP_USER}" \
-            --passwd "${FTP_PASS}" \
-            "ftp://${FTP_HOST}"
+            --user "${{ secrets.FTP_USER }}" \
+            --passwd "${{ secrets.FTP_PASS }}" \
+            --insecure \
+            "ftp://${{ secrets.FTP_HOST }}"
