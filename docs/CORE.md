@@ -129,24 +129,16 @@
 | 테이블 | 용도 | 핵심 컬럼 |
 |--------|------|-----------|
 | mg_lore_category | 위키 카테고리 | lc_id, lc_name, lc_order, lc_use |
-| mg_lore_article | 위키 문서 | la_id, lc_id, la_title, la_content, la_use |
-| mg_lore_version | 문서 버전 | lv_id, la_id, lv_content, mb_id |
-| mg_lore_tag | 태그 | lt_id, lt_name |
-| mg_lore_article_tag | 문서-태그 연결 | la_id, lt_id |
+| mg_lore_article | 위키 문서 | la_id, lc_id, la_title, la_subtitle, la_summary, la_use |
+| mg_lore_section | 문서 섹션 | ls_id, la_id, ls_name, ls_type(text/image), ls_content |
+| mg_lore_era | 타임라인 시대 | le_id, le_name, le_period, le_order |
+| mg_lore_event | 타임라인 사건 | lv_id, le_id, lv_year, lv_title, lv_content, lv_is_major |
 
 ### 프롬프트 미션(Prompt) (2)
 | 테이블 | 용도 | 핵심 컬럼 |
 |--------|------|-----------|
-| mg_prompt_mission | 미션 정의 | pm_id, pm_title, pm_content, pm_status, pm_reward_point |
-| mg_prompt_submission | 제출물 | ps_id, pm_id, mb_id, bo_table, wr_id, ps_status |
-
-### 업적(Achievement) (4)
-| 테이블 | 용도 | 핵심 컬럼 |
-|--------|------|-----------|
-| mg_achievement_category | 업적 카테고리 | ac_id, ac_name, ac_order |
-| mg_achievement | 업적 정의 | ach_id, ac_id, ach_name, ach_rarity, ach_trigger, ach_condition |
-| mg_user_achievement | 유저 획득 | mb_id, ach_id, ua_date |
-| mg_achievement_showcase | 쇼케이스 | mb_id, ach_id, as_order |
+| mg_prompt | 미션 정의 | pm_id, bo_table, pm_title, pm_cycle, pm_mode, pm_point, pm_status |
+| mg_prompt_entry | 제출/참여 | pe_id, pm_id, mb_id, wr_id, bo_table, pe_status, pe_point |
 
 ### TRPG (미구현, DB만 설계)
 | 테이블 | 용도 |

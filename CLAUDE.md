@@ -69,8 +69,8 @@ Morgan 자체 시스템(캐릭터, 상점, 역극, 개척, 보상, 업적, 인�
 12. 보상 시스템 (게시판 보상, RP 보상, 좋아요, 정산)
 13. 업적 시스템 (DB 4테이블, 트리거, 쇼케이스, 토스트)
 14. 인장 시스템 (시그니처카드, 편집/미리보기, 마이페이지)
-15. 세계관 위키 (DB 5테이블, admin CRUD, 프론트, 타임라인)
-16. 프롬프트 미션 (DB 2테이블, admin CRUD+리뷰, 게시판 스킨)
+15. 세계관 위키 (DB 5테이블: lore_category/article/section/era/event, admin CRUD, 프론트, 타임라인)
+16. 프롬프트 미션 (DB 2테이블: prompt/prompt_entry, admin CRUD+리뷰, 게시판 스킨, write hook)
 
 ### 미구현 (Phase 17~19)
 - **Phase 17**: 캐릭터 관계 (request→approve, vis.js 그래프) → `docs/plans/CHARACTER_RELATION.md`
