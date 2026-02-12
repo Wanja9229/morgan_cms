@@ -12,44 +12,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Remove excluded dirs
+        run: |
+          rm -rf .git .github .claude _backup node_modules docker docs src data
+          rm -f package.json package-lock.json tailwind.config.* morgan_db_*.sql
+          rm -f .ftp-deploy-sync-state.json
+          find . -name "*.tmp" -o -name "*.bak" -o -name "*.log" | xargs rm -f
+
       - name: Deploy via lftp
-        env:
-          FTP_HOST: ${{ secrets.FTP_HOST }}
-          FTP_USER: ${{ secrets.FTP_USER }}
-          FTP_PASS: ${{ secrets.FTP_PASS }}
-          FTP_DIR: ${{ secrets.FTP_DIR }}
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq lftp
 
-          # 제외할 파일/폴더 목록
-          EXCLUDE="
-            -X .git/ -X .git*
-            -X .github/
-            -X .claude/
-            -X _backup/
-            -X node_modules/
-            -X docker/
-            -X docs/
-            -X src/
-            -X data/
-            -X package.json -X package-lock.json
-            -X tailwind.config.*
-            -X morgan_db_*.sql
-            -X data/lore_seed.sql
-            -X *.tmp -X *.bak -X *.log
-            -X .ftp-deploy-sync-state.json
-          "
-
-          lftp -c "
-            set ftp:ssl-allow yes;
-            set ftp:ssl-protect-data yes;
-            set ssl:verify-certificate no;
-            set net:max-retries 3;
+          lftp -e "
+            set ftp:ssl-allow no;
+            set net:max-retries 5;
             set net:reconnect-interval-base 5;
             set mirror:parallel-transfer-count 5;
-            open -u ${FTP_USER},${FTP_PASS} ${FTP_HOST};
-            mirror --reverse --delete --verbose --only-newer \
-              ${EXCLUDE} \
-              ./ ${FTP_DIR};
+            mirror --reverse --delete --verbose --only-newer ./ ${{ secrets.FTP_DIR }};
             quit;
-          "
+          " -u "${{ secrets.FTP_USER }},${{ secrets.FTP_PASS }}" "${{ secrets.FTP_HOST }}"
