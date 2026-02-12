@@ -20,5 +20,6 @@ morgan_db_*.sql
 LICENSE.txt
 README.md
 SECURITY.md
+CLAUDE.md
 perms.sh
 install/

@@ -7,7 +7,7 @@
 
 ## 진행률
 
-### 완료 (Phase 1~13)
+### 완료 (Phase 1~16)
 - [x] Phase 1: 테마 기본 구조 (Tailwind, 다크테마, 사이드바)
 - [x] Phase 2: 캐릭터 시스템 (등록, 승인, 프로필, 세력/종족)
 - [x] Phase 3: 포인트/출석 (출석체크, 주사위 게임)
@@ -22,10 +22,10 @@
 - [x] Phase 12: 보상 시스템 (게시판 보상, RP 보상, 좋아요, 정산, 대시보드 통합)
 - [x] Phase 13: 업적 시스템 (DB 4테이블, 트리거, 관리자CRUD, 프론트, 쇼케이스, 토스트)
 - [x] Phase 14: 인장 시스템 (DB, 편집/미리보기, 렌더링, 관리자, 마이 페이지)
+- [x] Phase 15: 세계관 위키 (DB 5테이블, admin CRUD, 프론트 위키+타임라인, 사이드바)
+- [x] Phase 16: 프롬프트 미션 (DB 2테이블, admin CRUD+리뷰, 게시판 스킨, write hook)
 
-### 미구현 (Phase 15~19)
-- [ ] Phase 15: 세계관 위키 (위키형 설정집 + 타임라인) → 기획 필요
-- [ ] Phase 16: 정기 프롬프트 (주간/월간 미션) → `plans/PROMPT_MISSION.md`
+### 미구현 (Phase 17~19)
 - [ ] Phase 17: 캐릭터 관계 (관계도, vis.js) → `plans/CHARACTER_RELATION.md`
 - [ ] Phase 18: 연구 트리 (공동 투자, 버프) → `plans/RESEARCH_TREE.md`
 - [ ] Phase 19: SS Engine / TRPG 세션 → `plans/SS_ENGINE.md`
@@ -125,6 +125,29 @@
 | g5_board | 게시판 설정 |
 | g5_write_{bo_table} | 게시판별 글 (notice, qna, owner, vent, log 등) |
 
+### 세계관 위키(Lore) (5)
+| 테이블 | 용도 | 핵심 컬럼 |
+|--------|------|-----------|
+| mg_lore_category | 위키 카테고리 | lc_id, lc_name, lc_order, lc_use |
+| mg_lore_article | 위키 문서 | la_id, lc_id, la_title, la_content, la_use |
+| mg_lore_version | 문서 버전 | lv_id, la_id, lv_content, mb_id |
+| mg_lore_tag | 태그 | lt_id, lt_name |
+| mg_lore_article_tag | 문서-태그 연결 | la_id, lt_id |
+
+### 프롬프트 미션(Prompt) (2)
+| 테이블 | 용도 | 핵심 컬럼 |
+|--------|------|-----------|
+| mg_prompt_mission | 미션 정의 | pm_id, pm_title, pm_content, pm_status, pm_reward_point |
+| mg_prompt_submission | 제출물 | ps_id, pm_id, mb_id, bo_table, wr_id, ps_status |
+
+### 업적(Achievement) (4)
+| 테이블 | 용도 | 핵심 컬럼 |
+|--------|------|-----------|
+| mg_achievement_category | 업적 카테고리 | ac_id, ac_name, ac_order |
+| mg_achievement | 업적 정의 | ach_id, ac_id, ach_name, ach_rarity, ach_trigger, ach_condition |
+| mg_user_achievement | 유저 획득 | mb_id, ach_id, ua_date |
+| mg_achievement_showcase | 쇼케이스 | mb_id, ach_id, as_order |
+
 ### TRPG (미구현, DB만 설계)
 | 테이블 | 용도 |
 |--------|------|
@@ -202,10 +225,11 @@
 | 보상 시스템 | `plans/REWARD.md` | 구현 완료 |
 | 업적 시스템 | `plans/ACHIEVEMENT.md` | 구현 완료 |
 | 인장 시스템 | `plans/SEAL.md` | 구현 완료 |
-| 정기 프롬프트 | `plans/PROMPT_MISSION.md` | 미구현 (Phase 15) |
-| 캐릭터 관계 | `plans/CHARACTER_RELATION.md` | 미구현 (Phase 16) |
-| 연구 트리 | `plans/RESEARCH_TREE.md` | 미구현 (Phase 17) |
-| SS Engine | `plans/SS_ENGINE.md` | 미구현 (Phase 18) |
+| 세계관 위키 | `plans/LORE_WIKI.md` | 구현 완료 (Phase 15) |
+| 프롬프트 미션 | `plans/PROMPT_MISSION.md` | 구현 완료 (Phase 16) |
+| 캐릭터 관계 | `plans/CHARACTER_RELATION.md` | 미구현 (Phase 17) |
+| 연구 트리 | `plans/RESEARCH_TREE.md` | 미구현 (Phase 18) |
+| SS Engine | `plans/SS_ENGINE.md` | 미구현 (Phase 19) |
 | 디자인 에셋 | `plans/DESIGN_ASSETS.md` | 참고용 |
 | 2차 모듈 | `MODULES.md` | 참고용 |
 
