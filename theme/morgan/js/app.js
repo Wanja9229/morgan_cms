@@ -367,13 +367,19 @@
                         activeId = 'inventory';
                     } else if (script === 'new.php') {
                         activeId = 'new';
+                    } else if (script === 'lore.php' || script === 'lore_view.php' || script === 'lore_timeline.php') {
+                        activeId = 'lore';
+                    } else if (script === 'pioneer.php') {
+                        activeId = 'pioneer';
                     }
+
+                    var isLore = (activeId === 'lore');
 
                     // 모든 사이드바 아이콘에서 활성 클래스 제거
                     var icons = document.querySelectorAll('#sidebar [data-sidebar-id]');
                     var activeClasses = ['!bg-mg-accent', '!text-white', '!rounded-xl'];
                     icons.forEach(function(icon) {
-                        if (icon.id === 'sidebar-board-toggle') return; // 보드 토글은 별도 처리
+                        if (icon.id === 'sidebar-board-toggle' || icon.id === 'sidebar-lore-toggle') return;
                         activeClasses.forEach(function(cls) {
                             icon.classList.remove(cls);
                         });
@@ -444,6 +450,15 @@
                                 }
                             }
                         });
+                    }
+
+                    // 세계관 토글 + 패널 상태 업데이트
+                    if (window.MG_LorePanel) {
+                        window.MG_LorePanel.setLorePage(isLore);
+                        window.MG_LorePanel.updateFocus();
+                        if (!isLore) {
+                            window.MG_LorePanel.close();
+                        }
                     }
 
                     // RP 링크 활성 상태

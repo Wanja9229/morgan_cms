@@ -257,7 +257,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
     <div id="sidebar-backdrop" class="fixed inset-0 bg-black/50 hidden md:!hidden" style="z-index:35"></div>
 
     <!-- Board Submenu Panel (2뎁스) -->
-    <div id="sidebar-board-panel" class="fixed left-14 top-12 bottom-0 w-48 bg-mg-bg-secondary border-r border-mg-bg-tertiary transform" style="z-index:38" <?php echo $_is_community_section ? 'translate-x-0 opacity-100 pointer-events-auto' : '-translate-x-full opacity-0 pointer-events-none'; ?> transition-all duration-200 ease-in-out flex flex-col">
+    <div id="sidebar-board-panel" class="fixed left-14 top-12 bottom-0 w-48 bg-mg-bg-secondary border-r border-mg-bg-tertiary transform <?php echo $_is_community_section ? 'translate-x-0 opacity-100 pointer-events-auto' : '-translate-x-full opacity-0 pointer-events-none'; ?> transition-all duration-200 ease-in-out flex flex-col" style="z-index:38">
         <div class="px-3 pt-3 pb-2">
             <h3 class="text-xs font-semibold text-mg-text-muted uppercase tracking-wider">게시판</h3>
         </div>
@@ -350,7 +350,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
 
     <!-- Lore Submenu Panel (2뎁스) -->
     <?php if (mg_config('lore_use', '1') == '1') { ?>
-    <div id="sidebar-lore-panel" class="fixed left-14 top-12 bottom-0 w-48 bg-mg-bg-secondary border-r border-mg-bg-tertiary transform" style="z-index:38" <?php echo $_is_lore_page ? 'translate-x-0 opacity-100 pointer-events-auto' : '-translate-x-full opacity-0 pointer-events-none'; ?> transition-all duration-200 ease-in-out flex flex-col">
+    <div id="sidebar-lore-panel" class="fixed left-14 top-12 bottom-0 w-48 bg-mg-bg-secondary border-r border-mg-bg-tertiary transform <?php echo $_is_lore_page ? 'translate-x-0 opacity-100 pointer-events-auto' : '-translate-x-full opacity-0 pointer-events-none'; ?> transition-all duration-200 ease-in-out flex flex-col" style="z-index:38">
         <div class="px-3 pt-3 pb-2">
             <h3 class="text-xs font-semibold text-mg-text-muted uppercase tracking-wider">세계관</h3>
         </div>
@@ -506,7 +506,12 @@ if (isset($is_ajax_request) && $is_ajax_request) {
             closeLore();
         });
 
-        window.MG_LorePanel = { open: openLore, close: closeLore };
+        window.MG_LorePanel = {
+            open: openLore,
+            close: closeLore,
+            setLorePage: function(val) { isLorePage = val; },
+            updateFocus: updateLorePanelFocus
+        };
 
         // 매 페이지 로드 시 URL 기반 포커스 동기화 (캐시/bfcache 대응)
         updateLorePanelFocus();
