@@ -36,7 +36,6 @@ jobs:
             set net:reconnect-interval-base 5;
             set mirror:parallel-transfer-count 5;
             open ${{ secrets.FTP_HOST }};
-            cd ${{ secrets.FTP_DIR }};
-            mirror --reverse --delete --verbose --only-newer ./;
+            mirror --reverse --verbose --only-newer ./ ${{ secrets.FTP_DIR }};
             quit;
           "
