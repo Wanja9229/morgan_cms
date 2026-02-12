@@ -86,6 +86,11 @@ if (isset($is_ajax_request) && $is_ajax_request) {
 <header class="bg-mg-bg-secondary h-12 flex items-center justify-between px-4 border-b border-mg-bg-tertiary fixed top-0 left-0 right-0 z-50">
     <!-- Logo -->
     <div class="flex items-center gap-4">
+        <button id="sidebar-toggle" class="md:hidden text-mg-text-secondary hover:text-mg-text-primary p-1.5" type="button" aria-label="메뉴">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+        </button>
         <a href="<?php echo G5_URL; ?>" class="flex items-center gap-2 text-mg-accent font-bold text-lg hover:text-mg-accent-hover transition-colors">
             <?php if ($site_logo) { ?>
                 <img src="<?php echo htmlspecialchars($site_logo); ?>" alt="<?php echo htmlspecialchars($site_name); ?>" class="h-7 max-w-[160px] object-contain">
@@ -168,7 +173,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
 <div class="flex flex-1 pt-12">
 
     <!-- Sidebar -->
-    <aside id="sidebar" class="w-14 bg-mg-bg-secondary fixed left-0 top-12 bottom-0 flex flex-col items-center py-3 gap-2 border-r border-mg-bg-tertiary z-40 overflow-y-auto">
+    <aside id="sidebar" class="w-14 bg-mg-bg-secondary fixed left-0 top-12 bottom-0 hidden md:flex flex-col items-center py-3 gap-2 border-r border-mg-bg-tertiary z-40 overflow-y-auto">
         <!-- 홈 -->
         <a href="<?php echo G5_URL; ?>" class="sidebar-icon group <?php echo $_is_home ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="홈" data-sidebar-id="home">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -248,6 +253,9 @@ if (isset($is_ajax_request) && $is_ajax_request) {
         <?php } ?>
     </aside>
 
+    <!-- Mobile Backdrop -->
+    <div id="sidebar-backdrop" class="fixed inset-0 bg-black/50 hidden md:!hidden" style="z-index:35"></div>
+
     <!-- Board Submenu Panel (2뎁스) -->
     <div id="sidebar-board-panel" class="fixed left-14 top-12 bottom-0 w-48 bg-mg-bg-secondary border-r border-mg-bg-tertiary z-30 transform <?php echo $_is_community_section ? 'translate-x-0 opacity-100 pointer-events-auto' : '-translate-x-full opacity-0 pointer-events-none'; ?> transition-all duration-200 ease-in-out flex flex-col">
         <div class="px-3 pt-3 pb-2">
@@ -321,6 +329,15 @@ if (isset($is_ajax_request) && $is_ajax_request) {
         toggle.addEventListener('click', function(e) {
             e.stopPropagation();
             isOpen ? closePanel() : openPanel();
+        });
+
+        // 외부 클릭 시 패널 닫기
+        document.addEventListener('click', function(e) {
+            if (!isOpen) return;
+            if (panel.contains(e.target) || toggle.contains(e.target)) return;
+            var sidebar = document.getElementById('sidebar');
+            if (sidebar && sidebar.contains(e.target)) return;
+            closePanel();
         });
 
         window.MG_BoardPanel = {
@@ -480,6 +497,15 @@ if (isset($is_ajax_request) && $is_ajax_request) {
             isLoreOpen ? closeLore() : openLore();
         });
 
+        // 외부 클릭 시 패널 닫기
+        document.addEventListener('click', function(e) {
+            if (!isLoreOpen) return;
+            if (lorePanel.contains(e.target) || loreToggle.contains(e.target)) return;
+            var sidebar = document.getElementById('sidebar');
+            if (sidebar && sidebar.contains(e.target)) return;
+            closeLore();
+        });
+
         window.MG_LorePanel = { open: openLore, close: closeLore };
 
         // 매 페이지 로드 시 URL 기반 포커스 동기화 (캐시/bfcache 대응)
@@ -492,4 +518,4 @@ if (isset($is_ajax_request) && $is_ajax_request) {
     <?php } ?>
 
     <!-- Main Content Area -->
-    <main id="main-content" class="flex-1 ml-14 p-4 md:p-6 lg:mr-72">
+    <main id="main-content" class="flex-1 ml-0 md:ml-14 p-4 md:p-6 lg:mr-72">

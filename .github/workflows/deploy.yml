@@ -19,13 +19,14 @@ jobs:
 
       - name: Deploy via git-ftp
         run: |
-          git ftp init \
+          git ftp push \
             --user "${{ secrets.FTP_USER }}" \
             --passwd "${{ secrets.FTP_PASS }}" \
             --insecure \
             "ftp://${{ secrets.FTP_HOST }}" \
-          || git ftp push \
+          || git ftp init \
             --user "${{ secrets.FTP_USER }}" \
             --passwd "${{ secrets.FTP_PASS }}" \
             --insecure \
+            --force \
             "ftp://${{ secrets.FTP_HOST }}"

@@ -27,13 +27,30 @@
         initSidebar: function() {
             const sidebar = document.getElementById('sidebar');
             const toggleBtn = document.getElementById('sidebar-toggle');
+            const backdrop = document.getElementById('sidebar-backdrop');
 
-            if (toggleBtn && sidebar) {
-                toggleBtn.addEventListener('click', function() {
-                    sidebar.classList.toggle('hidden');
-                    sidebar.classList.toggle('flex');
-                });
-            }
+            if (!toggleBtn || !sidebar) return;
+
+            this._closeMobileSidebar = function() {
+                sidebar.classList.add('hidden');
+                sidebar.classList.remove('flex');
+                if (backdrop) backdrop.classList.add('hidden');
+                if (window.MG_BoardPanel) window.MG_BoardPanel.close();
+                if (window.MG_LorePanel) window.MG_LorePanel.close();
+            };
+
+            var closeMobile = this._closeMobileSidebar;
+
+            toggleBtn.addEventListener('click', function() {
+                var isHidden = sidebar.classList.contains('hidden');
+                if (isHidden) {
+                    sidebar.classList.remove('hidden');
+                    sidebar.classList.add('flex');
+                    if (backdrop) backdrop.classList.remove('hidden');
+                } else {
+                    closeMobile();
+                }
+            });
         },
 
         // 검색 기능
@@ -55,18 +72,27 @@
 
         // 모바일 메뉴
         initMobileMenu: function() {
-            // 모바일에서 사이드바 외부 클릭 시 닫기
-            document.addEventListener('click', function(e) {
-                const sidebar = document.getElementById('sidebar');
-                const toggleBtn = document.getElementById('sidebar-toggle');
+            var self = this;
+            var backdrop = document.getElementById('sidebar-backdrop');
 
-                if (window.innerWidth < 768 && sidebar && !sidebar.classList.contains('hidden')) {
-                    if (!sidebar.contains(e.target) && e.target !== toggleBtn) {
-                        sidebar.classList.add('hidden');
-                        sidebar.classList.remove('flex');
+            // 백드롭 클릭 시 전체 닫기
+            if (backdrop) {
+                backdrop.addEventListener('click', function() {
+                    if (self._closeMobileSidebar) self._closeMobileSidebar();
+                });
+            }
+
+            // 모바일에서 사이드바 직접 링크(a 태그) 클릭 시 사이드바 닫기
+            var sidebar = document.getElementById('sidebar');
+            if (sidebar) {
+                sidebar.addEventListener('click', function(e) {
+                    if (window.innerWidth >= 768) return;
+                    var link = e.target.closest('a');
+                    if (link && self._closeMobileSidebar) {
+                        self._closeMobileSidebar();
                     }
-                }
-            });
+                });
+            }
         },
 
         // API 요청 헬퍼
