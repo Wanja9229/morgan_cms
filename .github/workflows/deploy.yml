@@ -20,9 +20,14 @@ jobs:
       - name: Deploy via git-ftp
         timeout-minutes: 30
         run: |
+          # Delete existing .git-ftp.log so init can run fresh
+          curl -s --insecure \
+            -u "${{ secrets.FTP_USER }}:${{ secrets.FTP_PASS }}" \
+            "ftp://${{ secrets.FTP_HOST }}" \
+            -Q "DELE .git-ftp.log" || true
+          # Full init: upload all files + create new .git-ftp.log
           git ftp init \
             --user "${{ secrets.FTP_USER }}" \
             --passwd "${{ secrets.FTP_PASS }}" \
             --insecure \
-            --force \
             "ftp://${{ secrets.FTP_HOST }}"
