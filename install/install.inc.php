@@ -14,7 +14,7 @@ if (! (isset($title) && $title)) $title = G5_VERSION." 설치";
 <body>
 
 <div id="ins_bar">
-    <span id="bar_img">GNUBOARD5</span>
+    <span id="bar_img">Morgan Edition</span>
     <span id="bar_txt">INSTALLATION</span>
 </div>
 

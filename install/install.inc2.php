@@ -1,6 +1,6 @@
 <div id="ins_ft">
-    <strong>GNUBOARD5</strong>
-    <p>GPL! OPEN SOURCE GNUBOARD</p>
+    <strong>Morgan Edition</strong>
+    <p>Powered by GNUBOARD5 | Open Source Community Engine</p>
 </div>
 
 </body>

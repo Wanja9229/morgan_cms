@@ -169,6 +169,15 @@ CREATE TABLE IF NOT EXISTS `mg_main_widget` (
     CONSTRAINT `fk_widget_row` FOREIGN KEY (`row_id`) REFERENCES `mg_main_row`(`row_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='메인 페이지 위젯';
 
+-- 2.7 메인 페이지 시드 데이터
+INSERT INTO `mg_main_row` (`row_order`, `row_use`) VALUES (1, 1);
+
+INSERT INTO `mg_main_widget` (`row_id`, `widget_type`, `widget_order`, `widget_cols`, `widget_config`, `widget_use`) VALUES
+(1, 'image', 1, 8, '{"image_url":"","alt_text":"메인 이미지","max_width":"100%","border_radius":"none","align":"center"}', 1),
+(1, 'image', 0, 4, '{"image_url":"","alt_text":"","max_width":"100%","border_radius":"none","align":"center"}', 1),
+(1, 'text', 2, 3, '{"content":"환영합니다.","font_size":"base","font_weight":"normal","text_align":"left","padding":"normal","text_color":"#f2f3f5","bg_color":"#2b2d31"}', 1),
+(1, 'slider', 3, 12, '{}', 1);
+
 -- ======================================
 -- 3. 상점 관련 테이블
 -- ======================================
@@ -275,28 +284,89 @@ ON DUPLICATE KEY UPDATE `pf_name` = VALUES(`pf_name`);
 -- 3.2 성별 옵션 추가
 UPDATE `mg_profile_field` SET `pf_options` = '["남성","여성","기타","불명"]' WHERE `pf_code` = 'gender';
 
--- 4.3 기본 설정값
+-- 4.3 기본 설정값 (전체)
 INSERT INTO `mg_config` (`cf_key`, `cf_value`, `cf_desc`) VALUES
+-- 사이트 기본
+('site_name', 'Morgan Edition', '사이트 이름'),
+('point_name', 'P', '포인트 단위'),
+('login_point', '10', '로그인 포인트'),
+('theme_primary_color', '#f59f0a', '테마 메인 컬러'),
+('color_accent', '#f57c0a', '액센트 색상'),
+('color_button', '#f59f0a', '버튼 색상'),
+('color_border', '#313338', '테두리 색상'),
+('color_bg_primary', '#1e1f22', '기본 배경 색상'),
+('color_bg_secondary', '#2b2d31', '보조 배경 색상'),
+('bg_opacity', '4', '배경 불투명도'),
+('bg_image', '', '배경 이미지'),
+-- 캐릭터
 ('character_approval', '1', '캐릭터 승인제 사용 (0: 즉시승인, 1: 관리자승인)'),
 ('character_max', '10', '회원당 최대 캐릭터 수'),
+('character_create_point', '100', '캐릭터 생성 포인트'),
+('max_characters', '10', '최대 캐릭터 수'),
+('show_main_character', '1', '대표 캐릭터 표시'),
+('use_side', '1', '세력 사용'),
+('use_class', '1', '종족 사용'),
+-- 출석
 ('attendance_point', '100', '출석 기본 포인트'),
 ('attendance_bonus', '500', '연속 출석 보너스 (7일)'),
-('theme_primary_color', '#f59f0a', '테마 메인 컬러'),
+('attendance_game', 'dice', '출석체크 미니게임 종류'),
+('game_dice_min', '10', '주사위 최소 포인트'),
+('game_dice_max', '100', '주사위 최대 포인트'),
+('game_dice_bonus_multiplier', '2', '7일 연속 보너스 배율'),
+-- 상점
 ('shop_use', '1', '상점 사용 여부'),
 ('shop_gift_use', '1', '선물 기능 사용 여부'),
-('point_name', 'P', '포인트 단위'),
+-- 역극
 ('rp_use', '1', '역극 기능 사용 여부'),
 ('rp_require_reply', '0', '판 세우기 전 필요 이음 수'),
 ('rp_max_member_default', '0', '기본 최대 참여자 수 (0=무제한)'),
 ('rp_max_member_limit', '20', '참여자 상한선'),
-('rp_content_min', '20', '최소 글자 수'),
+('rp_content_min', '0', '최소 글자 수'),
+-- 이모티콘
 ('emoticon_use', '1', '이모티콘 기능 사용 여부'),
 ('emoticon_creator_use', '1', '유저 이모티콘 제작 허용'),
 ('emoticon_commission_rate', '10', '판매 수수료율 (%)'),
 ('emoticon_min_count', '8', '셋 당 최소 이모티콘 수'),
 ('emoticon_max_count', '30', '셋 당 최대 이모티콘 수'),
 ('emoticon_image_max_size', '512', '이모티콘 이미지 최대 크기 (KB)'),
-('emoticon_image_size', '128', '이모티콘 이미지 권장 크기 (px)')
+('emoticon_image_size', '128', '이모티콘 이미지 권장 크기 (px)'),
+-- 개척
+('pioneer_enabled', '1', '개척 시스템 활성화'),
+('pioneer_stamina_default', '10', '기본 일일 노동력'),
+('pioneer_write_reward', 'wood:1', '글 작성 시 재료 보상'),
+('pioneer_comment_reward', 'random:1:30', '댓글 작성 시 재료 보상 (30% 확률)'),
+('pioneer_rp_reward', 'stone:1', 'RP 이음 시 재료 보상'),
+('pioneer_attendance_reward', 'random:1:100', '출석 시 재료 보상'),
+-- 캡챠
+('recaptcha_site_key', '', 'reCAPTCHA 사이트 키'),
+('recaptcha_secret_key', '', 'reCAPTCHA 시크릿 키'),
+('captcha_register', '1', '회원가입 캡챠'),
+('captcha_write', '0', '글쓰기 캡챠'),
+('captcha_comment', '0', '댓글 캡챠'),
+-- 인장
+('seal_enable', '1', '인장 시스템 ON/OFF'),
+('seal_tagline_max', '50', '한마디 최대 글자수'),
+('seal_content_max', '300', '자유 영역 최대 글자수'),
+('seal_image_upload', '1', '이미지 업로드 허용'),
+('seal_image_url', '1', '외부 이미지 URL 허용'),
+('seal_image_max_size', '500', '이미지 최대 크기(KB)'),
+('seal_link_allow', '1', '링크 허용'),
+('seal_trophy_slots', '3', '트로피 슬롯 수'),
+('seal_show_in_rp', '1', '역극에서 인장 표시'),
+('seal_show_in_comment', '0', '댓글에서 인장 표시'),
+('seal_compact_in_rp', '1', '역극에서 compact 모드'),
+-- 세계관 위키
+('lore_use', '1', '세계관 위키 사용 여부'),
+('lore_image_max_size', '2048', '위키 이미지 최대 크기 (KB)'),
+('lore_thumbnail_max_size', '500', '위키 썸네일 최대 크기 (KB)'),
+('lore_articles_per_page', '12', '위키 페이지당 문서 수'),
+-- 프롬프트
+('prompt_enable', '1', '프롬프트 시스템 사용 여부'),
+('prompt_show_closed', '3', '종료된 프롬프트 표시 개수'),
+('prompt_notify_submit', '1', '제출 시 관리자 알림'),
+('prompt_notify_approve', '1', '승인 시 유저 알림'),
+('prompt_notify_reject', '1', '반려 시 유저 알림'),
+('prompt_banner_max_size', '1024', '배너 이미지 최대 크기 (KB)')
 ON DUPLICATE KEY UPDATE `cf_value` = VALUES(`cf_value`);
 
 -- ======================================
@@ -437,6 +507,13 @@ INSERT INTO `mg_shop_category` (`sc_name`, `sc_desc`, `sc_icon`, `sc_order`) VAL
 ('장비', '캐릭터 장착 아이템', 'shield', 4),
 ('기타', '기타 아이템', 'gift', 5)
 ON DUPLICATE KEY UPDATE `sc_name` = VALUES(`sc_name`);
+
+-- 4.5 기본 상점 아이템
+INSERT INTO `mg_shop_item` (`sc_id`, `si_name`, `si_desc`, `si_image`, `si_price`, `si_type`, `si_effect`, `si_stock`, `si_stock_sold`, `si_limit_per_user`, `si_sale_start`, `si_sale_end`, `si_consumable`, `si_display`, `si_use`, `si_order`, `si_datetime`) VALUES
+(1, '황금 닉네임', '닉네임이 황금색으로 빛납니다', NULL, 500, 'nick_color', '{"nick_color":"#fbbf24"}', -1, 0, 0, NULL, NULL, 0, 1, 1, 0, NOW()),
+(1, '무지개 효과', '닉네임에 무지개 효과가 적용됩니다', NULL, 1000, 'nick_effect', '{"nick_effect":"rainbow"}', 10, 0, 0, NULL, NULL, 0, 1, 1, 0, NOW()),
+(3, '파란 테두리', '프로필에 파란 테두리가 적용됩니다', NULL, 300, 'profile_border', '{"border_color":"#3b82f6","border_style":"solid"}', -1, 0, 0, NULL, NULL, 0, 1, 1, 0, NOW()),
+(1, '별 뱃지', '반짝이는 별 뱃지입니다', NULL, 200, 'badge', '{"badge_icon":"star","badge_color":"#fbbf24"}', -1, 0, 0, NULL, NULL, 0, 1, 1, 0, NOW());
 
 -- ======================================
 -- 6. 기본 게시판 (GnuBoard5)
@@ -1205,13 +1282,13 @@ CREATE TABLE IF NOT EXISTS `mg_material_type` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='개척 재료 종류';
 
 -- 기본 재료 데이터
-INSERT INTO `mg_material_type` (`mt_name`, `mt_code`, `mt_icon`, `mt_desc`, `mt_order`) VALUES
-('목재', 'wood', '🪵', '나무를 가공한 기본 건축 재료', 1),
-('석재', 'stone', '🪨', '돌을 다듬어 만든 기본 건축 재료', 2),
-('철광석', 'iron', '⛏️', '금속 가공에 필요한 광물', 3),
-('유리', 'glass', '🪟', '모래를 녹여 만든 투명한 재료', 4),
-('책', 'book', '📚', '지식이 담긴 서적', 5),
-('마법석', 'crystal', '💎', '마력이 깃든 희귀한 보석', 6);
+INSERT IGNORE INTO `mg_material_type` (`mt_name`, `mt_code`, `mt_icon`, `mt_desc`, `mt_order`) VALUES
+('목재', 'wood', 'rectangle-stack', '나무를 가공한 기본 건축 재료', 1),
+('석재', 'stone', 'archive-box', '돌을 다듬어 만든 기본 건축 재료', 2),
+('철광석', 'iron', 'cube', '금속 가공에 필요한 광물', 3),
+('유리', 'glass', 'squares-2x2', '모래를 녹여 만든 투명한 재료', 4),
+('책', 'book', 'book-open', '지식이 담긴 서적', 5),
+('마법석', 'crystal', 'sparkles', '마력이 깃든 희귀한 보석', 6);
 
 -- 유저별 재료 보유량
 CREATE TABLE IF NOT EXISTS `mg_user_material` (
@@ -1266,6 +1343,15 @@ CREATE TABLE IF NOT EXISTS `mg_facility_material_cost` (
     UNIQUE KEY `fc_mt` (`fc_id`, `mt_id`),
     KEY `mt_id` (`mt_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='시설별 필요 재료';
+
+-- 시설 재료 비용 시드 데이터 (우체국=fc_id 4, mt_id 1~6)
+INSERT IGNORE INTO `mg_facility_material_cost` (`fc_id`, `mt_id`, `fmc_required`, `fmc_current`) VALUES
+(4, 1, 10, 0),
+(4, 2, 10, 0),
+(4, 3, 10, 0),
+(4, 4, 10, 0),
+(4, 5, 10, 0),
+(4, 6, 10, 0);
 
 -- 기여 기록
 CREATE TABLE IF NOT EXISTS `mg_facility_contribution` (
@@ -1377,23 +1463,12 @@ CREATE TABLE IF NOT EXISTS `mg_reward_queue` (
     INDEX `idx_bo_wr` (`bo_table`, `wr_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='정산 대기열';
 
--- 개척 시스템 기본 설정
--- ======================================
-INSERT INTO `mg_config` (`cf_key`, `cf_value`, `cf_desc`) VALUES
-('pioneer_enabled', '1', '개척 시스템 활성화'),
-('pioneer_stamina_default', '10', '기본 일일 노동력'),
-('pioneer_write_reward', 'wood:1', '글 작성 시 재료 보상'),
-('pioneer_comment_reward', 'random:1:30', '댓글 작성 시 재료 보상 (30% 확률)'),
-('pioneer_rp_reward', 'stone:1', 'RP 이음 시 재료 보상'),
-('pioneer_attendance_reward', 'random:1:100', '출석 시 재료 보상')
-ON DUPLICATE KEY UPDATE `cf_key` = `cf_key`;
-
--- 샘플 시설 (앓이란, 역극 게시판 해금)
-INSERT INTO `mg_facility` (`fc_name`, `fc_desc`, `fc_icon`, `fc_status`, `fc_unlock_type`, `fc_unlock_target`, `fc_stamina_cost`, `fc_order`) VALUES
-('앓이란 게시판', '캐릭터의 앓이를 공유하는 공간입니다. 개척을 완료하면 이용할 수 있습니다.', 'heart', 'locked', 'board', 'ailiran', 100, 1),
-('역극 게시판', '역할극을 진행하는 공간입니다. 개척을 완료하면 이용할 수 있습니다.', 'theater', 'locked', 'board', 'roleplay', 150, 2),
-('상점', '포인트로 아이템을 구매할 수 있는 상점입니다.', 'shopping-bag', 'locked', 'shop', '', 200, 3),
-('선물함', '다른 유저에게 선물을 보낼 수 있습니다.', 'gift', 'locked', 'gift', '', 120, 4)
+-- 개척 시설 시드 데이터
+INSERT INTO `mg_facility` (`fc_name`, `fc_desc`, `fc_image`, `fc_icon`, `fc_status`, `fc_unlock_type`, `fc_unlock_target`, `fc_stamina_cost`, `fc_stamina_current`, `fc_order`, `fc_complete_date`) VALUES
+('역극 게시판', '역할극을 진행하는 공간입니다. 개척을 완료하면 이용할 수 있습니다.', '', 'sparkles', 'complete', 'board', 'roleplay', 150, 150, 2, '2026-02-09 16:02:36'),
+('상점', '포인트로 아이템을 구매할 수 있는 상점입니다.', '', 'shopping-cart', 'complete', 'shop', '', 200, 200, 3, '2026-02-06 16:52:22'),
+('선물함', '다른 유저에게 선물을 보낼 수 있습니다.', '', 'gift', 'complete', 'gift', '', 120, 120, 4, '2026-02-06 16:50:46'),
+('우체국', '우체국을 건설합니다. 익명으로 편지를 전달할 수 있게 됩니다. (앓이란 해금)', '', 'envelope', 'building', 'board', 'vent', 1000, 0, 0, NULL)
 ON DUPLICATE KEY UPDATE `fc_name` = VALUES(`fc_name`);
 
 -- ======================================
@@ -1420,6 +1495,19 @@ CREATE TABLE IF NOT EXISTS `mg_achievement` (
     INDEX `idx_use` (`ac_use`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='업적 정의';
 
+-- 11.1a 업적 시드 데이터
+INSERT INTO `mg_achievement` (`ac_name`, `ac_desc`, `ac_icon`, `ac_category`, `ac_type`, `ac_condition`, `ac_reward`, `ac_rarity`, `ac_hidden`, `ac_order`, `ac_use`, `ac_datetime`) VALUES
+('글쟁이', '게시글을 작성하여 활동하세요', NULL, 'activity', 'progressive', '{"type":"write_count","target":100}', '{"type":"point","amount":500}', 'common', 0, 1, 1, NOW()),
+('수다쟁이', '댓글을 많이 남겨보세요', NULL, 'activity', 'progressive', '{"type":"comment_count","target":200}', '{"type":"point","amount":500}', 'common', 0, 2, 1, NOW()),
+('역극 마스터', 'RP 답글을 꾸준히 작성하세요', NULL, 'rp', 'progressive', '{"type":"rp_reply_count","target":100}', '{"type":"point","amount":1000}', 'uncommon', 0, 3, 1, NOW()),
+('개근왕', '출석체크를 꾸준히 하세요', NULL, 'activity', 'progressive', '{"type":"attendance_count","target":365}', '{"type":"point","amount":2000}', 'rare', 0, 4, 1, NOW()),
+('쇼핑홀릭', '상점에서 아이템을 구매하세요', NULL, 'collection', 'progressive', '{"type":"shop_buy_count","target":50}', '{"type":"point","amount":500}', 'common', 0, 5, 1, NOW()),
+('첫 발자국', '첫 게시글을 작성하세요', NULL, 'activity', 'onetime', '{"type":"write_count","target":1}', '{"type":"point","amount":100}', 'common', 0, 10, 1, NOW()),
+('캐릭터 마스터', '캐릭터를 3개 이상 만드세요', NULL, 'character', 'onetime', '{"type":"character_count","target":3}', '{"type":"point","amount":300}', 'uncommon', 0, 11, 1, NOW()),
+('역극 개막', '첫 역극을 개설하세요', NULL, 'rp', 'onetime', '{"type":"rp_create_count","target":1}', '{"type":"point","amount":200}', 'common', 0, 12, 1, NOW()),
+('전설의 시작', '레벨 10에 도달하세요', NULL, 'special', 'onetime', '{"type":"level","target":10}', '{"type":"title","value":"legend_start"}', 'legendary', 0, 20, 1, NOW()),
+('개척자', '개척 시설에 기여하세요', NULL, 'pioneer', 'progressive', '{"type":"pioneer_contribute","target":50}', '{"type":"point","amount":1000}', 'rare', 0, 6, 1, NOW());
+
 -- 11.2 단계형 업적의 각 단계
 CREATE TABLE IF NOT EXISTS `mg_achievement_tier` (
     `at_id` int NOT NULL AUTO_INCREMENT,
@@ -1433,6 +1521,32 @@ CREATE TABLE IF NOT EXISTS `mg_achievement_tier` (
     UNIQUE KEY `idx_ac_level` (`ac_id`, `at_level`),
     INDEX `idx_ac_id` (`ac_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='업적 단계';
+
+-- 11.2a 업적 단계 시드 데이터
+INSERT IGNORE INTO `mg_achievement_tier` (`ac_id`, `at_level`, `at_name`, `at_target`, `at_icon`, `at_reward`) VALUES
+(1, 1, '견습 작가', 5, NULL, '{"type":"point","amount":50}'),
+(1, 2, '초보 작가', 20, NULL, '{"type":"point","amount":100}'),
+(1, 3, '중급 작가', 50, NULL, '{"type":"point","amount":200}'),
+(1, 4, '숙련 작가', 100, NULL, '{"type":"point","amount":500}'),
+(2, 1, '수줍은 한마디', 10, NULL, '{"type":"point","amount":50}'),
+(2, 2, '말걸기 달인', 50, NULL, '{"type":"point","amount":100}'),
+(2, 3, '수다의 왕', 200, NULL, '{"type":"point","amount":300}'),
+(3, 1, '역극 입문', 10, NULL, '{"type":"point","amount":100}'),
+(3, 2, '역극 숙련', 30, NULL, '{"type":"point","amount":200}'),
+(3, 3, '역극 달인', 60, NULL, '{"type":"point","amount":500}'),
+(3, 4, '역극 마스터', 100, NULL, '{"type":"point","amount":1000}'),
+(4, 1, '3일 연속', 3, NULL, '{"type":"point","amount":30}'),
+(4, 2, '일주일 개근', 7, NULL, '{"type":"point","amount":70}'),
+(4, 3, '한달 개근', 30, NULL, '{"type":"point","amount":300}'),
+(4, 4, '분기 개근', 90, NULL, '{"type":"point","amount":900}'),
+(4, 5, '1년 개근', 365, NULL, '{"type":"point","amount":3650}'),
+(5, 1, '첫 구매', 1, NULL, '{"type":"point","amount":30}'),
+(5, 2, '단골 손님', 10, NULL, '{"type":"point","amount":100}'),
+(5, 3, 'VIP 고객', 30, NULL, '{"type":"point","amount":300}'),
+(5, 4, '쇼핑홀릭', 50, NULL, '{"type":"point","amount":500}'),
+(10, 1, '초보 개척자', 5, NULL, '{"type":"point","amount":50}'),
+(10, 2, '숙련 개척자', 20, NULL, '{"type":"point","amount":200}'),
+(10, 3, '마스터 개척자', 50, NULL, '{"type":"point","amount":1000}');
 
 -- 11.3 유저별 달성 상태
 CREATE TABLE IF NOT EXISTS `mg_user_achievement` (
@@ -1556,13 +1670,62 @@ CREATE TABLE IF NOT EXISTS `mg_lore_event` (
     INDEX `idx_le_id` (`le_id`, `lv_order`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='타임라인 이벤트';
 
--- 13.6 위키 기본 설정
-INSERT INTO `mg_config` (`cf_key`, `cf_value`, `cf_desc`) VALUES
-('lore_use', '1', '세계관 위키 사용 여부'),
-('lore_image_max_size', '2048', '위키 이미지 최대 크기 (KB)'),
-('lore_thumbnail_max_size', '500', '위키 썸네일 최대 크기 (KB)'),
-('lore_articles_per_page', '12', '위키 페이지당 문서 수')
-ON DUPLICATE KEY UPDATE `cf_key` = `cf_key`;
+-- 13.6 위키 시드 데이터
+INSERT INTO `mg_lore_category` (`lc_name`, `lc_order`, `lc_use`) VALUES
+('세계관', 1, 1),
+('세력', 2, 1),
+('조직', 3, 1),
+('지역', 4, 1);
+
+INSERT INTO `mg_lore_article` (`lc_id`, `la_title`, `la_subtitle`, `la_thumbnail`, `la_summary`, `la_order`, `la_use`, `la_hit`, `la_created`, `la_updated`) VALUES
+(1, '달그늘', '평범한 인간은 인지할 수 없는 세계의 이면', '', '뱀파이어, 라이칸스로프, 헌터가 공존하는 달 그림자 아래의 세계', 1, 1, 15, NOW(), NOW()),
+(3, '주요 패밀리', '콘크리트 정글을 지배하는 야수들의 연맹', '', '블랙후프 — 라이칸스로프 5개 패밀리로 구성된 현대적 마피아 연맹', 1, 1, 10, NOW(), NOW()),
+(4, '에제이카 주', '세 세력이 충돌하는 미국의 가상 도시', '', '가장 많은 클랜, 가장 거대한 패밀리, 가장 중요한 볼트가 모인 달그늘의 중심지', 1, 1, 13, NOW(), NOW());
+
+INSERT INTO `mg_lore_section` (`la_id`, `ls_name`, `ls_type`, `ls_content`, `ls_image`, `ls_image_caption`, `ls_order`) VALUES
+(1, '개요', 'text', '달그늘은 평범한 인간이 인지할 수 없는 세계의 이면입니다.\n피를 마시며 영생을 이어가는 뱀파이어, 인간들 틈에 숨어든 야수 라이칸스로프, 이들과 대립하며 인류의 존속을 비호하는 헌터. 달그늘 아래의 세계에서는 이러한 세 개의 세력이 대립하고 화합하며, 적대하고 협력하며, 공멸하고 공존하며 살아가고 있습니다.\n\n여러분은 이 달 그림자 아래로 발을 들이게 된 저주받은 죄인의 자손입니다.\n세 개의 세력 중 한 곳에 속한 당신은 스스로의 목표를 위해 이 괴물들의 틈바구니를 살아나가게 됩니다.\n달그늘 아래의 주민들은 모두가 평범한 인간을 초월한 능력을 가지게 되고, 언젠가는 평범한 일상 속에서 살아갈 수 없게 마모되고 맙니다.\n\n그렇기에 달그늘 아래의 주민들은 달의 그림자 아래의 세계, 달그늘 속에 머무를 수 밖에 없습니다.\n문명은 끝없이 발전하여 밤의 어둠을 몰아내고, 현대 사회에는 괴물들이 숨어들 틈이 없는 것처럼 보이지만, 달그늘 아래의 주민들은 모두 각자의 방식으로 인간들 사이에 숨어 현재를 살아갑니다.', '', '', 1),
+(1, '세 개의 세력', 'text', '달그늘 아래의 주민들은 모두가 평범한 인간을 초월한 능력을 가지게 되고, 언젠가는 평범한 일상 속에서 살아갈 수 없게 마모되고 맙니다.\n그렇기에 달그늘 아래의 주민들은 달의 그림자 아래의 세계, 달그늘 속에 머무를 수밖에 없습니다.\n\n뱀파이어 (Vampire)\n피를 마시며 영생을 이어가는 밤의 귀족들입니다.\n7죄종의 저주를 이어받아 각기 다른 권능과 약점을 가지며, 클랜이라 불리는 혈연 중심의 가문 체계로 에제이카 주의 상류층을 장악하고 있습니다. 늙지 않는 육체와 막대한 부를 가졌으나, 태양 아래서는 한 줌의 재가 되며 끝없는 갈증에 시달립니다.\n\n라이칸스로프 (Lycanthrope)\n인간의 가죽을 쓴 야수들입니다.\n도시의 어둠 속에 적응하여 마피아, 갱단, 용병이 되었으며, 패밀리라 불리는 피보다 진한 유대로 묶인 조직을 이룹니다. 수화를 통해 헌터와 뱀파이어를 압도하는 신체 능력을 발휘하지만, 내면의 야성에 잠식되어 광증에 빠질 위험을 항상 안고 살아갑니다.\n\n헌터 (Hunter)\n연금술로 괴물을 사냥하는 인간들입니다.\n낮에는 평범한 시민으로 위장해 살아가지만, 밤이 되면 몸에 새긴 연금 회로를 불태우며 괴물들과 맞섭니다. 볼트라 불리는 문명으로 위장된 거점을 중심으로 활동하며, 인류를 구하기 위해 싸우면서도 역설적으로 괴물이 저지른 짓을 덮어주는 청소부 노릇을 해야만 합니다.', '', '', 2),
+(1, '배경: 에제이카 주', 'text', '달그늘은 달빛이 닿는 곳 어디든 존재하지만, Under the Moonveil은 그 중에서도 현대 미국의 가상의 지역인 에제이카 주를 무대로 합니다.\n이곳은 가장 많은 정통 흡혈귀 클랜이 모여있고, 가장 거대한 라이칸스로프 패밀리가 자리하고 있으며, 헌터들에게 가장 중요한 볼트들이 모여있는 도시입니다.\n\n에제이카 주는 미국의 축소판이나 다름없습니다.\n꿈을 꾸는 이들에게는 천사가 나팔을 부는 기회의 도시이지만, 그 꿈을 붙잡지 못한 이들이 머무는 슬럼은 지옥이며,\n어느 주보다 공명하고 정대한 법치를 따르지만, 온갖 불법과 외도를 걷는 이들이 도처에 도사리며,\n온갖 인간 군상이 모여 어울리는 것처럼 보이지만, 그 틈에 숨은 괴물들이 서로를 찌를 기회를 엿보고 있는 도시입니다.', '', '', 3),
+(1, '달그늘 아래의 삶', 'text', '이중생활\n\n문명은 끝없이 발전하여 밤의 어둠을 몰아내고, 현대 사회에는 괴물들이 숨어들 틈이 없는 것처럼 보이지만, 달그늘 아래의 주민들은 모두 각자의 방식으로 인간들 사이에 숨어 현재를 살아갑니다.\n\n뱀파이어는 낮에는 관 속에서 잠들지만, 밤이 되면 펜트하우스에서 도시를 내려다보며 권력을 행사합니다.\n라이칸스로프는 패밀리의 일원로서 낮에는 인간들, 밤에는 다른 세력들에 맞서 거리에 자신들이 머물 자리를 세워 나갑니다.\n헌터는 낮에는 카페에서 라떼를 만들거나 회사에 출근하지만, 밤이 되면 연금 회로를 불태우며 괴물을 사냥합니다.\n\n이들에게 가장 중요한 것은 \'일상\'을 유지하는 것입니다. 정체가 들통나는 순간, 사냥꾼은 사냥감이 되고 지배자는 추방당합니다.\n\n영원한 긴장\n\n이 변화무쌍한 도시에서 흡혈귀 클랜들의 적통은 의심받고, 라이칸스로프 패밀리 간의 유대는 무너지고, 볼트에 모인 헌터들은 비의의 완성을 바라지 않습니다.\n\n세 세력은 표면적으로 평화를 유지하지만, 어제의 동맹이 오늘의 적이 되는 위태로운 균형 위에서 살아갑니다.\n달 그림자 아래에서 가장 밝게 빛나는 에제이카 주를 향해 부나방처럼 모여든 달그늘 아래의 주민들은 스스로의 목표를 따라 에제이카 주의 밤을 거닙니다.\n\n결국 달그늘 아래의 세계를 알게 된 이들은 서로와 어울리는 수밖에 없습니다.\n그 방법이 서로를 해치는 것뿐이라 하더라도….', '', '', 4),
+(1, '베일 (The Veil)', 'text', '달그늘은 뱀파이어, 라이칸스로프, 헌터들이 살아가는 또 하나의 세계를 의미하지만, 그 어원은 위대한 초월자 카인이 그를 배신한 세 명의 선지자에게 내린 베일의 저주에서 기인합니다.\n이 저주는 단순한 마법이 아니라 세계를 관통하는 물리 법칙처럼 작용하며, 달그늘 아래의 존재들이 평범한 세상에 드러나는 것을 철저히 차단하여 이들이 살아가는 인지의 틈을 만듭니다.\n하지만 오랜 시간이 흐른 현재는 오히려 세상의 시선에서 달그늘 아래의 주민들을 숨겨주는 베일이 되었습니다.\n\n카인의 저주\n\n평범한 인간은 결코 달그늘 아래의 존재들을 올바르게 인식할 수 없습니다.\n카인의 저주로 인해 인간은 초자연적인 현상을 목격하는 즉시 무의식적으로 가장 합리적인 \'현실의 정보\'로 치환하여 받아들입니다.\n라이칸스로프의 포효는 맹견의 짖는 소리로, 뱀파이어의 권능은 가스 누출로 인한 집단 환각으로, 헌터와 괴물의 전투는 갱단의 총격전으로 기록됩니다.\n달그늘 아래의 주민들이 아무리 발버둥 쳐도, 그들의 행위는 결코 인류의 역사에 \'진실\'로 남지 못합니다.\n\n에스더의 조율\n\n하지만 저주로도 감춰지지 않는 거대한 균열이 발생할 때가 있습니다. 에사우가 도심을 먹어치우거나, 한낮에 전쟁이 벌어지는 경우입니다.\n이때 탐욕의 진혈종 에스더가 개입합니다. 그녀는 달그늘의 중재자로서 광역 정신 간섭과 미디어 통제를 수행하여, 도시 전체의 인식을 \'대형 재난\'이나 \'사고\' 쪽으로 유도하여 파국을 막습니다.\n그녀의 목적은 달그늘의 수호나 지배보다는 자신들의 터전을 지키기 위한 정원 가꾸기에 가깝습니다.\n\nWRO의 뒷수습\n\n인식이 조작되었다면, 남은 것은 물리적 증거입니다.\n세계구제기구(WRO)는 현장에 봉쇄선을 치고, 부서진 잔해를 치우고, 가짜 보고서를 작성하여 관공서와 언론을 입막음합니다.\n헌터들은 세상을 구하기 위해 괴물과 싸우지만, 역설적으로 세상의 평온을 위해 괴물이 저지른 짓을 덮어주는 청소부 노릇을 해야만 합니다.', '', '', 5),
+(2, '개요', 'text', '블랙 후프는 최초의 5대 부족 중 4개의 부족이 연합하여 결성한 현대적 마피아 연맹(Syndicate)입니다.\n이들은 과거 숲에 은거하던 드루이드(이케니)와 결별하고, 도시의 문명과 어둠 속에 적응하여 에제이카 주 전역을 지배하는 거대 범죄 조직으로 거듭났습니다.\n조직은 5개의 \'패밀리(Family)\'로 나뉘어 있으며, 각 패밀리는 야수의 신체 부위에 비유되는 고유한 역할과 직책을 수행합니다.', '', '', 1),
+(2, '블랙후프 패밀리 (The Blackhoof)', 'text', 'Symbol: Bison / Role: Capo\n\"야수의 단단한 발굽, 앞서가는 개척자들\"\n\n직책: 카포 (Capo / 운영자)\n\n조직의 \'심장\'이자 \'다리\'인 본가(Main Family)입니다.\n들소의 지칠 줄 모르는 지구력으로 에제이카 주 전역으로 뻗어 나가는 운송과 물류(Logistics) 루트를 장악하고 있습니다.\n조직 전체의 자금 흐름과 사업 방향을 결정하며, 멈추지 않는 엔진처럼 조직을 이끌고 나가는 실세들입니다.\n\n특징\n- 물류 장악: 트럭킹, 해운, 철도 운송망을 통해 합법/불법 물자를 유통합니다.\n- 리더십: 연맹의 창립 가문으로서 다른 패밀리들을 조율하고 지휘합니다.\n- 성향: 묵직함, 추진력, 개척자 정신.', '', '', 2),
+(2, '윈터팽 패밀리 (The Winterfang)', 'text', 'Symbol: Wolf / Role: Enforcer\n\"야수의 날카로운 이빨, 투쟁에 앞장서는 집행자들\"\n\n직책: 인포서 (Enforcer / 행동대장)\n\n조직의 \'칼\'이자 \'사냥개\'입니다.\n가장 호전적인 늑대들로 구성되어 있으며, 조직의 무력이 필요한 곳에 최우선으로 투입됩니다.\n적대 세력과의 전쟁, 청부 살인, 채무 징수 등 가장 거칠고 피 튀기는 현장에는 언제나 그들이 있습니다.\n무리(Pack) 지어 사냥하는 늑대처럼 완벽한 팀워크로 타겟을 물어뜯습니다.\n\n특징\n- 무력 행사: 해결사, 용병, 사설 경호 등 전투 관련 업무를 전담합니다.\n- 충성심: 조직에 대한 충성심이 가장 강하며, 배신자를 용납하지 않습니다.\n- 성향: 호전성, 팀워크, 잔혹함.', '', '', 3),
+(2, '아이언포 패밀리 (The Ironpaw)', 'text', 'Symbol: Bear / Role: Reggente\n\"야수의 견고한 가죽, 규율을 수호하는 감찰관들\"\n\n직책: 레젠테 (Reggente / 섭정 & 감찰관)\n\n조직의 \'방패\'이자 \'규율\'입니다.\n이들은 압도적인 피지컬과 방어력으로 조직의 주요 거점(카지노, 금고)을 철통같이 방어합니다.\n또한 우직하고 배신을 모르는 성품 덕분에, 조직 내부의 배신자를 색출하고 단죄하는 \'내부 감찰\'의 권한을 가집니다.\n조직원들이 가장 두려워하는 것은 적이 아니라, 묵묵히 다가와 어깨에 손을 올리는 레젠테들입니다.\n\n특징\n- 절대 방어: 어떤 공격에도 물러서지 않는 탱커 역할을 수행합니다.\n- 내부 통제: 조직의 규율(Omertà)을 어긴 자를 처형하거나 징계합니다.\n- 성향: 원칙주의, 과묵함, 압도적 무력.', '', '', 4),
+(2, '탱글테일 패밀리 (The Tangletail)', 'text', 'Symbol: Rat / Role: Fixer\n\"야수의 예민한 신경망, 모든 곳에 얽혀있는 설계자들\"\n\n직책: 픽서 (Fixer / 설계자)\n\n조직의 \'눈\'이자 \'설계자\'입니다.\n도시의 가장 낮은 하수구부터 가장 높은 펜트하우스의 환풍구까지, 이들의 정보망이 닿지 않는 곳은 없습니다.\n단순히 정보를 파는 것을 넘어, 정보를 이용해 판을 짜고, 경찰을 매수하고, 증거를 인멸하여 조직이 움직일 길을 닦아놓습니다.\n\n에제이카 시의 가장 큰 지하 경매장인 버로우의 주최자들이기도 합니다.\n\n특징\n- 정보 수집: 도청, 해킹, 미행을 통해 도시의 비밀을 수집합니다.\n- 사태 해결: 사고가 터졌을 때 뒷수습을 하거나 여론을 조작합니다.\n- 성향: 교활함, 은밀함, 기회주의.', '', '', 5),
+(2, '골드메인 패밀리 (The Goldmane)', 'text', 'Symbol: Lion / Role: Consigliere\n\"야수의 빛나는 갈기, 정재계를 주무르는 참모들\"\n\n직책: 콘실리에리 (Consigliere / 고문)\n\n조직의 \'머리\'이자 \'얼굴\'입니다.\n피 냄새 대신 최고급 향수 냄새를 풍기는 이들은 법원과 의회, 사교계에서 활동합니다.\n조직의 검은 돈을 세탁하여 합법적인 자금으로 바꾸고, 법률적인 공격을 방어하며, 정재계 로비를 통해 블랙 후프를 \'필요악\'으로 포장하는 엘리트 참모진입니다.\n\n특징\n- 대외 협력: 뱀파이어 클랜이나 인간 권력자들과의 협상을 담당합니다.\n- 자금 세탁: 페이퍼 컴퍼니와 투자를 통해 자금의 출처를 숨깁니다.\n- 성향: 오만함, 지적 능력, 귀족주의.', '', '', 6),
+(2, '이케니 (Iceni Family)', 'text', 'Alias: The Druids / Keepers of the Old Ways\n\"이빨을 버리고 지혜를 취한 숲의 현자들\"\n\n역할: 드루이드 (Druid / 영적 지도자)\n\n블랙 후프와 달리 도시 문명을 거부하고 숲을 지키는 보수적인 은둔자들입니다.\n과거 평화를 위해 스스로 \'고대종의 인자(야수의 힘)\'를 포기했기에, 이들에게서는 더 이상 강력한 괴물이 태어나지 않습니다.\n하지만 그 대가로 야수의 본능을 제어하는 지혜와, \'진실의 마도서\'를 수호하는 권한을 얻었습니다.\n블랙 후프는 이들을 시대착오적이라 비웃지만, 야수의 \'광증(Rabies)\'을 치료할 수 있는 유일한 치유사이기에 그들을 존중할 수밖에 없습니다.', '', '', 7),
+(3, '개요', 'text', '달그늘은 달빛이 닿는 곳 어디든 존재하지만, Under the Moonveil은 그 중에서도 현대 미국의 가상의 지역인 에제이카 주를 무대로 합니다.\n이곳은 가장 많은 정통 흡혈귀 클랜이 모여있고, 가장 거대한 라이칸스로프 패밀리가 자리하고 있으며, 헌터들에게 가장 중요한 볼트들이 모여있는 도시입니다.\n\n에제이카 주는 미국의 축소판이나 다름없습니다.\n꿈을 꾸는 이들에게는 천사가 나팔을 부는 기회의 도시이지만, 그 꿈을 붙잡지 못한 이들이 머무는 슬럼은 지옥이며,\n어느 주보다 공명하고 정대한 법치를 따르지만, 온갖 불법과 외도를 걷는 이들이 도처에 도사리며,\n온갖 인간 군상이 모여 어울리는 것처럼 보이지만, 그 틈에 숨은 괴물들이 서로를 찌를 기회를 엿보고 있는 도시입니다.', '', '', 1),
+(3, '이중생활', 'text', '뱀파이어는 낮에는 관 속에서 잠들지만, 밤이 되면 펜트하우스에서 도시를 내려다보며 권력을 행사합니다.\n라이칸스로프는 패밀리의 일원로서 낮에는 인간들, 밤에는 다른 세력들에 맞서 거리에 자신들이 머물 자리를 세워 나갑니다.\n헌터는 낮에는 카페에서 라떼를 만들거나 회사에 출근하지만, 밤이 되면 연금 회로를 불태우며 괴물을 사냥합니다.\n\n이들에게 가장 중요한 것은 \'일상\'을 유지하는 것입니다. 정체가 들통나는 순간, 사냥꾼은 사냥감이 되고 지배자는 추방당합니다.', '', '', 2),
+(3, '영원한 긴장', 'text', '이 변화무쌍한 도시에서 흡혈귀 클랜들의 적통은 의심받고, 라이칸스로프 패밀리 간의 유대는 무너지고, 볼트에 모인 헌터들은 비의의 완성을 바라지 않습니다.\n\n세 세력은 표면적으로 평화를 유지하지만, 어제의 동맹이 오늘의 적이 되는 위태로운 균형 위에서 살아갑니다.\n달 그림자 아래에서 가장 밝게 빛나는 에제이카 주를 향해 부나방처럼 모여든 달그늘 아래의 주민들은 스스로의 목표를 따라 에제이카 주의 밤을 거닙니다.\n\n결국 달그늘 아래의 세계를 알게 된 이들은 서로와 어울리는 수밖에 없습니다.\n그 방법이 서로를 해치는 것뿐이라 하더라도….', '', '', 3);
+
+INSERT INTO `mg_lore_era` (`le_name`, `le_period`, `le_order`, `le_use`) VALUES
+('신화 시대 (The Mythic Age)', '기원 불명 ~ 대홍수', 0, 1),
+('암흑 시대 (The Dark Age)', '5세기 ~ 15세기', 1, 1),
+('각성의 시대 (The Awakening)', '15세기 ~ 16세기', 2, 1),
+('언령의 계약 (The Verbal Covenant)', '1553년', 3, 1),
+('산업화 시대 (The Industrial Age)', '18세기 ~ 19세기 말', 4, 1),
+('근현대 (Modern Era)', '20세기 ~ 현재', 5, 1),
+('현재 (Present)', 'Storm Eve', 6, 1);
+
+INSERT INTO `mg_lore_event` (`le_id`, `lv_year`, `lv_title`, `lv_content`, `lv_image`, `lv_is_major`, `lv_order`, `lv_use`) VALUES
+(1, '', '태초의 초월자 카인', '스스로를 카인이라 칭한 첫번째 자손이 인류와 함께하며 기적을 베풀던 시대. 인류도 초월자의 선도를 따라 달그늘과 낮의 구분이 존재하지 않았다.', '', 0, 1, 1),
+(1, '', '대홍수와 3인의 선지자', '인류의 죄악을 씻어내기 위한 대홍수 이후, 카인은 생존한 인류를 이끌 3명의 선지자(의사, 교사, 환자)를 선택하여 자신의 지식을 전수한다.', '', 0, 2, 1),
+(1, '', '배신의 밤 (The Night of Betrayal)', '환자의 간계로 세 선지자가 카인을 배신하고 살해. 이로써 달그늘(Moonveil)이 탄생했다.\n\n- 교사: 카인의 피를 탐하여 뱀파이어의 시조가 됨\n- 환자: 카인의 육체를 탐하여 라이칸스로프의 기원이 됨\n- 의사: 카인의 지식을 탐하여 마도서를 남김', '', 1, 3, 1),
+(1, '', '질투의 원죄', '질투의 진혈종 레비아탄의 간계에 빠져, 오만의 진혈종 아벨이 인간들에게 토벌당하고 실전(失傳)됨.', '', 0, 4, 1),
+(2, '5~10세기', '밤의 지배자들', '인류가 밤을 지배하지 못했던 시대, 뱀파이어들의 황금기. 낮의 세계조차 암흑에 빠진 이 시기는 달그늘 주민들, 그 중에서도 뱀파이어들에게 전성기였다.', '', 0, 1, 1),
+(2, '10~13세기', '끓는 가마솥의 융성', '탐욕의 진혈종 에스더가 이끄는 \'끓는 가마솥\' 클랜이 최대 세력으로 부상. 종족을 초월하여 뱀파이어와 라이칸이 뒤섞인 거대한 사바트(Sabbat)가 시작된다.', '', 0, 2, 1),
+(3, '15세기', '마도서의 발굴과 역병 의사', '의사가 남긴 다섯 마도서가 발견되기 시작. 이를 기반으로 미신과 신앙에 의지해 괴물에 대항하는 초기 헌터 집단 \'역병 의사\'가 태동한다.', '', 0, 1, 1),
+(3, '1547년', '축제의 파국 (Catastrophe Sabbati)', '에스더의 초대로 사바트에 참석한 최초의 메기스투스(언령)가 괴물들의 광기에 충격을 받고 폭주. 달그늘 역사상 최악의 대학살이 발생한다.\n\n- 이 사건을 빌미로 이케니(드루이드)가 끓는 가마솥과의 전면전을 선포.\n- 탐욕 혈통의 뱀파이어와 다수의 라이칸이 사망하며 구세력 붕괴.', '', 1, 2, 1),
+(4, '1553년', '삼자 계약의 체결', '공멸을 막기 위해 언령의 메기스투스, 에스더, 이케니 부족장이 맺은 절대적 구속력을 가진 계약.\n\n에스더 (탐욕)\n- 희생: 혈족 증식 포기\n- 획득: 영구 중재자 지위\n→ \'끓는 가마솥\'의 몰락과 중재자 등극\n\n이케니 (드루이드)\n- 희생: 고대종 인자 영구 봉인\n- 획득: 광증 치료 및 마도서 수호\n→ \'블랙 후프\' 등 5개 부족의 이탈\n\n메기스투스 (인류)\n- 희생: 마법 포기 및 은거\n- 목표: 인간의 자주권 확보\n→ 진실의 마도서 봉인 및 \'과학\'으로 선회', '', 1, 1, 1),
+(5, '19세기', '강철의 안개', '산업 혁명과 함께 헌터들이 연금술을 기계 공학에 접목하기 시작. 마법(신비)이 아닌 기술(과학)로 괴물을 사냥하는 현대적 헌터의 시초가 됨.', '', 0, 1, 1),
+(5, '19세기 말', '엘리자의 실험', '성녀 엘리자(색욕)가 뱀파이어, 라이칸, 인간의 장점을 합친 \'완전생물\' 창조를 시도. 이는 레비아탄의 질투를 사 훗날 그녀가 파멸하는 원인이 된다.', '', 0, 2, 1),
+(6, '1920년대', '블랙 후프의 결성', '금주법 시대의 혼란을 틈타, 키건이 이케니와 결별한 5개 부족을 규합하여 기업형 마피아 연맹 \'블랙후프\'를 창설. 러스티 네일을 거점으로 뒷세계를 장악함.', '', 0, 1, 1),
+(6, '1960년대', '붉게 지는 성녀 (Red Dead Saint)', '레비아탄의 사주를 받은 키건이 성녀 엘리자를 암살. 도시가 붕괴 직전까지 갔으나, 에스더가 폐허 위에 중립 도시를 재건하고 \'세인트 일라이자\'라 명명함.', '', 1, 2, 1),
+(6, '1980년대', 'WRO 공식 출범', '소련 군부를 조종하던 카르밀라(분노)가 최초의 볼트에 봉인되며 냉전은 종식을 향하기 시작한다. 이를 계기로 헌터 조직이 통합되어 WRO가 공식 출범한다.', '', 1, 3, 1),
+(6, '1998년', '비요른의 최후와 인그레이브', '메기스투스 스털링이 아이언포 패밀리의 고대종(곰)을 사냥하여 최초의 인그레이브를 제련. 헌터의 무력이 괴물들을 위협하는 수준에 도달함.\n고대종을 잃은 아이언포는 세력이 약화되었으나, 돈나 시그리드의 주도 아래 블랙 후프 내 감찰(레젠테) 역할을 자처하며 재건 중이다.', '', 0, 4, 1),
+(6, '2015년', '에쉰베이(Eshin Bay) 완공', '거대 자본과 기술이 집약된 신도심 \'에쉰베이\' 완공. 구도심의 낡은 질서를 대체하는 새로운 탐욕의 상징이 세워짐.', '', 0, 5, 1),
+(7, 'NOW', '폭풍전야', '에제이카 주를 둘러싼 위태로운 평화가 흔들리고 있다.\n\n- 오만의 진혈(아벨)이 경매장 \'더 버로우\'에 등장\n- 식탐(에사우)의 수면기 종료 임박 징후\n- 새로운 메기스투스들의 각성', '', 1, 1, 1);
 
 -- ======================================
 -- 14. 프롬프트 미션 시스템
@@ -1615,14 +1778,12 @@ CREATE TABLE IF NOT EXISTS `mg_prompt_entry` (
     INDEX `idx_entry_write` (`bo_table`, `wr_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='프롬프트 제출';
 
--- 14.3 프롬프트 기본 설정
-INSERT INTO `mg_config` (`cf_key`, `cf_value`, `cf_desc`) VALUES
-('prompt_enable', '1', '프롬프트 시스템 사용 여부'),
-('prompt_show_closed', '3', '종료된 프롬프트 표시 개수'),
-('prompt_notify_submit', '1', '제출 시 관리자 알림'),
-('prompt_notify_approve', '1', '승인 시 유저 알림'),
-('prompt_notify_reject', '1', '반려 시 유저 알림'),
-('prompt_banner_max_size', '1024', '배너 이미지 최대 크기 (KB)')
-ON DUPLICATE KEY UPDATE `cf_key` = `cf_key`;
+-- 14.3 프롬프트 시드 데이터
+INSERT INTO `mg_prompt` (`bo_table`, `pm_title`, `pm_content`, `pm_cycle`, `pm_mode`, `pm_point`, `pm_bonus_point`, `pm_bonus_count`, `pm_material_id`, `pm_material_qty`, `pm_min_chars`, `pm_max_entry`, `pm_banner`, `pm_tags`, `pm_status`, `pm_start_date`, `pm_end_date`, `pm_created`, `pm_admin_id`) VALUES
+('mission', '달빛 아래의 조우', '달그늘의 경계가 흐려지는 밤, 당신의 캐릭터는 뜻밖의 존재와 마주하게 됩니다.\n\n평소라면 절대 만날 수 없었을 상대 — 다른 세력, 다른 종족, 혹은 이미 사라진 줄 알았던 누군가.\n\n달빛이 만들어낸 이 기묘한 만남에서, 당신의 캐릭터는 어떤 선택을 하게 될까요?\n\n자유롭게 단편을 작성해 주세요. 다른 참여자의 캐릭터를 언급하는 것도 환영합니다.', 'weekly', 'review', 300, 500, 3, NULL, 0, 500, 1, NULL, '세계관,단편,주간', 'active', '2026-02-10 00:00:00', '2026-02-16 23:59:59', NOW(), 'admin'),
+('mission', '잊혀진 서신', '오래된 서재의 먼지 낀 선반 사이에서, 당신의 캐릭터는 한 통의 서신을 발견합니다.\n\n낡은 봉투 안에는 누군가가 절박하게 남긴 편지가 들어 있습니다. 발신인은 불명, 하지만 내용은 현재의 달그늘과 깊은 관련이 있어 보입니다.\n\n이 서신의 내용은 무엇이며, 당신의 캐릭터는 이를 어떻게 받아들일까요?\n\n편지의 내용을 직접 작성하거나, 편지를 발견한 뒤의 이야기를 단편으로 풀어주세요.', 'weekly', 'review', 300, 500, 3, NULL, 0, 500, 1, NULL, '세계관,단편,주간', 'active', '2026-02-10 00:00:00', '2026-02-16 23:59:59', NOW(), 'admin'),
+('mission', '달그늘 인물 열전', '당신이 가장 애정하는 달그늘의 NPC 또는 설정 속 인물에 대해 글을 작성해 주세요.\n\n해당 인물이 어떤 존재인지, 어떤 매력이 있는지, 당신의 캐릭터와는 어떤 관계인지 등을 자유롭게 서술합니다.\n\n기존 세계관에 등장하는 인물이어도 좋고, 당신이 상상한 설정 속 인물이어도 좋습니다.\n\n추천수 상위 3명에게 보너스 보상이 지급됩니다.', 'monthly', 'vote', 200, 800, 3, NULL, 0, 300, 1, NULL, '세계관,인물,월간,콘테스트', 'active', '2026-02-01 00:00:00', '2026-02-28 23:59:59', NOW(), 'admin'),
+('mission', '겨울 끝자락의 소원', '긴 겨울이 끝나가고, 달그늘에도 서서히 봄의 기운이 찾아옵니다.\n\n계절이 바뀌는 이 시기, 당신의 캐릭터가 품고 있는 소원은 무엇인가요?\n\n짧은 독백, 일기, 편지, 단편 등 형식 자유. 캐릭터의 내면을 들여다보는 글을 작성해 주세요.\n\n제출 즉시 자동으로 보상이 지급됩니다.', 'event', 'auto', 200, 0, 0, NULL, 0, 200, 1, NULL, '캐릭터,감성,자유형식', 'active', '2026-02-01 00:00:00', '2026-02-28 23:59:59', NOW(), 'admin'),
+('mission', '그림자 속의 대화', '달그늘의 뒷골목, 혹은 숲의 깊은 곳에서 벌어지는 비밀스러운 대화.\n\n당신의 캐릭터가 누군가와 나누는 은밀한 이야기를 작성해 주세요.\n\n대화체 위주의 단편을 권장하며, 역극 파트너가 있다면 합작도 환영합니다.\n\n※ 이 프롬프트는 종료되었습니다.', 'weekly', 'review', 300, 500, 2, NULL, 0, 400, 1, NULL, '세계관,대화,주간', 'closed', '2026-02-03 00:00:00', '2026-02-09 23:59:59', NOW(), 'admin');
 
 SET FOREIGN_KEY_CHECKS = 1;

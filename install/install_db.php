@@ -155,7 +155,7 @@ if ($g5_install || $is_install === false) {
 
     $sql = " insert into `{$table_prefix}config`
                 set cf_title = '".G5_VERSION."',
-                    cf_theme = 'basic',
+                    cf_theme = 'morgan',
                     cf_admin = '$admin_id',
                     cf_admin_email = '$admin_email',
                     cf_admin_email_name = '".G5_VERSION."',
@@ -570,6 +570,91 @@ if($g5_shop_install) {
 
 <?php
 //-------------------------------------------------------------------------------------------------
+// Morgan Edition 포스트-인스톨
+//-------------------------------------------------------------------------------------------------
+
+// Morgan 데이터 디렉토리 생성
+$mg_dirs = array(
+    $data_path.'/character',
+    $data_path.'/shop',
+    $data_path.'/emoticon',
+    $data_path.'/seal',
+    $data_path.'/lore',
+    $data_path.'/lore/article',
+    $data_path.'/lore/category',
+    $data_path.'/prompt',
+    $data_path.'/rp',
+);
+foreach ($mg_dirs as $d) {
+    @mkdir($d, G5_DIR_PERMISSION, true);
+    @chmod($d, G5_DIR_PERMISSION);
+}
+
+// Morgan 커스텀 테이블 생성 (install.sql)
+$mg_sql_file = '../plugin/morgan/install/install.sql';
+if (file_exists($mg_sql_file)) {
+    $mg_sql = file_get_contents($mg_sql_file);
+    // 주석 제거
+    $mg_sql = preg_replace('/^--.*$/m', '', $mg_sql);
+    // SET 구문은 개별 실행
+    $mg_statements = explode(';', $mg_sql);
+    $mg_install_count = 0;
+    foreach ($mg_statements as $stmt) {
+        $stmt = trim($stmt);
+        if ($stmt === '' || strtoupper($stmt) === 'SET FOREIGN_KEY_CHECKS = 1' || strtoupper($stmt) === 'SET FOREIGN_KEY_CHECKS = 0') continue;
+        if (stripos($stmt, 'SET NAMES') === 0 || stripos($stmt, 'SET CHARACTER') === 0 || stripos($stmt, 'SET FOREIGN') === 0) {
+            sql_query($stmt, false, $dblink);
+            continue;
+        }
+        sql_query($stmt, false, $dblink);
+        $mg_install_count++;
+    }
+}
+
+// 그누보드 기본 게시판 스킨을 Morgan 스킨으로 변경
+$mg_board_skins = array(
+    'notice' => 'theme/basic',
+    'qa'     => 'theme/basic',
+    'free'   => 'theme/basic',
+    'gallery'=> 'theme/gallery',
+);
+foreach ($mg_board_skins as $bo => $skin) {
+    sql_query("UPDATE `{$table_prefix}board` SET
+        bo_skin = '{$skin}',
+        bo_mobile_skin = '{$skin}',
+        bo_include_head = '_head.php',
+        bo_include_tail = '_tail.php',
+        bo_use_dhtml_editor = 1
+        WHERE bo_table = '{$bo}'", false, $dblink);
+}
+
+// Morgan 추가 게시판용 write 테이블 생성
+$mg_extra_boards = array('qna', 'owner', 'vent', 'log', 'mission');
+$sql_write_tpl = file("../" . G5_ADMIN_DIR . "/sql_write.sql");
+$sql_write_tpl = get_db_create_replace($sql_write_tpl);
+$sql_write_base = implode("\n", $sql_write_tpl);
+
+foreach ($mg_extra_boards as $bo) {
+    $create_table = $table_prefix . 'write_' . $bo;
+    $source = array("/__TABLE_NAME__/", "/;/");
+    $target = array($create_table, "");
+    $sql_create = preg_replace($source, $target, $sql_write_base);
+    sql_query($sql_create, false, $dblink);
+
+    // 게시판 파일 디렉토리 생성
+    $board_dir = $data_path . '/file/' . $bo;
+    @mkdir($board_dir, G5_DIR_PERMISSION);
+    @chmod($board_dir, G5_DIR_PERMISSION);
+}
+
+// Morgan 스킨 참조 설정 (회원 스킨은 theme.config.php에서 직접 덮어쓰므로 별도 설정 불필요)
+// cf_new_skin, cf_search_skin 등은 root skin/*/basic/ 사용 (gnuboard 기본 스킨)
+?>
+
+        <li>Morgan Edition 테이블 및 데이터 설치 완료</li>
+
+<?php
+//-------------------------------------------------------------------------------------------------
 
 // DB 설정 파일 생성
 $file = '../'.G5_DATA_DIR.'/'.G5_DBCONFIG_FILE;
@@ -694,7 +779,7 @@ if($g5_shop_install) {
     </ol>
 
     <div class="inner_btn">
-        <a href="../index.php">새로운 그누보드5로 이동</a>
+        <a href="../index.php">Morgan Edition으로 이동</a>
     </div>
 
 </div>
