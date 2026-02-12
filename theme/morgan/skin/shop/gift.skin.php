@@ -132,8 +132,8 @@ $status_colors = array(
     <!-- 보낸 선물 -->
     <?php if ($tab == 'sent') { ?>
         <?php if (count($sent_gifts) > 0) { ?>
-        <div class="card overflow-hidden">
-            <table class="w-full text-sm">
+        <div class="card overflow-x-auto">
+            <table class="w-full text-sm" style="min-width:480px">
                 <thead class="bg-mg-bg-primary">
                     <tr>
                         <th class="px-4 py-3 text-left text-mg-text-muted font-medium">상품</th>
@@ -172,8 +172,8 @@ $status_colors = array(
     <!-- 받은 선물 내역 -->
     <?php if ($tab == 'received') { ?>
         <?php if (count($received_gifts) > 0) { ?>
-        <div class="card overflow-hidden">
-            <table class="w-full text-sm">
+        <div class="card overflow-x-auto">
+            <table class="w-full text-sm" style="min-width:400px">
                 <thead class="bg-mg-bg-primary">
                     <tr>
                         <th class="px-4 py-3 text-left text-mg-text-muted font-medium">상품</th>

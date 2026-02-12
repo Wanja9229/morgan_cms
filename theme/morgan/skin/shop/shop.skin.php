@@ -256,6 +256,12 @@ $item_type_names = $type_labels;
     </div>
 </div>
 
+<style>
+@media (min-width: 640px) {
+    .sm\:grid-cols-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+</style>
+
 <script>
 <?php if ($is_emoticon_tab) { ?>
 function showSetDetail(esId) {
@@ -295,7 +301,7 @@ function renderSetDetail(data, container) {
         html += '<p class="text-xs text-mg-text-muted mb-3">제작자: ' + escHtml(data.creator) + ' | 판매: ' + data.sales + '개</p>';
     }
 
-    html += '<div class="grid grid-cols-6 gap-2 mb-4 bg-mg-bg-primary rounded-lg p-3">';
+    html += '<div class="grid grid-cols-4 sm:grid-cols-6 gap-2 mb-4 bg-mg-bg-primary rounded-lg p-3">';
     data.emoticons.forEach(function(em) {
         html += '<div class="flex items-center justify-center p-1" title="' + escHtml(em.code) + '">';
         html += '<img src="' + escHtml(em.image) + '" alt="' + escHtml(em.code) + '" class="w-10 h-10 object-contain">';

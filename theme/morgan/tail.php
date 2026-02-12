@@ -232,7 +232,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
 <!-- End Main Layout -->
 
 <!-- Footer -->
-<footer class="bg-mg-bg-secondary border-t border-mg-bg-tertiary py-4 ml-14">
+<footer class="bg-mg-bg-secondary border-t border-mg-bg-tertiary py-4 ml-0 md:ml-14">
     <div class="container mx-auto px-4">
         <div class="flex flex-col md:flex-row items-center justify-between gap-2 text-sm text-mg-text-muted">
             <p>&copy; <?php echo date('Y'); ?> <?php echo $config['cf_title']; ?>. Powered by Morgan Edition.</p>

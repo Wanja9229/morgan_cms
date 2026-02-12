@@ -100,6 +100,10 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
             --mg-content-width: <?php echo function_exists('mg_config') ? mg_config('content_max_width', '72rem') : '72rem'; ?>;
         }
         .mg-inner { max-width: var(--mg-content-width); margin-left: auto; margin-right: auto; }
+        /* 반응형 유틸리티 보완 (Tailwind 빌드 누락분) */
+        @media (min-width: 48rem) {
+            .md\:ml-14 { margin-left: calc(var(--spacing) * 14); }
+        }
         /* 버튼 색상 오버라이드 */
         .btn-primary, .mg-btn-primary {
             background-color: var(--mg-button) !important;
@@ -117,7 +121,7 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
             content: '';
             position: fixed;
             top: 48px; /* 헤더 높이 */
-            left: 56px; /* 사이드바 너비 */
+            left: 0;
             right: 0;
             bottom: 0;
             background-image: url('<?php echo htmlspecialchars($mg_theme_bg['image']); ?>');
@@ -127,6 +131,11 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
             opacity: <?php echo $mg_theme_bg['opacity'] / 100; ?>;
             pointer-events: none;
             z-index: -1; /* isolate 내에서 콘텐츠 뒤로 배치 */
+        }
+        @media (min-width: 768px) {
+            #main-content::before {
+                left: 56px; /* 사이드바 너비 */
+            }
         }
         <?php endif; ?>
     </style>
