@@ -17,7 +17,22 @@ jobs:
       - name: Install git-ftp
         run: sudo apt-get update -qq && sudo apt-get install -y -qq git-ftp
 
+      - name: Debug FTP connection
+        run: |
+          echo "=== FTP directory listing ==="
+          curl --insecure --list-only \
+            -u "${{ secrets.FTP_USER }}:${{ secrets.FTP_PASS }}" \
+            "ftp://${{ secrets.FTP_HOST }}/" 2>&1 | head -30
+          echo ""
+          echo "=== Try uploading test file ==="
+          echo "test" > /tmp/ftp-test.txt
+          curl -v --insecure \
+            -u "${{ secrets.FTP_USER }}:${{ secrets.FTP_PASS }}" \
+            -T /tmp/ftp-test.txt \
+            "ftp://${{ secrets.FTP_HOST }}/ftp-write-test.txt" 2>&1
+
       - name: Deploy via git-ftp
+        if: success()
         run: |
           git ftp push \
             --user "${{ secrets.FTP_USER }}" \
@@ -27,9 +42,10 @@ jobs:
           || {
             echo "First deploy: bootstrapping .git-ftp.log on server..."
             COMMIT=$(git log -1 --format="%H")
-            curl -s --insecure \
+            echo "$COMMIT" > /tmp/.git-ftp.log
+            curl -v --insecure \
               -u "${{ secrets.FTP_USER }}:${{ secrets.FTP_PASS }}" \
-              -T <(echo "$COMMIT") \
-              "ftp://${{ secrets.FTP_HOST }}/.git-ftp.log"
-            echo "Sync point set to $COMMIT. Future pushes will upload only changed files."
+              -T /tmp/.git-ftp.log \
+              "ftp://${{ secrets.FTP_HOST }}/.git-ftp.log" 2>&1
+            echo "Sync point set to $COMMIT"
           }
