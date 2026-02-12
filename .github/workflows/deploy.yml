@@ -23,11 +23,36 @@ jobs:
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq lftp
 
+          # .netrc로 인증 (비밀번호 특수문자 안전 처리)
+          echo "machine ${{ secrets.FTP_HOST }} login ${{ secrets.FTP_USER }} password ${{ secrets.FTP_PASS }}" > ~/.netrc
+          chmod 600 ~/.netrc
+
+          # 디버그: 연결 테스트
+          lftp -d -e "
+            set ftp:ssl-allow yes;
+            set ftp:ssl-force no;
+            set ftp:ssl-protect-data no;
+            set ssl:verify-certificate no;
+            set ftp:passive-mode yes;
+            set net:max-retries 3;
+            set net:reconnect-interval-base 5;
+            open ${{ secrets.FTP_HOST }};
+            ls ${{ secrets.FTP_DIR }};
+            quit;
+          " 2>&1 | head -50
+
+          echo "--- Connection test done, starting mirror ---"
+
           lftp -e "
-            set ftp:ssl-allow no;
-            set net:max-retries 5;
+            set ftp:ssl-allow yes;
+            set ftp:ssl-force no;
+            set ftp:ssl-protect-data no;
+            set ssl:verify-certificate no;
+            set ftp:passive-mode yes;
+            set net:max-retries 3;
             set net:reconnect-interval-base 5;
             set mirror:parallel-transfer-count 5;
+            open ${{ secrets.FTP_HOST }};
             mirror --reverse --delete --verbose --only-newer ./ ${{ secrets.FTP_DIR }};
             quit;
-          " -u "${{ secrets.FTP_USER }},${{ secrets.FTP_PASS }}" "${{ secrets.FTP_HOST }}"
+          "
