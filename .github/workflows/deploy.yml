@@ -11,31 +11,45 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
-      - name: Remove excluded dirs
+      - name: Install git-ftp
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq git-ftp
+
+      - name: Deploy via git-ftp
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USER: ${{ secrets.FTP_USER }}
+          FTP_PASS: ${{ secrets.FTP_PASS }}
         run: |
-          rm -rf .git .github .claude _backup node_modules docker docs src data
-          rm -f package.json package-lock.json tailwind.config.* morgan_db_*.sql
-          rm -f .ftp-deploy-sync-state.json
-          find . -name "*.tmp" -o -name "*.bak" -o -name "*.log" | xargs rm -f
+          # .git-ftp-ignore 생성 (업로드 제외 목록)
+          cat > .git-ftp-ignore << 'IGNORE'
+          .github/
+          .claude/
+          _backup/
+          node_modules/
+          docker/
+          docs/
+          src/
+          data/
+          package.json
+          package-lock.json
+          tailwind.config.*
+          morgan_db_*.sql
+          *.tmp
+          *.bak
+          *.log
+          .ftp-deploy-sync-state.json
+          .git-ftp-ignore
+          IGNORE
 
-      - name: Deploy via lftp
-        run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq lftp
-
-          echo "machine ${{ secrets.FTP_HOST }} login ${{ secrets.FTP_USER }} password ${{ secrets.FTP_PASS }}" > ~/.netrc
-          chmod 600 ~/.netrc
-
-          lftp -e "
-            set ftp:ssl-allow yes;
-            set ftp:ssl-force no;
-            set ftp:ssl-protect-data no;
-            set ssl:verify-certificate no;
-            set ftp:passive-mode yes;
-            set net:max-retries 3;
-            set net:reconnect-interval-base 5;
-            set mirror:parallel-transfer-count 5;
-            open ${{ secrets.FTP_HOST }};
-            mirror --reverse --verbose --only-newer ./ ${{ secrets.FTP_DIR }};
-            quit;
-          "
+          # 첫 배포면 init, 이후엔 push
+          git ftp init \
+            --user "${FTP_USER}" \
+            --passwd "${FTP_PASS}" \
+            "ftp://${FTP_HOST}" \
+          || git ftp push \
+            --user "${FTP_USER}" \
+            --passwd "${FTP_PASS}" \
+            "ftp://${FTP_HOST}"
