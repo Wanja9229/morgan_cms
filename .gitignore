@@ -53,6 +53,12 @@ credentials.json
 # Claude Code
 .claude/
 
+# DB dumps (배포 불필요)
+morgan_db_*.sql
+
+# FTP deploy state
+.ftp-deploy-sync-state.json
+
 # Windows special files
 nul
 NUL

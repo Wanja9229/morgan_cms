@@ -1,0 +1,40 @@
+name: Deploy to Cafe24
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # 수동 실행 가능
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: FTP Deploy
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASS }}
+          server-dir: ${{ secrets.FTP_DIR }}
+          exclude: |
+            **/.git*
+            **/.git*/**
+            .github/**
+            _backup/**
+            node_modules/**
+            docker/**
+            docs/**
+            src/**
+            data/**
+            package.json
+            package-lock.json
+            tailwind.config.*
+            morgan_db_*.sql
+            data/lore_seed.sql
+            *.tmp
+            *.bak
+            *.log
+            .claude/**
