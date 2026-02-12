@@ -86,7 +86,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
 <header class="bg-mg-bg-secondary h-12 flex items-center justify-between px-4 border-b border-mg-bg-tertiary fixed top-0 left-0 right-0 z-50">
     <!-- Logo -->
     <div class="flex items-center gap-4">
-        <button id="sidebar-toggle" class="md:hidden text-mg-text-secondary hover:text-mg-text-primary p-3" type="button" aria-label="메뉴">
+        <button id="sidebar-toggle" class="lg:hidden text-mg-text-secondary hover:text-mg-text-primary p-3" type="button" aria-label="메뉴">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
             </svg>
@@ -101,7 +101,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
     </div>
 
     <!-- Search (Desktop) -->
-    <div class="hidden md:flex flex-1 max-w-md mx-4">
+    <div class="hidden lg:flex flex-1 max-w-md mx-4">
         <form name="fsearchbox" method="get" action="<?php echo G5_BBS_URL ?>/search.php" class="w-full">
             <input type="hidden" name="sfl" value="wr_subject||wr_content">
             <input type="hidden" name="sop" value="and">
@@ -154,17 +154,29 @@ if (isset($is_ajax_request) && $is_ajax_request) {
                     </div>
                 </div>
             </div>
-            <a href="<?php echo G5_BBS_URL; ?>/logout.php" class="text-sm text-mg-text-muted hover:text-mg-text-primary transition-colors px-3 py-1.5">
+            <a href="<?php echo G5_BBS_URL; ?>/logout.php" class="hidden lg:block text-sm text-mg-text-muted hover:text-mg-text-primary transition-colors px-3 py-1.5">
                 로그아웃
             </a>
+            <!-- 우측 사이드바 토글 (모바일/태블릿) -->
+            <button id="widget-toggle" class="lg:hidden text-mg-text-secondary hover:text-mg-text-primary p-1.5" type="button" aria-label="내 정보">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+            </button>
         <?php } else { ?>
             <!-- 비로그인 상태 -->
             <a href="<?php echo G5_BBS_URL; ?>/login.php" class="text-sm text-mg-text-secondary hover:text-mg-text-primary transition-colors px-3 py-1.5">
                 로그인
             </a>
-            <a href="<?php echo G5_BBS_URL; ?>/register.php" class="text-sm bg-mg-accent hover:bg-mg-accent-hover text-white rounded px-3 py-1.5 transition-colors">
+            <a href="<?php echo G5_BBS_URL; ?>/register.php" class="text-sm bg-mg-accent hover:bg-mg-accent-hover text-white rounded px-3 py-1.5 transition-colors hidden lg:block">
                 회원가입
             </a>
+            <!-- 우측 사이드바 토글 (모바일/태블릿) -->
+            <button id="widget-toggle" class="lg:hidden text-mg-text-secondary hover:text-mg-text-primary p-1.5" type="button" aria-label="메뉴">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+            </button>
         <?php } ?>
     </nav>
 </header>
@@ -173,7 +185,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
 <div class="flex flex-1 pt-12">
 
     <!-- Sidebar -->
-    <aside id="sidebar" class="w-14 bg-mg-bg-secondary fixed left-0 top-12 bottom-0 hidden md:flex flex-col items-center py-3 gap-2 border-r border-mg-bg-tertiary z-40 overflow-y-auto">
+    <aside id="sidebar" class="w-14 bg-mg-bg-secondary fixed left-0 top-12 bottom-0 hidden lg:flex flex-col items-center py-3 gap-2 border-r border-mg-bg-tertiary z-40 overflow-y-auto">
         <!-- 홈 -->
         <a href="<?php echo G5_URL; ?>" class="sidebar-icon group <?php echo $_is_home ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="홈" data-sidebar-id="home">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -254,7 +266,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
     </aside>
 
     <!-- Mobile Backdrop -->
-    <div id="sidebar-backdrop" class="fixed inset-0 bg-black/50 hidden md:!hidden" style="z-index:35"></div>
+    <div id="sidebar-backdrop" class="fixed inset-0 bg-black/50 hidden" style="z-index:35"></div>
 
     <!-- Board Submenu Panel (2뎁스) -->
     <div id="sidebar-board-panel" class="fixed left-14 top-12 bottom-0 w-48 bg-mg-bg-secondary border-r border-mg-bg-tertiary transform <?php echo $_is_community_section ? 'translate-x-0 opacity-100 pointer-events-auto' : '-translate-x-full opacity-0 pointer-events-none'; ?> transition-all duration-200 ease-in-out flex flex-col" style="z-index:38">
@@ -523,4 +535,4 @@ if (isset($is_ajax_request) && $is_ajax_request) {
     <?php } ?>
 
     <!-- Main Content Area -->
-    <main id="main-content" class="flex-1 ml-0 md:ml-14 p-4 md:p-6 lg:mr-72">
+    <main id="main-content" class="flex-1 ml-0 lg:ml-14 p-4 md:p-6 lg:mr-72">

@@ -24,6 +24,9 @@
         },
 
         // 사이드바 토글 (모바일)
+        // 사이드바 브레이크포인트 (lg = 1024px)
+        SIDEBAR_BP: 1024,
+
         initSidebar: function() {
             const sidebar = document.getElementById('sidebar');
             const toggleBtn = document.getElementById('sidebar-toggle');
@@ -39,9 +42,19 @@
                 if (window.MG_LorePanel) window.MG_LorePanel.close();
             };
 
+            // 우측 위젯 사이드바 닫기
+            this._closeWidgetSidebar = function() {
+                var ws = document.getElementById('widget-sidebar');
+                if (ws) ws.classList.add('hidden');
+                if (backdrop) backdrop.classList.add('hidden');
+            };
+
             var closeMobile = this._closeMobileSidebar;
+            var closeWidget = this._closeWidgetSidebar;
 
             toggleBtn.addEventListener('click', function() {
+                // 우측 사이드바가 열려있으면 먼저 닫기
+                closeWidget();
                 var isHidden = sidebar.classList.contains('hidden');
                 if (isHidden) {
                     sidebar.classList.remove('hidden');
@@ -51,6 +64,23 @@
                     closeMobile();
                 }
             });
+
+            // 우측 위젯 사이드바 토글
+            var widgetToggle = document.getElementById('widget-toggle');
+            var widgetSidebar = document.getElementById('widget-sidebar');
+            if (widgetToggle && widgetSidebar) {
+                widgetToggle.addEventListener('click', function() {
+                    // 좌측 사이드바가 열려있으면 먼저 닫기
+                    closeMobile();
+                    var isHidden = widgetSidebar.classList.contains('hidden');
+                    if (isHidden) {
+                        widgetSidebar.classList.remove('hidden');
+                        if (backdrop) backdrop.classList.remove('hidden');
+                    } else {
+                        closeWidget();
+                    }
+                });
+            }
         },
 
         // 검색 기능
@@ -79,14 +109,15 @@
             if (backdrop) {
                 backdrop.addEventListener('click', function() {
                     if (self._closeMobileSidebar) self._closeMobileSidebar();
+                    if (self._closeWidgetSidebar) self._closeWidgetSidebar();
                 });
             }
 
-            // 모바일에서 사이드바 직접 링크(a 태그) 클릭 시 사이드바 닫기
+            // 사이드바 직접 링크(a 태그) 클릭 시 사이드바 닫기 (< lg 브레이크포인트)
             var sidebar = document.getElementById('sidebar');
             if (sidebar) {
                 sidebar.addEventListener('click', function(e) {
-                    if (window.innerWidth >= 768) return;
+                    if (window.innerWidth >= MG.SIDEBAR_BP) return;
                     var link = e.target.closest('a');
                     if (link && self._closeMobileSidebar) {
                         self._closeMobileSidebar();
@@ -343,6 +374,18 @@
                     var params = parsed.searchParams;
                     var boTable = params.get('bo_table') || '';
 
+                    // SPA 네비게이션 시 모바일 사이드바/위젯/패널 닫기
+                    if (window.innerWidth < MG.SIDEBAR_BP) {
+                        var sb = document.getElementById('sidebar');
+                        if (sb) { sb.classList.add('hidden'); sb.classList.remove('flex'); }
+                        var bd = document.getElementById('sidebar-backdrop');
+                        if (bd) bd.classList.add('hidden');
+                        var ws = document.getElementById('widget-sidebar');
+                        if (ws) ws.classList.add('hidden');
+                        if (window.MG_BoardPanel) window.MG_BoardPanel.close();
+                        if (window.MG_LorePanel) window.MG_LorePanel.close();
+                    }
+
                     // 페이지별 사이드바 ID 매핑
                     var activeId = '';
                     var isCommunity = false;
@@ -396,13 +439,15 @@
                     }
 
                     // 보드 토글 + 패널 상태 업데이트
-                    // 패널 자동 열기 제거 - 클릭해야만 열리도록 변경
                     var boardToggle = document.getElementById('sidebar-board-toggle');
                     if (boardToggle && window.MG_BoardPanel) {
                         window.MG_BoardPanel.setCommunityPage(isCommunity);
                         if (isCommunity) {
                             boardToggle.classList.add('!bg-mg-accent', '!text-white', '!rounded-xl');
-                            // 패널은 자동으로 열지 않음 - 사용자가 클릭해야 열림
+                            // 데스크톱에서만 패널 자동 열기 (모바일은 이미 사이드바가 닫혀있음)
+                            if (window.innerWidth >= MG.SIDEBAR_BP) {
+                                window.MG_BoardPanel.open();
+                            }
                         } else {
                             boardToggle.classList.remove('!bg-mg-accent', '!text-white', '!rounded-xl');
                             window.MG_BoardPanel.close();
@@ -456,7 +501,12 @@
                     if (window.MG_LorePanel) {
                         window.MG_LorePanel.setLorePage(isLore);
                         window.MG_LorePanel.updateFocus();
-                        if (!isLore) {
+                        if (isLore) {
+                            // 데스크톱에서만 패널 자동 열기
+                            if (window.innerWidth >= MG.SIDEBAR_BP) {
+                                window.MG_LorePanel.open();
+                            }
+                        } else {
                             window.MG_LorePanel.close();
                         }
                     }

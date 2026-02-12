@@ -101,8 +101,9 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
         }
         .mg-inner { max-width: var(--mg-content-width); margin-left: auto; margin-right: auto; }
         /* 반응형 유틸리티 보완 (Tailwind 빌드 누락분) */
-        @media (min-width: 48rem) {
-            .md\:ml-14 { margin-left: calc(var(--spacing) * 14); }
+        @media (min-width: 64rem) {
+            .lg\:ml-14 { margin-left: calc(var(--spacing) * 14); }
+            #sidebar-backdrop { display: none !important; }
         }
         /* 버튼 색상 오버라이드 */
         .btn-primary, .mg-btn-primary {
@@ -132,7 +133,7 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
             pointer-events: none;
             z-index: -1; /* isolate 내에서 콘텐츠 뒤로 배치 */
         }
-        @media (min-width: 768px) {
+        @media (min-width: 1024px) {
             #main-content::before {
                 left: 56px; /* 사이드바 너비 */
             }

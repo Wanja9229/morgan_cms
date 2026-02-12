@@ -53,6 +53,14 @@ if (isset($is_ajax_request) && $is_ajax_request) {
                 </svg>
                 마이 페이지
             </a>
+
+            <!-- 로그아웃 버튼 -->
+            <a href="<?php echo G5_BBS_URL; ?>/logout.php" class="flex items-center justify-center gap-2 w-full py-2 mt-2 text-mg-text-muted hover:text-mg-error rounded-md text-sm transition-colors" data-no-spa>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                </svg>
+                로그아웃
+            </a>
         </div>
 
         <!-- 대표 캐릭터 -->
@@ -232,7 +240,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
 <!-- End Main Layout -->
 
 <!-- Footer -->
-<footer class="bg-mg-bg-secondary border-t border-mg-bg-tertiary py-4 ml-0 md:ml-14">
+<footer class="bg-mg-bg-secondary border-t border-mg-bg-tertiary py-4 ml-0 lg:ml-14">
     <div class="container mx-auto px-4">
         <div class="flex flex-col md:flex-row items-center justify-between gap-2 text-sm text-mg-text-muted">
             <p>&copy; <?php echo date('Y'); ?> <?php echo $config['cf_title']; ?>. Powered by Morgan Edition.</p>
