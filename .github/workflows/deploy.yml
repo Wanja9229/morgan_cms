@@ -17,16 +17,26 @@ jobs:
       - name: Install git-ftp
         run: sudo apt-get update -qq && sudo apt-get install -y -qq git-ftp
 
+      - name: Debug ignore file
+        run: |
+          echo "=== git-ftp version ==="
+          git ftp --version
+          echo "=== .git-ftp-ignore line endings ($ = LF, ^M$ = CRLF) ==="
+          cat -A .git-ftp-ignore
+          echo "=== total tracked files ==="
+          git ls-files | wc -l
+
       - name: Deploy via git-ftp
         run: |
           git ftp push \
             --user "${{ secrets.FTP_USER }}" \
             --passwd "${{ secrets.FTP_PASS }}" \
             --insecure \
+            --disable-epsv \
             "ftp://${{ secrets.FTP_HOST }}" \
-          || git ftp init \
+          || git ftp catchup \
             --user "${{ secrets.FTP_USER }}" \
             --passwd "${{ secrets.FTP_PASS }}" \
             --insecure \
-            --force \
+            --disable-epsv \
             "ftp://${{ secrets.FTP_HOST }}"
