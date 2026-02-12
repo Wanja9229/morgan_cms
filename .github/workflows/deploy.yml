@@ -18,19 +18,11 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y -qq git-ftp
 
       - name: Deploy via git-ftp
+        timeout-minutes: 30
         run: |
-          git ftp push \
+          git ftp init \
             --user "${{ secrets.FTP_USER }}" \
             --passwd "${{ secrets.FTP_PASS }}" \
             --insecure \
-            "ftp://${{ secrets.FTP_HOST }}" \
-          || {
-            echo "First deploy: bootstrapping .git-ftp.log on server..."
-            COMMIT=$(git log -1 --format="%H")
-            echo "$COMMIT" > /tmp/.git-ftp.log
-            curl -v --insecure \
-              -u "${{ secrets.FTP_USER }}:${{ secrets.FTP_PASS }}" \
-              -T /tmp/.git-ftp.log \
-              "ftp://${{ secrets.FTP_HOST }}/.git-ftp.log"
-            echo "Sync point set to $COMMIT"
-          }
+            --force \
+            "ftp://${{ secrets.FTP_HOST }}"
