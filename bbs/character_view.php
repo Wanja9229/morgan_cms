@@ -479,15 +479,15 @@ include_once(G5_THEME_PATH.'/head.php');
                     container.innerHTML = '';
                     var nodes = new vis.DataSet(data.nodes.map(function(n) {
                         var nodeOpt = {
-                            id: n.id,
-                            label: n.label,
-                            color: { background: n.id === <?php echo $ch_id; ?> ? '#f59e0b' : '#2b2d31', border: n.id === <?php echo $ch_id; ?> ? '#d97706' : '#444' },
+                            id: n.ch_id,
+                            label: n.ch_name,
+                            color: { background: n.ch_id === <?php echo $ch_id; ?> ? '#f59e0b' : '#2b2d31', border: n.ch_id === <?php echo $ch_id; ?> ? '#d97706' : '#444' },
                             font: { color: '#f2f3f5', size: 12 },
-                            borderWidth: n.id === <?php echo $ch_id; ?> ? 3 : 1,
+                            borderWidth: n.ch_id === <?php echo $ch_id; ?> ? 3 : 1,
                         };
-                        if (n.image) {
+                        if (n.ch_thumb) {
                             nodeOpt.shape = 'circularImage';
-                            nodeOpt.image = n.image;
+                            nodeOpt.image = n.ch_thumb;
                         } else {
                             nodeOpt.shape = 'circle';
                             nodeOpt.size = 25;
@@ -496,10 +496,10 @@ include_once(G5_THEME_PATH.'/head.php');
                     }));
                     var edges = new vis.DataSet(data.edges.map(function(e) {
                         return {
-                            from: e.from, to: e.to,
-                            label: e.label || '',
-                            color: { color: e.color || '#666', highlight: '#f59e0b' },
-                            width: e.width || 2,
+                            from: e.ch_id_a, to: e.ch_id_b,
+                            label: e.label_display || '',
+                            color: { color: e.edge_color || '#666', highlight: '#f59e0b' },
+                            width: e.edge_width || 2,
                             font: { color: '#b5bac1', size: 10, strokeWidth: 3, strokeColor: '#1a1a1a' },
                             smooth: { type: 'continuous' }
                         };
