@@ -76,6 +76,9 @@ $g5['mg_like_log_table'] = 'mg_like_log';
 $g5['mg_like_daily_table'] = 'mg_like_daily';
 $g5['mg_reward_type_table'] = 'mg_reward_type';
 $g5['mg_reward_queue_table'] = 'mg_reward_queue';
+// 관계 시스템
+$g5['mg_relation_table'] = 'mg_relation';
+$g5['mg_relation_icon_table'] = 'mg_relation_icon';
 
 // 캐릭터 이미지 저장 경로
 define('MG_CHAR_IMAGE_PATH', G5_DATA_PATH.'/character');
@@ -150,6 +153,9 @@ $mg['like_log_table'] = $g5['mg_like_log_table'];
 $mg['like_daily_table'] = $g5['mg_like_daily_table'];
 $mg['reward_type_table'] = $g5['mg_reward_type_table'];
 $mg['reward_queue_table'] = $g5['mg_reward_queue_table'];
+// 관계 시스템
+$mg['relation_table'] = $g5['mg_relation_table'];
+$mg['relation_icon_table'] = $g5['mg_relation_icon_table'];
 
 // 상점 이미지 저장 경로
 define('MG_SHOP_IMAGE_PATH', G5_DATA_PATH.'/shop');
@@ -5298,4 +5304,467 @@ function mg_upload_prompt_banner($file, $pm_id = 0)
     $url = MG_PROMPT_IMAGE_URL . '/' . $filename;
 
     return array('success' => true, 'url' => $url, 'filename' => $filename);
+}
+
+// ======================================
+// 캐릭터 관계 함수
+// ======================================
+
+/**
+ * 관계 아이콘 목록
+ */
+function mg_get_relation_icons($active_only = true)
+{
+    global $g5;
+    $where = $active_only ? "WHERE ri_active = 1" : "";
+    $sql = "SELECT * FROM {$g5['mg_relation_icon_table']} {$where} ORDER BY ri_order, ri_id";
+    $result = sql_query($sql);
+    $icons = array();
+    while ($row = sql_fetch_array($result)) {
+        $icons[] = $row;
+    }
+    return $icons;
+}
+
+/**
+ * 관계 아이콘 단건
+ */
+function mg_get_relation_icon($ri_id)
+{
+    global $g5;
+    $ri_id = (int)$ri_id;
+    return sql_fetch("SELECT * FROM {$g5['mg_relation_icon_table']} WHERE ri_id = {$ri_id}");
+}
+
+/**
+ * 관계 단건 (아이콘+캐릭터 조인)
+ */
+function mg_get_relation($cr_id)
+{
+    global $g5;
+    $cr_id = (int)$cr_id;
+    $sql = "SELECT r.*, ri.ri_icon, ri.ri_label, ri.ri_color, ri.ri_width, ri.ri_category,
+                   ca.ch_name AS name_a, ca.ch_thumb AS thumb_a, ca.mb_id AS mb_id_a,
+                   cb.ch_name AS name_b, cb.ch_thumb AS thumb_b, cb.mb_id AS mb_id_b
+            FROM {$g5['mg_relation_table']} r
+            JOIN {$g5['mg_relation_icon_table']} ri ON r.ri_id = ri.ri_id
+            JOIN {$g5['mg_character_table']} ca ON r.ch_id_a = ca.ch_id
+            JOIN {$g5['mg_character_table']} cb ON r.ch_id_b = cb.ch_id
+            WHERE r.cr_id = {$cr_id}";
+    return sql_fetch($sql);
+}
+
+/**
+ * 특정 캐릭터의 관계 목록
+ */
+function mg_get_relations($ch_id, $status = 'active')
+{
+    global $g5;
+    $ch_id = (int)$ch_id;
+    $status_cond = $status ? "AND r.cr_status = '".sql_real_escape_string($status)."'" : "";
+    $sql = "SELECT r.*, ri.ri_icon, ri.ri_label, ri.ri_color, ri.ri_width, ri.ri_category,
+                   ca.ch_name AS name_a, ca.ch_thumb AS thumb_a, ca.mb_id AS mb_id_a,
+                   cb.ch_name AS name_b, cb.ch_thumb AS thumb_b, cb.mb_id AS mb_id_b
+            FROM {$g5['mg_relation_table']} r
+            JOIN {$g5['mg_relation_icon_table']} ri ON r.ri_id = ri.ri_id
+            JOIN {$g5['mg_character_table']} ca ON r.ch_id_a = ca.ch_id
+            JOIN {$g5['mg_character_table']} cb ON r.ch_id_b = cb.ch_id
+            WHERE (r.ch_id_a = {$ch_id} OR r.ch_id_b = {$ch_id}) {$status_cond}
+            ORDER BY r.cr_datetime DESC";
+    $result = sql_query($sql);
+    $relations = array();
+    while ($row = sql_fetch_array($result)) {
+        $relations[] = $row;
+    }
+    return $relations;
+}
+
+/**
+ * 캐릭터 쌍으로 관계 조회
+ */
+function mg_get_relation_by_pair($ch_id_1, $ch_id_2)
+{
+    global $g5;
+    $a = min((int)$ch_id_1, (int)$ch_id_2);
+    $b = max((int)$ch_id_1, (int)$ch_id_2);
+    return sql_fetch("SELECT * FROM {$g5['mg_relation_table']} WHERE ch_id_a = {$a} AND ch_id_b = {$b}");
+}
+
+/**
+ * 관계 신청
+ */
+function mg_request_relation($from_ch_id, $to_ch_id, $ri_id, $label, $memo = '')
+{
+    global $g5;
+
+    $from_ch_id = (int)$from_ch_id;
+    $to_ch_id = (int)$to_ch_id;
+    $ri_id = (int)$ri_id;
+
+    if ($from_ch_id == $to_ch_id) {
+        return array('success' => false, 'message' => '자기 자신에게는 신청할 수 없습니다.');
+    }
+
+    // 정규화: 작은쪽 = A, 큰쪽 = B
+    $a = min($from_ch_id, $to_ch_id);
+    $b = max($from_ch_id, $to_ch_id);
+
+    // 중복 체크
+    $exists = mg_get_relation_by_pair($a, $b);
+    if ($exists) {
+        return array('success' => false, 'message' => '이미 관계가 존재합니다.');
+    }
+
+    // 아이콘 존재 확인
+    $icon = mg_get_relation_icon($ri_id);
+    if (!$icon || !$icon['ri_active']) {
+        return array('success' => false, 'message' => '유효하지 않은 아이콘입니다.');
+    }
+
+    // 신청자가 A인지 B인지에 따라 라벨 위치 결정
+    $label = sql_real_escape_string($label);
+    $memo = sql_real_escape_string($memo);
+
+    if ($from_ch_id == $a) {
+        $sql = "INSERT INTO {$g5['mg_relation_table']}
+                (ch_id_a, ch_id_b, ch_id_from, ri_id, cr_label_a, cr_memo_a, cr_status, cr_datetime)
+                VALUES ({$a}, {$b}, {$from_ch_id}, {$ri_id}, '{$label}', '{$memo}', 'pending', NOW())";
+    } else {
+        $sql = "INSERT INTO {$g5['mg_relation_table']}
+                (ch_id_a, ch_id_b, ch_id_from, ri_id, cr_label_b, cr_memo_b, cr_status, cr_datetime)
+                VALUES ({$a}, {$b}, {$from_ch_id}, {$ri_id}, '{$label}', '{$memo}', 'pending', NOW())";
+    }
+    sql_query($sql);
+    $cr_id = sql_insert_id();
+
+    // 대상 캐릭터 소유자에게 알림
+    $from_char = mg_get_character($from_ch_id);
+    $to_char = mg_get_character($to_ch_id);
+    if ($to_char && $to_char['mb_id']) {
+        $noti_title = $from_char['ch_name'] . '이(가) ' . $to_char['ch_name'] . '에게 관계를 신청했습니다.';
+        $noti_content = $icon['ri_icon'] . ' ' . $label;
+        mg_notify($to_char['mb_id'], 'relation_request', $noti_title, $noti_content,
+            G5_BBS_URL . '/relation.php?tab=pending');
+    }
+
+    return array('success' => true, 'cr_id' => $cr_id, 'message' => '관계를 신청했습니다.');
+}
+
+/**
+ * 관계 승인
+ */
+function mg_accept_relation($cr_id, $label_b = '', $memo_b = '', $icon_b = '')
+{
+    global $g5;
+    $cr_id = (int)$cr_id;
+
+    $rel = mg_get_relation($cr_id);
+    if (!$rel || $rel['cr_status'] !== 'pending') {
+        return array('success' => false, 'message' => '유효하지 않은 관계입니다.');
+    }
+
+    // 승인자는 신청자의 반대쪽
+    // 승인자 쪽 라벨 저장
+    $sets = array("cr_status = 'active'", "cr_accept_datetime = NOW()");
+    $approver_ch_id = ($rel['ch_id_from'] == $rel['ch_id_a']) ? $rel['ch_id_b'] : $rel['ch_id_a'];
+
+    if ($label_b) {
+        $label_b_esc = sql_real_escape_string($label_b);
+        if ($approver_ch_id == $rel['ch_id_a']) {
+            $sets[] = "cr_label_a = '{$label_b_esc}'";
+        } else {
+            $sets[] = "cr_label_b = '{$label_b_esc}'";
+        }
+    }
+    if ($memo_b) {
+        $memo_b_esc = sql_real_escape_string($memo_b);
+        if ($approver_ch_id == $rel['ch_id_a']) {
+            $sets[] = "cr_memo_a = '{$memo_b_esc}'";
+        } else {
+            $sets[] = "cr_memo_b = '{$memo_b_esc}'";
+        }
+    }
+    if ($icon_b) {
+        $icon_b_esc = sql_real_escape_string($icon_b);
+        if ($approver_ch_id == $rel['ch_id_a']) {
+            $sets[] = "cr_icon_a = '{$icon_b_esc}'";
+        } else {
+            $sets[] = "cr_icon_b = '{$icon_b_esc}'";
+        }
+    }
+
+    sql_query("UPDATE {$g5['mg_relation_table']} SET " . implode(', ', $sets) . " WHERE cr_id = {$cr_id}");
+
+    // 신청자에게 승인 알림
+    $from_char = mg_get_character($rel['ch_id_from']);
+    $approver_char = mg_get_character($approver_ch_id);
+    if ($from_char && $from_char['mb_id']) {
+        $noti_title = $approver_char['ch_name'] . '이(가) 관계를 승인했습니다.';
+        $noti_content = $rel['ri_icon'] . ' ' . ($label_b ?: $rel['cr_label_a'] ?: $rel['cr_label_b']);
+        mg_notify($from_char['mb_id'], 'relation_accepted', $noti_title, $noti_content,
+            G5_BBS_URL . '/relation.php');
+    }
+
+    return array('success' => true, 'message' => '관계를 승인했습니다.');
+}
+
+/**
+ * 관계 거절 (삭제)
+ */
+function mg_reject_relation($cr_id)
+{
+    global $g5;
+    $cr_id = (int)$cr_id;
+
+    $rel = mg_get_relation($cr_id);
+    if (!$rel || $rel['cr_status'] !== 'pending') {
+        return array('success' => false, 'message' => '유효하지 않은 관계입니다.');
+    }
+
+    sql_query("DELETE FROM {$g5['mg_relation_table']} WHERE cr_id = {$cr_id}");
+
+    // 신청자에게 거절 알림
+    $from_char = mg_get_character($rel['ch_id_from']);
+    $rejector_ch_id = ($rel['ch_id_from'] == $rel['ch_id_a']) ? $rel['ch_id_b'] : $rel['ch_id_a'];
+    $rejector_char = mg_get_character($rejector_ch_id);
+    if ($from_char && $from_char['mb_id']) {
+        mg_notify($from_char['mb_id'], 'relation_rejected',
+            $rejector_char['ch_name'] . '이(가) 관계 신청을 거절했습니다.', '', G5_BBS_URL . '/relation.php');
+    }
+
+    return array('success' => true, 'message' => '관계를 거절했습니다.');
+}
+
+/**
+ * 관계 해제 (어느 쪽이든 가능)
+ */
+function mg_delete_relation($cr_id, $by_ch_id = 0)
+{
+    global $g5;
+    $cr_id = (int)$cr_id;
+
+    $rel = mg_get_relation($cr_id);
+    if (!$rel) {
+        return array('success' => false, 'message' => '존재하지 않는 관계입니다.');
+    }
+
+    sql_query("DELETE FROM {$g5['mg_relation_table']} WHERE cr_id = {$cr_id}");
+
+    // 상대에게 해제 알림
+    if ($by_ch_id) {
+        $other_ch_id = ($by_ch_id == $rel['ch_id_a']) ? $rel['ch_id_b'] : $rel['ch_id_a'];
+        $by_char = mg_get_character($by_ch_id);
+        $other_char = mg_get_character($other_ch_id);
+        if ($other_char && $other_char['mb_id']) {
+            mg_notify($other_char['mb_id'], 'relation_deleted',
+                $by_char['ch_name'] . '이(가) 관계를 해제했습니다.', '', G5_BBS_URL . '/relation.php');
+        }
+    }
+
+    return array('success' => true, 'message' => '관계를 해제했습니다.');
+}
+
+/**
+ * 자기 쪽 관계 정보 수정
+ */
+function mg_update_relation_side($cr_id, $ch_id, $label = '', $memo = '', $icon = '')
+{
+    global $g5;
+    $cr_id = (int)$cr_id;
+    $ch_id = (int)$ch_id;
+
+    $rel = sql_fetch("SELECT * FROM {$g5['mg_relation_table']} WHERE cr_id = {$cr_id}");
+    if (!$rel) {
+        return array('success' => false, 'message' => '존재하지 않는 관계입니다.');
+    }
+
+    // ch_id가 A인지 B인지 판별
+    $side = '';
+    if ($ch_id == $rel['ch_id_a']) $side = 'a';
+    elseif ($ch_id == $rel['ch_id_b']) $side = 'b';
+    else return array('success' => false, 'message' => '해당 관계의 당사자가 아닙니다.');
+
+    $sets = array();
+    if ($label) $sets[] = "cr_label_{$side} = '".sql_real_escape_string($label)."'";
+    if ($memo !== '') $sets[] = "cr_memo_{$side} = '".sql_real_escape_string($memo)."'";
+    if ($icon) $sets[] = "cr_icon_{$side} = '".sql_real_escape_string($icon)."'";
+
+    if (empty($sets)) {
+        return array('success' => false, 'message' => '변경 사항이 없습니다.');
+    }
+
+    sql_query("UPDATE {$g5['mg_relation_table']} SET ".implode(', ', $sets)." WHERE cr_id = {$cr_id}");
+
+    return array('success' => true, 'message' => '관계 정보를 수정했습니다.');
+}
+
+/**
+ * vis.js 관계도 데이터 (nodes + edges)
+ *
+ * @param int $ch_id 중심 캐릭터 (0이면 전체)
+ * @param int $depth 탐색 깊이 (1~3)
+ * @param string $category 카테고리 필터 (콤마 구분)
+ * @param int $faction_id 세력 필터
+ * @return array ['nodes' => [...], 'edges' => [...]]
+ */
+function mg_get_relation_graph($ch_id = 0, $depth = 2, $category = '', $faction_id = 0)
+{
+    global $g5;
+    $ch_id = (int)$ch_id;
+    $depth = max(1, min(3, (int)$depth));
+
+    // 전체 관계도 or 특정 캐릭터 중심
+    if ($ch_id > 0) {
+        // BFS로 depth만큼 관계 탐색
+        $visited = array($ch_id);
+        $current_ids = array($ch_id);
+        $all_relations = array();
+
+        for ($d = 0; $d < $depth; $d++) {
+            if (empty($current_ids)) break;
+            $id_list = implode(',', array_map('intval', $current_ids));
+
+            $cat_cond = '';
+            if ($category) {
+                $cats = array_map(function($c) { return "'".sql_real_escape_string(trim($c))."'"; }, explode(',', $category));
+                $cat_cond = "AND ri.ri_category IN (" . implode(',', $cats) . ")";
+            }
+
+            $sql = "SELECT r.*, ri.ri_icon, ri.ri_label, ri.ri_color, ri.ri_width, ri.ri_category
+                    FROM {$g5['mg_relation_table']} r
+                    JOIN {$g5['mg_relation_icon_table']} ri ON r.ri_id = ri.ri_id
+                    WHERE r.cr_status = 'active'
+                    AND (r.ch_id_a IN ({$id_list}) OR r.ch_id_b IN ({$id_list}))
+                    {$cat_cond}";
+            $result = sql_query($sql);
+
+            $next_ids = array();
+            while ($row = sql_fetch_array($result)) {
+                $all_relations[$row['cr_id']] = $row;
+                foreach (array('ch_id_a', 'ch_id_b') as $col) {
+                    if (!in_array($row[$col], $visited)) {
+                        $visited[] = $row[$col];
+                        $next_ids[] = $row[$col];
+                    }
+                }
+            }
+            $current_ids = $next_ids;
+        }
+
+        $node_ids = $visited;
+        $edges = array_values($all_relations);
+    } else {
+        // 전체 관계도
+        $cat_cond = '';
+        if ($category) {
+            $cats = array_map(function($c) { return "'".sql_real_escape_string(trim($c))."'"; }, explode(',', $category));
+            $cat_cond = "AND ri.ri_category IN (" . implode(',', $cats) . ")";
+        }
+
+        $sql = "SELECT r.*, ri.ri_icon, ri.ri_label, ri.ri_color, ri.ri_width, ri.ri_category
+                FROM {$g5['mg_relation_table']} r
+                JOIN {$g5['mg_relation_icon_table']} ri ON r.ri_id = ri.ri_id
+                WHERE r.cr_status = 'active' {$cat_cond}
+                LIMIT 500";
+        $result = sql_query($sql);
+        $edges = array();
+        $node_ids = array();
+        while ($row = sql_fetch_array($result)) {
+            $edges[] = $row;
+            if (!in_array($row['ch_id_a'], $node_ids)) $node_ids[] = $row['ch_id_a'];
+            if (!in_array($row['ch_id_b'], $node_ids)) $node_ids[] = $row['ch_id_b'];
+        }
+    }
+
+    // 노드 정보 조회
+    $nodes = array();
+    if (!empty($node_ids)) {
+        $id_list = implode(',', array_map('intval', $node_ids));
+        $faction_cond = $faction_id ? "AND c.side_id = ".(int)$faction_id : "";
+        $sql = "SELECT c.ch_id, c.ch_name, c.ch_thumb, c.side_id, c.mb_id,
+                       s.side_name, s.side_image
+                FROM {$g5['mg_character_table']} c
+                LEFT JOIN {$g5['mg_side_table']} s ON c.side_id = s.side_id
+                WHERE c.ch_id IN ({$id_list}) AND c.ch_state = 'approved' {$faction_cond}";
+        $result = sql_query($sql);
+        while ($row = sql_fetch_array($result)) {
+            $nodes[] = array(
+                'ch_id' => (int)$row['ch_id'],
+                'ch_name' => $row['ch_name'],
+                'ch_thumb' => $row['ch_thumb'] ? MG_CHAR_IMAGE_URL.'/'.$row['ch_thumb'] : '',
+                'side_id' => (int)$row['side_id'],
+                'faction_name' => $row['side_name'] ?: '',
+                'faction_color' => '',
+            );
+        }
+    }
+
+    // 엣지 포맷
+    $formatted_edges = array();
+    foreach ($edges as $e) {
+        $label_a = $e['cr_label_a'] ?: '';
+        $label_b = $e['cr_label_b'] ?: '';
+        $icon_a = $e['cr_icon_a'] ?: $e['ri_icon'];
+        $icon_b = $e['cr_icon_b'] ?: $e['ri_icon'];
+
+        if ($label_a && $label_b && $label_a !== $label_b) {
+            $label_display = $label_a . ' / ' . $label_b;
+        } else {
+            $label_display = $label_a ?: $label_b;
+        }
+
+        $formatted_edges[] = array(
+            'cr_id' => (int)$e['cr_id'],
+            'ch_id_a' => (int)$e['ch_id_a'],
+            'ch_id_b' => (int)$e['ch_id_b'],
+            'icon' => $icon_a,
+            'icon_a' => $icon_a,
+            'icon_b' => $icon_b,
+            'label_a' => $label_a,
+            'label_b' => $label_b,
+            'label_display' => $label_display,
+            'edge_color' => $e['cr_color'] ?: $e['ri_color'],
+            'edge_width' => (int)$e['ri_width'],
+            'category' => $e['ri_category'],
+            'memo_a' => $e['cr_memo_a'] ?: '',
+            'memo_b' => $e['cr_memo_b'] ?: '',
+        );
+    }
+
+    return array('nodes' => $nodes, 'edges' => $formatted_edges);
+}
+
+/**
+ * 회원이 받은 대기중 관계 신청 목록
+ */
+function mg_get_pending_relations($mb_id)
+{
+    global $g5;
+    $mb_id = sql_real_escape_string($mb_id);
+
+    // 내 캐릭터 ID 목록
+    $chars = mg_get_characters($mb_id);
+    if (empty($chars)) return array();
+
+    $my_ch_ids = array_map(function($c) { return (int)$c['ch_id']; }, $chars);
+    $id_list = implode(',', $my_ch_ids);
+
+    // 내 캐릭터가 대상(B)이면서 신청자(from)가 아닌 pending 관계
+    $sql = "SELECT r.*, ri.ri_icon, ri.ri_label, ri.ri_color, ri.ri_category,
+                   ca.ch_name AS name_a, ca.ch_thumb AS thumb_a, ca.mb_id AS mb_id_a,
+                   cb.ch_name AS name_b, cb.ch_thumb AS thumb_b, cb.mb_id AS mb_id_b
+            FROM {$g5['mg_relation_table']} r
+            JOIN {$g5['mg_relation_icon_table']} ri ON r.ri_id = ri.ri_id
+            JOIN {$g5['mg_character_table']} ca ON r.ch_id_a = ca.ch_id
+            JOIN {$g5['mg_character_table']} cb ON r.ch_id_b = cb.ch_id
+            WHERE r.cr_status = 'pending'
+            AND ((r.ch_id_a IN ({$id_list}) OR r.ch_id_b IN ({$id_list}))
+                 AND r.ch_id_from NOT IN ({$id_list}))
+            ORDER BY r.cr_datetime DESC";
+    $result = sql_query($sql);
+    $relations = array();
+    while ($row = sql_fetch_array($result)) {
+        $relations[] = $row;
+    }
+    return $relations;
 }

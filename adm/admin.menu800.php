@@ -44,4 +44,7 @@ $menu["menu800"] = array(
     array('801300', '인장 관리', $mg_admin_url . '/seal.php', 'mg_seal', '인장'),
     // 프롬프트 미션
     array('801500', '프롬프트 관리', $mg_admin_url . '/prompt.php', 'mg_prompt', '프롬프트'),
+    // 관계
+    array('801600', '관계 아이콘', $mg_admin_url . '/relation_icon.php', 'mg_relation', '관계'),
+    array('801700', '관계 관리', $mg_admin_url . '/relation.php', 'mg_relation'),
 );

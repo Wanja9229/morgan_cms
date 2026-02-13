@@ -1786,4 +1786,58 @@ INSERT INTO `mg_prompt` (`bo_table`, `pm_title`, `pm_content`, `pm_cycle`, `pm_m
 ('mission', '겨울 끝자락의 소원', '긴 겨울이 끝나가고, 달그늘에도 서서히 봄의 기운이 찾아옵니다.\n\n계절이 바뀌는 이 시기, 당신의 캐릭터가 품고 있는 소원은 무엇인가요?\n\n짧은 독백, 일기, 편지, 단편 등 형식 자유. 캐릭터의 내면을 들여다보는 글을 작성해 주세요.\n\n제출 즉시 자동으로 보상이 지급됩니다.', 'event', 'auto', 200, 0, 0, NULL, 0, 200, 1, NULL, '캐릭터,감성,자유형식', 'active', '2026-02-01 00:00:00', '2026-02-28 23:59:59', NOW(), 'admin'),
 ('mission', '그림자 속의 대화', '달그늘의 뒷골목, 혹은 숲의 깊은 곳에서 벌어지는 비밀스러운 대화.\n\n당신의 캐릭터가 누군가와 나누는 은밀한 이야기를 작성해 주세요.\n\n대화체 위주의 단편을 권장하며, 역극 파트너가 있다면 합작도 환영합니다.\n\n※ 이 프롬프트는 종료되었습니다.', 'weekly', 'review', 300, 500, 2, NULL, 0, 400, 1, NULL, '세계관,대화,주간', 'closed', '2026-02-03 00:00:00', '2026-02-09 23:59:59', NOW(), 'admin');
 
+-- ======================================
+-- 15. 캐릭터 관계 시스템
+-- ======================================
+
+-- 15.1 관계 아이콘 정의
+CREATE TABLE IF NOT EXISTS `mg_relation_icon` (
+    `ri_id` int NOT NULL AUTO_INCREMENT,
+    `ri_category` varchar(30) NOT NULL COMMENT '카테고리 (love, friendship, family, rival, mentor, etc)',
+    `ri_icon` varchar(20) NOT NULL COMMENT '이모지/아이콘',
+    `ri_label` varchar(50) NOT NULL COMMENT '표시명',
+    `ri_color` varchar(7) NOT NULL DEFAULT '#95a5a6' COMMENT '엣지 기본 색상',
+    `ri_width` tinyint NOT NULL DEFAULT 2 COMMENT '엣지 기본 굵기',
+    `ri_image` varchar(200) DEFAULT NULL COMMENT '커스텀 이미지 경로',
+    `ri_order` int NOT NULL DEFAULT 0 COMMENT '정렬순',
+    `ri_active` tinyint(1) NOT NULL DEFAULT 1 COMMENT '사용 여부',
+    PRIMARY KEY (`ri_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='관계 아이콘';
+
+-- 15.2 기본 아이콘 데이터
+INSERT INTO `mg_relation_icon` (`ri_category`, `ri_icon`, `ri_label`, `ri_color`, `ri_width`, `ri_order`) VALUES
+('love', '♡', '연인', '#e74c3c', 2, 1),
+('love', '♡♡', '깊은 사랑', '#c0392b', 3, 2),
+('friendship', '☆', '친구', '#3498db', 2, 3),
+('friendship', '★', '절친', '#2980b9', 2, 4),
+('family', '🏠', '가족', '#27ae60', 2, 5),
+('rival', '⚔', '라이벌', '#e67e22', 2, 6),
+('mentor', '📖', '스승/제자', '#9b59b6', 2, 7),
+('etc', '🔗', '동료/지인', '#95a5a6', 2, 8),
+('etc', '❓', '복잡한 관계', '#f39c12', 2, 9);
+
+-- 15.3 관계 데이터
+CREATE TABLE IF NOT EXISTS `mg_relation` (
+    `cr_id` int NOT NULL AUTO_INCREMENT,
+    `ch_id_a` int NOT NULL COMMENT '캐릭터A (항상 작은쪽 ID)',
+    `ch_id_b` int NOT NULL COMMENT '캐릭터B (항상 큰쪽 ID)',
+    `ch_id_from` int NOT NULL COMMENT '신청자 캐릭터 ID',
+    `ri_id` int NOT NULL COMMENT '아이콘 ID',
+    `cr_label_a` varchar(50) NOT NULL COMMENT 'A쪽 관계명',
+    `cr_label_b` varchar(50) DEFAULT NULL COMMENT 'B쪽 관계명 (NULL이면 A와 동일)',
+    `cr_icon_a` varchar(20) DEFAULT NULL COMMENT 'A쪽 개별 아이콘',
+    `cr_icon_b` varchar(20) DEFAULT NULL COMMENT 'B쪽 개별 아이콘',
+    `cr_memo_a` text COMMENT 'A쪽 메모',
+    `cr_memo_b` text COMMENT 'B쪽 메모',
+    `cr_color` varchar(7) DEFAULT NULL COMMENT '커스텀 엣지 색상 (NULL이면 아이콘 기본색)',
+    `cr_status` enum('pending','active','rejected') NOT NULL DEFAULT 'pending' COMMENT '상태',
+    `cr_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '신청일',
+    `cr_accept_datetime` datetime DEFAULT NULL COMMENT '승인일',
+    PRIMARY KEY (`cr_id`),
+    UNIQUE KEY `idx_relation_pair` (`ch_id_a`, `ch_id_b`),
+    INDEX `idx_relation_a` (`ch_id_a`, `cr_status`),
+    INDEX `idx_relation_b` (`ch_id_b`, `cr_status`),
+    INDEX `idx_relation_from` (`ch_id_from`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='캐릭터 관계';
+
 SET FOREIGN_KEY_CHECKS = 1;
