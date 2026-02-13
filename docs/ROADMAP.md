@@ -502,15 +502,23 @@
 > 상세: plans/DICE_SYSTEM.md
 
 ### 18.1 주사위 기본
-- [ ] DB 컬럼 추가 (mg_comment: cm_is_dice, cm_dice_value)
-- [ ] 🎲 버튼 + 서버사이드 rand() 댓글 자동 등록
-- [ ] 주사위 댓글 별도 스타일 (수정/삭제 불가)
-- [ ] 최고값 하이라이트 표시
+- [x] 기존 write 테이블 wr_1/wr_2 활용 (별도 테이블 불필요)
+- [x] mg_board_reward에 dice 설정 컬럼 3개 (br_dice_use, br_dice_once, br_dice_max)
+- [x] 🎲 버튼 + 서버사이드 rand() 댓글 자동 등록 (comment_dice.php)
+- [x] 주사위 댓글 별도 스타일 (수정/삭제 불가, 앰버 배경)
+- [x] 최고값 ★ 하이라이트 표시
 
 ### 18.2 옵션
-- [ ] 게시판별 주사위 ON/OFF 토글 (관리자)
-- [ ] 1인 1회 제한 (한 글에서 한 번)
+- [x] 게시판별 주사위 ON/OFF 토글 (관리자 보상 모달)
+- [x] 1인 1회 제한 (한 글에서 한 번)
+- [x] 최대값 설정 (관리자, 기본 100)
 - [ ] 범위 커스텀 (글 작성자가 0~N 범위 지정)
+
+### 18.3 이모티콘 피커 보완
+- [x] emoticon-picker.js SmartEditor2 iframe 삽입 지원
+- [x] 게시글 작성 폼 4종에 이모티콘 피커 추가 (basic, postit, memo, prompt)
+- [x] RP 이음 폼에 이모티콘 피커 추가 (참여자별 고유 picker)
+- [x] postit/prompt 댓글 스킨 → basic include로 통합
 
 ---
 
@@ -697,6 +705,7 @@ new_cms/
 | 2026-02-12 | 섹션 번호 오류 수정 (16.x→17.x 등), 파일 구조 부록 최신화 |
 | 2026-02-12 | Phase 17 백엔드+관리자 완료 (DB, 함수, 관리자 CRUD, vis.js 그래프). UI 재배치 예정 (독립 페이지→캐릭터 뷰 통합) |
 | 2026-02-13 | Phase 17 UI 재배치 완료 (신청→character_view, 관계 탭→character_form, 사이드바 아이콘 제거, 독립 페이지 리다이렉트) |
+| 2026-02-13 | Phase 18 댓글 주사위 완료 + 이모티콘 피커 보완 (write 4종+RP 이음 폼, SE2 지원, 댓글 스킨 통합) |
 
 ---
 
