@@ -281,9 +281,15 @@ function rp_time_ago($datetime) {
                                         <?php } ?>
                                     </select>
                                     <div class="flex-1">
-                                        <textarea name="rr_content" rows="3" class="w-full bg-mg-bg-tertiary/50 text-mg-text-primary text-xs rounded-lg px-2 py-1.5 border border-mg-bg-tertiary focus:border-mg-accent focus:outline-none resize-none"
+                                        <?php $rp_textarea_id = 'rr_content_'.$thread['rt_id'].'_'.$mem['ch_id']; ?>
+                                        <textarea name="rr_content" id="<?php echo $rp_textarea_id; ?>" rows="3" class="w-full bg-mg-bg-tertiary/50 text-mg-text-primary text-xs rounded-lg px-2 py-1.5 border border-mg-bg-tertiary focus:border-mg-accent focus:outline-none resize-none"
                                                   placeholder="댓글을 입력하세요..."></textarea>
                                         <div class="rp-image-preview hidden mt-1"></div>
+                                        <?php
+                                        $picker_id = 'rp_'.$thread['rt_id'].'_'.$mem['ch_id'];
+                                        $picker_target = $rp_textarea_id;
+                                        include(G5_THEME_PATH.'/skin/emoticon/picker.skin.php');
+                                        ?>
                                     </div>
                                     <div class="flex flex-col gap-1">
                                         <label class="bg-mg-bg-tertiary hover:bg-mg-bg-tertiary/80 text-mg-text-muted rounded-lg px-2 py-1.5 flex-shrink-0 h-[32px] transition-colors cursor-pointer flex items-center" title="이미지 첨부">

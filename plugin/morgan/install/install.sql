@@ -1400,6 +1400,9 @@ CREATE TABLE IF NOT EXISTS `mg_board_reward` (
     `br_material_list` text COMMENT '드롭 대상 재료 JSON ["wood","stone"]',
     `br_daily_limit` int NOT NULL DEFAULT 0 COMMENT '일일 보상 횟수 (0=무제한)',
     `br_like_use` tinyint NOT NULL DEFAULT 1 COMMENT '좋아요 보상 활성화 (0=비활성)',
+    `br_dice_use` tinyint NOT NULL DEFAULT 0 COMMENT '댓글 주사위 활성화',
+    `br_dice_once` tinyint NOT NULL DEFAULT 1 COMMENT '1인 1회 제한',
+    `br_dice_max` int NOT NULL DEFAULT 100 COMMENT '주사위 최대값',
     PRIMARY KEY (`br_id`),
     UNIQUE KEY `idx_bo_table` (`bo_table`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='게시판별 보상 설정';

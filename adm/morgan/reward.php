@@ -37,7 +37,8 @@ $boards = array();
 $sql = "SELECT b.bo_table, b.bo_subject, b.bo_write_point, b.bo_comment_point,
                r.br_id, r.br_mode, r.br_point, r.br_bonus_500, r.br_bonus_1000,
                r.br_bonus_image, r.br_material_use, r.br_material_chance,
-               r.br_material_list, r.br_daily_limit, r.br_like_use
+               r.br_material_list, r.br_daily_limit, r.br_like_use,
+               r.br_dice_use, r.br_dice_once, r.br_dice_max
         FROM {$g5['board_table']} b
         LEFT JOIN {$g5['mg_board_reward_table']} r ON b.bo_table = r.bo_table
         ORDER BY b.gr_id, b.bo_order, b.bo_table";
@@ -248,6 +249,7 @@ require_once __DIR__.'/_head.php';
                     <th style="width:70px;">재료</th>
                     <th style="width:70px;">일일제한</th>
                     <th style="width:55px;">좋아요</th>
+                    <th style="width:50px;">🎲</th>
                     <th style="width:60px;">기존P</th>
                     <th style="width:65px;">관리</th>
                 </tr>
@@ -275,6 +277,9 @@ require_once __DIR__.'/_head.php';
                     <td style="text-align:center;"><?php
                         $like_on = ($b['br_like_use'] === null || $b['br_like_use'] == 1);
                         echo $like_on ? '<span style="color:var(--mg-success);">&check;</span>' : '<span style="color:var(--mg-text-muted);">&cross;</span>';
+                    ?></td>
+                    <td style="text-align:center;"><?php
+                        echo $b['br_dice_use'] ? '<span style="color:var(--mg-success);">&check;</span>' : '<span style="color:var(--mg-text-muted);">&cross;</span>';
                     ?></td>
                     <td style="text-align:center;color:var(--mg-text-muted);"><?php echo $b['bo_write_point']; ?></td>
                     <td style="text-align:center;">
@@ -321,6 +326,30 @@ require_once __DIR__.'/_head.php';
                         <span class="mg-form-label" style="margin:0;">좋아요 보상 활성화</span>
                     </label>
                     <small style="color:var(--mg-text-muted);">체크 해제 시 이 게시판에서 좋아요 보상이 지급되지 않습니다. (글 작성 보상 모드와 무관)</small>
+                </div>
+
+                <div class="mg-form-group" style="border-top:1px solid var(--mg-border);padding-top:0.75rem;margin-top:0.25rem;">
+                    <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                        <input type="checkbox" name="br_dice_use" id="f_br_dice_use" value="1" onchange="toggleDice()">
+                        <span class="mg-form-label" style="margin:0;">🎲 댓글 주사위 활성화</span>
+                    </label>
+                    <small style="color:var(--mg-text-muted);">활성화 시 댓글 영역에 주사위 버튼이 표시됩니다.</small>
+                    <div id="dice-settings" style="display:none;margin-top:0.75rem;">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                            <div class="mg-form-group">
+                                <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                                    <input type="checkbox" name="br_dice_once" id="f_br_dice_once" value="1">
+                                    <span class="mg-form-label" style="margin:0;">1인 1회 제한</span>
+                                </label>
+                                <small style="color:var(--mg-text-muted);">한 글에서 한 번만 굴릴 수 있습니다.</small>
+                            </div>
+                            <div class="mg-form-group">
+                                <label class="mg-form-label">최대값</label>
+                                <input type="number" name="br_dice_max" id="f_br_dice_max" class="mg-form-input" value="100" min="1" max="9999">
+                                <small style="color:var(--mg-text-muted);">0 ~ 최대값 범위의 랜덤 숫자</small>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="auto-settings" style="display:none;">
@@ -434,6 +463,12 @@ function editReward(bo_table) {
     document.getElementById('f_br_material_chance').value = b.br_material_chance || 30;
     document.getElementById('f_br_like_use').checked = (b.br_like_use == null || b.br_like_use == 1);
 
+    // 주사위 설정
+    document.getElementById('f_br_dice_use').checked = b.br_dice_use == 1;
+    document.getElementById('f_br_dice_once').checked = (b.br_dice_once == null || b.br_dice_once == 1);
+    document.getElementById('f_br_dice_max').value = b.br_dice_max || 100;
+    toggleDice();
+
     // 재료 체크박스
     var matList = [];
     try { matList = b.br_material_list ? JSON.parse(b.br_material_list) : []; } catch(e) {}
@@ -460,6 +495,11 @@ function toggleMaterial() {
         document.getElementById('f_br_material_use').checked ? '' : 'none';
 }
 
+function toggleDice() {
+    document.getElementById('dice-settings').style.display =
+        document.getElementById('f_br_dice_use').checked ? '' : 'none';
+}
+
 function closeModal() {
     document.getElementById('reward-modal').style.display = 'none';
 }
@@ -478,6 +518,9 @@ document.getElementById('reward-form').addEventListener('submit', function(e) {
     fd.set('br_material_list', JSON.stringify(mats));
     fd.set('br_material_use', document.getElementById('f_br_material_use').checked ? '1' : '0');
     fd.set('br_like_use', document.getElementById('f_br_like_use').checked ? '1' : '0');
+    fd.set('br_dice_use', document.getElementById('f_br_dice_use').checked ? '1' : '0');
+    fd.set('br_dice_once', document.getElementById('f_br_dice_once').checked ? '1' : '0');
+    fd.set('br_dice_max', document.getElementById('f_br_dice_max').value || '100');
 
     fetch('<?php echo G5_ADMIN_URL; ?>/morgan/reward_update.php', {
         method: 'POST',

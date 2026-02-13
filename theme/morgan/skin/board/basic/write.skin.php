@@ -201,6 +201,11 @@ if ($is_member) {
             <div class="mb-4">
                 <label for="wr_content" class="block text-sm font-medium text-mg-text-secondary mb-2">내용 <span class="text-mg-error">*</span></label>
                 <?php echo $html_editor; ?>
+                <?php if ($is_member) {
+                    $picker_id = 'write';
+                    $picker_target = 'wr_content';
+                    include(G5_THEME_PATH.'/skin/emoticon/picker.skin.php');
+                } ?>
             </div>
 
             <!-- 링크 -->

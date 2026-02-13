@@ -116,6 +116,11 @@ $auto_subject = $is_edit ? $subject : date('Y-m-d H:i') . ' 포스트잇';
                 <?php } else { ?>
                     <textarea name="wr_content" id="wr_content" rows="8" class="input w-full resize-y" placeholder="마음속 이야기를 적어주세요..." required><?php echo $content; ?></textarea>
                 <?php } ?>
+                <?php if ($is_member) {
+                    $picker_id = 'write';
+                    $picker_target = 'wr_content';
+                    include(G5_THEME_PATH.'/skin/emoticon/picker.skin.php');
+                } ?>
             </div>
 
             <!-- 옵션: 비밀글만 표시 -->

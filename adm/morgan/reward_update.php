@@ -44,6 +44,9 @@ if ($mode == 'board_reward') {
     $br_material_list = isset($_POST['br_material_list']) ? $_POST['br_material_list'] : '[]';
     $br_daily_limit = max(0, (int)($_POST['br_daily_limit'] ?? 0));
     $br_like_use = ($_POST['br_like_use'] ?? '1') == '1' ? 1 : 0;
+    $br_dice_use = ($_POST['br_dice_use'] ?? '0') == '1' ? 1 : 0;
+    $br_dice_once = ($_POST['br_dice_once'] ?? '1') == '1' ? 1 : 0;
+    $br_dice_max = max(1, (int)($_POST['br_dice_max'] ?? 100));
 
     // JSON 유효성 체크
     $decoded = json_decode($br_material_list);
@@ -54,10 +57,12 @@ if ($mode == 'board_reward') {
 
     $sql = "INSERT INTO {$g5['mg_board_reward_table']}
             (bo_table, br_mode, br_point, br_bonus_500, br_bonus_1000, br_bonus_image,
-             br_material_use, br_material_chance, br_material_list, br_daily_limit, br_like_use)
+             br_material_use, br_material_chance, br_material_list, br_daily_limit, br_like_use,
+             br_dice_use, br_dice_once, br_dice_max)
             VALUES
             ('{$bo_table_esc}', '{$br_mode}', {$br_point}, {$br_bonus_500}, {$br_bonus_1000}, {$br_bonus_image},
-             {$br_material_use}, {$br_material_chance}, '{$br_material_list_esc}', {$br_daily_limit}, {$br_like_use})
+             {$br_material_use}, {$br_material_chance}, '{$br_material_list_esc}', {$br_daily_limit}, {$br_like_use},
+             {$br_dice_use}, {$br_dice_once}, {$br_dice_max})
             ON DUPLICATE KEY UPDATE
             br_mode = '{$br_mode}',
             br_point = {$br_point},
@@ -68,7 +73,10 @@ if ($mode == 'board_reward') {
             br_material_chance = {$br_material_chance},
             br_material_list = '{$br_material_list_esc}',
             br_daily_limit = {$br_daily_limit},
-            br_like_use = {$br_like_use}";
+            br_like_use = {$br_like_use},
+            br_dice_use = {$br_dice_use},
+            br_dice_once = {$br_dice_once},
+            br_dice_max = {$br_dice_max}";
 
     sql_query($sql);
 

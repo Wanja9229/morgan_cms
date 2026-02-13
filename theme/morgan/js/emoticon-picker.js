@@ -150,6 +150,33 @@ var MgEmoticonPicker = (function() {
 
             var textarea = document.getElementById(_currentTarget) ||
                            document.querySelector('[name="' + _currentTarget + '"]');
+
+            // SmartEditor2 iframe 지원: textarea가 없거나 hidden이면 SE2 iframe에 삽입
+            if (!textarea || (textarea.offsetParent === null && textarea.tagName === 'TEXTAREA')) {
+                var iframe = document.querySelector('#' + _currentTarget + '_ifr, .se2_inputarea iframe');
+                if (iframe && iframe.contentDocument) {
+                    var doc = iframe.contentDocument;
+                    var sel = doc.getSelection ? doc.getSelection() : null;
+                    var textNode = doc.createTextNode(' ' + code + ' ');
+                    if (sel && sel.rangeCount > 0) {
+                        var range = sel.getRangeAt(0);
+                        range.deleteContents();
+                        range.insertNode(textNode);
+                        range.setStartAfter(textNode);
+                        range.collapse(true);
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+                    } else {
+                        doc.body.appendChild(textNode);
+                    }
+                    // Close all popups
+                    document.querySelectorAll('.mg-emoticon-popup').forEach(function(p) {
+                        p.style.display = 'none';
+                    });
+                    return;
+                }
+            }
+
             if (!textarea) return;
 
             var start = textarea.selectionStart;

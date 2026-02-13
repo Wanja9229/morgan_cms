@@ -42,6 +42,24 @@ if ($is_member) {
         }
     }
 }
+
+// 주사위 설정
+$mg_dice_enabled = false;
+$mg_dice_max_val = -1; // 해당 글의 최고 주사위 값
+if (function_exists('mg_get_board_reward')) {
+    $mg_br = mg_get_board_reward($bo_table);
+    if ($mg_br && $mg_br['br_dice_use']) {
+        $mg_dice_enabled = true;
+    }
+}
+// 최고값 계산 (dice 댓글이 있을 때만)
+if (!empty($list)) {
+    foreach ($list as $row) {
+        if ($row['wr_1'] === 'dice' && (int)$row['wr_2'] > $mg_dice_max_val) {
+            $mg_dice_max_val = (int)$row['wr_2'];
+        }
+    }
+}
 ?>
 
 <section id="bo_vc" class="card">
@@ -53,7 +71,12 @@ if ($is_member) {
     <?php if (!empty($list)) { ?>
     <div id="cmt_list" class="divide-y divide-mg-bg-tertiary mb-6">
         <?php foreach ($list as $i => $row) { ?>
-        <div id="<?php echo $comment_id; ?>_<?php echo $row['wr_id']; ?>" class="py-4 <?php echo $row['is_reply'] ? 'pl-8' : ''; ?>">
+        <?php
+        $is_dice = ($row['wr_1'] === 'dice');
+        $dice_val = $is_dice ? (int)$row['wr_2'] : 0;
+        $is_dice_best = ($is_dice && $dice_val === $mg_dice_max_val && $mg_dice_max_val > 0);
+        ?>
+        <div id="<?php echo $comment_id; ?>_<?php echo $row['wr_id']; ?>" class="py-4 <?php echo $row['is_reply'] ? 'pl-8' : ''; ?> <?php echo $is_dice ? 'rounded-lg my-1' : ''; ?>" <?php echo $is_dice ? 'style="background:rgba(245,159,10,0.08);"' : ''; ?>>
             <!-- 댓글 헤더 -->
             <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-2">
@@ -80,6 +103,7 @@ if ($is_member) {
                     <?php } ?>
                     <span class="text-xs text-mg-text-muted"><?php echo $row['datetime2']; ?></span>
                 </div>
+                <?php if (!$is_dice) { ?>
                 <div class="flex items-center gap-2">
                     <?php if ($row['is_reply_write']) { ?>
                     <button type="button" onclick="comment_reply('<?php echo $row['wr_id']; ?>');" class="text-xs text-mg-text-muted hover:text-mg-text-primary">답글</button>
@@ -91,11 +115,15 @@ if ($is_member) {
                     <a href="<?php echo $row['del_href']; ?>" onclick="return confirm('댓글을 삭제하시겠습니까?');" class="text-xs text-mg-text-muted hover:text-mg-error">삭제</a>
                     <?php } ?>
                 </div>
+                <?php } ?>
             </div>
 
             <!-- 댓글 내용 -->
             <div id="cmt_txt_<?php echo $row['wr_id']; ?>" class="text-sm text-mg-text-secondary">
-                <?php if ($row['is_secret']) { ?>
+                <?php if ($is_dice) { ?>
+                <span class="text-lg font-bold text-mg-accent">🎲 <?php echo $dice_val; ?></span>
+                <?php if ($is_dice_best) { ?><span class="ml-1 text-yellow-400 font-bold" title="최고값">★</span><?php } ?>
+                <?php } elseif ($row['is_secret']) { ?>
                 <span class="text-mg-warning">비밀 댓글입니다.</span>
                 <?php } else { ?>
                 <?php echo mg_render_emoticons($row['content']); ?>
@@ -103,7 +131,9 @@ if ($is_member) {
             </div>
 
             <!-- 수정/답글 폼 영역 -->
+            <?php if (!$is_dice) { ?>
             <div id="cmt_form_<?php echo $row['wr_id']; ?>"></div>
+            <?php } ?>
         </div>
         <?php } ?>
     </div>
@@ -146,6 +176,11 @@ if ($is_member) {
                     include(G5_THEME_PATH.'/skin/emoticon/picker.skin.php');
                 } ?>
             </div>
+            <?php if ($is_member && $mg_dice_enabled) { ?>
+            <button type="button" onclick="rollDice()" class="btn btn-secondary self-end" title="주사위 굴리기" style="padding:0.5rem;">
+                🎲
+            </button>
+            <?php } ?>
             <button type="submit" class="btn btn-primary self-end">등록</button>
         </div>
 
@@ -212,4 +247,34 @@ function comment_edit(cmt_id) {
     // TODO: AJAX로 댓글 수정 폼 로드
     alert('수정 기능은 개발 중입니다.');
 }
+
+<?php if ($is_member && $mg_dice_enabled) { ?>
+function rollDice() {
+    if (!confirm('주사위를 굴리시겠습니까?')) return;
+    var btn = document.querySelector('[onclick="rollDice()"]');
+    btn.disabled = true;
+    btn.textContent = '...';
+    fetch('<?php echo G5_BBS_URL; ?>/comment_dice.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'bo_table=<?php echo urlencode($bo_table); ?>&wr_id=<?php echo $wr_id; ?>'
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            alert('🎲 ' + data.dice_value + ' (0~' + data.dice_max + ')');
+            location.reload();
+        } else {
+            alert(data.message || '주사위 굴리기 실패');
+            btn.disabled = false;
+            btn.textContent = '🎲';
+        }
+    })
+    .catch(function() {
+        alert('요청 실패');
+        btn.disabled = false;
+        btn.textContent = '🎲';
+    });
+}
+<?php } ?>
 </script>
