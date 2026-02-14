@@ -985,7 +985,7 @@ CREATE TABLE IF NOT EXISTS `g5_write_notice` (
     KEY `wr_seo_title` (`wr_seo_title`),
     KEY `wr_num_reply_parent` (`wr_num`,`wr_reply`,`wr_parent`),
     KEY `wr_is_comment` (`wr_is_comment`,`wr_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `g5_write_qna` (
     `wr_id` int(11) NOT NULL AUTO_INCREMENT,
@@ -1032,7 +1032,7 @@ CREATE TABLE IF NOT EXISTS `g5_write_qna` (
     KEY `wr_seo_title` (`wr_seo_title`),
     KEY `wr_num_reply_parent` (`wr_num`,`wr_reply`,`wr_parent`),
     KEY `wr_is_comment` (`wr_is_comment`,`wr_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `g5_write_owner` (
     `wr_id` int(11) NOT NULL AUTO_INCREMENT,
@@ -1079,7 +1079,7 @@ CREATE TABLE IF NOT EXISTS `g5_write_owner` (
     KEY `wr_seo_title` (`wr_seo_title`),
     KEY `wr_num_reply_parent` (`wr_num`,`wr_reply`,`wr_parent`),
     KEY `wr_is_comment` (`wr_is_comment`,`wr_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `g5_write_vent` (
     `wr_id` int(11) NOT NULL AUTO_INCREMENT,
@@ -1126,7 +1126,7 @@ CREATE TABLE IF NOT EXISTS `g5_write_vent` (
     KEY `wr_seo_title` (`wr_seo_title`),
     KEY `wr_num_reply_parent` (`wr_num`,`wr_reply`,`wr_parent`),
     KEY `wr_is_comment` (`wr_is_comment`,`wr_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `g5_write_log` (
     `wr_id` int(11) NOT NULL AUTO_INCREMENT,
@@ -1173,7 +1173,7 @@ CREATE TABLE IF NOT EXISTS `g5_write_log` (
     KEY `wr_seo_title` (`wr_seo_title`),
     KEY `wr_num_reply_parent` (`wr_num`,`wr_reply`,`wr_parent`),
     KEY `wr_is_comment` (`wr_is_comment`,`wr_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- mission (프롬프트 미션) - prompt 스킨, 회원 글쓰기/댓글, 추천 활성화
 INSERT INTO `g5_board` SET
@@ -1279,7 +1279,7 @@ CREATE TABLE IF NOT EXISTS `mg_material_type` (
     `mt_order` int(11) NOT NULL DEFAULT 0 COMMENT '정렬 순서',
     PRIMARY KEY (`mt_id`),
     UNIQUE KEY `mt_code` (`mt_code`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='개척 재료 종류';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='개척 재료 종류';
 
 -- 기본 재료 데이터
 INSERT IGNORE INTO `mg_material_type` (`mt_name`, `mt_code`, `mt_icon`, `mt_desc`, `mt_order`) VALUES
@@ -1299,7 +1299,7 @@ CREATE TABLE IF NOT EXISTS `mg_user_material` (
     PRIMARY KEY (`um_id`),
     UNIQUE KEY `mb_mt` (`mb_id`, `mt_id`),
     KEY `mt_id` (`mt_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='유저별 재료 보유량';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='유저별 재료 보유량';
 
 -- 유저별 노동력
 CREATE TABLE IF NOT EXISTS `mg_user_stamina` (
@@ -1310,7 +1310,7 @@ CREATE TABLE IF NOT EXISTS `mg_user_stamina` (
     `us_last_reset` date DEFAULT NULL COMMENT '마지막 리셋 날짜',
     PRIMARY KEY (`us_id`),
     UNIQUE KEY `mb_id` (`mb_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='유저별 노동력';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='유저별 노동력';
 
 -- 시설 정의
 CREATE TABLE IF NOT EXISTS `mg_facility` (
@@ -1330,7 +1330,7 @@ CREATE TABLE IF NOT EXISTS `mg_facility` (
     KEY `fc_status` (`fc_status`),
     KEY `fc_order` (`fc_order`),
     KEY `fc_unlock` (`fc_unlock_type`, `fc_unlock_target`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='개척 시설';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='개척 시설';
 
 -- 시설별 필요 재료
 CREATE TABLE IF NOT EXISTS `mg_facility_material_cost` (
@@ -1342,7 +1342,7 @@ CREATE TABLE IF NOT EXISTS `mg_facility_material_cost` (
     PRIMARY KEY (`fmc_id`),
     UNIQUE KEY `fc_mt` (`fc_id`, `mt_id`),
     KEY `mt_id` (`mt_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='시설별 필요 재료';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='시설별 필요 재료';
 
 -- 시설 재료 비용 시드 데이터 (우체국=fc_id 4, mt_id 1~6)
 INSERT IGNORE INTO `mg_facility_material_cost` (`fc_id`, `mt_id`, `fmc_required`, `fmc_current`) VALUES
@@ -1366,7 +1366,7 @@ CREATE TABLE IF NOT EXISTS `mg_facility_contribution` (
     KEY `fc_id` (`fc_id`),
     KEY `mb_id` (`mb_id`),
     KEY `fcn_type` (`fcn_type`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='시설 기여 기록';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='시설 기여 기록';
 
 -- 명예의 전당 (완공 후 확정)
 CREATE TABLE IF NOT EXISTS `mg_facility_honor` (
@@ -1379,7 +1379,7 @@ CREATE TABLE IF NOT EXISTS `mg_facility_honor` (
     PRIMARY KEY (`fh_id`),
     KEY `fc_id` (`fc_id`),
     KEY `fh_category` (`fh_category`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='시설 명예의 전당';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='시설 명예의 전당';
 
 -- ======================================
 -- ======================================
