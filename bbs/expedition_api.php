@@ -127,6 +127,17 @@ switch ($action) {
         ));
         break;
 
+    // 나를 파트너로 선택한 기록
+    case 'partner_history':
+        $limit = isset($_GET['limit']) ? min(50, max(1, (int)$_GET['limit'])) : 10;
+        $partner_history = mg_get_expedition_partner_history($mb_id, $limit);
+
+        echo json_encode(array(
+            'success' => true,
+            'partner_history' => $partner_history,
+        ));
+        break;
+
     default:
         echo json_encode(array('success' => false, 'message' => '알 수 없는 액션입니다.'));
 }

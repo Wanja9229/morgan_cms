@@ -75,6 +75,14 @@ $expedition_api = G5_BBS_URL . '/expedition_api.php';
         </div>
     </div>
 
+    <!-- 나를 파트너로 선택한 기록 -->
+    <div class="card mb-6">
+        <h2 class="text-lg font-semibold text-mg-text-primary mb-3">나를 파트너로 선택한 파견</h2>
+        <div id="partner-history-list">
+            <div class="text-sm text-mg-text-muted text-center py-4">불러오는 중...</div>
+        </div>
+    </div>
+
     <!-- 파견 이력 -->
     <div class="card">
         <h2 class="text-lg font-semibold text-mg-text-primary mb-3">최근 파견 이력</h2>
@@ -105,6 +113,7 @@ $expedition_api = G5_BBS_URL . '/expedition_api.php';
     // === 초기 로드 ===
     loadStatus();
     loadCharacters();
+    loadPartnerHistory();
     loadHistory();
 
     // === API 호출 ===
@@ -437,6 +446,45 @@ $expedition_api = G5_BBS_URL . '/expedition_api.php';
     document.getElementById('reward-modal').addEventListener('click', function(e) {
         if (e.target === this) closeRewardModal();
     });
+
+    // === 파트너 이력 ===
+    function loadPartnerHistory() {
+        api('partner_history', { limit: 10 }).then(function(data) {
+            var container = document.getElementById('partner-history-list');
+            if (!data.success || !data.partner_history || data.partner_history.length === 0) {
+                container.innerHTML = '<div class="text-sm text-mg-text-muted text-center py-4">아직 나를 파트너로 선택한 파견이 없습니다.</div>';
+                return;
+            }
+
+            var html = '<div class="space-y-2">';
+            data.partner_history.forEach(function(h) {
+                var statusBadge = '';
+                if (h.el_status === 'active') statusBadge = '<span class="px-2 py-0.5 text-xs rounded bg-mg-accent/20 text-mg-accent">진행중</span>';
+                else if (h.el_status === 'complete') statusBadge = '<span class="px-2 py-0.5 text-xs rounded bg-yellow-500/20 text-yellow-400">미수령</span>';
+                else if (h.el_status === 'claimed') statusBadge = '<span class="px-2 py-0.5 text-xs rounded bg-mg-success/20 text-mg-success">완료</span>';
+                else if (h.el_status === 'cancelled') statusBadge = '<span class="px-2 py-0.5 text-xs rounded bg-mg-bg-tertiary text-mg-text-muted">취소</span>';
+
+                var dateText = (h.el_start || '').substring(5, 16);
+
+                html += '<div class="flex items-center gap-3 p-2 bg-mg-bg-primary rounded-lg text-sm">' +
+                    '<div class="flex-1 min-w-0">' +
+                        '<div class="flex items-center gap-2">' +
+                            '<span class="text-mg-text-primary font-medium">' + escHtml(h.mb_nick || h.mb_id) + '</span>' +
+                            '<span class="text-mg-text-muted">→</span>' +
+                            '<span class="text-mg-accent">' + escHtml(h.ea_name || '') + '</span>' +
+                            statusBadge +
+                        '</div>' +
+                        '<div class="text-xs text-mg-text-muted mt-0.5">' +
+                            escHtml(h.ch_name || '') + ' + ' + escHtml(h.my_ch_name || '내 캐릭터') +
+                            ' · ' + dateText +
+                            (h.ea_partner_point ? ' · +' + h.ea_partner_point + 'P' : '') +
+                        '</div>' +
+                    '</div></div>';
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        });
+    }
 
     // === 이력 ===
     function loadHistory() {

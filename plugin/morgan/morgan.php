@@ -4051,6 +4051,35 @@ function mg_get_expedition_partner_candidates($ch_id) {
     return $candidates;
 }
 
+/**
+ * 나를 파트너로 선택한 파견 목록
+ */
+function mg_get_expedition_partner_history($mb_id, $limit = 10) {
+    global $g5;
+
+    $mb_id_esc = sql_real_escape_string($mb_id);
+    $limit = (int)$limit;
+
+    $sql = "SELECT el.el_id, el.el_start, el.el_status, el.ea_id,
+                   ea.ea_name, ea.ea_partner_point,
+                   m.mb_nick, m.mb_id,
+                   ch.ch_name, pch.ch_name as my_ch_name
+            FROM {$g5['mg_expedition_log_table']} el
+            LEFT JOIN {$g5['mg_expedition_area_table']} ea ON el.ea_id = ea.ea_id
+            LEFT JOIN {$g5['member_table']} m ON el.mb_id = m.mb_id
+            LEFT JOIN {$g5['mg_character_table']} ch ON el.ch_id = ch.ch_id
+            LEFT JOIN {$g5['mg_character_table']} pch ON el.partner_ch_id = pch.ch_id
+            WHERE el.partner_mb_id = '{$mb_id_esc}'
+            ORDER BY el.el_start DESC
+            LIMIT {$limit}";
+    $result = sql_query($sql);
+    $list = array();
+    while ($row = sql_fetch_array($result)) {
+        $list[] = $row;
+    }
+    return $list;
+}
+
 // ======================================
 // 보상 시스템
 // ======================================
