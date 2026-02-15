@@ -12,19 +12,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Test FTP - upload concierge.php
+      - name: Deploy via FTP (lftp mirror)
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq lftp
 
           lftp -c "
             set ftp:ssl-allow yes;
             set ssl:verify-certificate no;
-            set net:max-retries 5;
+            set net:max-retries 10;
             set net:reconnect-interval-base 5;
+            set mirror:parallel-transfer-count 5;
             open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASS }} \
               ftp://${{ secrets.FTP_HOST }};
-            put bbs/concierge.php -o ./bbs/concierge.php;
-            echo '--- Upload OK ---';
-            ls ./bbs/concierge.php;
+            mirror --reverse --verbose \
+              --exclude ^\.git/ \
+              --exclude ^\.github/ \
+              --exclude ^\.claude/ \
+              --exclude ^data/ \
+              --exclude ^node_modules/ \
+              --exclude ^docker/ \
+              --exclude ^docker-compose\.yml \
+              --exclude ^\.env \
+              --exclude ^\.gitignore \
+              --exclude ^src/ \
+              . .;
           "
-          echo "Test done."
+          echo "Deploy complete."
