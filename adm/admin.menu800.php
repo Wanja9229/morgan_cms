@@ -49,4 +49,6 @@ $menu["menu800"] = array(
     // 관계
     array('801600', '관계 아이콘', $mg_admin_url . '/relation_icon.php', 'mg_relation', '관계'),
     array('801700', '관계 관리', $mg_admin_url . '/relation.php', 'mg_relation'),
+    // 의뢰
+    array('801800', '의뢰 관리', $mg_admin_url . '/concierge.php', 'mg_concierge', '의뢰'),
 );

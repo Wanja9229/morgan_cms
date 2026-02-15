@@ -274,6 +274,27 @@ if ($is_member) {
             <?php } ?>
 
             <!-- 버튼 -->
+            <?php
+            // Morgan: 의뢰 연결 (수행 중인 의뢰가 있을 때만 표시)
+            if (!$is_edit && function_exists('mg_get_my_matched_concierges') && $member['mb_id']) {
+                $_mg_matched = mg_get_my_matched_concierges($member['mb_id']);
+                if (!empty($_mg_matched)) {
+            ?>
+            <div class="mb-4 p-3 bg-mg-bg-primary rounded-lg border border-mg-bg-tertiary">
+                <label class="block text-sm font-medium text-mg-text-primary mb-1">의뢰 연결 (선택)</label>
+                <select name="mg_concierge_id" class="w-full px-3 py-2 bg-mg-bg-tertiary border border-mg-bg-tertiary text-mg-text-primary rounded-lg text-sm">
+                    <option value="0">연결하지 않음</option>
+                    <?php foreach ($_mg_matched as $_mc) {
+                        $type_labels = array('collaboration' => '합작', 'illustration' => '일러스트', 'novel' => '소설', 'other' => '기타');
+                        $_mc_type = isset($type_labels[$_mc['cc_type']]) ? $type_labels[$_mc['cc_type']] : '';
+                    ?>
+                    <option value="<?php echo $_mc['cc_id']; ?>">[<?php echo $_mc_type; ?>] <?php echo htmlspecialchars($_mc['cc_title']); ?><?php if (isset($_mc['is_owner'])) echo ' (내 의뢰)'; ?></option>
+                    <?php } ?>
+                </select>
+                <p class="text-xs text-mg-text-muted mt-1">이 글을 의뢰 결과물로 연결하면 의뢰가 완료 처리됩니다.</p>
+            </div>
+            <?php } } ?>
+
             <div class="flex items-center justify-between">
                 <a href="<?php echo $list_href; ?>" class="btn btn-secondary">취소</a>
                 <button type="submit" id="btn_submit" class="btn btn-primary">

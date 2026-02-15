@@ -361,6 +361,12 @@ if ($w == '' || $w == 'r') {
         if (function_exists('mg_trigger_achievement')) {
             mg_trigger_achievement($member['mb_id'], 'write_count', 1, array('board' => $bo_table));
         }
+
+        // Morgan: 의뢰 연결 (write hook)
+        $_mg_concierge_id = isset($_POST['mg_concierge_id']) ? (int)$_POST['mg_concierge_id'] : 0;
+        if ($_mg_concierge_id > 0 && function_exists('mg_complete_concierge') && $member['mb_id']) {
+            mg_complete_concierge($member['mb_id'], $_mg_concierge_id, $bo_table, $wr_id);
+        }
     } else {
         // 답변은 코멘트 포인트를 부여함
         // 답변 포인트가 많은 경우 코멘트 대신 답변을 하는 경우가 많음

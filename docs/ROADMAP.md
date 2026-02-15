@@ -1,7 +1,7 @@
 # Morgan Edition - 개발 로드맵
 
 > 작성일: 2026-02-04
-> 최종 업데이트: 2026-02-13
+> 최종 업데이트: 2026-02-15
 
 ---
 
@@ -553,24 +553,24 @@
 
 ### 20.1 의뢰 기본
 - [x] 기획서 작성 (`docs/plans/CONCIERGE.md`)
-- [ ] DB 테이블 (mg_concierge, mg_concierge_apply, mg_concierge_result)
-- [ ] 의뢰 CRUD (등록/목록/상세/수정/삭제)
-- [ ] 지원 기능 (캐릭터 선택 + 메시지)
-- [ ] 직접 선택 매칭
-- [ ] 보상 티어 (일반 50pt / 긴급 100pt 선불+환불)
+- [x] DB 테이블 (mg_concierge, mg_concierge_apply, mg_concierge_result)
+- [x] 의뢰 CRUD (등록/목록/상세/수정/삭제)
+- [x] 지원 기능 (캐릭터 선택 + 메시지)
+- [x] 직접 선택 매칭
+- [x] 보상 티어 (일반 50pt / 긴급 100pt 선불+환불)
 
 ### 20.2 완료 판정
-- [ ] 게시판 write hook (글 작성 시 의뢰 연결 드롭다운)
-- [ ] 결과물 등록 → 자동 완료 + 보상 지급
-- [ ] 의뢰자 수동 완료 옵션 (다인 모집용)
+- [x] 게시판 write hook (글 작성 시 의뢰 연결 드롭다운)
+- [x] 결과물 등록 → 자동 완료 + 보상 지급
+- [x] 의뢰자 수동 완료 옵션 (다인 모집용)
 
 ### 20.3 확장
-- [ ] 추첨 매칭 (가중치 아이템 연동)
+- [x] 추첨 매칭 (가중치 아이템 연동)
 - [ ] 상점 아이템 (슬롯 추가, 추첨 확률 UP, 하이라이트)
-- [ ] 마감 자동 만료 + 긴급 의뢰 환불 처리
+- [x] 마감 자동 만료 + 긴급 의뢰 환불 처리
 
 ### 20.4 관리자
-- [ ] 의뢰 조회/관리 페이지
+- [x] 의뢰 조회/관리 페이지
 
 ---
 
@@ -729,7 +729,8 @@ new_cms/
 │   ├── prompt.php              # 프롬프트 미션 관리
 │   ├── prompt_update.php       # 프롬프트 처리
 │   ├── relation.php            # 캐릭터 관계 관리
-│   └── relation_icon.php       # 관계 아이콘 관리
+│   ├── relation_icon.php       # 관계 아이콘 관리
+│   └── concierge.php           # 의뢰 관리
 │
 ├── bbs/                        # 프론트 페이지
 │   ├── character*.php          # 캐릭터 관련
@@ -739,6 +740,10 @@ new_cms/
 │   ├── achievement.php         # 업적 목록
 │   ├── relation_api.php        # 관계 AJAX API
 │   ├── relation_graph_api.php  # 관계도 그래프 데이터 API
+│   ├── concierge.php           # 의뢰 목록
+│   ├── concierge_view.php      # 의뢰 상세
+│   ├── concierge_write.php     # 의뢰 등록
+│   ├── concierge_api.php       # 의뢰 AJAX API
 │   ├── mypage.php              # 마이 페이지 허브
 │   ├── wiki.php                # 세계관 위키
 │   ├── wiki_view.php           # 위키 문서 보기
@@ -815,6 +820,7 @@ new_cms/
 | 2026-02-13 | Phase 18 댓글 주사위 완료 + 이모티콘 피커 보완 (write 4종+RP 이음 폼, SE2 지원, 댓글 스킨 통합) |
 | 2026-02-15 | 18.2 범위 커스텀 삭제 (불필요). 연구 트리/SS Engine/진영 컨텐츠를 2차 작업으로 분리 (2차-A/B/C) |
 | 2026-02-15 | Phase 19 탐색 파견 완료 (DB 3테이블, 관리자 CRUD+로그, 프론트 AJAX UI, 관계 기반 파트너+20% 보너스) |
+| 2026-02-15 | Phase 20 의뢰 매칭 완료 (DB 3테이블, 9함수, 관리자 관리, 프론트 API+UI, write hook, 추첨/직선택, 보상 티어) |
 
 ---
 

@@ -1891,4 +1891,54 @@ CREATE TABLE IF NOT EXISTS `mg_expedition_log` (
     INDEX `idx_expedition_partner` (`partner_ch_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='파견 기록';
 
+-- =====================================================
+-- 의뢰 매칭 시스템 (Phase 20)
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS `mg_concierge` (
+    `cc_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '의뢰 ID',
+    `mb_id` varchar(20) NOT NULL COMMENT '의뢰자 회원 ID',
+    `ch_id` int(11) NOT NULL COMMENT '의뢰자 캐릭터 ID',
+    `cc_title` varchar(255) NOT NULL COMMENT '의뢰 제목',
+    `cc_content` text NOT NULL COMMENT '의뢰 내용',
+    `cc_type` enum('collaboration','illustration','novel','other') NOT NULL DEFAULT 'collaboration' COMMENT '의뢰 유형',
+    `cc_max_members` int(11) NOT NULL DEFAULT 1 COMMENT '모집 인원',
+    `cc_tier` enum('normal','urgent') NOT NULL DEFAULT 'normal' COMMENT '보상 티어',
+    `cc_match_mode` enum('direct','lottery') NOT NULL DEFAULT 'direct' COMMENT '매칭 방식',
+    `cc_deadline` datetime NOT NULL COMMENT '지원 마감일',
+    `cc_status` enum('recruiting','matched','completed','expired','cancelled') NOT NULL DEFAULT 'recruiting' COMMENT '상태',
+    `cc_highlight` datetime DEFAULT NULL COMMENT '하이라이트 만료 시각',
+    `cc_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '등록일',
+    PRIMARY KEY (`cc_id`),
+    INDEX `idx_concierge_mb` (`mb_id`, `cc_status`),
+    INDEX `idx_concierge_status` (`cc_status`, `cc_deadline`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='의뢰';
+
+CREATE TABLE IF NOT EXISTS `mg_concierge_apply` (
+    `ca_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '지원 ID',
+    `cc_id` int(11) NOT NULL COMMENT '의뢰 ID',
+    `mb_id` varchar(20) NOT NULL COMMENT '지원자 회원 ID',
+    `ch_id` int(11) NOT NULL COMMENT '지원자 캐릭터 ID',
+    `ca_message` text COMMENT '지원 메시지',
+    `ca_status` enum('pending','selected','rejected') NOT NULL DEFAULT 'pending' COMMENT '상태',
+    `ca_has_boost` tinyint(1) NOT NULL DEFAULT 0 COMMENT '추첨 확률 UP 적용',
+    `ca_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '지원일',
+    PRIMARY KEY (`ca_id`),
+    INDEX `idx_apply_cc` (`cc_id`, `ca_status`),
+    INDEX `idx_apply_mb` (`mb_id`),
+    UNIQUE KEY `idx_apply_unique` (`cc_id`, `mb_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='의뢰 지원';
+
+CREATE TABLE IF NOT EXISTS `mg_concierge_result` (
+    `cr_id` int(11) NOT NULL AUTO_INCREMENT,
+    `cc_id` int(11) NOT NULL COMMENT '의뢰 ID',
+    `ca_id` int(11) NOT NULL COMMENT '지원(수행자) ID',
+    `bo_table` varchar(20) NOT NULL COMMENT '게시판 테이블명',
+    `wr_id` int(11) NOT NULL COMMENT '게시글 ID',
+    `cr_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '완료일',
+    PRIMARY KEY (`cr_id`),
+    INDEX `idx_result_cc` (`cc_id`),
+    INDEX `idx_result_post` (`bo_table`, `wr_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='의뢰 완료 연결';
+
 SET FOREIGN_KEY_CHECKS = 1;

@@ -83,6 +83,9 @@ $g5['mg_relation_icon_table'] = 'mg_relation_icon';
 $g5['mg_expedition_area_table'] = 'mg_expedition_area';
 $g5['mg_expedition_drop_table'] = 'mg_expedition_drop';
 $g5['mg_expedition_log_table'] = 'mg_expedition_log';
+$g5['mg_concierge_table'] = 'mg_concierge';
+$g5['mg_concierge_apply_table'] = 'mg_concierge_apply';
+$g5['mg_concierge_result_table'] = 'mg_concierge_result';
 
 // 캐릭터 이미지 저장 경로
 define('MG_CHAR_IMAGE_PATH', G5_DATA_PATH.'/character');
@@ -164,6 +167,10 @@ $mg['relation_icon_table'] = $g5['mg_relation_icon_table'];
 $mg['expedition_area_table'] = $g5['mg_expedition_area_table'];
 $mg['expedition_drop_table'] = $g5['mg_expedition_drop_table'];
 $mg['expedition_log_table'] = $g5['mg_expedition_log_table'];
+// 의뢰 매칭 시스템
+$mg['concierge_table'] = $g5['mg_concierge_table'];
+$mg['concierge_apply_table'] = $g5['mg_concierge_apply_table'];
+$mg['concierge_result_table'] = $g5['mg_concierge_result_table'];
 
 // 상점 이미지 저장 경로
 define('MG_SHOP_IMAGE_PATH', G5_DATA_PATH.'/shop');
@@ -4077,6 +4084,464 @@ function mg_get_expedition_partner_history($mb_id, $limit = 10) {
     while ($row = sql_fetch_array($result)) {
         $list[] = $row;
     }
+    return $list;
+}
+
+// ======================================
+// 의뢰 매칭 시스템 (Concierge)
+// ======================================
+
+/**
+ * 의뢰 목록 조회
+ */
+function mg_get_concierge_list($status = null, $type = null, $page = 1, $per_page = 20) {
+    global $g5;
+
+    $where = "1=1";
+    if ($status) {
+        $where .= " AND cc.cc_status = '" . sql_real_escape_string($status) . "'";
+    }
+    if ($type) {
+        $where .= " AND cc.cc_type = '" . sql_real_escape_string($type) . "'";
+    }
+
+    // 만료 자동 처리
+    $now = date('Y-m-d H:i:s');
+    sql_query("UPDATE {$g5['mg_concierge_table']}
+               SET cc_status = 'expired'
+               WHERE cc_status = 'recruiting' AND cc_deadline < '{$now}'");
+
+    $offset = ($page - 1) * $per_page;
+
+    $total_row = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_concierge_table']} cc WHERE {$where}");
+    $total_count = (int)$total_row['cnt'];
+
+    $sql = "SELECT cc.*, m.mb_nick, ch.ch_name, ch.ch_thumb,
+                   (SELECT COUNT(*) FROM {$g5['mg_concierge_apply_table']} WHERE cc_id = cc.cc_id) as apply_count
+            FROM {$g5['mg_concierge_table']} cc
+            LEFT JOIN {$g5['member_table']} m ON cc.mb_id = m.mb_id
+            LEFT JOIN {$g5['mg_character_table']} ch ON cc.ch_id = ch.ch_id
+            WHERE {$where}
+            ORDER BY cc.cc_highlight DESC, cc.cc_tier = 'urgent' DESC, cc.cc_datetime DESC
+            LIMIT {$offset}, {$per_page}";
+    $result = sql_query($sql);
+    $list = array();
+    while ($row = sql_fetch_array($result)) {
+        $list[] = $row;
+    }
+
+    return array('items' => $list, 'total' => $total_count, 'page' => $page, 'total_pages' => max(1, ceil($total_count / $per_page)));
+}
+
+/**
+ * 의뢰 상세 조회
+ */
+function mg_get_concierge($cc_id) {
+    global $g5;
+
+    $cc_id = (int)$cc_id;
+    $row = sql_fetch("SELECT cc.*, m.mb_nick, ch.ch_name, ch.ch_thumb
+                      FROM {$g5['mg_concierge_table']} cc
+                      LEFT JOIN {$g5['member_table']} m ON cc.mb_id = m.mb_id
+                      LEFT JOIN {$g5['mg_character_table']} ch ON cc.ch_id = ch.ch_id
+                      WHERE cc.cc_id = {$cc_id}");
+    if (!$row || !$row['cc_id']) return null;
+
+    // 지원자 목록
+    $apply_sql = "SELECT ca.*, m.mb_nick, ch.ch_name, ch.ch_thumb
+                  FROM {$g5['mg_concierge_apply_table']} ca
+                  LEFT JOIN {$g5['member_table']} m ON ca.mb_id = m.mb_id
+                  LEFT JOIN {$g5['mg_character_table']} ch ON ca.ch_id = ch.ch_id
+                  WHERE ca.cc_id = {$cc_id}
+                  ORDER BY ca.ca_datetime ASC";
+    $apply_result = sql_query($apply_sql);
+    $row['applies'] = array();
+    while ($a = sql_fetch_array($apply_result)) {
+        $row['applies'][] = $a;
+    }
+
+    // 결과물 목록
+    $result_sql = "SELECT cr.*, ca.mb_id as performer_mb_id, m.mb_nick as performer_nick
+                   FROM {$g5['mg_concierge_result_table']} cr
+                   LEFT JOIN {$g5['mg_concierge_apply_table']} ca ON cr.ca_id = ca.ca_id
+                   LEFT JOIN {$g5['member_table']} m ON ca.mb_id = m.mb_id
+                   WHERE cr.cc_id = {$cc_id}";
+    $res_result = sql_query($result_sql);
+    $row['results'] = array();
+    while ($r = sql_fetch_array($res_result)) {
+        $row['results'][] = $r;
+    }
+
+    return $row;
+}
+
+/**
+ * 의뢰 등록
+ */
+function mg_create_concierge($mb_id, $data) {
+    global $g5;
+
+    $mb_id_esc = sql_real_escape_string($mb_id);
+    $ch_id = (int)$data['ch_id'];
+
+    // 캐릭터 소유 확인
+    $ch = sql_fetch("SELECT ch_id FROM {$g5['mg_character_table']}
+                     WHERE ch_id = {$ch_id} AND mb_id = '{$mb_id_esc}' AND ch_state = 'approved'");
+    if (!$ch) {
+        return array('success' => false, 'message' => '사용할 수 없는 캐릭터입니다.');
+    }
+
+    // 동시 등록 제한
+    $max_slots = (int)mg_config('concierge_max_slots', 2);
+    $active_row = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_concierge_table']}
+                              WHERE mb_id = '{$mb_id_esc}' AND cc_status IN ('recruiting', 'matched')");
+    if ((int)$active_row['cnt'] >= $max_slots) {
+        return array('success' => false, 'message' => "동시 등록 가능한 의뢰 수({$max_slots}개)를 초과했습니다.");
+    }
+
+    $title = sql_real_escape_string(clean_xss_tags($data['cc_title']));
+    $content = sql_real_escape_string(clean_xss_tags($data['cc_content'], 0, 0, 0, 0));
+    $type = in_array($data['cc_type'], array('collaboration', 'illustration', 'novel', 'other')) ? $data['cc_type'] : 'collaboration';
+    $max_members = max(1, min(5, (int)$data['cc_max_members']));
+    $tier = in_array($data['cc_tier'], array('normal', 'urgent')) ? $data['cc_tier'] : 'normal';
+    $match_mode = in_array($data['cc_match_mode'], array('direct', 'lottery')) ? $data['cc_match_mode'] : 'direct';
+    $deadline = $data['cc_deadline'];
+
+    if (empty($title)) {
+        return array('success' => false, 'message' => '의뢰 제목을 입력해주세요.');
+    }
+    if (strtotime($deadline) <= time()) {
+        return array('success' => false, 'message' => '마감일은 현재 시각 이후여야 합니다.');
+    }
+
+    // 긴급 의뢰: 포인트 선불 차감
+    if ($tier === 'urgent') {
+        $cost = (int)mg_config('concierge_reward_urgent', 100);
+        $mb_point = (int)sql_fetch("SELECT mb_point FROM {$g5['member_table']} WHERE mb_id = '{$mb_id_esc}'")['mb_point'];
+        if ($mb_point < $cost) {
+            return array('success' => false, 'message' => "긴급 의뢰 등록에 {$cost}P가 필요합니다. (보유: {$mb_point}P)");
+        }
+        insert_point($mb_id, -$cost, '긴급 의뢰 등록 (선불)', 'mg_concierge', 0, '긴급등록');
+    }
+
+    $deadline_esc = sql_real_escape_string($deadline);
+    sql_query("INSERT INTO {$g5['mg_concierge_table']}
+               (mb_id, ch_id, cc_title, cc_content, cc_type, cc_max_members, cc_tier, cc_match_mode, cc_deadline)
+               VALUES ('{$mb_id_esc}', {$ch_id}, '{$title}', '{$content}', '{$type}', {$max_members},
+                       '{$tier}', '{$match_mode}', '{$deadline_esc}')");
+    $cc_id = sql_insert_id();
+
+    // 긴급 의뢰 포인트 rel_id 업데이트
+    if ($tier === 'urgent') {
+        sql_query("UPDATE {$g5['point_table']} SET po_rel_id = '{$cc_id}'
+                   WHERE mb_id = '{$mb_id_esc}' AND po_rel_table = 'mg_concierge' AND po_rel_id = '0' AND po_rel_action = '긴급등록'
+                   ORDER BY po_id DESC LIMIT 1");
+    }
+
+    return array('success' => true, 'message' => '의뢰가 등록되었습니다.', 'cc_id' => $cc_id);
+}
+
+/**
+ * 의뢰 지원
+ */
+function mg_apply_concierge($mb_id, $cc_id, $ch_id, $message = '') {
+    global $g5;
+
+    $mb_id_esc = sql_real_escape_string($mb_id);
+    $cc_id = (int)$cc_id;
+    $ch_id = (int)$ch_id;
+
+    $cc = sql_fetch("SELECT * FROM {$g5['mg_concierge_table']} WHERE cc_id = {$cc_id}");
+    if (!$cc || $cc['cc_status'] !== 'recruiting') {
+        return array('success' => false, 'message' => '모집 중인 의뢰가 아닙니다.');
+    }
+
+    // 본인 의뢰 지원 불가
+    if ($cc['mb_id'] === $mb_id) {
+        return array('success' => false, 'message' => '본인이 등록한 의뢰에는 지원할 수 없습니다.');
+    }
+
+    // 중복 지원 방지
+    $existing = sql_fetch("SELECT ca_id FROM {$g5['mg_concierge_apply_table']}
+                           WHERE cc_id = {$cc_id} AND mb_id = '{$mb_id_esc}'");
+    if ($existing && $existing['ca_id']) {
+        return array('success' => false, 'message' => '이미 지원한 의뢰입니다.');
+    }
+
+    // 캐릭터 확인
+    $ch = sql_fetch("SELECT ch_id FROM {$g5['mg_character_table']}
+                     WHERE ch_id = {$ch_id} AND mb_id = '{$mb_id_esc}' AND ch_state = 'approved'");
+    if (!$ch) {
+        return array('success' => false, 'message' => '사용할 수 없는 캐릭터입니다.');
+    }
+
+    $message_esc = sql_real_escape_string(clean_xss_tags($message, 0, 0, 0, 0));
+    sql_query("INSERT INTO {$g5['mg_concierge_apply_table']}
+               (cc_id, mb_id, ch_id, ca_message)
+               VALUES ({$cc_id}, '{$mb_id_esc}', {$ch_id}, '{$message_esc}')");
+
+    // 의뢰자에게 알림
+    $my_nick = sql_fetch("SELECT mb_nick FROM {$g5['member_table']} WHERE mb_id = '{$mb_id_esc}'");
+    mg_notify($cc['mb_id'], 'concierge_apply',
+             '의뢰 지원 알림',
+             ($my_nick['mb_nick'] ?? $mb_id) . '님이 "' . $cc['cc_title'] . '" 의뢰에 지원했습니다.',
+             G5_BBS_URL . '/concierge_view.php?cc_id=' . $cc_id);
+
+    return array('success' => true, 'message' => '지원이 완료되었습니다.');
+}
+
+/**
+ * 매칭 (의뢰자가 지원자 선택)
+ */
+function mg_match_concierge($mb_id, $cc_id, $selected_ca_ids) {
+    global $g5;
+
+    $cc_id = (int)$cc_id;
+    $cc = sql_fetch("SELECT * FROM {$g5['mg_concierge_table']} WHERE cc_id = {$cc_id}");
+    if (!$cc || $cc['mb_id'] !== $mb_id) {
+        return array('success' => false, 'message' => '권한이 없습니다.');
+    }
+    if ($cc['cc_status'] !== 'recruiting') {
+        return array('success' => false, 'message' => '모집 중인 의뢰만 매칭할 수 있습니다.');
+    }
+
+    if (!is_array($selected_ca_ids) || count($selected_ca_ids) < 1) {
+        return array('success' => false, 'message' => '최소 1명 이상 선택해주세요.');
+    }
+    if (count($selected_ca_ids) > (int)$cc['cc_max_members']) {
+        return array('success' => false, 'message' => '모집 인원을 초과했습니다.');
+    }
+
+    // 선택된 지원자 승인
+    foreach ($selected_ca_ids as $ca_id) {
+        $ca_id = (int)$ca_id;
+        sql_query("UPDATE {$g5['mg_concierge_apply_table']}
+                   SET ca_status = 'selected' WHERE ca_id = {$ca_id} AND cc_id = {$cc_id}");
+
+        $applicant = sql_fetch("SELECT mb_id FROM {$g5['mg_concierge_apply_table']} WHERE ca_id = {$ca_id}");
+        if ($applicant && $applicant['mb_id']) {
+            mg_notify($applicant['mb_id'], 'concierge_match',
+                     '의뢰 매칭 완료',
+                     '"' . $cc['cc_title'] . '" 의뢰에 선정되었습니다!',
+                     G5_BBS_URL . '/concierge_view.php?cc_id=' . $cc_id);
+        }
+    }
+
+    // 미선택 지원자 거절
+    $selected_str = implode(',', array_map('intval', $selected_ca_ids));
+    $rejected = sql_query("SELECT ca_id, mb_id FROM {$g5['mg_concierge_apply_table']}
+                           WHERE cc_id = {$cc_id} AND ca_id NOT IN ({$selected_str}) AND ca_status = 'pending'");
+    while ($rej = sql_fetch_array($rejected)) {
+        sql_query("UPDATE {$g5['mg_concierge_apply_table']}
+                   SET ca_status = 'rejected' WHERE ca_id = " . (int)$rej['ca_id']);
+        mg_notify($rej['mb_id'], 'concierge_match',
+                 '의뢰 매칭 결과',
+                 '"' . $cc['cc_title'] . '" 의뢰에 아쉽게도 선정되지 않았습니다.',
+                 G5_BBS_URL . '/concierge_view.php?cc_id=' . $cc_id);
+    }
+
+    // 의뢰 상태 변경
+    sql_query("UPDATE {$g5['mg_concierge_table']} SET cc_status = 'matched' WHERE cc_id = {$cc_id}");
+
+    return array('success' => true, 'message' => '매칭이 완료되었습니다.');
+}
+
+/**
+ * 추첨 매칭
+ */
+function mg_lottery_concierge($mb_id, $cc_id) {
+    global $g5;
+
+    $cc_id = (int)$cc_id;
+    $cc = sql_fetch("SELECT * FROM {$g5['mg_concierge_table']} WHERE cc_id = {$cc_id}");
+    if (!$cc || $cc['mb_id'] !== $mb_id) {
+        return array('success' => false, 'message' => '권한이 없습니다.');
+    }
+    if ($cc['cc_match_mode'] !== 'lottery') {
+        return array('success' => false, 'message' => '추첨 모드 의뢰만 추첨할 수 있습니다.');
+    }
+    if ($cc['cc_status'] !== 'recruiting') {
+        return array('success' => false, 'message' => '모집 중인 의뢰만 추첨할 수 있습니다.');
+    }
+
+    // 지원자 풀
+    $applicants = array();
+    $result = sql_query("SELECT ca_id, mb_id, ca_has_boost FROM {$g5['mg_concierge_apply_table']}
+                         WHERE cc_id = {$cc_id} AND ca_status = 'pending'");
+    while ($row = sql_fetch_array($result)) {
+        $applicants[] = $row;
+    }
+
+    if (count($applicants) === 0) {
+        return array('success' => false, 'message' => '지원자가 없습니다.');
+    }
+
+    // 가중치 풀 구성 (boost: x2)
+    $pool = array();
+    foreach ($applicants as $a) {
+        $weight = $a['ca_has_boost'] ? 2 : 1;
+        for ($i = 0; $i < $weight; $i++) {
+            $pool[] = $a['ca_id'];
+        }
+    }
+
+    // 추첨
+    $max_members = (int)$cc['cc_max_members'];
+    $selected = array();
+    shuffle($pool);
+    foreach ($pool as $ca_id) {
+        if (!in_array($ca_id, $selected)) {
+            $selected[] = $ca_id;
+            if (count($selected) >= $max_members) break;
+        }
+    }
+
+    return mg_match_concierge($mb_id, $cc_id, $selected);
+}
+
+/**
+ * 의뢰 완료 처리 (게시판 write hook에서 호출)
+ */
+function mg_complete_concierge($mb_id, $cc_id, $bo_table, $wr_id) {
+    global $g5;
+
+    $mb_id_esc = sql_real_escape_string($mb_id);
+    $cc_id = (int)$cc_id;
+    $bo_table_esc = sql_real_escape_string($bo_table);
+    $wr_id = (int)$wr_id;
+
+    $cc = sql_fetch("SELECT * FROM {$g5['mg_concierge_table']} WHERE cc_id = {$cc_id}");
+    if (!$cc || $cc['cc_status'] !== 'matched') {
+        return array('success' => false, 'message' => '매칭 완료 상태의 의뢰만 결과를 등록할 수 있습니다.');
+    }
+
+    // 수행자 확인
+    $apply = sql_fetch("SELECT ca_id FROM {$g5['mg_concierge_apply_table']}
+                        WHERE cc_id = {$cc_id} AND mb_id = '{$mb_id_esc}' AND ca_status = 'selected'");
+    if (!$apply || !$apply['ca_id']) {
+        // 의뢰자 본인이 수동 완료하는 경우
+        if ($cc['mb_id'] !== $mb_id) {
+            return array('success' => false, 'message' => '이 의뢰의 수행자가 아닙니다.');
+        }
+    }
+
+    $ca_id = $apply ? (int)$apply['ca_id'] : 0;
+
+    // 중복 결과 방지
+    if ($ca_id > 0) {
+        $existing = sql_fetch("SELECT cr_id FROM {$g5['mg_concierge_result_table']}
+                               WHERE cc_id = {$cc_id} AND ca_id = {$ca_id}");
+        if ($existing && $existing['cr_id']) {
+            return array('success' => false, 'message' => '이미 결과를 등록한 의뢰입니다.');
+        }
+    }
+
+    // 결과 등록
+    sql_query("INSERT INTO {$g5['mg_concierge_result_table']}
+               (cc_id, ca_id, bo_table, wr_id)
+               VALUES ({$cc_id}, {$ca_id}, '{$bo_table_esc}', {$wr_id})");
+
+    // 수행자 보상 지급
+    if ($ca_id > 0) {
+        $reward_key = $cc['cc_tier'] === 'urgent' ? 'concierge_reward_urgent' : 'concierge_reward_normal';
+        $reward = (int)mg_config($reward_key, $cc['cc_tier'] === 'urgent' ? 100 : 50);
+        if ($reward > 0) {
+            insert_point($mb_id, $reward, '의뢰 수행 완료 보상 (' . $cc['cc_title'] . ')',
+                        'mg_concierge', $cc_id, '수행완료');
+            mg_notify($mb_id, 'concierge_reward',
+                     '의뢰 보상 지급',
+                     '"' . $cc['cc_title'] . '" 의뢰 수행 보상 ' . $reward . 'P가 지급되었습니다.',
+                     G5_BBS_URL . '/concierge_view.php?cc_id=' . $cc_id);
+        }
+    }
+
+    // 모든 수행자 결과 등록 확인 → 의뢰 완료
+    $selected_count = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_concierge_apply_table']}
+                                 WHERE cc_id = {$cc_id} AND ca_status = 'selected'");
+    $result_count = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_concierge_result_table']}
+                               WHERE cc_id = {$cc_id}");
+
+    // 의뢰자 본인 완료이거나 모든 수행자 결과 등록 시
+    if ($cc['mb_id'] === $mb_id || (int)$result_count['cnt'] >= (int)$selected_count['cnt']) {
+        sql_query("UPDATE {$g5['mg_concierge_table']} SET cc_status = 'completed' WHERE cc_id = {$cc_id}");
+
+        mg_notify($cc['mb_id'], 'concierge_complete',
+                 '의뢰 완료',
+                 '"' . $cc['cc_title'] . '" 의뢰가 완료되었습니다.',
+                 G5_BBS_URL . '/concierge_view.php?cc_id=' . $cc_id);
+    }
+
+    if (function_exists('mg_trigger_achievement')) {
+        mg_trigger_achievement($mb_id, 'concierge_complete_count');
+    }
+
+    return array('success' => true, 'message' => '의뢰 결과가 등록되었습니다.');
+}
+
+/**
+ * 의뢰 취소
+ */
+function mg_cancel_concierge($mb_id, $cc_id) {
+    global $g5;
+
+    $cc_id = (int)$cc_id;
+    $cc = sql_fetch("SELECT * FROM {$g5['mg_concierge_table']} WHERE cc_id = {$cc_id}");
+    if (!$cc || $cc['mb_id'] !== $mb_id) {
+        return array('success' => false, 'message' => '권한이 없습니다.');
+    }
+    if (!in_array($cc['cc_status'], array('recruiting', 'matched'))) {
+        return array('success' => false, 'message' => '취소할 수 없는 상태입니다.');
+    }
+
+    sql_query("UPDATE {$g5['mg_concierge_table']} SET cc_status = 'cancelled' WHERE cc_id = {$cc_id}");
+
+    // 긴급 의뢰 환불
+    if ($cc['cc_tier'] === 'urgent') {
+        $cost = (int)mg_config('concierge_reward_urgent', 100);
+        insert_point($mb_id, $cost, '긴급 의뢰 취소 환불 (' . $cc['cc_title'] . ')',
+                    'mg_concierge', $cc_id, '환불');
+    }
+
+    return array('success' => true, 'message' => '의뢰가 취소되었습니다.' . ($cc['cc_tier'] === 'urgent' ? ' 선불 포인트가 환불됩니다.' : ''));
+}
+
+/**
+ * 현재 유저의 수행 중인(matched) 의뢰 목록 (write hook용)
+ */
+function mg_get_my_matched_concierges($mb_id) {
+    global $g5;
+
+    $mb_id_esc = sql_real_escape_string($mb_id);
+    $sql = "SELECT cc.cc_id, cc.cc_title, cc.cc_type
+            FROM {$g5['mg_concierge_apply_table']} ca
+            JOIN {$g5['mg_concierge_table']} cc ON ca.cc_id = cc.cc_id
+            WHERE ca.mb_id = '{$mb_id_esc}' AND ca.ca_status = 'selected' AND cc.cc_status = 'matched'";
+    $result = sql_query($sql);
+    $list = array();
+    while ($row = sql_fetch_array($result)) {
+        // 이미 결과 등록한 의뢰 제외
+        $existing = sql_fetch("SELECT cr_id FROM {$g5['mg_concierge_result_table']}
+                               WHERE cc_id = {$row['cc_id']} AND ca_id = (SELECT ca_id FROM {$g5['mg_concierge_apply_table']} WHERE cc_id = {$row['cc_id']} AND mb_id = '{$mb_id_esc}' AND ca_status = 'selected' LIMIT 1)");
+        if (!$existing || !$existing['cr_id']) {
+            $list[] = $row;
+        }
+    }
+
+    // 의뢰자 본인이 수동 완료 가능한 의뢰도 포함
+    $own_sql = "SELECT cc_id, cc_title, cc_type FROM {$g5['mg_concierge_table']}
+                WHERE mb_id = '{$mb_id_esc}' AND cc_status = 'matched'";
+    $own_result = sql_query($own_sql);
+    while ($row = sql_fetch_array($own_result)) {
+        $found = false;
+        foreach ($list as $l) {
+            if ((int)$l['cc_id'] === (int)$row['cc_id']) { $found = true; break; }
+        }
+        if (!$found) {
+            $row['is_owner'] = true;
+            $list[] = $row;
+        }
+    }
+
     return $list;
 }
 
