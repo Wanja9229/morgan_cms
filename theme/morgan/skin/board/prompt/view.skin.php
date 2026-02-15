@@ -11,7 +11,7 @@ include_once(G5_PATH.'/plugin/morgan/morgan.php');
 // 글에 연결된 캐릭터 조회
 $mg_view_char = mg_get_write_character($bo_table, $wr_id);
 
-// 프롬프트 엔트리 조회
+// 미션 엔트리 조회
 $mg_entry = mg_get_entry_by_write($bo_table, $wr_id);
 
 // 좋아요 보상 잔여 횟수
@@ -42,7 +42,7 @@ function _prompt_view_status_badge($status) {
     <!-- 게시글 카드 -->
     <article class="card mb-4">
 
-        <!-- 프롬프트 엔트리 정보 -->
+        <!-- 미션 참여 정보 -->
         <?php if ($mg_entry && $mg_entry['pm_id']) { ?>
         <div class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg mb-4 border border-mg-bg-tertiary">
             <svg class="w-4 h-4 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -109,10 +109,17 @@ function _prompt_view_status_badge($status) {
         </div>
 
         <!-- 첨부파일 -->
-        <?php if ($view['file']) { ?>
+        <?php if (isset($view['file']['count']) && $view['file']['count']) { ?>
         <div class="border-t border-mg-bg-tertiary pt-4 mt-4">
             <h3 class="text-sm font-medium text-mg-text-muted mb-2">첨부파일</h3>
-            <?php echo $view['file']; ?>
+            <ul class="space-y-1">
+                <?php for ($i = 0; $i < count($view['file']); $i++) {
+                    if (empty($view['file'][$i]['source'])) continue;
+                    if ($view['file'][$i]['view']) continue;
+                ?>
+                <li><a href="<?php echo $view['file'][$i]['href']; ?>" class="text-sm text-mg-accent hover:underline"><?php echo $view['file'][$i]['source']; ?> <span class="text-xs text-mg-text-muted">(<?php echo $view['file'][$i]['size']; ?>)</span></a></li>
+                <?php } ?>
+            </ul>
         </div>
         <?php } ?>
 
@@ -196,7 +203,7 @@ function _prompt_view_status_badge($status) {
     <?php } ?>
 
     <!-- 댓글 -->
-    <?php echo $view['comment']; ?>
+    <?php include_once(G5_BBS_PATH.'/view_comment.php'); ?>
 
 </div>
 

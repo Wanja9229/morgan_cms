@@ -1,6 +1,6 @@
 <?php
 /**
- * Morgan Edition - 프롬프트 미션 관리
+ * Morgan Edition - 미션 관리
  */
 
 $sub_menu = "801500";
@@ -15,7 +15,7 @@ $mode = isset($_GET['mode']) ? $_GET['mode'] : 'list';
 $pm_id = isset($_GET['pm_id']) ? (int)$_GET['pm_id'] : 0;
 
 // ==========================================
-// AJAX: 프롬프트 데이터 반환 (편집용)
+// AJAX: 미션 데이터 반환 (편집용)
 // ==========================================
 if (isset($_GET['ajax_prompt_data'])) {
     header('Content-Type: application/json; charset=utf-8');
@@ -129,7 +129,7 @@ if ($mode == 'edit') {
     if ($pm_id > 0) {
         $edit_pm = sql_fetch("SELECT * FROM {$g5['mg_prompt_table']} WHERE pm_id = {$pm_id}");
         if (!$edit_pm || !$edit_pm['pm_id']) {
-            alert('프롬프트를 찾을 수 없습니다.', './prompt.php');
+            alert('미션을 찾을 수 없습니다.', './prompt.php');
         }
     }
 }
@@ -144,7 +144,7 @@ $entry_page = 1;
 if ($mode == 'review' && $pm_id > 0) {
     $review_pm = sql_fetch("SELECT * FROM {$g5['mg_prompt_table']} WHERE pm_id = {$pm_id}");
     if (!$review_pm || !$review_pm['pm_id']) {
-        alert('프롬프트를 찾을 수 없습니다.', './prompt.php');
+        alert('미션을 찾을 수 없습니다.', './prompt.php');
     }
 
     // 상태 필터
@@ -199,7 +199,7 @@ if ($mode == 'review' && $pm_id > 0) {
 }
 
 // 페이지 타이틀
-$g5['title'] = '프롬프트 미션 관리';
+$g5['title'] = '미션 관리';
 require_once __DIR__.'/_head.php';
 
 $update_url = G5_ADMIN_URL . '/morgan/prompt_update.php';
@@ -238,7 +238,7 @@ $entry_status_labels = array(
 
 <?php if ($mode == 'list') { ?>
 <!-- ================================ -->
-<!-- 프롬프트 목록 -->
+<!-- 미션 목록 -->
 <!-- ================================ -->
 
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:0.5rem;">
@@ -266,7 +266,7 @@ $entry_status_labels = array(
             <?php } ?>
         </select>
     </div>
-    <a href="?mode=edit&pm_id=0" class="mg-btn mg-btn-primary">+ 프롬프트 등록</a>
+    <a href="?mode=edit&pm_id=0" class="mg-btn mg-btn-primary">+ 미션 등록</a>
 </div>
 
 <div class="mg-card">
@@ -288,7 +288,7 @@ $entry_status_labels = array(
             </thead>
             <tbody>
                 <?php if (empty($prompts)) { ?>
-                <tr><td colspan="10" style="text-align:center;padding:3rem;color:var(--mg-text-muted);">등록된 프롬프트가 없습니다.</td></tr>
+                <tr><td colspan="10" style="text-align:center;padding:3rem;color:var(--mg-text-muted);">등록된 미션이 없습니다.</td></tr>
                 <?php } else { foreach ($prompts as $pm) {
                     $sb = $status_badges[$pm['pm_status']] ?? array('label' => $pm['pm_status'], 'class' => '');
                     $cb = $cycle_badges[$pm['pm_cycle']] ?? array('label' => $pm['pm_cycle'], 'color' => '#949ba4');
@@ -358,7 +358,7 @@ $entry_status_labels = array(
 
 <script>
 function closePrompt(pmId, title) {
-    if (!confirm('"' + title + '" 프롬프트를 종료하시겠습니까?')) return;
+    if (!confirm('"' + title + '" 미션을 종료하시겠습니까?')) return;
     var form = document.createElement('form');
     form.method = 'POST';
     form.action = '<?php echo $update_url; ?>';
@@ -368,7 +368,7 @@ function closePrompt(pmId, title) {
 }
 
 function deletePrompt(pmId, title) {
-    if (!confirm('"' + title + '" 프롬프트를 삭제하시겠습니까?\n모든 제출 기록도 함께 삭제됩니다.')) return;
+    if (!confirm('"' + title + '" 미션을 삭제하시겠습니까?\n모든 제출 기록도 함께 삭제됩니다.')) return;
     var form = document.createElement('form');
     form.method = 'POST';
     form.action = '<?php echo $update_url; ?>';
@@ -380,17 +380,17 @@ function deletePrompt(pmId, title) {
 
 <?php } elseif ($mode == 'edit') { ?>
 <!-- ================================ -->
-<!-- 프롬프트 등록/편집 -->
+<!-- 미션 등록/편집 -->
 <!-- ================================ -->
 
 <div style="margin-bottom:1rem;">
     <a href="?mode=list" class="mg-btn mg-btn-secondary mg-btn-sm">&larr; 목록으로</a>
     <span style="margin-left:0.5rem;font-size:1.125rem;font-weight:600;">
-        <?php echo $edit_pm ? '프롬프트 편집: ' . htmlspecialchars($edit_pm['pm_title']) : '새 프롬프트 등록'; ?>
+        <?php echo $edit_pm ? '미션 편집: ' . htmlspecialchars($edit_pm['pm_title']) : '새 미션 등록'; ?>
     </span>
 </div>
 
-<form method="post" action="<?php echo $update_url; ?>" enctype="multipart/form-data">
+<form id="prompt-edit-form" method="post" action="<?php echo $update_url; ?>" enctype="multipart/form-data" onsubmit="if(window.pmEditor){document.getElementById('pm_content_textarea').value=window.pmEditor.getHTML();}">
     <input type="hidden" name="mode" value="<?php echo $edit_pm ? 'edit' : 'add'; ?>">
     <input type="hidden" name="pm_id" value="<?php echo $edit_pm ? $edit_pm['pm_id'] : 0; ?>">
 
@@ -423,11 +423,12 @@ function deletePrompt(pmId, title) {
             </div>
             <div class="mg-form-group">
                 <label class="mg-form-label">미션 제목 *</label>
-                <input type="text" name="pm_title" class="mg-form-input" value="<?php echo $edit_pm ? htmlspecialchars($edit_pm['pm_title']) : ''; ?>" required placeholder="프롬프트 미션 제목을 입력하세요">
+                <input type="text" name="pm_title" class="mg-form-input" value="<?php echo $edit_pm ? htmlspecialchars($edit_pm['pm_title']) : ''; ?>" required placeholder="미션 제목을 입력하세요">
             </div>
             <div class="mg-form-group">
-                <label class="mg-form-label">미션 설명 (HTML 가능)</label>
-                <textarea name="pm_content" class="mg-form-input" rows="6" placeholder="미션의 상세 내용을 작성하세요. HTML 태그를 사용할 수 있습니다."><?php echo $edit_pm ? htmlspecialchars($edit_pm['pm_content']) : ''; ?></textarea>
+                <label class="mg-form-label">미션 설명</label>
+                <textarea name="pm_content" id="pm_content_textarea" class="mg-form-input" rows="6" style="display:none;"><?php echo $edit_pm ? htmlspecialchars($edit_pm['pm_content']) : ''; ?></textarea>
+                <div id="toast_pm_content" style="min-height:300px;"></div>
             </div>
         </div>
     </div>
@@ -551,9 +552,59 @@ function deletePrompt(pmId, title) {
     </div>
 </form>
 
+<!-- Toast UI Editor for mission description -->
+<link rel="stylesheet" href="https://uicdn.toast.com/editor/3.2.2/toastui-editor.min.css">
+<link rel="stylesheet" href="https://uicdn.toast.com/editor/3.2.2/theme/toastui-editor-dark.min.css">
+<link rel="stylesheet" href="<?php echo G5_PATH; ?>/plugin/editor/toastui/morgan-dark.css">
+<script src="https://uicdn.toast.com/editor/3.2.2/toastui-editor-all.min.js"></script>
+<script>
+(function() {
+    var el = document.getElementById('toast_pm_content');
+    if (!el) return;
+
+    var textarea = document.getElementById('pm_content_textarea');
+    var initialValue = textarea ? textarea.value : '';
+
+    window.pmEditor = new toastui.Editor({
+        el: el,
+        height: '300px',
+        initialEditType: 'wysiwyg',
+        initialValue: initialValue,
+        theme: 'dark',
+        toolbarItems: [
+            ['heading', 'bold', 'italic', 'strike'],
+            ['hr', 'quote'],
+            ['ul', 'ol'],
+            ['image', 'link'],
+            ['code', 'codeblock']
+        ],
+        hooks: {
+            addImageBlobHook: function(blob, callback) {
+                var formData = new FormData();
+                formData.append('image', blob);
+                fetch('<?php echo G5_URL; ?>/plugin/editor/toastui/imageUpload/upload.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (data.url) {
+                        callback(data.url, blob.name || 'image');
+                    } else {
+                        alert(data.error || '이미지 업로드 실패');
+                    }
+                })
+                .catch(function() { alert('이미지 업로드 네트워크 오류'); });
+                return false;
+            }
+        }
+    });
+})();
+</script>
+
 <?php } elseif ($mode == 'review' && $review_pm) { ?>
 <!-- ================================ -->
-<!-- 프롬프트 검수 -->
+<!-- 미션 검수 -->
 <!-- ================================ -->
 
 <div style="margin-bottom:1rem;">
@@ -561,7 +612,7 @@ function deletePrompt(pmId, title) {
     <span style="margin-left:0.5rem;font-size:1.125rem;font-weight:600;">검수: <?php echo htmlspecialchars($review_pm['pm_title']); ?></span>
 </div>
 
-<!-- 프롬프트 요약 카드 -->
+<!-- 미션 요약 카드 -->
 <div class="mg-card" style="margin-bottom:1.5rem;">
     <div class="mg-card-body">
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));gap:1rem;">

@@ -1,6 +1,6 @@
 <?php
 /**
- * Morgan Edition - 프롬프트 미션 관리 처리
+ * Morgan Edition - 미션 관리 처리
  */
 
 $sub_menu = "801500";
@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $mode = isset($_POST['mode']) ? trim($_POST['mode']) : '';
 
 // ==========================================
-// 프롬프트 추가
+// 미션 추가
 // ==========================================
 if ($mode == 'add') {
     $bo_table = isset($_POST['bo_table']) ? trim($_POST['bo_table']) : '';
@@ -88,7 +88,7 @@ if ($mode == 'add') {
 }
 
 // ==========================================
-// 프롬프트 수정
+// 미션 수정
 // ==========================================
 if ($mode == 'edit') {
     $pm_id = (int)($_POST['pm_id'] ?? 0);
@@ -98,7 +98,7 @@ if ($mode == 'edit') {
 
     $existing = sql_fetch("SELECT * FROM {$g5['mg_prompt_table']} WHERE pm_id = {$pm_id}");
     if (!$existing || !$existing['pm_id']) {
-        alert('프롬프트를 찾을 수 없습니다.', './prompt.php');
+        alert('미션을 찾을 수 없습니다.', './prompt.php');
     }
 
     $bo_table = isset($_POST['bo_table']) ? trim($_POST['bo_table']) : '';
@@ -204,7 +204,7 @@ if ($mode == 'edit') {
 }
 
 // ==========================================
-// 프롬프트 삭제
+// 미션 삭제
 // ==========================================
 if ($mode == 'delete') {
     $pm_id = (int)($_POST['pm_id'] ?? 0);
@@ -229,14 +229,14 @@ if ($mode == 'delete') {
     // 관련 엔트리 삭제
     sql_query("DELETE FROM {$g5['mg_prompt_entry_table']} WHERE pm_id = {$pm_id}");
 
-    // 프롬프트 삭제
+    // 미션 삭제
     sql_query("DELETE FROM {$g5['mg_prompt_table']} WHERE pm_id = {$pm_id}");
 
     goto_url('./prompt.php');
 }
 
 // ==========================================
-// 프롬프트 종료
+// 미션 종료
 // ==========================================
 if ($mode == 'close') {
     $pm_id = (int)($_POST['pm_id'] ?? 0);
@@ -309,7 +309,7 @@ if ($mode == 'reward_all') {
 
     $prompt = mg_get_prompt($pm_id);
     if (!$prompt || !$prompt['pm_id']) {
-        alert('프롬프트를 찾을 수 없습니다.', './prompt.php');
+        alert('미션을 찾을 수 없습니다.', './prompt.php');
     }
 
     // 승인 상태의 엔트리만 보상 대상

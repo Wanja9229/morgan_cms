@@ -54,147 +54,142 @@ include_once(G5_THEME_PATH.'/head.php');
 ?>
 
 <style>
-.wiki-body { max-width: var(--mg-content-width); margin: 0 auto; padding: 0 1rem; }
-.wiki-article { position: relative; }
-.wiki-title { font-size: 1.75rem; font-weight: 700; color: var(--mg-text-primary, #e4e6eb); border-bottom: 1px solid var(--mg-bg-tertiary, #3a3b3e); padding-bottom: 0.5rem; margin-bottom: 0.25rem; line-height: 1.3; }
-.wiki-subtitle { font-size: 1rem; color: var(--mg-text-muted, #949ba4); margin-bottom: 0.75rem; font-style: italic; }
-.wiki-meta { display: flex; gap: 1rem; font-size: 0.75rem; color: var(--mg-text-muted, #949ba4); margin-bottom: 1.5rem; }
-/* 인라인 TOC 박스 (위키 스타일) */
-.wiki-toc { background: var(--mg-bg-secondary, #2b2d31); border: 1px solid var(--mg-bg-tertiary, #3a3b3e); padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: inline-block; min-width: 240px; max-width: 360px; }
-.wiki-toc-title { font-size: 0.8125rem; font-weight: 600; color: var(--mg-text-primary, #e4e6eb); margin-bottom: 0.5rem; text-align: center; }
-.wiki-toc ol { list-style: none; counter-reset: toc; padding: 0; margin: 0; }
-.wiki-toc ol li { counter-increment: toc; }
-.wiki-toc ol li a { display: block; padding: 0.2rem 0; font-size: 0.8125rem; color: var(--mg-accent, #5865f2); text-decoration: none; transition: color 0.15s; }
-.wiki-toc ol li a::before { content: counter(toc) ". "; color: var(--mg-text-muted, #949ba4); }
-.wiki-toc ol li a:hover { text-decoration: underline; }
-.wiki-toc ol li a.active { color: var(--mg-text-primary, #e4e6eb); font-weight: 500; }
-/* 섹션 */
-.wiki-section { margin-bottom: 1.75rem; }
-.wiki-section-heading { font-size: 1.25rem; font-weight: 600; color: var(--mg-text-primary, #e4e6eb); border-bottom: 1px solid var(--mg-bg-tertiary, #3a3b3e); padding-bottom: 0.35rem; margin-bottom: 0.75rem; }
-.wiki-section-content { font-size: 0.9375rem; line-height: 1.75; color: var(--mg-text-secondary, #b5bac1); }
-.wiki-section-content p { margin-bottom: 0.5em; }
-/* 이미지 섹션 */
-.wiki-figure { margin: 0.75rem 0; background: var(--mg-bg-secondary, #2b2d31); border: 1px solid var(--mg-bg-tertiary, #3a3b3e); padding: 0.5rem; display: inline-block; max-width: 100%; }
+/* 위키 본문 타이포그래피 */
+.wiki-content { font-size: 0.9375rem; line-height: 1.8; color: var(--mg-text-secondary); }
+.wiki-content p { margin-bottom: 0.5em; }
+/* 이미지 피겨 */
 .wiki-figure img { max-width: 100%; display: block; }
-.wiki-figure figcaption { font-size: 0.75rem; color: var(--mg-text-muted, #949ba4); text-align: center; margin-top: 0.5rem; font-style: italic; }
-/* 관련 문서 하단 */
-.wiki-related { background: var(--mg-bg-secondary, #2b2d31); border: 1px solid var(--mg-bg-tertiary, #3a3b3e); padding: 1rem 1.25rem; margin-top: 2rem; }
-.wiki-related-title { font-size: 0.8125rem; font-weight: 600; color: var(--mg-text-primary, #e4e6eb); margin-bottom: 0.5rem; }
-.wiki-related-list { display: flex; flex-wrap: wrap; gap: 0.25rem 1.5rem; }
-.wiki-related-list a { font-size: 0.8125rem; color: var(--mg-accent, #5865f2); text-decoration: none; padding: 0.15rem 0; }
-.wiki-related-list a:hover { text-decoration: underline; }
-/* 브레드크럼 */
-.wiki-breadcrumb { font-size: 0.75rem; color: var(--mg-text-muted, #949ba4); margin-bottom: 1rem; }
-.wiki-breadcrumb a { color: var(--mg-accent, #5865f2); text-decoration: none; }
-.wiki-breadcrumb a:hover { text-decoration: underline; }
-.wiki-breadcrumb span { margin: 0 0.35rem; }
-/* 우측 스티키 TOC (데스크톱) */
-.wiki-sticky-toc { position: sticky; top: 5rem; }
-.wiki-sticky-toc-inner { border-left: 2px solid var(--mg-bg-tertiary, #3a3b3e); padding-left: 0.75rem; }
-.wiki-sticky-toc-inner a { display: block; font-size: 0.8125rem; color: var(--mg-text-muted, #949ba4); padding: 0.25rem 0; text-decoration: none; transition: all 0.15s; border-left: 2px solid transparent; margin-left: -0.85rem; padding-left: 0.75rem; }
-.wiki-sticky-toc-inner a:hover { color: var(--mg-text-primary, #e4e6eb); }
-.wiki-sticky-toc-inner a.active { color: var(--mg-accent, #5865f2); border-left-color: var(--mg-accent, #5865f2); }
+/* TOC 활성 링크 */
+.toc-link.active { color: var(--mg-accent) !important; background: color-mix(in srgb, var(--mg-accent) 10%, transparent); }
 </style>
 
-<div class="wiki-body py-6">
-    <!-- 브레드크럼 -->
-    <div class="wiki-breadcrumb">
-        <a href="<?php echo G5_BBS_URL; ?>/lore.php">세계관 위키</a>
-        <?php if ($lc_name) { ?>
-        <span>&rsaquo;</span>
-        <a href="<?php echo G5_BBS_URL; ?>/lore.php?category=<?php echo $lc_id; ?>"><?php echo htmlspecialchars($lc_name); ?></a>
-        <?php } ?>
-        <span>&rsaquo;</span>
-        <?php echo htmlspecialchars($article['la_title']); ?>
+<div class="mg-inner px-4 py-6">
+    <!-- 페이지 헤더 -->
+    <div class="flex items-center gap-3 mb-6">
+        <div class="w-10 h-10 rounded-lg bg-mg-accent/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-6 h-6 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+            </svg>
+        </div>
+        <div class="min-w-0">
+            <h1 class="text-2xl font-bold text-mg-text-primary truncate"><?php echo htmlspecialchars($article['la_title']); ?></h1>
+            <nav class="text-sm text-mg-text-muted flex items-center gap-1 flex-wrap">
+                <a href="<?php echo G5_BBS_URL; ?>/lore.php" class="text-mg-accent hover:underline">세계관 위키</a>
+                <?php if ($lc_name) { ?>
+                <span>&rsaquo;</span>
+                <a href="<?php echo G5_BBS_URL; ?>/lore.php?category=<?php echo $lc_id; ?>" class="text-mg-accent hover:underline"><?php echo htmlspecialchars($lc_name); ?></a>
+                <?php } ?>
+                <span>&rsaquo;</span>
+                <span class="truncate"><?php echo htmlspecialchars($article['la_title']); ?></span>
+            </nav>
+        </div>
     </div>
 
-    <!-- 2단 레이아웃 -->
-    <div class="flex gap-8 items-start">
-        <!-- 본문 -->
-        <div class="wiki-article flex-1 min-w-0">
-            <!-- 제목 -->
-            <h1 class="wiki-title"><?php echo htmlspecialchars($article['la_title']); ?></h1>
-
-            <!-- 부제목 -->
-            <?php if (!empty($article['la_subtitle'])) { ?>
-            <p class="wiki-subtitle"><?php echo htmlspecialchars($article['la_subtitle']); ?></p>
+    <!-- 메인 카드 -->
+    <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
+        <!-- 메타 바 -->
+        <div class="px-5 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-mg-text-muted">
+            <?php if ($lc_name) { ?>
+            <span class="bg-mg-accent/15 text-mg-accent px-2 py-0.5 rounded-full font-medium"><?php echo htmlspecialchars($lc_name); ?></span>
             <?php } ?>
-
-            <!-- 메타 -->
-            <div class="wiki-meta">
-                <?php if ($lc_name) { ?>
-                <span><?php echo htmlspecialchars($lc_name); ?></span>
-                <?php } ?>
-                <span>조회 <?php echo number_format((int)$article['la_hit'] + 1); ?></span>
+            <?php if (!empty($article['la_subtitle'])) { ?>
+            <span class="italic text-mg-text-secondary"><?php echo htmlspecialchars($article['la_subtitle']); ?></span>
+            <?php } ?>
+            <span class="ml-auto flex items-center gap-3">
+                <span class="flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                    <?php echo number_format((int)$article['la_hit'] + 1); ?>
+                </span>
                 <?php if (!empty($article['la_created'])) { ?>
                 <span><?php echo date('Y.m.d', strtotime($article['la_created'])); ?></span>
                 <?php } ?>
-            </div>
-
-            <!-- 인라인 목차 (섹션 3개 이상일 때) -->
-            <?php if (count($sections) >= 3) { ?>
-            <div class="wiki-toc" id="wiki-toc-inline">
-                <div class="wiki-toc-title">목차</div>
-                <ol>
-                    <?php foreach ($sections as $idx => $sec) { ?>
-                    <li><a href="#section-<?php echo $sec['ls_id']; ?>" class="toc-link"><?php echo htmlspecialchars($sec['ls_name']); ?></a></li>
-                    <?php } ?>
-                </ol>
-            </div>
-            <?php } ?>
-
-            <!-- 섹션 내용 -->
-            <?php if (!empty($sections)) { ?>
-            <?php foreach ($sections as $idx => $sec) { ?>
-            <div id="section-<?php echo $sec['ls_id']; ?>" class="wiki-section scroll-mt-20">
-                <h2 class="wiki-section-heading"><?php echo htmlspecialchars($sec['ls_name']); ?></h2>
-
-                <?php if (isset($sec['ls_type']) && $sec['ls_type'] === 'image') { ?>
-                <div class="wiki-figure">
-                    <img src="<?php echo MG_LORE_IMAGE_URL.'/'.htmlspecialchars($sec['ls_image']); ?>" alt="<?php echo htmlspecialchars($sec['ls_name']); ?>">
-                    <?php if (!empty($sec['ls_image_caption'])) { ?>
-                    <figcaption><?php echo htmlspecialchars($sec['ls_image_caption']); ?></figcaption>
-                    <?php } ?>
-                </div>
-                <?php } else { ?>
-                <div class="wiki-section-content"><?php echo nl2br(htmlspecialchars($sec['ls_content'])); ?></div>
-                <?php } ?>
-            </div>
-            <?php } ?>
-            <?php } else { ?>
-            <div class="text-center py-12 text-mg-text-muted">
-                <p>아직 작성된 내용이 없습니다.</p>
-            </div>
-            <?php } ?>
-
-            <!-- 관련 문서 (하단) -->
-            <?php if (!empty($related_articles)) { ?>
-            <div class="wiki-related">
-                <div class="wiki-related-title">같은 카테고리 문서</div>
-                <div class="wiki-related-list">
-                    <?php foreach ($related_articles as $rel) { ?>
-                    <a href="<?php echo G5_BBS_URL; ?>/lore_view.php?la_id=<?php echo $rel['la_id']; ?>"><?php echo htmlspecialchars($rel['la_title']); ?></a>
-                    <?php } ?>
-                </div>
-            </div>
-            <?php } ?>
+            </span>
         </div>
 
-        <!-- 우측 스티키 목차 (데스크톱, 섹션 2개 이상) -->
-        <?php if (count($sections) >= 2) { ?>
-        <div class="hidden lg:block w-52 flex-shrink-0 wiki-sticky-toc">
-            <div class="wiki-sticky-toc-inner">
+        <!-- 콘텐츠 영역 -->
+        <div class="flex">
+            <!-- 본문 -->
+            <div class="flex-1 min-w-0 px-5 py-6 md:px-6">
+                <!-- 인라인 목차 (섹션 3개 이상) -->
+                <?php if (count($sections) >= 3) { ?>
+                <div class="bg-mg-bg-tertiary/30 rounded-lg border border-mg-bg-tertiary px-4 py-3 mb-6 inline-block min-w-[220px] max-w-[340px]">
+                    <h3 class="text-xs font-semibold text-mg-text-primary mb-2 text-center uppercase tracking-wider">목차</h3>
+                    <ol class="space-y-0.5">
+                        <?php foreach ($sections as $idx => $sec) { ?>
+                        <li>
+                            <a href="#section-<?php echo $sec['ls_id']; ?>" class="toc-link text-sm text-mg-accent hover:underline block py-0.5">
+                                <span class="text-mg-text-muted mr-1"><?php echo ($idx + 1); ?>.</span><?php echo htmlspecialchars($sec['ls_name']); ?>
+                            </a>
+                        </li>
+                        <?php } ?>
+                    </ol>
+                </div>
+                <?php } ?>
+
+                <!-- 섹션 -->
+                <?php if (!empty($sections)) { ?>
                 <?php foreach ($sections as $idx => $sec) { ?>
-                <a href="#section-<?php echo $sec['ls_id']; ?>" class="toc-link"><?php echo htmlspecialchars($sec['ls_name']); ?></a>
+                <div id="section-<?php echo $sec['ls_id']; ?>" class="mb-7 scroll-mt-20">
+                    <h2 class="text-lg font-semibold text-mg-text-primary border-b border-mg-bg-tertiary pb-2 mb-3"><?php echo htmlspecialchars($sec['ls_name']); ?></h2>
+
+                    <?php if (isset($sec['ls_type']) && $sec['ls_type'] === 'image') { ?>
+                    <div class="wiki-figure bg-mg-bg-tertiary/30 border border-mg-bg-tertiary rounded-lg p-2 inline-block max-w-full">
+                        <img src="<?php echo MG_LORE_IMAGE_URL.'/'.htmlspecialchars($sec['ls_image']); ?>" alt="<?php echo htmlspecialchars($sec['ls_name']); ?>" class="rounded">
+                        <?php if (!empty($sec['ls_image_caption'])) { ?>
+                        <p class="text-xs text-mg-text-muted text-center mt-2 italic"><?php echo htmlspecialchars($sec['ls_image_caption']); ?></p>
+                        <?php } ?>
+                    </div>
+                    <?php } else { ?>
+                    <div class="wiki-content"><?php echo nl2br(htmlspecialchars($sec['ls_content'])); ?></div>
+                    <?php } ?>
+                </div>
+                <?php } ?>
+                <?php } else { ?>
+                <div class="text-center py-12 text-mg-text-muted">
+                    <p>아직 작성된 내용이 없습니다.</p>
+                </div>
                 <?php } ?>
             </div>
+
+            <!-- 우측 스티키 TOC (카드 내부, 데스크톱) -->
+            <?php if (count($sections) >= 2) { ?>
+            <div class="hidden lg:block w-48 flex-shrink-0 border-l border-mg-bg-tertiary">
+                <div class="sticky top-20 p-4">
+                    <h4 class="text-xs font-semibold text-mg-text-muted uppercase tracking-wider mb-3">목차</h4>
+                    <nav class="space-y-0.5">
+                        <?php foreach ($sections as $idx => $sec) { ?>
+                        <a href="#section-<?php echo $sec['ls_id']; ?>" class="toc-link block text-xs text-mg-text-muted hover:text-mg-text-primary py-1 px-2 rounded transition-colors"><?php echo htmlspecialchars($sec['ls_name']); ?></a>
+                        <?php } ?>
+                    </nav>
+                </div>
+            </div>
+            <?php } ?>
         </div>
-        <?php } ?>
     </div>
+
+    <!-- 관련 문서 -->
+    <?php if (!empty($related_articles)) { ?>
+    <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary p-5 mt-4">
+        <h3 class="text-sm font-semibold text-mg-text-primary mb-3 flex items-center gap-2">
+            <svg class="w-4 h-4 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            같은 카테고리 문서
+        </h3>
+        <div class="flex flex-wrap gap-x-4 gap-y-1">
+            <?php foreach ($related_articles as $rel) { ?>
+            <a href="<?php echo G5_BBS_URL; ?>/lore_view.php?la_id=<?php echo $rel['la_id']; ?>" class="text-sm text-mg-accent hover:underline"><?php echo htmlspecialchars($rel['la_title']); ?></a>
+            <?php } ?>
+        </div>
+    </div>
+    <?php } ?>
 </div>
 
 <script>
-// 부드러운 스크롤 (목차 링크)
+// 부드러운 스크롤 + TOC 하이라이트
 document.addEventListener('DOMContentLoaded', function() {
     var tocLinks = document.querySelectorAll('.toc-link');
     tocLinks.forEach(function(link) {
@@ -209,7 +204,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // 스크롤 감지 → TOC 활성 항목 하이라이트
     var sectionEls = document.querySelectorAll('[id^="section-"]');
     if (sectionEls.length > 0) {
         var observer = new IntersectionObserver(function(entries) {

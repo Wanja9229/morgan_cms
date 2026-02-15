@@ -64,7 +64,7 @@ if (!empty($list)) {
 
 <section id="bo_vc" class="card">
     <h2 class="text-lg font-semibold text-mg-text-primary mb-4">
-        댓글 <span class="text-mg-accent"><?php echo $comment_count; ?></span>
+        댓글 <span class="text-mg-accent"><?php echo count($list); ?></span>
     </h2>
 
     <!-- 댓글 목록 -->
@@ -76,11 +76,11 @@ if (!empty($list)) {
         $dice_val = $is_dice ? (int)$row['wr_2'] : 0;
         $is_dice_best = ($is_dice && $dice_val === $mg_dice_max_val && $mg_dice_max_val > 0);
         ?>
-        <div id="<?php echo $comment_id; ?>_<?php echo $row['wr_id']; ?>" class="py-4 <?php echo $row['is_reply'] ? 'pl-8' : ''; ?> <?php echo $is_dice ? 'rounded-lg my-1' : ''; ?>" <?php echo $is_dice ? 'style="background:rgba(245,159,10,0.08);"' : ''; ?>>
+        <div id="<?php echo $comment_id; ?>_<?php echo $row['wr_id']; ?>" class="py-4 <?php echo $row['wr_comment_reply'] ? 'pl-8' : ''; ?> <?php echo $is_dice ? 'rounded-lg my-1' : ''; ?>" <?php echo $is_dice ? 'style="background:rgba(245,159,10,0.08);"' : ''; ?>>
             <!-- 댓글 헤더 -->
             <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-2">
-                    <?php if ($row['is_reply']) { ?>
+                    <?php if ($row['wr_comment_reply']) { ?>
                     <svg class="w-4 h-4 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
                     </svg>
@@ -101,18 +101,18 @@ if (!empty($list)) {
                     <?php } else { ?>
                     <span class="font-medium text-mg-text-primary"><?php echo $row['name']; ?></span>
                     <?php } ?>
-                    <span class="text-xs text-mg-text-muted"><?php echo $row['datetime2']; ?></span>
+                    <span class="text-xs text-mg-text-muted"><?php echo $row['datetime']; ?></span>
                 </div>
                 <?php if (!$is_dice) { ?>
                 <div class="flex items-center gap-2">
-                    <?php if ($row['is_reply_write']) { ?>
+                    <?php if ($row['is_reply']) { ?>
                     <button type="button" onclick="comment_reply('<?php echo $row['wr_id']; ?>');" class="text-xs text-mg-text-muted hover:text-mg-text-primary">답글</button>
                     <?php } ?>
                     <?php if ($row['is_edit']) { ?>
                     <button type="button" onclick="comment_edit('<?php echo $row['wr_id']; ?>');" class="text-xs text-mg-text-muted hover:text-mg-text-primary">수정</button>
                     <?php } ?>
                     <?php if ($row['is_del']) { ?>
-                    <a href="<?php echo $row['del_href']; ?>" onclick="return confirm('댓글을 삭제하시겠습니까?');" class="text-xs text-mg-text-muted hover:text-mg-error">삭제</a>
+                    <a href="<?php echo $row['del_link']; ?>" onclick="return confirm('댓글을 삭제하시겠습니까?');" class="text-xs text-mg-text-muted hover:text-mg-error">삭제</a>
                     <?php } ?>
                 </div>
                 <?php } ?>
@@ -123,8 +123,6 @@ if (!empty($list)) {
                 <?php if ($is_dice) { ?>
                 <span class="text-lg font-bold text-mg-accent">🎲 <?php echo $dice_val; ?></span>
                 <?php if ($is_dice_best) { ?><span class="ml-1 text-yellow-400 font-bold" title="최고값">★</span><?php } ?>
-                <?php } elseif ($row['is_secret']) { ?>
-                <span class="text-mg-warning">비밀 댓글입니다.</span>
                 <?php } else { ?>
                 <?php echo mg_render_emoticons($row['content']); ?>
                 <?php } ?>
@@ -153,9 +151,10 @@ if (!empty($list)) {
             <input type="text" name="wr_name" value="<?php echo $name; ?>" class="input w-32" placeholder="이름" required>
             <input type="password" name="wr_password" class="input w-32" placeholder="비밀번호" required>
         </div>
-        <?php } elseif (count($mg_cmt_my_chars) > 0) { ?>
-        <!-- 캐릭터 선택 (드롭다운) -->
-        <div class="mb-3">
+        <?php } else { ?>
+        <!-- 캐릭터 선택 + 이모티콘 + 주사위 -->
+        <div class="flex items-center gap-2 mb-3">
+            <?php if (count($mg_cmt_my_chars) > 0) { ?>
             <select name="mg_ch_id" class="input w-auto text-sm">
                 <option value="0">캐릭터 없이 작성</option>
                 <?php foreach ($mg_cmt_my_chars as $ch) { ?>
@@ -164,27 +163,26 @@ if (!empty($list)) {
                 </option>
                 <?php } ?>
             </select>
+            <?php } ?>
+            <?php
+            $picker_id = 'comment';
+            $picker_target = 'wr_content';
+            include(G5_THEME_PATH.'/skin/emoticon/picker.skin.php');
+            ?>
+            <?php if ($mg_dice_enabled) { ?>
+            <button type="button" onclick="rollDice()" class="mg-emoticon-btn" title="주사위 굴리기">🎲</button>
+            <?php } ?>
         </div>
         <?php } ?>
 
         <div class="flex gap-2">
-            <div class="flex-1 relative">
-                <textarea name="wr_content" id="wr_content" rows="3" class="input w-full resize-none" placeholder="댓글을 입력하세요" required></textarea>
-                <?php if ($is_member) {
-                    $picker_id = 'comment';
-                    $picker_target = 'wr_content';
-                    include(G5_THEME_PATH.'/skin/emoticon/picker.skin.php');
-                } ?>
+            <div class="flex-1">
+                <textarea name="wr_content" id="wr_content" rows="3" class="input w-full h-full resize-none" placeholder="댓글을 입력하세요" required></textarea>
             </div>
-            <?php if ($is_member && $mg_dice_enabled) { ?>
-            <button type="button" onclick="rollDice()" class="btn btn-secondary self-end" title="주사위 굴리기" style="padding:0.5rem;">
-                🎲
-            </button>
-            <?php } ?>
             <button type="submit" class="btn btn-primary self-end">등록</button>
         </div>
 
-        <?php if ($is_secret) { ?>
+        <?php if ($board['bo_use_secret']) { ?>
         <label class="flex items-center gap-2 mt-2 cursor-pointer">
             <input type="checkbox" name="wr_secret" value="secret" class="w-4 h-4 rounded">
             <span class="text-sm text-mg-text-secondary">비밀 댓글</span>

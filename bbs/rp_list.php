@@ -6,7 +6,7 @@
 include_once('./_common.php');
 include_once(G5_PATH.'/plugin/morgan/morgan.php');
 
-if (!$is_member) { alert_close('로그인이 필요합니다.'); }
+if (!$is_member) { alert('로그인 후 이용해 주세요.', G5_BBS_URL.'/login.php?url='.urlencode($_SERVER['REQUEST_URI'])); }
 
 // Check if RP is enabled
 if (!mg_config('rp_use', '1')) { alert_close('역극 기능이 비활성화되어 있습니다.'); }

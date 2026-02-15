@@ -4,49 +4,13 @@
  *
  * 포스트잇 게시판 전용 미니멀 작성 폼
  * 제목 없이 내용만 작성 (제목은 날짜 자동 생성)
+ * 변수는 bbs/write.php에서 준비됨
  */
 
 if (!defined('_GNUBOARD_')) exit;
 
-// Morgan 플러그인 로드
-include_once(G5_PATH.'/plugin/morgan/morgan.php');
-
-// 변수 기본값 설정
-$w = isset($w) ? $w : '';
-$wr_id = isset($wr_id) ? $wr_id : 0;
-$sca = isset($sca) ? $sca : '';
-$sfl = isset($sfl) ? $sfl : '';
-$stx = isset($stx) ? $stx : '';
-$spt = isset($spt) ? $spt : '';
-$page = isset($page) ? $page : '';
-$name = isset($name) ? $name : '';
-$subject = isset($subject) ? $subject : '';
-$secret_checked = isset($secret_checked) ? $secret_checked : '';
-$html_editor_head_script = isset($html_editor_head_script) ? $html_editor_head_script : '';
-$html_editor = isset($editor_html) ? $editor_html : (isset($html_editor) ? $html_editor : '');
-$html_editor_tail_script = isset($html_editor_tail_script) ? $html_editor_tail_script : '';
-$editor_js = isset($editor_js) ? $editor_js : '';
-$is_name = isset($is_name) ? $is_name : false;
-$is_password = isset($is_password) ? $is_password : false;
-$is_secret = isset($is_secret) ? $is_secret : false;
-$action_url = isset($action_url) ? $action_url : '';
-$list_href = isset($list_href) ? $list_href : '';
-
 $is_edit = $w === 'u';
 $form_title = $is_edit ? '포스트잇 수정' : '새 포스트잇';
-
-// 보상 유형 (request 모드)
-$_mg_br_mode = '';
-$_mg_reward_types = array();
-if ($is_member && !$is_edit && function_exists('mg_get_board_reward')) {
-    $_mg_br = mg_get_board_reward($bo_table);
-    if ($_mg_br && $_mg_br['br_mode'] === 'request') {
-        $_mg_br_mode = 'request';
-        $_mg_reward_types = mg_get_reward_types($bo_table);
-    }
-}
-
-// 자동 제목 생성 (날짜 기반)
 $auto_subject = $is_edit ? $subject : date('Y-m-d H:i') . ' 포스트잇';
 ?>
 
@@ -69,8 +33,7 @@ $auto_subject = $is_edit ? $subject : date('Y-m-d H:i') . ' 포스트잇';
             <input type="hidden" name="spt" value="<?php echo $spt; ?>">
             <input type="hidden" name="page" value="<?php echo $page; ?>">
             <input type="hidden" name="token" value="">
-
-            <!-- 제목: 숨김 (자동 생성) -->
+            <input type="hidden" name="html" value="html1">
             <input type="hidden" name="wr_subject" id="wr_subject" value="<?php echo htmlspecialchars($auto_subject); ?>">
 
             <?php echo $html_editor_head_script; ?>
@@ -111,11 +74,7 @@ $auto_subject = $is_edit ? $subject : date('Y-m-d H:i') . ' 포스트잇';
             <!-- 내용 -->
             <div class="mb-4">
                 <label for="wr_content" class="block text-sm font-medium text-mg-text-secondary mb-2">내용 <span class="text-mg-error">*</span></label>
-                <?php if ($html_editor) { ?>
-                    <?php echo $html_editor; ?>
-                <?php } else { ?>
-                    <textarea name="wr_content" id="wr_content" rows="8" class="input w-full resize-y" placeholder="마음속 이야기를 적어주세요..." required><?php echo $content; ?></textarea>
-                <?php } ?>
+                <?php echo $html_editor; ?>
                 <?php if ($is_member) {
                     $picker_id = 'write';
                     $picker_target = 'wr_content';
@@ -123,9 +82,9 @@ $auto_subject = $is_edit ? $subject : date('Y-m-d H:i') . ' 포스트잇';
                 } ?>
             </div>
 
-            <!-- 옵션: 비밀글만 표시 -->
+            <!-- 비밀글 -->
             <?php if ($is_secret) { ?>
-            <div class="mb-6 p-4 bg-mg-bg-primary rounded-lg">
+            <div class="mb-4">
                 <label class="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" name="secret" value="secret" <?php echo $secret_checked; ?> class="w-4 h-4 rounded">
                     <span class="text-sm text-mg-text-secondary">비밀글로 작성</span>
@@ -151,7 +110,10 @@ $auto_subject = $is_edit ? $subject : date('Y-m-d H:i') . ' 포스트잇';
 <?php echo $html_editor_tail_script; ?>
 
 <script>
+var _fwrite_submitting = false;
 function fwrite_submit(f) {
+    if (_fwrite_submitting) return true;
+
     // 제목이 비어있으면 자동 생성
     if (!f.wr_subject.value.trim()) {
         var now = new Date();
@@ -165,17 +127,20 @@ function fwrite_submit(f) {
 
     <?php echo $editor_js; ?>
 
-    // 내용 검증 (에디터가 없는 경우)
-    var content = f.wr_content ? f.wr_content.value : '';
-    if (typeof get_editor_content === 'function') {
-        content = get_editor_content('wr_content');
-    }
-    if (!content.replace(/<[^>]*>/g, '').trim()) {
-        alert('내용을 입력해주세요.');
-        if (f.wr_content) f.wr_content.focus();
-        return false;
-    }
-
-    return true;
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '<?php echo G5_BBS_URL; ?>/write_token.php', true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.onload = function() {
+        try {
+            var data = JSON.parse(xhr.responseText);
+            if (data.error) { alert(data.error); return; }
+            f.token.value = data.token;
+            _fwrite_submitting = true;
+            f.submit();
+        } catch(e) { alert('토큰 발급 오류'); }
+    };
+    xhr.onerror = function() { alert('토큰 발급 네트워크 오류'); };
+    xhr.send('bo_table=<?php echo $bo_table; ?>');
+    return false;
 }
 </script>

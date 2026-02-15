@@ -233,7 +233,8 @@
                         '/logout.php',
                         '/download.php',
                         '/formmail.php',
-                        '/rp_api.php'
+                        '/rp_api.php',
+                        '/write.php'
                     ];
                     for (const pattern of excludePatterns) {
                         if (linkUrl.pathname.includes(pattern)) return false;
@@ -389,15 +390,17 @@
                     // 페이지별 사이드바 ID 매핑
                     var activeId = '';
                     var isCommunity = false;
-
                     if (script === 'index.php' || script === '' || pathname === '/') {
                         activeId = 'home';
                     } else if (script === 'board.php' || script === 'write.php' || script === 'view.php') {
-                        activeId = 'board';
-                        isCommunity = true;
-                    } else if (script === 'rp_list.php') {
-                        activeId = 'board';
-                        isCommunity = true;
+                        if (boTable === 'mission') {
+                            activeId = 'mission';
+                        } else {
+                            activeId = 'board';
+                            isCommunity = true;
+                        }
+                    } else if (script === 'rp_list.php' || script === 'rp_close.php' || script === 'rp_reply.php') {
+                        activeId = 'rp';
                     } else if (script === 'character.php' || script === 'character_edit.php' || script === 'character_form.php') {
                         activeId = 'character';
                     } else if (script === 'character_view.php') {
@@ -408,12 +411,14 @@
                         activeId = 'shop';
                     } else if (script === 'inventory.php') {
                         activeId = 'inventory';
-                    } else if (script === 'new.php') {
-                        activeId = 'new';
+                    } else if (script === 'notification.php') {
+                        activeId = 'notification';
                     } else if (script === 'lore.php' || script === 'lore_view.php' || script === 'lore_timeline.php') {
                         activeId = 'lore';
                     } else if (script === 'pioneer.php') {
                         activeId = 'pioneer';
+                    } else if (script === 'concierge.php' || script === 'concierge_view.php' || script === 'concierge_write.php') {
+                        activeId = 'concierge';
                     }
 
                     var isLore = (activeId === 'lore');
@@ -444,8 +449,9 @@
                         window.MG_BoardPanel.setCommunityPage(isCommunity);
                         if (isCommunity) {
                             boardToggle.classList.add('!bg-mg-accent', '!text-white', '!rounded-xl');
-                            // 데스크톱에서만 패널 자동 열기 (모바일은 이미 사이드바가 닫혀있음)
-                            if (window.innerWidth >= MG.SIDEBAR_BP) {
+                            // sessionStorage 기반 패널 상태 복원
+                            var bpStored = sessionStorage.getItem('mg_board_panel');
+                            if (bpStored !== 'closed' && window.innerWidth >= MG.SIDEBAR_BP) {
                                 window.MG_BoardPanel.open();
                             }
                         } else {
@@ -457,7 +463,7 @@
                     // 보드 서브메뉴 내 개별 항목 활성 상태 업데이트
                     // isCommunity일 때만 처리 (RP 페이지에서도 게시판 하이라이트 제거 필요)
                     if (isCommunity) {
-                        var boardLinks = document.querySelectorAll('#sidebar-board-panel nav a[href*="bo_table"]');
+                        var boardLinks = document.querySelectorAll('#sidebar-board-panel nav a[href*="bo_table"]:not([data-activity])');
                         boardLinks.forEach(function(link) {
                             var linkHref = link.getAttribute('href') || '';
                             // boTable이 있을 때만 해당 게시판 활성화, 없으면 모두 비활성화
@@ -502,8 +508,9 @@
                         window.MG_LorePanel.setLorePage(isLore);
                         window.MG_LorePanel.updateFocus();
                         if (isLore) {
-                            // 데스크톱에서만 패널 자동 열기
-                            if (window.innerWidth >= MG.SIDEBAR_BP) {
+                            // sessionStorage 기반 패널 상태 복원
+                            var lpStored = sessionStorage.getItem('mg_lore_panel');
+                            if (lpStored !== 'closed' && window.innerWidth >= MG.SIDEBAR_BP) {
                                 window.MG_LorePanel.open();
                             }
                         } else {
@@ -511,23 +518,6 @@
                         }
                     }
 
-                    // RP 링크 활성 상태
-                    var isRp = (script === 'rp_list.php');
-                    var rpLinks = document.querySelectorAll('#sidebar-board-panel nav a[href*="rp_list"]');
-                    rpLinks.forEach(function(link) {
-                        var rpIcon = link.querySelector('svg');
-                        if (isRp) {
-                            link.classList.add('bg-mg-accent/15', 'font-medium');
-                            link.classList.remove('text-mg-text-secondary');
-                            link.classList.add('text-mg-text-primary');
-                            if (rpIcon) rpIcon.className = rpIcon.className.replace('text-mg-text-muted', 'text-mg-accent');
-                        } else {
-                            link.classList.remove('bg-mg-accent/15', 'font-medium');
-                            link.classList.add('text-mg-text-secondary');
-                            link.classList.remove('text-mg-text-primary');
-                            if (rpIcon) rpIcon.className = rpIcon.className.replace('text-mg-accent', 'text-mg-text-muted');
-                        }
-                    });
 
                 } catch (e) {
                     console.warn('SPA: sidebar update error', e);

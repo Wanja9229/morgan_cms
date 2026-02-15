@@ -124,7 +124,7 @@ if ($stx) {
 
         $sql = " select wr_id from {$tmp_write_table} where {$sql_search} ";
         $result = sql_query($sql, false);
-        $row['cnt'] = @sql_num_rows($result);
+        $row['cnt'] = ($result !== false) ? sql_num_rows($result) : 0;
 
         $total_count += $row['cnt'];
         if ($row['cnt']) {

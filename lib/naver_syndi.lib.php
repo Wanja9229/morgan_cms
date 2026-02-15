@@ -20,7 +20,7 @@ function naver_syndi_ping($bo_table, $wr_id)
 {
     global $config;
 
-    $token = trim($config['cf_syndi_token']);
+    $token = isset($config['cf_syndi_token']) ? trim($config['cf_syndi_token']) : '';
 
     // 토큰값이 없다면 네이버 신디케이션 사용안함
     if ($token == '') return 0;

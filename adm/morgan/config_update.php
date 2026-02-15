@@ -84,6 +84,8 @@ $config_keys = array(
     'show_main_character',
     'use_side',
     'use_class',
+    // 접속자 표시
+    'show_connect_count',
     // 역극 설정
     'rp_use',
     'rp_require_reply',
@@ -120,13 +122,18 @@ $config_keys = array(
     'lore_image_max_size',
     'lore_thumbnail_max_size',
     'lore_articles_per_page',
-    // 프롬프트 미션 설정
+    // 미션 설정
     'prompt_enable',
     'prompt_show_closed',
     'prompt_banner_max_size',
     'prompt_notify_submit',
     'prompt_notify_approve',
     'prompt_notify_reject',
+    // 의뢰 설정
+    'concierge_use',
+    'concierge_max_slots',
+    'concierge_reward_normal',
+    'concierge_reward_urgent',
     // 레이아웃 설정
     'content_max_width',
     // 디자인 설정

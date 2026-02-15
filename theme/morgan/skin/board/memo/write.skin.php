@@ -3,71 +3,13 @@
  * Morgan Edition - Memo Board Write Skin
  *
  * 간소화된 메모 작성 폼 (캐릭터 선택, 제목, 내용, 비밀글)
+ * 변수는 bbs/write.php에서 준비됨
  */
 
 if (!defined('_GNUBOARD_')) exit;
 
-// Morgan 플러그인 로드
-include_once(G5_PATH.'/plugin/morgan/morgan.php');
-
-// 변수 기본값 설정
-$w = isset($w) ? $w : '';
-$wr_id = isset($wr_id) ? $wr_id : 0;
-$sca = isset($sca) ? $sca : '';
-$sfl = isset($sfl) ? $sfl : '';
-$stx = isset($stx) ? $stx : '';
-$spt = isset($spt) ? $spt : '';
-$page = isset($page) ? $page : '';
-$name = isset($name) ? $name : '';
-$subject = isset($subject) ? $subject : '';
-$secret_checked = isset($secret_checked) ? $secret_checked : '';
-$html_editor_head_script = isset($html_editor_head_script) ? $html_editor_head_script : '';
-$html_editor = isset($editor_html) ? $editor_html : (isset($html_editor) ? $html_editor : '');
-$html_editor_tail_script = isset($html_editor_tail_script) ? $html_editor_tail_script : '';
-$editor_js = isset($editor_js) ? $editor_js : '';
-$is_name = isset($is_name) ? $is_name : false;
-$is_password = isset($is_password) ? $is_password : false;
-$is_secret = isset($is_secret) ? $is_secret : false;
-$action_url = isset($action_url) ? $action_url : '';
-$list_href = isset($list_href) ? $list_href : '';
-
 $is_edit = $w === 'u';
 $form_title = $is_edit ? '메모 수정' : '메모 쓰기';
-
-// 보상 유형 (request 모드)
-$_mg_br_mode = '';
-$_mg_reward_types = array();
-if ($is_member && !$is_edit && function_exists('mg_get_board_reward')) {
-    $_mg_br = mg_get_board_reward($bo_table);
-    if ($_mg_br && $_mg_br['br_mode'] === 'request') {
-        $_mg_br_mode = 'request';
-        $_mg_reward_types = mg_get_reward_types($bo_table);
-    }
-}
-
-// 캐릭터 선택기 준비 (로그인 회원만)
-$mg_characters = array();
-$mg_selected_ch_id = 0;
-
-if ($is_member) {
-    $mg_characters = mg_get_usable_characters($member['mb_id']);
-
-    // 수정 시 기존 선택된 캐릭터
-    if ($is_edit && $wr_id) {
-        $mg_write_char = mg_get_write_character($bo_table, $wr_id);
-        if ($mg_write_char) {
-            $mg_selected_ch_id = $mg_write_char['ch_id'];
-        }
-    } else {
-        // 신규 작성 시 대표 캐릭터 기본 선택
-        foreach ($mg_characters as $ch) {
-            if ($ch['ch_main']) {
-                $mg_selected_ch_id = $ch['ch_id'];
-                break;
-            }
-        }
-    }
-}
 ?>
 
 <div id="bo_write" class="mg-inner">
@@ -84,6 +26,7 @@ if ($is_member) {
             <input type="hidden" name="spt" value="<?php echo $spt; ?>">
             <input type="hidden" name="page" value="<?php echo $page; ?>">
             <input type="hidden" name="token" value="">
+            <input type="hidden" name="html" value="html1">
             <?php echo $html_editor_head_script; ?>
 
             <!-- 이름 (비회원) -->
@@ -107,7 +50,6 @@ if ($is_member) {
             <div class="mb-4">
                 <label class="block text-sm font-medium text-mg-text-secondary mb-2">캐릭터 선택</label>
                 <div class="flex flex-wrap gap-2" id="mg-character-selector">
-                    <!-- 캐릭터 없음 옵션 -->
                     <label class="character-option cursor-pointer">
                         <input type="radio" name="mg_ch_id" value="0" <?php echo $mg_selected_ch_id == 0 ? 'checked' : ''; ?> class="hidden">
                         <div class="flex items-center gap-2 px-3 py-2 rounded-lg border border-mg-bg-tertiary bg-mg-bg-primary hover:border-mg-accent transition-colors character-badge">
@@ -178,9 +120,9 @@ if ($is_member) {
                 } ?>
             </div>
 
-            <!-- 옵션 (비밀글만) -->
+            <!-- 비밀글 -->
             <?php if ($is_secret) { ?>
-            <div class="mb-6 p-4 bg-mg-bg-primary rounded-lg">
+            <div class="mb-4">
                 <label class="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" name="secret" value="secret" <?php echo $secret_checked; ?> class="w-4 h-4 rounded">
                     <span class="text-sm text-mg-text-secondary">비밀글</span>
@@ -202,7 +144,10 @@ if ($is_member) {
 <?php echo $html_editor_tail_script; ?>
 
 <script>
+var _fwrite_submitting = false;
 function fwrite_submit(f) {
+    if (_fwrite_submitting) return true;
+
     if (!f.wr_subject.value.trim()) {
         alert('제목을 입력해주세요.');
         f.wr_subject.focus();
@@ -211,25 +156,36 @@ function fwrite_submit(f) {
 
     <?php echo $editor_js; ?>
 
-    return true;
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '<?php echo G5_BBS_URL; ?>/write_token.php', true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.onload = function() {
+        try {
+            var data = JSON.parse(xhr.responseText);
+            if (data.error) { alert(data.error); return; }
+            f.token.value = data.token;
+            _fwrite_submitting = true;
+            f.submit();
+        } catch(e) { alert('토큰 발급 오류'); }
+    };
+    xhr.onerror = function() { alert('토큰 발급 네트워크 오류'); };
+    xhr.send('bo_table=<?php echo $bo_table; ?>');
+    return false;
 }
 
 // 캐릭터 선택기 UI 업데이트
 document.querySelectorAll('.character-option input[type="radio"]').forEach(function(radio) {
     radio.addEventListener('change', function() {
-        // 모든 배지 기본 스타일로
         document.querySelectorAll('.character-badge').forEach(function(badge) {
             badge.classList.remove('border-mg-accent', 'ring-2', 'ring-mg-accent/30');
             badge.classList.add('border-mg-bg-tertiary');
         });
-        // 선택된 항목 강조
         if (this.checked) {
             var badge = this.parentElement.querySelector('.character-badge');
             badge.classList.remove('border-mg-bg-tertiary');
             badge.classList.add('border-mg-accent', 'ring-2', 'ring-mg-accent/30');
         }
     });
-    // 초기 상태 설정
     if (radio.checked) {
         var badge = radio.parentElement.querySelector('.character-badge');
         badge.classList.remove('border-mg-bg-tertiary');

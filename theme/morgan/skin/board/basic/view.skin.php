@@ -75,10 +75,23 @@ if ($is_member && function_exists('mg_like_get_daily') && $_mg_like_limit > 0) {
         </div>
 
         <!-- 첨부파일 -->
-        <?php if ($view['file']) { ?>
+        <?php if (isset($view['file']['count']) && $view['file']['count']) { ?>
         <div class="border-t border-mg-bg-tertiary pt-4 mt-4">
             <h3 class="text-sm font-medium text-mg-text-muted mb-2">첨부파일</h3>
-            <?php echo $view['file']; ?>
+            <ul class="space-y-1">
+                <?php for ($i = 0; $i < count($view['file']); $i++) {
+                    if (empty($view['file'][$i]['source'])) continue;
+                    if ($view['file'][$i]['view']) continue; // 본문 삽입 이미지 제외
+                ?>
+                <li>
+                    <a href="<?php echo $view['file'][$i]['href']; ?>" class="inline-flex items-center gap-2 text-sm text-mg-accent hover:underline py-1">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <?php echo $view['file'][$i]['source']; ?>
+                        <span class="text-xs text-mg-text-muted">(<?php echo $view['file'][$i]['size']; ?>)</span>
+                    </a>
+                </li>
+                <?php } ?>
+            </ul>
         </div>
         <?php } ?>
 
@@ -162,7 +175,7 @@ if ($is_member && function_exists('mg_like_get_daily') && $_mg_like_limit > 0) {
     <?php } ?>
 
     <!-- 댓글 -->
-    <?php echo $view['comment']; ?>
+    <?php include_once(G5_BBS_PATH.'/view_comment.php'); ?>
 
 </div>
 

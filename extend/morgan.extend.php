@@ -16,7 +16,7 @@ if (file_exists($morgan_plugin)) {
 /**
  * 글 작성/수정 후 캐릭터 연결 저장
  */
-add_event('write_update_after', 'mg_write_update_after', 1);
+add_event('write_update_after', 'mg_write_update_after', 1, 5);
 
 function mg_write_update_after($board, $wr_id, $w, $qstr, $redirect_url) {
     global $member, $is_member;
@@ -32,7 +32,7 @@ function mg_write_update_after($board, $wr_id, $w, $qstr, $redirect_url) {
     // 캐릭터 연결 저장
     mg_set_write_character($bo_table, $wr_id, $ch_id);
 
-    // 프롬프트 미션 엔트리 생성 (신규 작성 시에만)
+    // 미션 엔트리 생성 (신규 작성 시에만)
     if ($w == '' && function_exists('mg_prompt_after_write') && mg_config('prompt_enable', '1') == '1') {
         $wr = sql_fetch("SELECT wr_content FROM g5_write_{$bo_table} WHERE wr_id = {$wr_id}");
         $wr_content = isset($wr['wr_content']) ? $wr['wr_content'] : '';
@@ -43,7 +43,7 @@ function mg_write_update_after($board, $wr_id, $w, $qstr, $redirect_url) {
 /**
  * 댓글 작성/수정 후 캐릭터 연결 저장
  */
-add_event('comment_update_after', 'mg_comment_update_after', 1);
+add_event('comment_update_after', 'mg_comment_update_after', 1, 5);
 
 function mg_comment_update_after($bo_table, $wr_id, $w, $comment_id, $member) {
     global $is_member;

@@ -146,6 +146,13 @@ switch ($action) {
         // 참여자 이음수 감소
         sql_query("UPDATE {$g5['mg_rp_member_table']} SET rm_reply_count = GREATEST(rm_reply_count - 1, 0) WHERE rt_id = {$rt_id} AND ch_id = {$ch_id}");
 
+        // 이음수가 0이 된 참여자 레코드 삭제 (판장 제외)
+        $thread_info = sql_fetch("SELECT ch_id FROM {$g5['mg_rp_thread_table']} WHERE rt_id = {$rt_id}");
+        $owner_ch_id = (int)$thread_info['ch_id'];
+        if ($ch_id !== $owner_ch_id) {
+            sql_query("DELETE FROM {$g5['mg_rp_member_table']} WHERE rt_id = {$rt_id} AND ch_id = {$ch_id} AND rm_reply_count <= 0");
+        }
+
         echo json_encode(array('success' => true, 'message' => '삭제되었습니다.', 'ch_id' => $ch_id));
         break;
 

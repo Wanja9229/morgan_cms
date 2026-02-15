@@ -38,9 +38,18 @@ if ($w == 'u' || $w == 'r') {
 
 run_event('bbs_write', $board, $wr_id, $w);
 
-// Morgan: 레벨 3 이상만 글쓰기 가능 (새 글, 답글)
-if (($w == '' || $w == 'r') && $member['mb_level'] < 3 && !$is_admin) {
-    alert('캐릭터 승인 후 게시판을 이용하실 수 있습니다.', G5_BBS_URL.'/character.php');
+// Morgan: 글쓰기 접근 권한 체크 (새 글, 답글)
+if (($w == '' || $w == 'r') && !$is_admin) {
+    if (!$is_member) {
+        alert('로그인 후 이용해 주세요.', G5_BBS_URL.'/login.php?url='.urlencode($_SERVER['REQUEST_URI']));
+    } else if ($member['mb_level'] < 3) {
+        $has_char = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_character_table']} WHERE mb_id = '{$member['mb_id']}'");
+        if ((int)$has_char['cnt'] === 0) {
+            alert('캐릭터를 등록해야 게시판을 이용하실 수 있습니다.', G5_BBS_URL.'/character_form.php');
+        } else {
+            alert('캐릭터 승인 대기 중입니다. 승인 후 이용해 주세요.', G5_BBS_URL.'/character.php');
+        }
+    }
 }
 
 if ($w == '') {
@@ -428,6 +437,12 @@ if ($config['cf_editor'] && $is_dhtml_editor_use && $board['bo_use_dhtml_editor'
 
     if(is_file(G5_EDITOR_PATH.'/'.$config['cf_editor'].'/autosave.editor.js'))
         $editor_content_js = '<script src="'.G5_EDITOR_URL.'/'.$config['cf_editor'].'/autosave.editor.js"></script>'.PHP_EOL;
+
+    // WYSIWYG 에디터 사용 시 HTML 옵션 자동 활성화
+    if ($w == '' && !$html_checked) {
+        $html_checked = 'checked';
+        $html_value = 'html1';
+    }
 }
 $editor_html = editor_html('wr_content', $content, $is_dhtml_editor);
 $editor_js = '';
@@ -436,6 +451,44 @@ $editor_js .= chk_editor_js('wr_content', $is_dhtml_editor);
 
 // 임시 저장된 글 수
 $autosave_count = autosave_count($member['mb_id']);
+
+// Morgan: 공통 write 변수 준비 (모든 스킨에서 공유)
+$html_editor = $editor_html;
+$html_editor_head_script = isset($html_editor_head_script) ? $html_editor_head_script : '';
+$html_editor_tail_script = isset($html_editor_tail_script) ? $html_editor_tail_script : '';
+include_once(G5_PATH.'/plugin/morgan/morgan.php');
+
+// 캐릭터 선택기
+$mg_characters = array();
+$mg_selected_ch_id = 0;
+if ($is_member) {
+    $mg_characters = mg_get_usable_characters($member['mb_id']);
+    if ($w === 'u' && $wr_id) {
+        $mg_write_char = mg_get_write_character($bo_table, $wr_id);
+        if ($mg_write_char) $mg_selected_ch_id = $mg_write_char['ch_id'];
+    } else {
+        foreach ($mg_characters as $ch) {
+            if ($ch['ch_main']) { $mg_selected_ch_id = $ch['ch_id']; break; }
+        }
+    }
+}
+
+// 보상 유형 (request 모드)
+$_mg_br_mode = '';
+$_mg_reward_types = array();
+if ($is_member && $w !== 'u' && function_exists('mg_get_board_reward')) {
+    $_mg_br = mg_get_board_reward($bo_table);
+    if ($_mg_br && $_mg_br['br_mode'] === 'request') {
+        $_mg_br_mode = 'request';
+        $_mg_reward_types = mg_get_reward_types($bo_table);
+    }
+}
+
+// 의뢰 연결
+$_mg_matched_concierges = array();
+if ($w !== 'u' && $is_member && function_exists('mg_get_my_matched_concierges')) {
+    $_mg_matched_concierges = mg_get_my_matched_concierges($member['mb_id']);
+}
 
 include_once(G5_PATH.'/head.sub.php');
 @include_once ($board_skin_path.'/write.head.skin.php');

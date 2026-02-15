@@ -65,7 +65,7 @@ $g5['mg_lore_article_table'] = 'mg_lore_article';
 $g5['mg_lore_section_table'] = 'mg_lore_section';
 $g5['mg_lore_era_table'] = 'mg_lore_era';
 $g5['mg_lore_event_table'] = 'mg_lore_event';
-// 프롬프트 미션
+// 미션
 $g5['mg_prompt_table'] = 'mg_prompt';
 $g5['mg_prompt_entry_table'] = 'mg_prompt_entry';
 // 보상 시스템
@@ -86,6 +86,8 @@ $g5['mg_expedition_log_table'] = 'mg_expedition_log';
 $g5['mg_concierge_table'] = 'mg_concierge';
 $g5['mg_concierge_apply_table'] = 'mg_concierge_apply';
 $g5['mg_concierge_result_table'] = 'mg_concierge_result';
+// 마이그레이션
+$g5['mg_migrations_table'] = 'mg_migrations';
 
 // 캐릭터 이미지 저장 경로
 define('MG_CHAR_IMAGE_PATH', G5_DATA_PATH.'/character');
@@ -150,7 +152,7 @@ $mg['lore_article_table'] = $g5['mg_lore_article_table'];
 $mg['lore_section_table'] = $g5['mg_lore_section_table'];
 $mg['lore_era_table'] = $g5['mg_lore_era_table'];
 $mg['lore_event_table'] = $g5['mg_lore_event_table'];
-// 프롬프트 미션
+// 미션
 $mg['prompt_table'] = $g5['mg_prompt_table'];
 $mg['prompt_entry_table'] = $g5['mg_prompt_entry_table'];
 // 보상 시스템
@@ -171,6 +173,8 @@ $mg['expedition_log_table'] = $g5['mg_expedition_log_table'];
 $mg['concierge_table'] = $g5['mg_concierge_table'];
 $mg['concierge_apply_table'] = $g5['mg_concierge_apply_table'];
 $mg['concierge_result_table'] = $g5['mg_concierge_result_table'];
+// 마이그레이션
+$mg['migrations_table'] = $g5['mg_migrations_table'];
 
 // 상점 이미지 저장 경로
 define('MG_SHOP_IMAGE_PATH', G5_DATA_PATH.'/shop');
@@ -188,9 +192,25 @@ define('MG_SEAL_IMAGE_URL', G5_DATA_URL.'/seal');
 define('MG_LORE_IMAGE_PATH', G5_DATA_PATH.'/lore');
 define('MG_LORE_IMAGE_URL', G5_DATA_URL.'/lore');
 
-// 프롬프트 배너 이미지 저장 경로
+// 미션 배너 이미지 저장 경로
 define('MG_PROMPT_IMAGE_PATH', G5_DATA_PATH.'/prompt');
 define('MG_PROMPT_IMAGE_URL', G5_DATA_URL.'/prompt');
+
+// DB 마이그레이션 자동 실행 (세션당 1회)
+if (!defined('MG_MIGRATION_CHECKED')) {
+    define('MG_MIGRATION_CHECKED', true);
+    $mig_dir = G5_PATH . '/db/migrations';
+    if (is_dir($mig_dir)) {
+        $mig_files = glob($mig_dir . '/*.sql');
+        $mig_count = $mig_files ? count($mig_files) : 0;
+        $mig_cache = isset($_SESSION['mg_mig_count']) ? (int)$_SESSION['mg_mig_count'] : -1;
+        if ($mig_count > 0 && $mig_cache !== $mig_count) {
+            include_once(G5_PLUGIN_PATH . '/morgan/migrate.php');
+            mg_run_migrations();
+            $_SESSION['mg_mig_count'] = $mig_count;
+        }
+    }
+}
 
 // 썸네일 사이즈
 define('MG_THUMB_SIZE', 200);
@@ -2103,7 +2123,7 @@ function mg_get_rp_members($rt_id) {
             FROM {$mg['rp_member_table']} rm
             LEFT JOIN {$g5['member_table']} m ON rm.mb_id = m.mb_id
             LEFT JOIN {$mg['character_table']} c ON rm.ch_id = c.ch_id
-            WHERE rm.rt_id = {$rt_id}
+            WHERE rm.rt_id = {$rt_id} AND rm.rm_reply_count > 0
             ORDER BY rm.rm_datetime ASC";
     $result = sql_query($sql);
 
@@ -2677,8 +2697,12 @@ function mg_render_emoticons($content) {
         return $content;
     }
 
-    return preg_replace_callback('/:([a-zA-Z0-9_]+):/', function($m) use ($emoticon_map) {
-        $code = ':' . $m[1] . ':';
+    return preg_replace_callback('/(<[^>]+>)|:([a-zA-Z0-9_]+):/', function($m) use ($emoticon_map) {
+        // HTML 태그 안의 코드는 그대로 유지
+        if (!empty($m[1])) {
+            return $m[0];
+        }
+        $code = ':' . $m[2] . ':';
         if (isset($emoticon_map[$code])) {
             $img = htmlspecialchars($emoticon_map[$code], ENT_QUOTES, 'UTF-8');
             $alt = htmlspecialchars($code, ENT_QUOTES, 'UTF-8');
@@ -4737,7 +4761,7 @@ function mg_like_get_daily($mb_id) {
     $row = sql_fetch("SELECT * FROM {$g5['mg_like_daily_table']}
         WHERE mb_id = '".sql_real_escape_string($mb_id)."' AND ld_date = '{$today}'");
 
-    if (!$row['ld_id']) {
+    if (empty($row['ld_id'])) {
         return array('count' => 0, 'targets' => array());
     }
 
@@ -5166,7 +5190,7 @@ function mg_trigger_achievement($mb_id, $event_type, $increment = 1, $context = 
             $target = (int)($condition['target'] ?? 1);
             $newly_completed = ($new_progress >= $target) ? 1 : 0;
 
-            if ($ua['ua_id']) {
+            if (!empty($ua['ua_id'])) {
                 sql_query("UPDATE {$g5['mg_user_achievement_table']}
                     SET ua_progress = {$new_progress}, ua_completed = {$newly_completed},
                         ua_tier = ".($newly_completed ? 1 : 0).", ua_datetime = NOW()
@@ -5207,7 +5231,7 @@ function mg_trigger_achievement($mb_id, $event_type, $increment = 1, $context = 
                 }
             }
 
-            if ($ua['ua_id']) {
+            if (!empty($ua['ua_id'])) {
                 sql_query("UPDATE {$g5['mg_user_achievement_table']}
                     SET ua_progress = {$new_progress}, ua_tier = {$new_tier},
                         ua_completed = {$newly_completed}, ua_datetime = NOW()
@@ -5934,11 +5958,11 @@ function mg_upload_lore_image($file, $type = 'article', $id = 0)
 }
 
 // ======================================
-// 프롬프트 미션 함수
+// 미션 함수
 // ======================================
 
 /**
- * 기한 만료 프롬프트 자동 종료 (패시브 체크)
+ * 기한 만료 미션 자동 종료 (패시브 체크)
  */
 function mg_prompt_check_expired()
 {
@@ -5951,7 +5975,7 @@ function mg_prompt_check_expired()
 }
 
 /**
- * 게시판의 활성 프롬프트 목록
+ * 게시판의 활성 미션 목록
  */
 function mg_get_active_prompts($bo_table)
 {
@@ -5971,7 +5995,7 @@ function mg_get_active_prompts($bo_table)
 }
 
 /**
- * 프롬프트 단건 조회
+ * 미션 단건 조회
  */
 function mg_get_prompt($pm_id)
 {
@@ -5981,7 +6005,7 @@ function mg_get_prompt($pm_id)
 }
 
 /**
- * 프롬프트 제출 수
+ * 미션 제출 수
  */
 function mg_get_prompt_entry_count($pm_id, $status = '')
 {
@@ -6029,7 +6053,7 @@ function mg_get_entry_by_write($bo_table, $wr_id)
 }
 
 /**
- * 글 저장 후 프롬프트 엔트리 생성 훅
+ * 글 저장 후 미션 엔트리 생성 훅
  */
 function mg_prompt_after_write($bo_table, $wr_id, $mb_id, $wr_content = '')
 {
@@ -6072,7 +6096,7 @@ function mg_prompt_after_write($bo_table, $wr_id, $mb_id, $wr_content = '')
     // 관리자 알림
     if (mg_config('prompt_notify_submit', '1') == '1') {
         if (function_exists('mg_notify')) {
-            mg_notify('admin', 'prompt_submit', "프롬프트 \"{$prompt['pm_title']}\"에 새 제출이 있습니다.", '', G5_ADMIN_URL.'/morgan/prompt.php?mode=review&pm_id='.$pm_id);
+            mg_notify('admin', 'prompt_submit', "미션 \"{$prompt['pm_title']}\"에 새 제출이 있습니다.", '', G5_ADMIN_URL.'/morgan/prompt.php?mode=review&pm_id='.$pm_id);
         }
     }
 
@@ -6117,7 +6141,7 @@ function mg_prompt_give_reward($pm_id, $pe_id, $is_bonus = false)
 
     // 유저 알림
     if (mg_config('prompt_notify_approve', '1') == '1' && function_exists('mg_notify')) {
-        $msg = "프롬프트 \"{$prompt['pm_title']}\" 보상이 지급되었습니다. (+{$point}P)";
+        $msg = "미션 \"{$prompt['pm_title']}\" 보상이 지급되었습니다. (+{$point}P)";
         mg_notify($entry['mb_id'], 'prompt_reward', $msg);
     }
 
@@ -6165,7 +6189,7 @@ function mg_prompt_reject($pe_id, $admin_id, $memo = '')
     // 반려 알림
     if (mg_config('prompt_notify_reject', '1') == '1' && function_exists('mg_notify')) {
         $prompt = mg_get_prompt($entry['pm_id']);
-        $msg = "프롬프트 \"{$prompt['pm_title']}\" 제출이 반려되었습니다.";
+        $msg = "미션 \"{$prompt['pm_title']}\" 제출이 반려되었습니다.";
         if ($memo) $msg .= " 사유: {$memo}";
         mg_notify($entry['mb_id'], 'prompt_reject', $msg);
     }
@@ -6174,7 +6198,7 @@ function mg_prompt_reject($pe_id, $admin_id, $memo = '')
 }
 
 /**
- * 프롬프트 종료
+ * 미션 종료
  */
 function mg_prompt_close($pm_id)
 {
@@ -6185,7 +6209,7 @@ function mg_prompt_close($pm_id)
 }
 
 /**
- * 프롬프트 배너 이미지 업로드
+ * 미션 배너 이미지 업로드
  */
 function mg_upload_prompt_banner($file, $pm_id = 0)
 {

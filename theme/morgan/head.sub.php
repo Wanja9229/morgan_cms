@@ -118,10 +118,15 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
         }
         .mg-inner { max-width: var(--mg-content-width); margin-left: auto; margin-right: auto; }
         /* 반응형 유틸리티 보완 (Tailwind 빌드 누락분) */
+        @media (min-width: 40rem) {
+            .sm\:inline-flex { display: inline-flex !important; }
+            .sm\:inline { display: inline !important; }
+        }
         @media (min-width: 64rem) {
             .lg\:ml-14 { margin-left: calc(var(--spacing) * 14); }
             #sidebar-backdrop { display: none !important; }
         }
+        .px-2\.5 { padding-left: 0.625rem; padding-right: 0.625rem; }
         /* 버튼 색상 오버라이드 */
         .btn-primary, .mg-btn-primary {
             background-color: var(--mg-button) !important;

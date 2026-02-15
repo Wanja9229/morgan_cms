@@ -75,13 +75,17 @@ function rp_time_ago($datetime) {
                     <?php } ?>
                 </p>
             </div>
-            <?php if ($is_member && $can_create['can_create']) { ?>
+            <?php if ($is_member && $can_create['can_create'] && count($my_characters) > 0) { ?>
             <button type="button" onclick="openWriteModal()" class="btn btn-primary flex items-center gap-1">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
                 새 글
             </button>
+            <?php } elseif ($is_member && count($my_characters) === 0) { ?>
+            <a href="<?php echo G5_BBS_URL; ?>/character_form.php" class="btn btn-secondary flex items-center gap-1 text-sm">
+                캐릭터를 등록하면 글을 쓸 수 있어요
+            </a>
             <?php } ?>
         </div>
     </div>
@@ -214,17 +218,25 @@ function rp_time_ago($datetime) {
 
             <!-- 참여자 섹션 -->
             <div class="border-t border-mg-bg-tertiary pt-3">
+                <?php
+                // 판장 제외 참여자 수 계산
+                $_participant_count = 0;
+                foreach ($thread_members as $_tm) {
+                    if ((int)$_tm['ch_id'] !== (int)$thread['ch_id'] && (int)$_tm['rm_reply_count'] > 0) $_participant_count++;
+                }
+                ?>
                 <div class="flex items-center gap-2 mb-2">
                     <span class="text-xs font-medium text-mg-text-muted">참여자</span>
-                    <span class="text-xs text-mg-text-muted/70">(<?php echo count($thread_members); ?>명<?php if ($thread['rt_max_member'] > 0) echo ' / 최대 '.$thread['rt_max_member']; ?>)</span>
+                    <span class="text-xs text-mg-text-muted/70">(<?php echo $_participant_count; ?>명<?php if ($thread['rt_max_member'] > 0) echo ' / 최대 '.$thread['rt_max_member']; ?>)</span>
                 </div>
 
                 <div class="rp-participants space-y-1" id="rp-participants-<?php echo $thread['rt_id']; ?>">
-                    <?php if (count($thread_members) > 0) { ?>
+                    <?php if ($_participant_count > 0) { ?>
                     <?php foreach ($thread_members as $mem) {
                         $mem_ch_id = (int)$mem['ch_id'];
-                        $is_completed = isset($completions_map[$mem_ch_id]);
                         $is_owner_char = ($mem_ch_id === (int)$thread['ch_id']); // 판장 캐릭터
+                        if ($is_owner_char || (int)$mem['rm_reply_count'] <= 0) continue; // 판장 및 이음 없는 참여자 제외
+                        $is_completed = isset($completions_map[$mem_ch_id]);
                         $comp_data = $is_completed ? $completions_map[$mem_ch_id] : null;
                     ?>
                     <div class="rp-participant" data-rt-id="<?php echo $thread['rt_id']; ?>" data-ch-id="<?php echo $mem['ch_id']; ?>" data-completed="<?php echo $is_completed ? '1' : '0'; ?>">
@@ -271,36 +283,42 @@ function rp_time_ago($datetime) {
                                 && ($mem['mb_id'] == $member['mb_id'] || $is_owner));
                             if ($show_messenger_form) { ?>
                             <div class="border-t border-mg-bg-tertiary p-2">
-                                <form class="rp-reply-form flex items-start gap-2" data-rt-id="<?php echo $thread['rt_id']; ?>">
+                                <form class="rp-reply-form" data-rt-id="<?php echo $thread['rt_id']; ?>">
                                     <input type="hidden" name="context_ch_id" value="<?php echo $mem['ch_id']; ?>">
-                                    <select name="ch_id" class="bg-mg-bg-tertiary text-mg-text-primary text-xs rounded-lg px-2 py-1.5 border border-mg-bg-tertiary focus:border-mg-accent focus:outline-none h-[32px]" style="min-width:100px;">
-                                        <?php foreach ($my_characters as $ch) { ?>
-                                        <option value="<?php echo $ch['ch_id']; ?>" <?php echo $default_ch_id == $ch['ch_id'] ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars($ch['ch_name']); ?><?php if ($ch['ch_main']) echo ' ★'; ?>
-                                        </option>
-                                        <?php } ?>
-                                    </select>
-                                    <div class="flex-1">
-                                        <?php $rp_textarea_id = 'rr_content_'.$thread['rt_id'].'_'.$mem['ch_id']; ?>
-                                        <textarea name="rr_content" id="<?php echo $rp_textarea_id; ?>" rows="3" class="w-full bg-mg-bg-tertiary/50 text-mg-text-primary text-xs rounded-lg px-2 py-1.5 border border-mg-bg-tertiary focus:border-mg-accent focus:outline-none resize-none"
-                                                  placeholder="댓글을 입력하세요..."></textarea>
-                                        <div class="rp-image-preview hidden mt-1"></div>
+                                    <?php $rp_textarea_id = 'rr_content_'.$thread['rt_id'].'_'.$mem['ch_id']; ?>
+                                    <!-- 툴바: 캐릭터 선택 + 이모티콘 -->
+                                    <div class="flex items-center gap-1 mb-1">
+                                        <select name="ch_id" class="bg-mg-bg-tertiary text-mg-text-primary text-xs rounded-lg px-2 py-1.5 border border-mg-bg-tertiary focus:border-mg-accent focus:outline-none h-[32px]" style="min-width:100px;">
+                                            <?php foreach ($my_characters as $ch) { ?>
+                                            <option value="<?php echo $ch['ch_id']; ?>" <?php echo $default_ch_id == $ch['ch_id'] ? 'selected' : ''; ?>>
+                                                <?php echo htmlspecialchars($ch['ch_name']); ?><?php if ($ch['ch_main']) echo ' ★'; ?>
+                                            </option>
+                                            <?php } ?>
+                                        </select>
                                         <?php
                                         $picker_id = 'rp_'.$thread['rt_id'].'_'.$mem['ch_id'];
                                         $picker_target = $rp_textarea_id;
                                         include(G5_THEME_PATH.'/skin/emoticon/picker.skin.php');
                                         ?>
                                     </div>
-                                    <div class="flex flex-col gap-1">
-                                        <label class="bg-mg-bg-tertiary hover:bg-mg-bg-tertiary/80 text-mg-text-muted rounded-lg px-2 py-1.5 flex-shrink-0 h-[32px] transition-colors cursor-pointer flex items-center" title="이미지 첨부">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                            <input type="file" name="rr_image" accept="image/jpeg,image/png,image/gif,image/webp" class="hidden rp-image-input">
-                                        </label>
-                                        <button type="submit" class="bg-mg-accent hover:bg-mg-accent-hover text-white rounded-lg px-2 py-1.5 flex-shrink-0 h-[32px] transition-colors">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-                                            </svg>
-                                        </button>
+                                    <!-- 입력: 텍스트 + 이미지/전송 -->
+                                    <div class="flex gap-2">
+                                        <div class="flex-1 flex flex-col">
+                                            <textarea name="rr_content" id="<?php echo $rp_textarea_id; ?>" rows="3" class="w-full h-full flex-1 bg-mg-bg-tertiary/50 text-mg-text-primary text-xs rounded-lg px-2 py-1.5 border border-mg-bg-tertiary focus:border-mg-accent focus:outline-none resize-none"
+                                                      placeholder="댓글을 입력하세요..."></textarea>
+                                            <div class="rp-image-preview hidden mt-1"></div>
+                                        </div>
+                                        <div class="flex flex-col gap-1">
+                                            <label class="bg-mg-bg-tertiary hover:bg-mg-bg-tertiary/80 text-mg-text-muted rounded-lg flex-1 transition-colors cursor-pointer flex items-center justify-center" title="이미지 첨부" style="min-width:32px;">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                                <input type="file" name="rr_image" accept="image/jpeg,image/png,image/gif,image/webp" class="hidden rp-image-input">
+                                            </label>
+                                            <button type="submit" class="bg-mg-accent hover:bg-mg-accent-hover text-white rounded-lg flex-1 transition-colors flex items-center justify-center" style="min-width:32px;">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                                                </svg>
+                                            </button>
+                                        </div>
                                     </div>
                                 </form>
                             </div>
@@ -434,13 +452,17 @@ function rp_time_ago($datetime) {
             첫 번째 역극을 시작해보세요!
             <?php } ?>
         </p>
-        <?php if ($is_member && $can_create['can_create']) { ?>
+        <?php if ($is_member && $can_create['can_create'] && count($my_characters) > 0) { ?>
         <button type="button" onclick="openWriteModal()" class="btn btn-primary inline-flex items-center gap-1">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
             새 글
         </button>
+        <?php } elseif ($is_member && count($my_characters) === 0) { ?>
+        <a href="<?php echo G5_BBS_URL; ?>/character_form.php" class="btn btn-secondary inline-flex items-center gap-1 text-sm">
+            캐릭터를 등록하면 글을 쓸 수 있어요
+        </a>
         <?php } ?>
     </div>
     <?php } ?>
@@ -453,7 +475,7 @@ function rp_time_ago($datetime) {
 #rp-write-modal { top:3rem; left:3.5rem; right:0; bottom:0; }
 @media (min-width:1024px) { #rp-write-modal { right:18rem; } }
 </style>
-<div id="rp-write-modal" class="fixed z-50 hidden flex items-center justify-center p-4 md:p-6">
+<div id="rp-write-modal" class="fixed z-50 hidden items-center justify-center p-4 md:p-6">
     <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeWriteModal()"></div>
     <div class="relative z-10 w-full max-w-2xl bg-mg-bg-secondary rounded-xl shadow-2xl overflow-y-auto max-h-[80vh]">
         <div class="p-6">
@@ -818,16 +840,18 @@ function rp_time_ago($datetime) {
         var contextHtml = '<input type="hidden" name="context_ch_id" value="' + (contextChId || 0) + '">';
 
         return '<div class="border-t border-mg-bg-tertiary p-2">' +
-            '<form class="rp-reply-form flex items-start gap-2" data-rt-id="' + rtId + '">' +
+            '<form class="rp-reply-form" data-rt-id="' + rtId + '">' +
                 contextHtml +
-                charHtml +
-                '<div class="flex-1"><textarea name="rr_content" rows="3" class="w-full bg-mg-bg-tertiary/50 text-mg-text-primary text-xs rounded-lg px-2 py-1.5 border border-mg-bg-tertiary focus:border-mg-accent focus:outline-none resize-none" placeholder="댓글을 입력하세요..."></textarea><div class="rp-image-preview hidden mt-1"></div></div>' +
-                '<div class="flex flex-col gap-1">' +
-                    '<label class="bg-mg-bg-tertiary hover:bg-mg-bg-tertiary/80 text-mg-text-muted rounded-lg px-2 py-1.5 flex-shrink-0 h-[32px] transition-colors cursor-pointer flex items-center" title="이미지 첨부">' +
-                        '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>' +
-                        '<input type="file" name="rr_image" accept="image/jpeg,image/png,image/gif,image/webp" class="hidden rp-image-input">' +
-                    '</label>' +
-                    '<button type="submit" class="bg-mg-accent hover:bg-mg-accent-hover text-white rounded-lg px-2 py-1.5 flex-shrink-0 h-[32px] transition-colors"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg></button>' +
+                '<div class="flex items-center gap-1 mb-1">' + charHtml + '</div>' +
+                '<div class="flex gap-2">' +
+                    '<div class="flex-1 flex flex-col"><textarea name="rr_content" rows="3" class="w-full h-full flex-1 bg-mg-bg-tertiary/50 text-mg-text-primary text-xs rounded-lg px-2 py-1.5 border border-mg-bg-tertiary focus:border-mg-accent focus:outline-none resize-none" placeholder="댓글을 입력하세요..."></textarea><div class="rp-image-preview hidden mt-1"></div></div>' +
+                    '<div class="flex flex-col gap-1">' +
+                        '<label class="bg-mg-bg-tertiary hover:bg-mg-bg-tertiary/80 text-mg-text-muted rounded-lg flex-1 transition-colors cursor-pointer flex items-center justify-center" title="이미지 첨부" style="min-width:32px;">' +
+                            '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>' +
+                            '<input type="file" name="rr_image" accept="image/jpeg,image/png,image/gif,image/webp" class="hidden rp-image-input">' +
+                        '</label>' +
+                        '<button type="submit" class="bg-mg-accent hover:bg-mg-accent-hover text-white rounded-lg flex-1 transition-colors flex items-center justify-center" style="min-width:32px;"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg></button>' +
+                    '</div>' +
                 '</div>' +
             '</form>' +
         '</div>';
@@ -846,9 +870,18 @@ function rp_time_ago($datetime) {
         var card = document.getElementById('rp-thread-' + rtId);
         var isOpen = card ? card.dataset.status === 'open' : false;
         var ownerMbId = card ? card.dataset.owner : '';
+        var ownerChId = card ? parseInt(card.dataset.ownerCh) || 0 : 0;
+
+        // 판장 제외 필터링
+        var filtered = members.filter(function(m) { return parseInt(m.ch_id) !== ownerChId && parseInt(m.rm_reply_count) > 0; });
+
+        if (filtered.length === 0) {
+            container.innerHTML = '<p class="text-sm text-mg-text-muted py-2 px-3">아직 참여자가 없습니다.</p>';
+            return;
+        }
 
         var html = '';
-        members.forEach(function(mem) {
+        filtered.forEach(function(mem) {
             var name = escapeHtml(mem.ch_name || mem.mb_nick || '');
             var initial = name.charAt(0);
             var avatarHtml = mem.ch_thumb
@@ -989,29 +1022,7 @@ function rp_time_ago($datetime) {
             .catch(function() { alert('삭제 중 오류가 발생했습니다.'); });
     };
 
-    // === 글쓰기 모달 ===
-    window.openWriteModal = function() {
-        var modal = document.getElementById('rp-write-modal');
-        if (modal) {
-            modal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-        }
-    };
-
-    window.closeWriteModal = function() {
-        var modal = document.getElementById('rp-write-modal');
-        if (modal) {
-            modal.classList.add('hidden');
-            document.body.style.overflow = '';
-        }
-    };
-
-    // ESC로 모달 닫기
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeWriteModal();
-    });
-
-    // 글쓰기 폼 유효성 검사
+    // 글쓰기 폼 유효성 검사 (IIFE 내부에서 등록)
     window.frp_write_submit = function(f) {
         if (!f.rt_title.value.trim()) { alert('제목을 입력해주세요.'); f.rt_title.focus(); return false; }
         if (!f.rt_content.value.trim()) { alert('내용을 입력해주세요.'); f.rt_content.focus(); return false; }
@@ -1217,4 +1228,29 @@ function rp_time_ago($datetime) {
         }
     }
 })();
+</script>
+
+<script>
+// 글쓰기 모달 (IIFE 밖에 별도 정의 — SPA 호환성)
+function openWriteModal() {
+    var modal = document.getElementById('rp-write-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeWriteModal() {
+    var modal = document.getElementById('rp-write-modal');
+    if (modal) {
+        modal.style.display = '';
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeWriteModal();
+});
 </script>

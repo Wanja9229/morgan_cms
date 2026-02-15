@@ -23,16 +23,22 @@ $menu["menu800"] = array(
     array('800200', '캐릭터 관리', $mg_admin_url . '/character_list.php', 'mg_character'),
     array('800300', '프로필 필드 관리', $mg_admin_url . '/profile_field.php', 'mg_profile'),
     array('800400', '진영/클래스 관리', $mg_admin_url . '/side_class.php', 'mg_side_class'),
+    array('801600', '관계 아이콘', $mg_admin_url . '/relation_icon.php', 'mg_relation'),
+    array('801700', '관계 관리', $mg_admin_url . '/relation.php', 'mg_relation'),
+    array('801300', '인장 관리', $mg_admin_url . '/seal.php', 'mg_seal'),
     // 활동
     array('800500', '출석 관리', $mg_admin_url . '/attendance.php', 'mg_attendance', '활동'),
-    array('800550', '포인트 관리', $mg_admin_url . '/point_manage.php', 'mg_point'),
-    array('800570', '보상 관리', $mg_admin_url . '/reward.php', 'mg_reward'),
     array('800600', '알림 관리', $mg_admin_url . '/notification.php', 'mg_notification'),
+    array('801200', '업적 관리', $mg_admin_url . '/achievement.php', 'mg_achievement'),
     // 콘텐츠
     array('800650', '역극 관리', $mg_admin_url . '/rp_list.php', 'mg_rp', '콘텐츠'),
     array('800180', '게시판 관리', $mg_admin_url . '/board_list.php', 'mg_board'),
-    // 상점
-    array('800700', '상점 관리', $mg_admin_url . '/shop_item_list.php', 'mg_shop', '상점'),
+    array('801500', '미션 관리', $mg_admin_url . '/prompt.php', 'mg_prompt'),
+    array('801800', '의뢰 관리', $mg_admin_url . '/concierge.php', 'mg_concierge'),
+    // 재화 / 상점
+    array('800550', '포인트 관리', $mg_admin_url . '/point_manage.php', 'mg_point', '재화 / 상점'),
+    array('800570', '보상 관리', $mg_admin_url . '/reward.php', 'mg_reward'),
+    array('800700', '상점 관리', $mg_admin_url . '/shop_item_list.php', 'mg_shop'),
     array('800900', '구매/선물 내역', $mg_admin_url . '/shop_log.php', 'mg_shop_log'),
     array('800950', '이모티콘 관리', $mg_admin_url . '/emoticon_list.php', 'mg_emoticon'),
     // 개척
@@ -40,15 +46,4 @@ $menu["menu800"] = array(
     array('801100', '재료 관리', $mg_admin_url . '/pioneer_material.php', 'mg_pioneer_material'),
     array('801110', '파견지 관리', $mg_admin_url . '/expedition_area.php', 'mg_expedition'),
     array('801120', '파견 로그', $mg_admin_url . '/expedition_log.php', 'mg_expedition_log'),
-    // 업적
-    array('801200', '업적 관리', $mg_admin_url . '/achievement.php', 'mg_achievement', '업적'),
-    // 인장
-    array('801300', '인장 관리', $mg_admin_url . '/seal.php', 'mg_seal', '인장'),
-    // 프롬프트 미션
-    array('801500', '프롬프트 관리', $mg_admin_url . '/prompt.php', 'mg_prompt', '프롬프트'),
-    // 관계
-    array('801600', '관계 아이콘', $mg_admin_url . '/relation_icon.php', 'mg_relation', '관계'),
-    array('801700', '관계 관리', $mg_admin_url . '/relation.php', 'mg_relation'),
-    // 의뢰
-    array('801800', '의뢰 관리', $mg_admin_url . '/concierge.php', 'mg_concierge', '의뢰'),
 );

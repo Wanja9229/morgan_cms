@@ -11,10 +11,10 @@ include_once(G5_PATH.'/plugin/morgan/morgan.php');
 $colspan = 4;
 if ($is_checkbox) $colspan++;
 
-// 활성 프롬프트 목록
+// 활성 미션 목록
 $active_prompts = mg_get_active_prompts($bo_table);
 
-// 종료된 프롬프트 (최근 N개)
+// 종료된 미션 (최근 N개)
 $closed_prompt_limit = (int)mg_config('prompt_closed_limit', 5);
 $closed_prompts = array();
 if ($closed_prompt_limit > 0) {
@@ -30,7 +30,7 @@ if ($closed_prompt_limit > 0) {
     }
 }
 
-// 프롬프트 필터
+// 미션 필터
 $filter_pm_id = isset($_GET['pm_id']) ? (int)$_GET['pm_id'] : 0;
 
 // 목록의 글에 연결된 캐릭터 정보 미리 로드
@@ -54,7 +54,7 @@ if (count($list) > 0) {
     }
 }
 
-// 목록 글에 연결된 프롬프트 엔트리 정보 미리 로드
+// 목록 글에 연결된 미션 엔트리 정보 미리 로드
 $mg_list_entries = array();
 if (count($list) > 0) {
     global $g5;
@@ -69,7 +69,7 @@ if (count($list) > 0) {
     }
 }
 
-// 프롬프트별 제출 수 미리 로드
+// 미션별 제출 수 미리 로드
 $prompt_entry_counts = array();
 foreach ($active_prompts as $ap) {
     $prompt_entry_counts[$ap['pm_id']] = mg_get_prompt_entry_count($ap['pm_id']);
@@ -137,10 +137,10 @@ function _prompt_mode_label($mode) {
         </div>
     </div>
 
-    <!-- 활성 프롬프트 섹션 -->
+    <!-- 활성 미션 섹션 -->
     <?php if (count($active_prompts) > 0) { ?>
     <div class="mb-6">
-        <h2 class="text-lg font-semibold text-mg-text-primary mb-3">진행 중 프롬프트</h2>
+        <h2 class="text-lg font-semibold text-mg-text-primary mb-3">진행 중 미션</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <?php foreach ($active_prompts as $ap) {
                 // D-day 계산
@@ -196,6 +196,7 @@ function _prompt_mode_label($mode) {
                         </div>
                         <div class="flex items-center gap-3">
                             <span class="text-sm text-mg-text-muted">제출 <?php echo number_format($entry_count); ?>건</span>
+                            <button type="button" onclick="openPromptDetail(<?php echo $ap['pm_id']; ?>)" class="btn btn-secondary text-sm">상세보기</button>
                             <?php if ($participate_url) { ?>
                             <a href="<?php echo $participate_url; ?>" class="btn btn-primary text-sm">참여하기</a>
                             <?php } ?>
@@ -208,7 +209,7 @@ function _prompt_mode_label($mode) {
     </div>
     <?php } ?>
 
-    <!-- 프롬프트 필터 탭 -->
+    <!-- 미션 필터 탭 -->
     <?php if (count($active_prompts) > 1 || $filter_pm_id) { ?>
     <div class="mb-4 flex flex-wrap gap-2">
         <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=<?php echo $bo_table; ?>" class="badge <?php echo !$filter_pm_id ? 'badge-accent' : ''; ?>">전체</a>
@@ -239,7 +240,7 @@ function _prompt_mode_label($mode) {
             <?php if (count($list) > 0) { ?>
             <div class="divide-y divide-mg-bg-tertiary">
                 <?php foreach ($list as $i => $row) {
-                    // 프롬프트 필터: pm_id가 설정되면 해당 프롬프트 글만 표시
+                    // 미션 필터: pm_id가 설정되면 해당 미션 글만 표시
                     if ($filter_pm_id > 0) {
                         $row_entry = isset($mg_list_entries[$row['wr_id']]) ? $mg_list_entries[$row['wr_id']] : null;
                         if (!$row_entry || (int)$row_entry['pm_id'] != $filter_pm_id) {
@@ -260,7 +261,7 @@ function _prompt_mode_label($mode) {
                                 <span class="badge badge-accent">공지</span>
                                 <?php } ?>
                                 <?php
-                                // 프롬프트 배지
+                                // 미션 배지
                                 $row_entry = isset($mg_list_entries[$row['wr_id']]) ? $mg_list_entries[$row['wr_id']] : null;
                                 if ($row_entry) {
                                 ?>
@@ -332,10 +333,10 @@ function _prompt_mode_label($mode) {
         <?php } ?>
     </form>
 
-    <!-- 종료된 프롬프트 -->
+    <!-- 종료된 미션 -->
     <?php if (count($closed_prompts) > 0) { ?>
     <div class="mt-6">
-        <h3 class="text-sm font-medium text-mg-text-muted mb-2">종료된 프롬프트</h3>
+        <h3 class="text-sm font-medium text-mg-text-muted mb-2">종료된 미션</h3>
         <div class="card overflow-hidden">
             <div class="divide-y divide-mg-bg-tertiary">
                 <?php foreach ($closed_prompts as $cp) {
@@ -355,6 +356,7 @@ function _prompt_mode_label($mode) {
                         <span><?php echo $cp_date; ?></span>
                         <?php } ?>
                         <span>참여 <?php echo number_format($cp_count); ?>건</span>
+                        <button type="button" onclick="openPromptDetail(<?php echo $cp['pm_id']; ?>)" class="text-mg-accent hover:text-mg-accent-hover text-xs">상세보기</button>
                     </div>
                 </div>
                 <?php } ?>
@@ -390,3 +392,157 @@ function _prompt_mode_label($mode) {
         </form>
     </div>
 </div>
+
+<!-- 미션 상세 모달 -->
+<div id="mg-prompt-detail-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closePromptDetail()"></div>
+    <div class="relative z-10 w-full max-w-2xl bg-mg-bg-secondary rounded-xl shadow-2xl overflow-hidden" style="max-height:80vh;display:flex;flex-direction:column;">
+        <div id="prompt-detail-banner"></div>
+        <div class="flex-1 overflow-y-auto p-6">
+            <div id="prompt-detail-header" class="mb-4"></div>
+            <div id="prompt-detail-content" class="mb-4 text-sm text-mg-text-secondary leading-relaxed"></div>
+            <div id="prompt-detail-meta" class="mb-4"></div>
+            <div class="flex justify-end gap-2 mt-6 pt-4 border-t border-mg-bg-tertiary">
+                <button type="button" onclick="closePromptDetail()" class="btn btn-secondary">닫기</button>
+                <a id="prompt-detail-participate" href="#" class="btn btn-primary" style="display:none;">참여하기</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php
+// 모달용 미션 데이터 전달
+$all_prompts_data = array();
+foreach ($active_prompts as $ap) {
+    $entry_count = isset($prompt_entry_counts[$ap['pm_id']]) ? $prompt_entry_counts[$ap['pm_id']] : 0;
+    $participate_url_modal = $write_href ? $write_href . (strpos($write_href, '?') !== false ? '&' : '?') . 'pm_id=' . $ap['pm_id'] : '';
+    $all_prompts_data[$ap['pm_id']] = array(
+        'pm_id' => (int)$ap['pm_id'],
+        'pm_title' => $ap['pm_title'],
+        'pm_content' => $ap['pm_content'],
+        'pm_cycle' => _prompt_cycle_label($ap['pm_cycle']),
+        'pm_mode' => _prompt_mode_label($ap['pm_mode']),
+        'pm_point' => (int)$ap['pm_point'],
+        'pm_bonus_point' => (int)$ap['pm_bonus_point'],
+        'pm_min_chars' => (int)$ap['pm_min_chars'],
+        'pm_max_entry' => (int)$ap['pm_max_entry'],
+        'pm_banner' => $ap['pm_banner'],
+        'pm_start_date' => $ap['pm_start_date'] ? date('Y.m.d', strtotime($ap['pm_start_date'])) : '',
+        'pm_end_date' => $ap['pm_end_date'] ? date('Y.m.d', strtotime($ap['pm_end_date'])) : '',
+        'entry_count' => $entry_count,
+        'participate_url' => $participate_url_modal,
+        'status' => 'active',
+    );
+}
+foreach ($closed_prompts as $cp) {
+    $cp_cnt = mg_get_prompt_entry_count($cp['pm_id']);
+    $all_prompts_data[$cp['pm_id']] = array(
+        'pm_id' => (int)$cp['pm_id'],
+        'pm_title' => $cp['pm_title'],
+        'pm_content' => $cp['pm_content'],
+        'pm_cycle' => _prompt_cycle_label($cp['pm_cycle']),
+        'pm_mode' => _prompt_mode_label($cp['pm_mode']),
+        'pm_point' => (int)$cp['pm_point'],
+        'pm_bonus_point' => (int)$cp['pm_bonus_point'],
+        'pm_min_chars' => (int)$cp['pm_min_chars'],
+        'pm_max_entry' => (int)$cp['pm_max_entry'],
+        'pm_banner' => $cp['pm_banner'],
+        'pm_start_date' => $cp['pm_start_date'] ? date('Y.m.d', strtotime($cp['pm_start_date'])) : '',
+        'pm_end_date' => $cp['pm_end_date'] ? date('Y.m.d', strtotime($cp['pm_end_date'])) : '',
+        'entry_count' => $cp_cnt,
+        'participate_url' => '',
+        'status' => 'closed',
+    );
+}
+?>
+<script>
+var promptDetailData = <?php echo json_encode($all_prompts_data, JSON_UNESCAPED_UNICODE); ?>;
+
+function openPromptDetail(pmId) {
+    var data = promptDetailData[pmId];
+    if (!data) return;
+
+    var modal = document.getElementById('mg-prompt-detail-modal');
+    var bannerEl = document.getElementById('prompt-detail-banner');
+    var headerEl = document.getElementById('prompt-detail-header');
+    var contentEl = document.getElementById('prompt-detail-content');
+    var metaEl = document.getElementById('prompt-detail-meta');
+    var participateEl = document.getElementById('prompt-detail-participate');
+
+    // 배너
+    if (data.pm_banner) {
+        bannerEl.innerHTML = '<img src="' + data.pm_banner.replace(/"/g, '&quot;') + '" alt="" class="w-full h-40 object-cover">';
+    } else {
+        bannerEl.innerHTML = '';
+    }
+
+    // 헤더 (배지 + 제목 + 날짜)
+    var statusBadge = data.status === 'active'
+        ? '<span class="badge badge-accent">진행중</span>'
+        : '<span class="badge">종료</span>';
+    var dateStr = '';
+    if (data.pm_start_date || data.pm_end_date) {
+        dateStr = '<span class="text-sm text-mg-text-muted ml-2">' + (data.pm_start_date || '') + ' ~ ' + (data.pm_end_date || '') + '</span>';
+    }
+    headerEl.innerHTML = '<div class="flex items-center gap-2 mb-2">'
+        + statusBadge
+        + '<span class="badge">' + data.pm_cycle + '</span>'
+        + '<span class="badge">' + data.pm_mode + '</span>'
+        + '</div>'
+        + '<h2 class="text-xl font-bold text-mg-text-primary">' + data.pm_title.replace(/</g, '&lt;') + '</h2>'
+        + (dateStr ? '<div class="mt-1">' + dateStr + '</div>' : '');
+
+    // 콘텐츠 (HTML 렌더링)
+    if (data.pm_content) {
+        contentEl.innerHTML = '<div class="prose-dark">' + data.pm_content + '</div>';
+        contentEl.style.display = '';
+    } else {
+        contentEl.innerHTML = '';
+        contentEl.style.display = 'none';
+    }
+
+    // 메타 정보
+    var metaHtml = '<div class="flex flex-wrap gap-4 text-sm">';
+    metaHtml += '<div><span class="text-mg-text-muted">보상</span> <span class="text-mg-accent font-medium">' + data.pm_point.toLocaleString() + 'P</span>';
+    if (data.pm_bonus_point > 0) {
+        metaHtml += ' <span class="text-mg-text-muted">+ 우수작 ' + data.pm_bonus_point.toLocaleString() + 'P</span>';
+    }
+    metaHtml += '</div>';
+    if (data.pm_min_chars > 0) {
+        metaHtml += '<div><span class="text-mg-text-muted">최소 글자수</span> <span class="text-mg-text-primary">' + data.pm_min_chars.toLocaleString() + '자</span></div>';
+    }
+    metaHtml += '<div><span class="text-mg-text-muted">인당 제출</span> <span class="text-mg-text-primary">최대 ' + data.pm_max_entry + '건</span></div>';
+    metaHtml += '<div><span class="text-mg-text-muted">참여 현황</span> <span class="text-mg-text-primary">' + data.entry_count + '건</span></div>';
+    metaHtml += '</div>';
+    metaEl.innerHTML = metaHtml;
+
+    // 참여하기 버튼
+    if (data.participate_url && data.status === 'active') {
+        participateEl.href = data.participate_url;
+        participateEl.style.display = '';
+    } else {
+        participateEl.style.display = 'none';
+    }
+
+    // 모달 표시
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+}
+
+function closePromptDetail() {
+    var modal = document.getElementById('mg-prompt-detail-modal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        var modal = document.getElementById('mg-prompt-detail-modal');
+        if (modal && !modal.classList.contains('hidden')) {
+            closePromptDetail();
+        }
+    }
+});
+</script>

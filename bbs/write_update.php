@@ -7,9 +7,18 @@ include_once(G5_CAPTCHA_PATH.'/captcha.lib.php');
 // 토큰체크
 check_write_token($bo_table);
 
-// Morgan: 레벨 3 이상만 글쓰기 가능 (새 글, 답글)
-if (($w == '' || $w == 'r') && $member['mb_level'] < 3 && !$is_admin) {
-    alert('캐릭터 승인 후 게시판을 이용하실 수 있습니다.');
+// Morgan: 글쓰기 접근 권한 체크 (새 글, 답글)
+if (($w == '' || $w == 'r') && !$is_admin) {
+    if (!$is_member) {
+        alert('로그인 후 이용해 주세요.', G5_BBS_URL.'/login.php');
+    } else if ($member['mb_level'] < 3) {
+        $has_char = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_character_table']} WHERE mb_id = '{$member['mb_id']}'");
+        if ((int)$has_char['cnt'] === 0) {
+            alert('캐릭터를 등록해야 게시판을 이용하실 수 있습니다.', G5_BBS_URL.'/character_form.php');
+        } else {
+            alert('캐릭터 승인 대기 중입니다. 승인 후 이용해 주세요.', G5_BBS_URL.'/character.php');
+        }
+    }
 }
 
 $g5['title'] = '게시글 저장';

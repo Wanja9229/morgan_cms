@@ -18,9 +18,18 @@ if (substr_count($wr_content, "&#") > 50) {
 
 $w = isset($_POST['w']) ? clean_xss_tags($_POST['w']) : '';
 
-// Morgan: 레벨 3 이상만 댓글 작성 가능 (새 댓글)
-if ($w == '' && $member['mb_level'] < 3 && !$is_admin) {
-    alert('캐릭터 승인 후 댓글을 작성하실 수 있습니다.');
+// Morgan: 댓글 작성 권한 체크 (새 댓글)
+if ($w == '' && !$is_admin) {
+    if (!$is_member) {
+        alert('로그인 후 이용해 주세요.');
+    } else if ($member['mb_level'] < 3) {
+        $has_char = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_character_table']} WHERE mb_id = '{$member['mb_id']}'");
+        if ((int)$has_char['cnt'] === 0) {
+            alert('캐릭터를 등록해야 댓글을 작성하실 수 있습니다.');
+        } else {
+            alert('캐릭터 승인 대기 중입니다. 승인 후 이용해 주세요.');
+        }
+    }
 }
 
 $wr_name  = isset($_POST['wr_name']) ? clean_xss_tags(trim($_POST['wr_name'])) : '';

@@ -55,24 +55,56 @@ $_current_script = basename($_SERVER['SCRIPT_NAME'] ?? '');
 $_is_rp_page = in_array($_current_script, array('rp_list.php', 'rp_close.php', 'rp_reply.php'));
 // 역극 페이지에서는 게시판 포커싱 제거
 $_current_bo_table = ($_is_rp_page || !isset($bo_table)) ? '' : $bo_table;
+$_is_mission_page = ($_current_bo_table === 'mission');
 $_is_board_page = !empty($_current_bo_table);
-$_is_community_section = $_is_board_page || $_is_rp_page;
+$_is_community_section = $_is_board_page && !$_is_mission_page;
 $_is_home = ($_current_script === 'index.php' || $_current_script === '' || $_SERVER['REQUEST_URI'] === '/' || $_SERVER['REQUEST_URI'] === G5_URL.'/');
 $_is_character_view_from_list = ($_current_script === 'character_view.php' && isset($_GET['from']) && $_GET['from'] === 'list');
 $_is_character_page = !$_is_character_view_from_list && in_array($_current_script, array('character.php', 'character_view.php', 'character_edit.php', 'character_form.php'));
 $_is_character_list_page = ($_current_script === 'character_list.php') || $_is_character_view_from_list;
 $_is_shop_page = ($_current_script === 'shop.php');
 $_is_new_page = ($_current_script === 'new.php');
+$_is_notification_page = ($_current_script === 'notification.php');
 $_is_inventory_page = ($_current_script === 'inventory.php');
+$_is_concierge_page = in_array($_current_script, array('concierge.php', 'concierge_view.php', 'concierge_write.php'));
 $_is_pioneer_page = ($_current_script === 'pioneer.php');
 $_is_mypage = in_array($_current_script, array('mypage.php', 'seal_edit.php'));
 $_is_lore_page = in_array($_current_script, array('lore.php', 'lore_view.php', 'lore_timeline.php'));
 $_current_la_id = ($_current_script === 'lore_view.php' && isset($_GET['la_id'])) ? (int)$_GET['la_id'] : 0;
 
+// 역극/미션 사용 여부
+$_show_rp = function_exists('mg_config') ? mg_config('rp_use', '1') : '1';
+$_show_mission = function_exists('mg_config') ? mg_config('prompt_enable', '1') : '1';
+$_show_concierge = function_exists('mg_config') ? mg_config('concierge_use', '1') : '1';
+
 // 개척 시스템: 유저 노동력
 $_user_stamina = null;
 if ($is_member && function_exists('mg_pioneer_enabled') && mg_pioneer_enabled()) {
     $_user_stamina = mg_get_stamina($member['mb_id']);
+}
+
+// 현재 접속자
+$_show_connect = function_exists('mg_config') ? mg_config('show_connect_count', '1') : '1';
+$_connect_count = 0;
+$_connect_members = array();
+$_connect_guest_count = 0;
+if ($_show_connect == '1') {
+    $_connect_row = sql_fetch("SELECT count(*) as cnt FROM {$g5['login_table']}");
+    $_connect_count = (int)$_connect_row['cnt'];
+    if ($_connect_count > 0) {
+        $sql_conn = "SELECT l.mb_id, l.lo_datetime, COALESCE(m.mb_nick, '') as mb_nick
+                     FROM {$g5['login_table']} l
+                     LEFT JOIN {$g5['member_table']} m ON l.mb_id = m.mb_id
+                     ORDER BY l.lo_datetime DESC";
+        $result_conn = sql_query($sql_conn);
+        while ($row_conn = sql_fetch_array($result_conn)) {
+            if ($row_conn['mb_id']) {
+                $_connect_members[] = $row_conn;
+            } else {
+                $_connect_guest_count++;
+            }
+        }
+    }
 }
 
 // SPA-like: AJAX 요청이면 레이아웃 건너뛰기
@@ -116,6 +148,42 @@ if (isset($is_ajax_request) && $is_ajax_request) {
 
     <!-- User Menu -->
     <nav class="flex items-center gap-2">
+        <?php if ($_show_connect == '1') { ?>
+        <!-- 접속자 수 -->
+        <div class="relative" id="mg-connect-wrap">
+            <button type="button" id="mg-connect-toggle" class="text-xs bg-mg-accent/15 text-mg-accent rounded-full px-2.5 py-1 hidden sm:inline-flex items-center gap-1 hover:bg-mg-accent/25 transition-colors cursor-pointer" title="현재 접속자 목록">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/></svg>
+                접속 <?php echo $_connect_count; ?>
+            </button>
+            <!-- 접속자 드롭다운 -->
+            <div id="mg-connect-panel" class="hidden absolute right-0 top-full mt-2 w-72 bg-mg-bg-secondary border border-mg-bg-tertiary rounded-lg shadow-xl z-50 overflow-hidden">
+                <div class="flex items-center justify-between px-4 py-3 border-b border-mg-bg-tertiary">
+                    <h3 class="text-sm font-semibold text-mg-text-primary">현재 접속자 <span class="text-mg-accent"><?php echo $_connect_count; ?></span>명</h3>
+                </div>
+                <div class="max-h-64 overflow-y-auto divide-y divide-mg-bg-tertiary">
+                    <?php if (count($_connect_members) > 0) { ?>
+                    <?php foreach ($_connect_members as $cm) {
+                        $cm_time = date('H:i', strtotime($cm['lo_datetime']));
+                    ?>
+                    <div class="flex items-center justify-between px-4 py-2">
+                        <span class="text-sm text-mg-text-primary"><?php echo htmlspecialchars($cm['mb_nick'] ?: $cm['mb_id']); ?></span>
+                        <span class="text-xs text-mg-text-muted"><?php echo $cm_time; ?></span>
+                    </div>
+                    <?php } ?>
+                    <?php } ?>
+                    <?php if ($_connect_guest_count > 0) { ?>
+                    <div class="flex items-center justify-between px-4 py-2">
+                        <span class="text-sm text-mg-text-muted">비회원</span>
+                        <span class="text-xs text-mg-text-muted"><?php echo $_connect_guest_count; ?>명</span>
+                    </div>
+                    <?php } ?>
+                    <?php if ($_connect_count == 0) { ?>
+                    <div class="px-4 py-6 text-center text-sm text-mg-text-muted">접속자가 없습니다.</div>
+                    <?php } ?>
+                </div>
+            </div>
+        </div>
+        <?php } ?>
         <?php if ($is_member) { ?>
             <!-- 로그인 상태 -->
             <a href="<?php echo G5_BBS_URL; ?>/member_confirm.php?url=<?php echo urlencode(G5_BBS_URL.'/register_form.php'); ?>" class="text-sm text-mg-text-secondary hover:text-mg-text-primary transition-colors px-2 py-1.5 hidden sm:inline">
@@ -181,6 +249,28 @@ if (isset($is_ajax_request) && $is_ajax_request) {
     </nav>
 </header>
 
+<?php if ($_show_connect == '1') { ?>
+<script>
+(function() {
+    var btn = document.getElementById('mg-connect-toggle');
+    var panel = document.getElementById('mg-connect-panel');
+    if (!btn || !panel) return;
+    btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        panel.classList.toggle('hidden');
+    });
+    document.addEventListener('click', function(e) {
+        if (!panel.classList.contains('hidden') && !panel.contains(e.target)) {
+            panel.classList.add('hidden');
+        }
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') panel.classList.add('hidden');
+    });
+})();
+</script>
+<?php } ?>
+
 <!-- Main Layout -->
 <div class="flex flex-1 pt-12">
 
@@ -204,19 +294,48 @@ if (isset($is_ajax_request) && $is_ajax_request) {
         </button>
         <?php } ?>
 
-        <!-- 게시판 메뉴 (2뎁스) -->
-        <button id="sidebar-board-toggle" class="sidebar-icon group <?php echo $_is_community_section ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="게시판" type="button" data-sidebar-id="board">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-            </svg>
-        </button>
-
         <!-- 캐릭터 목록 -->
         <a href="<?php echo G5_BBS_URL; ?>/character_list.php" class="sidebar-icon group <?php echo $_is_character_list_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="캐릭터 목록" data-sidebar-id="character_list">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
             </svg>
         </a>
+
+        <div class="w-8 h-px bg-mg-bg-tertiary my-1"></div>
+
+        <!-- 게시판 메뉴 (2뎁스) -->
+        <button id="sidebar-board-toggle" class="sidebar-icon group <?php echo $_is_community_section ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="게시판" type="button" data-sidebar-id="board">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+            </svg>
+        </button>
+
+        <!-- 역극 -->
+        <?php if ($_show_rp == '1') { ?>
+        <a href="<?php echo G5_BBS_URL; ?>/rp_list.php" class="sidebar-icon group <?php echo $_is_rp_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="역극" data-sidebar-id="rp">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            </svg>
+        </a>
+        <?php } ?>
+
+        <!-- 미션 -->
+        <?php if ($_show_mission == '1') { ?>
+        <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=mission" class="sidebar-icon group <?php echo $_is_mission_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="미션" data-sidebar-id="mission">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+            </svg>
+        </a>
+        <?php } ?>
+
+        <!-- 의뢰 -->
+        <?php if ($_show_concierge == '1') { ?>
+        <a href="<?php echo G5_BBS_URL; ?>/concierge.php" class="sidebar-icon group <?php echo $_is_concierge_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="의뢰" data-sidebar-id="concierge">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+        </a>
+        <?php } ?>
 
         <div class="w-8 h-px bg-mg-bg-tertiary my-1"></div>
 
@@ -227,8 +346,8 @@ if (isset($is_ajax_request) && $is_ajax_request) {
             </svg>
         </a>
 
-        <!-- 새글 -->
-        <a href="<?php echo G5_BBS_URL; ?>/new.php" class="sidebar-icon group <?php echo $_is_new_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="새글" data-sidebar-id="new">
+        <!-- 알림 -->
+        <a href="<?php echo G5_BBS_URL; ?>/notification.php" class="sidebar-icon group <?php echo $_is_notification_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="알림" data-sidebar-id="notification">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
             </svg>
@@ -248,11 +367,6 @@ if (isset($is_ajax_request) && $is_ajax_request) {
 
         <!-- 구분선 -->
         <div class="flex-1"></div>
-
-        <!-- 접속자 수 -->
-        <div class="sidebar-icon group cursor-default" title="접속자">
-            <span class="text-xs font-bold text-mg-accent">1</span>
-        </div>
 
         <!-- 설정 (관리자만) -->
         <?php if ($is_admin) { ?>
@@ -276,6 +390,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
         <nav class="flex-1 overflow-y-auto px-2 pb-3">
             <div class="space-y-0.5">
             <?php foreach ($sidebar_boards as $sb) {
+                if ($sb['bo_table'] === 'mission') continue;
                 $bo_url = G5_BBS_URL . '/board.php?bo_table=' . $sb['bo_table'];
                 $is_current = ($_current_bo_table === $sb['bo_table']);
                 $active_class = $is_current
@@ -291,24 +406,6 @@ if (isset($is_ajax_request) && $is_ajax_request) {
             <?php } ?>
             </div>
 
-            <!-- 역극 -->
-            <div class="my-2 mx-1 border-t border-mg-bg-tertiary"></div>
-            <div class="space-y-0.5">
-                <h4 class="text-[10px] font-semibold text-mg-text-muted uppercase tracking-wider px-2 py-1">역극</h4>
-                <?php
-                $rp_active = $_is_rp_page
-                    ? 'bg-mg-accent/15 text-mg-text-primary font-medium'
-                    : 'text-mg-text-secondary hover:bg-mg-bg-tertiary/50 hover:text-mg-text-primary';
-                ?>
-                <a href="<?php echo G5_BBS_URL; ?>/rp_list.php"
-                   class="flex items-center gap-2 px-2 py-1.5 rounded text-sm transition-colors <?php echo $rp_active; ?>">
-                    <svg class="w-3.5 h-3.5 flex-shrink-0 <?php echo $_is_rp_page ? 'text-mg-accent' : 'text-mg-text-muted'; ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                    </svg>
-                    <span class="truncate">역극 목록</span>
-                    <?php if ($_is_rp_page) { ?><span class="ml-auto w-1 h-1 rounded-full bg-mg-accent"></span><?php } ?>
-                </a>
-            </div>
         </nav>
     </div>
 
@@ -340,7 +437,13 @@ if (isset($is_ajax_request) && $is_ajax_request) {
 
         toggle.addEventListener('click', function(e) {
             e.stopPropagation();
-            isOpen ? closePanel() : openPanel();
+            if (isOpen) {
+                closePanel();
+                sessionStorage.setItem('mg_board_panel', 'closed');
+            } else {
+                openPanel();
+                sessionStorage.setItem('mg_board_panel', 'open');
+            }
         });
 
         // 외부 클릭 시 패널 닫기
@@ -350,12 +453,22 @@ if (isset($is_ajax_request) && $is_ajax_request) {
             var sidebar = document.getElementById('sidebar');
             if (sidebar && sidebar.contains(e.target)) return;
             closePanel();
+            sessionStorage.setItem('mg_board_panel', 'closed');
         });
+
+        // 초기 로드 시 저장된 상태 복원
+        if (isCommunityPage) {
+            var _bpStored = sessionStorage.getItem('mg_board_panel');
+            if (_bpStored === 'closed') {
+                closePanel();
+            }
+        }
 
         window.MG_BoardPanel = {
             open: openPanel,
             close: closePanel,
-            setCommunityPage: function(val) { isCommunityPage = val; }
+            setCommunityPage: function(val) { isCommunityPage = val; },
+            isOpen: function() { return isOpen; }
         };
     })();
     </script>
@@ -506,7 +619,13 @@ if (isset($is_ajax_request) && $is_ajax_request) {
 
         loreToggle.addEventListener('click', function(e) {
             e.stopPropagation();
-            isLoreOpen ? closeLore() : openLore();
+            if (isLoreOpen) {
+                closeLore();
+                sessionStorage.setItem('mg_lore_panel', 'closed');
+            } else {
+                openLore();
+                sessionStorage.setItem('mg_lore_panel', 'open');
+            }
         });
 
         // 외부 클릭 시 패널 닫기
@@ -516,13 +635,23 @@ if (isset($is_ajax_request) && $is_ajax_request) {
             var sidebar = document.getElementById('sidebar');
             if (sidebar && sidebar.contains(e.target)) return;
             closeLore();
+            sessionStorage.setItem('mg_lore_panel', 'closed');
         });
+
+        // 초기 로드 시 저장된 상태 복원
+        if (isLorePage) {
+            var _lpStored = sessionStorage.getItem('mg_lore_panel');
+            if (_lpStored === 'closed') {
+                closeLore();
+            }
+        }
 
         window.MG_LorePanel = {
             open: openLore,
             close: closeLore,
             setLorePage: function(val) { isLorePage = val; },
-            updateFocus: updateLorePanelFocus
+            updateFocus: updateLorePanelFocus,
+            isOpen: function() { return isLoreOpen; }
         };
 
         // 매 페이지 로드 시 URL 기반 포커스 동기화 (캐시/bfcache 대응)

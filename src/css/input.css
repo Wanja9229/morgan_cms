@@ -136,6 +136,18 @@ body {
     @apply transition-colors duration-150;
 }
 
+/* 그누보드 에디터 textarea (class="" 빈 채로 출력됨) */
+#fwrite textarea,
+#fcommentform textarea {
+    @apply w-full px-3 py-2 rounded-md;
+    @apply bg-mg-bg-primary text-mg-text-primary;
+    @apply border border-mg-bg-tertiary;
+    @apply text-sm leading-relaxed;
+    @apply focus:outline-none focus:ring-2 focus:ring-mg-accent focus:border-transparent;
+    @apply transition-colors duration-150;
+    @apply resize-y;
+}
+
 /* 카드 컴포넌트 */
 .card {
     @apply bg-mg-bg-secondary rounded-lg p-4;
@@ -187,19 +199,16 @@ body {
 }
 
 .mg-emoticon-popup {
-    position: absolute;
-    bottom: 100%;
-    right: 0;
+    position: fixed;
     width: 320px;
     max-height: 360px;
     background: var(--mg-bg-secondary);
     border: 1px solid var(--mg-bg-tertiary);
     border-radius: 0.5rem;
     box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-    z-index: 100;
+    z-index: 1000;
     display: flex;
     flex-direction: column;
-    margin-bottom: 0.25rem;
 }
 
 .mg-emoticon-popup-header {

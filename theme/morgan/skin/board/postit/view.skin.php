@@ -78,10 +78,17 @@ $postit_accent = $postit_accents[$color_index];
         </div>
 
         <!-- 첨부파일 -->
-        <?php if ($view['file']) { ?>
+        <?php if (isset($view['file']['count']) && $view['file']['count']) { ?>
         <div class="border-t border-white/10 p-4">
             <h3 class="text-sm font-medium text-mg-text-muted mb-2">첨부파일</h3>
-            <?php echo $view['file']; ?>
+            <ul class="space-y-1">
+                <?php for ($i = 0; $i < count($view['file']); $i++) {
+                    if (empty($view['file'][$i]['source'])) continue;
+                    if ($view['file'][$i]['view']) continue;
+                ?>
+                <li><a href="<?php echo $view['file'][$i]['href']; ?>" class="text-sm text-mg-accent hover:underline"><?php echo $view['file'][$i]['source']; ?> <span class="text-xs text-mg-text-muted">(<?php echo $view['file'][$i]['size']; ?>)</span></a></li>
+                <?php } ?>
+            </ul>
         </div>
         <?php } ?>
 
@@ -165,7 +172,7 @@ $postit_accent = $postit_accents[$color_index];
     <?php } ?>
 
     <!-- 댓글 -->
-    <?php echo $view['comment']; ?>
+    <?php include_once(G5_BBS_PATH.'/view_comment.php'); ?>
 
 </div>
 
