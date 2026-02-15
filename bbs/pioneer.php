@@ -23,8 +23,12 @@ $view = isset($_GET['view']) ? clean_xss_tags($_GET['view']) : 'list';
 $my_stamina = mg_get_stamina($member['mb_id']);
 $my_materials = mg_get_materials($member['mb_id']);
 
-// 시설 목록 또는 상세
-if ($fc_id > 0 && $view === 'detail') {
+// 시설 목록 / 상세 / 파견
+if ($view === 'expedition') {
+    // 탐색 파견
+    $g5['title'] = '탐색 파견 - 개척';
+    $skin_file = 'expedition.skin.php';
+} elseif ($fc_id > 0 && $view === 'detail') {
     // 시설 상세
     $facility = mg_get_facility($fc_id);
     if (!$facility) {

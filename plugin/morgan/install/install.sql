@@ -1843,4 +1843,52 @@ CREATE TABLE IF NOT EXISTS `mg_relation` (
     INDEX `idx_relation_from` (`ch_id_from`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='캐릭터 관계';
 
+-- =====================================================
+-- 탐색 파견 시스템 (Phase 19)
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS `mg_expedition_area` (
+    `ea_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '파견지 ID',
+    `ea_name` varchar(100) NOT NULL COMMENT '파견지 이름',
+    `ea_desc` text COMMENT '설명',
+    `ea_icon` varchar(200) DEFAULT NULL COMMENT '아이콘',
+    `ea_stamina_cost` int(11) NOT NULL DEFAULT 2 COMMENT '필요 스태미나',
+    `ea_duration` int(11) NOT NULL DEFAULT 60 COMMENT '소요 시간(분)',
+    `ea_status` enum('active','hidden','locked') NOT NULL DEFAULT 'active' COMMENT '상태',
+    `ea_unlock_facility` int(11) DEFAULT NULL COMMENT '해금 조건 시설 ID',
+    `ea_partner_point` int(11) NOT NULL DEFAULT 10 COMMENT '파트너 보상 포인트',
+    `ea_order` int(11) NOT NULL DEFAULT 0 COMMENT '정렬 순서',
+    PRIMARY KEY (`ea_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='파견지 정의';
+
+CREATE TABLE IF NOT EXISTS `mg_expedition_drop` (
+    `ed_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '드롭 ID',
+    `ea_id` int(11) NOT NULL COMMENT '파견지 ID',
+    `mt_id` int(11) NOT NULL COMMENT '재료 종류 ID',
+    `ed_min` int(11) NOT NULL DEFAULT 1 COMMENT '최소 획득량',
+    `ed_max` int(11) NOT NULL DEFAULT 1 COMMENT '최대 획득량',
+    `ed_chance` int(11) NOT NULL DEFAULT 100 COMMENT '드롭 확률(0~100)',
+    `ed_is_rare` tinyint(1) NOT NULL DEFAULT 0 COMMENT '레어 드롭 여부',
+    PRIMARY KEY (`ed_id`),
+    INDEX `idx_drop_area` (`ea_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='파견지별 드롭 테이블';
+
+CREATE TABLE IF NOT EXISTS `mg_expedition_log` (
+    `el_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '파견 로그 ID',
+    `mb_id` varchar(20) NOT NULL COMMENT '파견 보낸 회원',
+    `ch_id` int(11) NOT NULL COMMENT '선택한 캐릭터 ID',
+    `partner_mb_id` varchar(20) DEFAULT NULL COMMENT '파트너 회원 ID',
+    `partner_ch_id` int(11) DEFAULT NULL COMMENT '파트너 캐릭터 ID',
+    `ea_id` int(11) NOT NULL COMMENT '파견지 ID',
+    `el_stamina_used` int(11) NOT NULL DEFAULT 0 COMMENT '소모 스태미나',
+    `el_start` datetime NOT NULL COMMENT '파견 시작 시각',
+    `el_end` datetime NOT NULL COMMENT '파견 완료 예정 시각',
+    `el_status` enum('active','complete','claimed','cancelled') NOT NULL DEFAULT 'active' COMMENT '상태',
+    `el_rewards` text COMMENT '획득 보상 JSON',
+    PRIMARY KEY (`el_id`),
+    INDEX `idx_expedition_mb` (`mb_id`, `el_status`),
+    INDEX `idx_expedition_ch` (`ch_id`),
+    INDEX `idx_expedition_partner` (`partner_ch_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='파견 기록';
+
 SET FOREIGN_KEY_CHECKS = 1;

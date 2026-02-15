@@ -7,6 +7,12 @@ if (!defined('_GNUBOARD_')) exit;
 ?>
 
 <div class="mg-inner">
+    <!-- 탭 네비게이션 -->
+    <div class="flex gap-2 mb-6 border-b border-mg-bg-tertiary pb-3">
+        <a href="<?php echo G5_BBS_URL; ?>/pioneer.php" class="px-4 py-2 text-sm font-medium text-mg-accent bg-mg-accent/10 rounded-lg">시설 건설</a>
+        <a href="<?php echo G5_BBS_URL; ?>/pioneer.php?view=expedition" class="px-4 py-2 text-sm font-medium text-mg-text-secondary hover:text-mg-text-primary rounded-lg transition-colors">탐색 파견</a>
+    </div>
+
     <!-- 헤더 -->
     <div class="mb-6">
         <h1 class="text-2xl font-bold text-mg-text-primary mb-2">개척 현황</h1>

@@ -79,6 +79,10 @@ $g5['mg_reward_queue_table'] = 'mg_reward_queue';
 // 관계 시스템
 $g5['mg_relation_table'] = 'mg_relation';
 $g5['mg_relation_icon_table'] = 'mg_relation_icon';
+// 탐색 파견 시스템
+$g5['mg_expedition_area_table'] = 'mg_expedition_area';
+$g5['mg_expedition_drop_table'] = 'mg_expedition_drop';
+$g5['mg_expedition_log_table'] = 'mg_expedition_log';
 
 // 캐릭터 이미지 저장 경로
 define('MG_CHAR_IMAGE_PATH', G5_DATA_PATH.'/character');
@@ -156,6 +160,10 @@ $mg['reward_queue_table'] = $g5['mg_reward_queue_table'];
 // 관계 시스템
 $mg['relation_table'] = $g5['mg_relation_table'];
 $mg['relation_icon_table'] = $g5['mg_relation_icon_table'];
+// 탐색 파견 시스템
+$mg['expedition_area_table'] = $g5['mg_expedition_area_table'];
+$mg['expedition_drop_table'] = $g5['mg_expedition_drop_table'];
+$mg['expedition_log_table'] = $g5['mg_expedition_log_table'];
 
 // 상점 이미지 저장 경로
 define('MG_SHOP_IMAGE_PATH', G5_DATA_PATH.'/shop');
@@ -3625,6 +3633,422 @@ function mg_reward_material($mb_id, $activity) {
  */
 function mg_pioneer_enabled() {
     return mg_config('pioneer_enabled', '1') === '1';
+}
+
+// ======================================
+// 탐색 파견 시스템
+// ======================================
+
+/**
+ * 파견지 목록
+ */
+function mg_get_expedition_areas($status = null, $mb_id = null) {
+    global $g5;
+
+    $where = '';
+    if ($status) {
+        $where = " WHERE ea_status = '" . sql_real_escape_string($status) . "'";
+    }
+
+    $sql = "SELECT * FROM {$g5['mg_expedition_area_table']}{$where} ORDER BY ea_order, ea_id";
+    $result = sql_query($sql);
+    $areas = array();
+
+    while ($row = sql_fetch_array($result)) {
+        // 드롭 테이블 함께 로드
+        $drop_sql = "SELECT ed.*, mt.mt_name, mt.mt_icon, mt.mt_code
+                     FROM {$g5['mg_expedition_drop_table']} ed
+                     LEFT JOIN {$g5['mg_material_type_table']} mt ON ed.mt_id = mt.mt_id
+                     WHERE ed.ea_id = {$row['ea_id']}
+                     ORDER BY ed.ed_is_rare, ed.ed_chance DESC";
+        $drop_result = sql_query($drop_sql);
+        $row['drops'] = array();
+        while ($drop = sql_fetch_array($drop_result)) {
+            $row['drops'][] = $drop;
+        }
+
+        // 해금 조건 체크
+        $row['is_unlocked'] = true;
+        if ($row['ea_unlock_facility'] && $mb_id) {
+            $fc = sql_fetch("SELECT fc_id, fc_name, fc_status FROM {$g5['mg_facility_table']}
+                            WHERE fc_id = " . (int)$row['ea_unlock_facility']);
+            if (!$fc || $fc['fc_status'] !== 'complete') {
+                $row['is_unlocked'] = false;
+            }
+            $row['unlock_facility_name'] = $fc ? $fc['fc_name'] : '';
+        }
+
+        $areas[] = $row;
+    }
+
+    return $areas;
+}
+
+/**
+ * 진행 중인 파견 목록
+ */
+function mg_get_active_expeditions($mb_id) {
+    global $g5;
+
+    $mb_id_esc = sql_real_escape_string($mb_id);
+    $now = date('Y-m-d H:i:s');
+
+    // active 상태 중 완료 시간 지난 것 → complete로 전환
+    sql_query("UPDATE {$g5['mg_expedition_log_table']}
+               SET el_status = 'complete'
+               WHERE mb_id = '{$mb_id_esc}' AND el_status = 'active' AND el_end <= '{$now}'");
+
+    $sql = "SELECT el.*, ea.ea_name, ea.ea_icon, ea.ea_image, ea.ea_partner_point,
+                   ch.ch_name, ch.ch_thumb,
+                   pch.ch_name as partner_ch_name, pch.ch_thumb as partner_ch_thumb,
+                   pm.mb_nick as partner_nick
+            FROM {$g5['mg_expedition_log_table']} el
+            LEFT JOIN {$g5['mg_expedition_area_table']} ea ON el.ea_id = ea.ea_id
+            LEFT JOIN {$g5['mg_character_table']} ch ON el.ch_id = ch.ch_id
+            LEFT JOIN {$g5['mg_character_table']} pch ON el.partner_ch_id = pch.ch_id
+            LEFT JOIN {$g5['member_table']} pm ON el.partner_mb_id = pm.mb_id
+            WHERE el.mb_id = '{$mb_id_esc}' AND el.el_status IN ('active', 'complete')
+            ORDER BY el.el_start DESC";
+    $result = sql_query($sql);
+    $expeditions = array();
+    while ($row = sql_fetch_array($result)) {
+        $row['is_complete'] = ($row['el_status'] === 'complete');
+        $row['remaining_seconds'] = max(0, strtotime($row['el_end']) - time());
+        $row['total_seconds'] = strtotime($row['el_end']) - strtotime($row['el_start']);
+        $row['progress'] = $row['total_seconds'] > 0
+            ? min(100, (($row['total_seconds'] - $row['remaining_seconds']) / $row['total_seconds']) * 100)
+            : 100;
+        $expeditions[] = $row;
+    }
+
+    return $expeditions;
+}
+
+/**
+ * 파견 시작
+ */
+function mg_start_expedition($mb_id, $ch_id, $ea_id, $partner_ch_id = null) {
+    global $g5;
+
+    $mb_id_esc = sql_real_escape_string($mb_id);
+    $ch_id = (int)$ch_id;
+    $ea_id = (int)$ea_id;
+
+    // 1. 파견지 확인
+    $area = sql_fetch("SELECT * FROM {$g5['mg_expedition_area_table']} WHERE ea_id = {$ea_id} AND ea_status = 'active'");
+    if (!$area) {
+        return array('success' => false, 'message' => '파견지를 찾을 수 없습니다.');
+    }
+
+    // 2. 해금 조건
+    if ($area['ea_unlock_facility']) {
+        $fc = sql_fetch("SELECT fc_status FROM {$g5['mg_facility_table']} WHERE fc_id = " . (int)$area['ea_unlock_facility']);
+        if (!$fc || $fc['fc_status'] !== 'complete') {
+            return array('success' => false, 'message' => '아직 해금되지 않은 파견지입니다.');
+        }
+    }
+
+    // 3. 동시 파견 수 제한
+    $max_slots = (int)mg_config('expedition_max_slots', 1);
+    $active_row = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_expedition_log_table']}
+                             WHERE mb_id = '{$mb_id_esc}' AND el_status IN ('active', 'complete')");
+    $active_count = (int)$active_row['cnt'];
+    if ($active_count >= $max_slots) {
+        return array('success' => false, 'message' => "동시 파견 수({$max_slots}회)를 초과했습니다.");
+    }
+
+    // 4. 캐릭터 소유 확인
+    $character = sql_fetch("SELECT ch_id, ch_name FROM {$g5['mg_character_table']}
+                            WHERE ch_id = {$ch_id} AND mb_id = '{$mb_id_esc}' AND ch_state = 'approved'");
+    if (!$character) {
+        return array('success' => false, 'message' => '사용할 수 없는 캐릭터입니다.');
+    }
+
+    // 5. 동일 캐릭터 파견 중 확인
+    $char_active = sql_fetch("SELECT el_id FROM {$g5['mg_expedition_log_table']}
+                              WHERE ch_id = {$ch_id} AND el_status IN ('active', 'complete')");
+    if ($char_active && $char_active['el_id']) {
+        return array('success' => false, 'message' => '이미 파견 중인 캐릭터입니다.');
+    }
+
+    // 6. 파트너 검증 (관계 기반)
+    $partner_mb_id = null;
+    if ($partner_ch_id) {
+        $partner_ch_id = (int)$partner_ch_id;
+
+        // 관계 확인
+        $rel = sql_fetch("SELECT cr_id FROM {$g5['mg_relation_table']}
+                          WHERE ((ch_id_a = {$ch_id} AND ch_id_b = {$partner_ch_id})
+                              OR (ch_id_a = {$partner_ch_id} AND ch_id_b = {$ch_id}))
+                          AND cr_status = 'active'");
+        if (!$rel || !$rel['cr_id']) {
+            return array('success' => false, 'message' => '관계가 맺어진 캐릭터만 파트너로 선택할 수 있습니다.');
+        }
+
+        // 파트너 캐릭터 소유자 확인
+        $partner_char = sql_fetch("SELECT ch_id, mb_id FROM {$g5['mg_character_table']}
+                                   WHERE ch_id = {$partner_ch_id} AND ch_state = 'approved'");
+        if (!$partner_char || !$partner_char['mb_id']) {
+            return array('success' => false, 'message' => '존재하지 않는 파트너 캐릭터입니다.');
+        }
+        $partner_mb_id = $partner_char['mb_id'];
+
+        // 자기 자신 불가
+        if ($partner_mb_id === $mb_id) {
+            return array('success' => false, 'message' => '자기 자신의 캐릭터를 파트너로 선택할 수 없습니다.');
+        }
+
+        // 1일 1회 동일 파트너 제한
+        $today = date('Y-m-d');
+        $today_partner = sql_fetch("SELECT el_id FROM {$g5['mg_expedition_log_table']}
+                                    WHERE mb_id = '{$mb_id_esc}' AND partner_ch_id = {$partner_ch_id}
+                                    AND DATE(el_start) = '{$today}'");
+        if ($today_partner && $today_partner['el_id']) {
+            return array('success' => false, 'message' => '오늘 이미 같은 파트너와 파견을 보냈습니다.');
+        }
+    }
+
+    // 7. 스태미나 차감
+    if (!mg_use_stamina($mb_id, $area['ea_stamina_cost'])) {
+        return array('success' => false, 'message' => '스태미나가 부족합니다. (필요: ' . $area['ea_stamina_cost'] . ')');
+    }
+
+    // 8. 파견 기록 생성
+    $now = date('Y-m-d H:i:s');
+    $end_time = date('Y-m-d H:i:s', time() + ($area['ea_duration'] * 60));
+    $partner_mb_col = $partner_mb_id ? "'" . sql_real_escape_string($partner_mb_id) . "'" : 'NULL';
+    $partner_ch_col = $partner_ch_id ? (int)$partner_ch_id : 'NULL';
+
+    sql_query("INSERT INTO {$g5['mg_expedition_log_table']}
+               (mb_id, ch_id, partner_mb_id, partner_ch_id, ea_id, el_stamina_used, el_start, el_end, el_status)
+               VALUES ('{$mb_id_esc}', {$ch_id}, {$partner_mb_col}, {$partner_ch_col}, {$ea_id},
+                       {$area['ea_stamina_cost']}, '{$now}', '{$end_time}', 'active')");
+
+    $el_id = sql_insert_id();
+
+    // 9. 업적 트리거
+    if (function_exists('mg_trigger_achievement')) {
+        mg_trigger_achievement($mb_id, 'expedition_start_count');
+    }
+
+    return array('success' => true, 'message' => '파견을 보냈습니다!', 'el_id' => $el_id, 'end_time' => $end_time);
+}
+
+/**
+ * 드롭 결과 계산
+ */
+function mg_calculate_drops($ea_id, $has_partner = false) {
+    global $g5;
+
+    $ea_id = (int)$ea_id;
+    $drops = array();
+    $has_rare = false;
+
+    $result = sql_query("SELECT ed.*, mt.mt_name, mt.mt_icon, mt.mt_code
+                         FROM {$g5['mg_expedition_drop_table']} ed
+                         LEFT JOIN {$g5['mg_material_type_table']} mt ON ed.mt_id = mt.mt_id
+                         WHERE ed.ea_id = {$ea_id}");
+
+    while ($row = sql_fetch_array($result)) {
+        $roll = mt_rand(1, 100);
+        if ($roll <= (int)$row['ed_chance']) {
+            $amount = mt_rand((int)$row['ed_min'], max((int)$row['ed_min'], (int)$row['ed_max']));
+            // 파트너 보너스 +20%
+            if ($has_partner && $amount > 0) {
+                $amount = (int)ceil($amount * 1.2);
+            }
+            if ($amount > 0) {
+                $drops[] = array(
+                    'mt_id'   => (int)$row['mt_id'],
+                    'mt_name' => $row['mt_name'],
+                    'mt_icon' => $row['mt_icon'],
+                    'mt_code' => $row['mt_code'],
+                    'amount'  => $amount,
+                    'is_rare' => (bool)$row['ed_is_rare'],
+                );
+                if ($row['ed_is_rare']) {
+                    $has_rare = true;
+                }
+            }
+        }
+    }
+
+    return array('items' => $drops, 'has_rare' => $has_rare);
+}
+
+/**
+ * 파견 보상 수령
+ */
+function mg_claim_expedition($mb_id, $el_id) {
+    global $g5;
+
+    $mb_id_esc = sql_real_escape_string($mb_id);
+    $el_id = (int)$el_id;
+
+    $log = sql_fetch("SELECT * FROM {$g5['mg_expedition_log_table']}
+                      WHERE el_id = {$el_id} AND mb_id = '{$mb_id_esc}'");
+
+    if (!$log) {
+        return array('success' => false, 'message' => '파견 기록을 찾을 수 없습니다.');
+    }
+
+    // active인데 시간 지났으면 complete로
+    if ($log['el_status'] === 'active') {
+        if (strtotime($log['el_end']) <= time()) {
+            sql_query("UPDATE {$g5['mg_expedition_log_table']}
+                       SET el_status = 'complete' WHERE el_id = {$el_id}");
+            $log['el_status'] = 'complete';
+        } else {
+            return array('success' => false, 'message' => '아직 파견이 진행 중입니다.');
+        }
+    }
+
+    if ($log['el_status'] !== 'complete') {
+        return array('success' => false, 'message' => '수령할 수 없는 상태입니다.');
+    }
+
+    // 드롭 계산 (파트너 보너스 반영)
+    $has_partner = !empty($log['partner_ch_id']);
+    $drop_result = mg_calculate_drops((int)$log['ea_id'], $has_partner);
+
+    // 재료 지급
+    foreach ($drop_result['items'] as $item) {
+        mg_add_material($mb_id, $item['mt_id'], $item['amount']);
+    }
+
+    // 상태 업데이트 + 보상 기록
+    $rewards_json = sql_real_escape_string(json_encode($drop_result, JSON_UNESCAPED_UNICODE));
+    sql_query("UPDATE {$g5['mg_expedition_log_table']}
+               SET el_status = 'claimed', el_rewards = '{$rewards_json}'
+               WHERE el_id = {$el_id}");
+
+    // 파트너 보상
+    if ($log['partner_mb_id']) {
+        $area = sql_fetch("SELECT ea_partner_point, ea_name FROM {$g5['mg_expedition_area_table']}
+                          WHERE ea_id = " . (int)$log['ea_id']);
+        $partner_point = $area ? (int)$area['ea_partner_point'] : 10;
+        if ($partner_point > 0) {
+            insert_point($log['partner_mb_id'], $partner_point,
+                        '파견 파트너 보상 (' . ($area ? $area['ea_name'] : '') . ')',
+                        'mg_expedition_log', $el_id, '파트너');
+
+            $my_info = get_member($mb_id, 'mb_nick');
+            $my_nick = $my_info['mb_nick'] ?? $mb_id;
+            mg_notify($log['partner_mb_id'], 'expedition',
+                     '파견 파트너 보상',
+                     "{$my_nick}님의 파견이 완료되어 {$partner_point}P를 받았습니다.",
+                     G5_BBS_URL . '/pioneer.php?view=expedition');
+        }
+    }
+
+    // 업적 트리거
+    if (function_exists('mg_trigger_achievement')) {
+        mg_trigger_achievement($mb_id, 'expedition_claim_count');
+        if ($drop_result['has_rare']) {
+            mg_trigger_achievement($mb_id, 'expedition_rare_drop_count');
+        }
+    }
+
+    return array(
+        'success' => true,
+        'message' => '보상을 수령했습니다!',
+        'rewards' => $drop_result
+    );
+}
+
+/**
+ * 파견 취소 (스태미나 미반환)
+ */
+function mg_cancel_expedition($mb_id, $el_id) {
+    global $g5;
+
+    $mb_id_esc = sql_real_escape_string($mb_id);
+    $el_id = (int)$el_id;
+
+    $log = sql_fetch("SELECT * FROM {$g5['mg_expedition_log_table']}
+                      WHERE el_id = {$el_id} AND mb_id = '{$mb_id_esc}' AND el_status = 'active'");
+
+    if (!$log || !$log['el_id']) {
+        return array('success' => false, 'message' => '취소할 수 있는 파견이 없습니다.');
+    }
+
+    sql_query("UPDATE {$g5['mg_expedition_log_table']}
+               SET el_status = 'cancelled' WHERE el_id = {$el_id}");
+
+    return array('success' => true, 'message' => '파견이 취소되었습니다. (스태미나는 반환되지 않습니다)');
+}
+
+/**
+ * 파견 이력 (최근 N건)
+ */
+function mg_get_expedition_history($mb_id, $limit = 10) {
+    global $g5;
+
+    $mb_id_esc = sql_real_escape_string($mb_id);
+    $limit = (int)$limit;
+
+    $sql = "SELECT el.*, ea.ea_name, ea.ea_icon, ch.ch_name,
+                   pch.ch_name as partner_ch_name, pm.mb_nick as partner_nick
+            FROM {$g5['mg_expedition_log_table']} el
+            LEFT JOIN {$g5['mg_expedition_area_table']} ea ON el.ea_id = ea.ea_id
+            LEFT JOIN {$g5['mg_character_table']} ch ON el.ch_id = ch.ch_id
+            LEFT JOIN {$g5['mg_character_table']} pch ON el.partner_ch_id = pch.ch_id
+            LEFT JOIN {$g5['member_table']} pm ON el.partner_mb_id = pm.mb_id
+            WHERE el.mb_id = '{$mb_id_esc}' AND el.el_status IN ('claimed', 'cancelled')
+            ORDER BY el.el_start DESC
+            LIMIT {$limit}";
+    $result = sql_query($sql);
+    $history = array();
+    while ($row = sql_fetch_array($result)) {
+        if ($row['el_rewards']) {
+            $row['el_rewards_parsed'] = json_decode($row['el_rewards'], true);
+        }
+        $history[] = $row;
+    }
+    return $history;
+}
+
+/**
+ * 캐릭터의 관계 목록에서 파트너 후보 조회
+ */
+function mg_get_expedition_partner_candidates($ch_id) {
+    global $g5;
+
+    $ch_id = (int)$ch_id;
+    $relations = mg_get_relations($ch_id, 'active');
+    $candidates = array();
+
+    foreach ($relations as $rel) {
+        // 상대 캐릭터 정보 추출
+        if ((int)$rel['ch_id_a'] === $ch_id) {
+            $partner = array(
+                'ch_id' => (int)$rel['ch_id_b'],
+                'ch_name' => $rel['name_b'],
+                'ch_thumb' => $rel['thumb_b'],
+                'mb_id' => $rel['mb_id_b'],
+                'relation_label' => $rel['ri_label'],
+                'relation_icon' => $rel['ri_icon'],
+            );
+        } else {
+            $partner = array(
+                'ch_id' => (int)$rel['ch_id_a'],
+                'ch_name' => $rel['name_a'],
+                'ch_thumb' => $rel['thumb_a'],
+                'mb_id' => $rel['mb_id_a'],
+                'relation_label' => $rel['ri_label'],
+                'relation_icon' => $rel['ri_icon'],
+            );
+        }
+
+        // 자기 자신 캐릭터 제외
+        if ($partner['mb_id'] === sql_fetch("SELECT mb_id FROM {$g5['mg_character_table']} WHERE ch_id = {$ch_id}")['mb_id']) {
+            continue;
+        }
+
+        $candidates[] = $partner;
+    }
+
+    return $candidates;
 }
 
 // ======================================

@@ -73,9 +73,9 @@ Morgan 자체 시스템(캐릭터, 상점, 역극, 개척, 보상, 업적, 인�
 16. 프롬프트 미션 (DB 2테이블: prompt/prompt_entry, admin CRUD+리뷰, 게시판 스킨, write hook)
 17. 캐릭터 관계 (관계도, vis.js 그래프, UI 재배치)
 18. 댓글 주사위 + 이모티콘 피커 보완
+19. 탐색 파견 (DB 3테이블, 관리자 CRUD+로그, 프론트 AJAX UI, 관계 기반 파트너+20% 보너스)
 
 ### 미구현 (1차)
-- **Phase 19**: 탐색 파견 (개척 확장, 파트너 시스템) → `docs/plans/PIONEER_EXPEDITION.md`
 - **Phase 20**: 의뢰 매칭 (창작 협업 의뢰/지원/매칭) → `docs/plans/CONCIERGE.md`
 
 ### 2차 작업 (별도 진행)
