@@ -93,14 +93,6 @@ Morgan 자체 시스템(캐릭터, 상점, 역극, 개척, 보상, 업적, 인�
 4. **PHP syntax check** 후 커밋
 5. 새 테이블 추가 시 `morgan.php`에 `$g5` + `$mg` 양쪽 등록
 
-## 서브 에이전트
-
-작업 유형별 전문 가이드가 `.claude/agents/`에 준비되어 있음:
-- `phase-builder.md` — 새 Phase 구현 워크플로우
-- `admin-page.md` — 관리자 CRUD 페이지 스캐폴딩
-- `frontend-ui.md` — 프론트엔드 UI/반응형 작업
-- `verify-deploy.md` — 검증 및 배포 절차
-
 ## 상세 문서
 
 | 문서 | 경로 |

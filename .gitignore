@@ -51,8 +51,7 @@ credentials.json
 *.bak
 
 # Claude Code
-.claude/*
-!.claude/agents/
+.claude/
 
 # DB dumps (배포 불필요)
 morgan_db_*.sql
