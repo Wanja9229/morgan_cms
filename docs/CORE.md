@@ -25,10 +25,14 @@
 - [x] Phase 15: 세계관 위키 (DB 5테이블, admin CRUD, 프론트 위키+타임라인, 사이드바)
 - [x] Phase 16: 프롬프트 미션 (DB 2테이블, admin CRUD+리뷰, 게시판 스킨, write hook)
 
-### 미구현 (Phase 17~19)
-- [ ] Phase 17: 캐릭터 관계 (관계도, vis.js) → `plans/CHARACTER_RELATION.md`
-- [ ] Phase 18: 연구 트리 (공동 투자, 버프) → `plans/RESEARCH_TREE.md`
-- [ ] Phase 19: SS Engine / TRPG 세션 → `plans/SS_ENGINE.md`
+### 완료 (Phase 17~18)
+- [x] Phase 17: 캐릭터 관계 (관계도, vis.js, UI 재배치) → `plans/CHARACTER_RELATION.md`
+- [x] Phase 18: 댓글 주사위 + 이모티콘 피커 보완 → `plans/DICE_SYSTEM.md`
+
+### 미구현 (Phase 19~21)
+- [ ] Phase 19: 탐색 파견 (개척 확장, 파트너) → `plans/PIONEER_EXPEDITION.md`
+- [ ] Phase 20: 연구 트리 (공동 투자, 버프) → `plans/RESEARCH_TREE.md`
+- [ ] Phase 21: SS Engine (세미 턴제 RPG) → `plans/SS_ENGINE_DESIGN.md`
 
 ### 2차 (별도 패키지)
 - [ ] VN Engine (역극→비주얼노벨 변환) → `MODULES.md`

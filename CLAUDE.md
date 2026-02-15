@@ -54,7 +54,7 @@ Morgan 자체 시스템(캐릭터, 상점, 역극, 개척, 보상, 업적, 인�
 
 ## Phase 진행률
 
-### 완료 (Phase 1~16)
+### 완료 (Phase 1~18)
 1. 테마 기본 구조 (Tailwind, 다크테마, 사이드바)
 2. 캐릭터 시스템 (등록, 승인, 프로필, 세력/종족)
 3. 포인트/출석 (출석체크, 주사위 게임)
@@ -71,23 +71,24 @@ Morgan 자체 시스템(캐릭터, 상점, 역극, 개척, 보상, 업적, 인�
 14. 인장 시스템 (시그니처카드, 편집/미리보기, 마이페이지)
 15. 세계관 위키 (DB 5테이블: lore_category/article/section/era/event, admin CRUD, 프론트, 타임라인)
 16. 프롬프트 미션 (DB 2테이블: prompt/prompt_entry, admin CRUD+리뷰, 게시판 스킨, write hook)
+17. 캐릭터 관계 (관계도, vis.js 그래프, UI 재배치)
+18. 댓글 주사위 + 이모티콘 피커 보완
 
-### 미구현 (Phase 17~21)
-- **Phase 17**: 캐릭터 관계 (request→approve, vis.js 그래프) → `docs/plans/CHARACTER_RELATION.md`
-- **Phase 18**: 댓글 주사위 (서버사이드 rand, 역극/이벤트용) → `docs/plans/DICE_SYSTEM.md`
+### 미구현 (Phase 19~21)
 - **Phase 19**: 탐색 파견 (개척 확장, 파트너 시스템) → `docs/plans/PIONEER_EXPEDITION.md`
 - **Phase 20**: 연구 트리 (공동 투자, 시설 해금) → `docs/plans/RESEARCH_TREE.md`
-- **Phase 21**: SS Engine / TRPG 세션 → `docs/plans/SS_ENGINE.md`
+- **Phase 21**: SS Engine (세미 턴제 RPG) → `docs/plans/SS_ENGINE_DESIGN.md`
 
 ### 2차 패키지 (별도)
 - VN Engine, 익명망, 마이룸, TRPG 스탯 → `docs/MODULES.md`
 
 ## 작업 규칙
 
-1. **Phase 작업 시 반드시 해당 plan 문서를 먼저 읽을 것**: `docs/plans/{해당_시스템}.md`를 확인한 후 작업 시작. DB 스키마, API 설계, UI 기획이 모두 포함되어 있음.
-2. **Git push는 사용자 요청 시에만** 실행
-3. **PHP syntax check** 후 커밋
-4. 새 테이블 추가 시 `morgan.php`에 `$g5` + `$mg` 양쪽 등록
+1. **모든 응답은 한국어로 작성** (코드/명령어 제외)
+2. **Phase 작업 시 반드시 해당 plan 문서를 먼저 읽을 것**: `docs/plans/{해당_시스템}.md`를 확인한 후 작업 시작. DB 스키마, API 설계, UI 기획이 모두 포함되어 있음.
+3. **Git push는 사용자 요청 시에만** 실행
+4. **PHP syntax check** 후 커밋
+5. 새 테이블 추가 시 `morgan.php`에 `$g5` + `$mg` 양쪽 등록
 
 ## 서브 에이전트
 

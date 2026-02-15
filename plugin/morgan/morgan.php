@@ -3736,7 +3736,7 @@ function mg_is_unlocked($type, $target = '') {
     $facility = sql_fetch($sql);
 
     // 연결된 시설이 없으면 해금된 것으로 처리
-    if (!$facility['fc_id']) {
+    if (!$facility || !$facility['fc_id']) {
         return true;
     }
 
@@ -3793,7 +3793,7 @@ function mg_get_unlock_info($type, $target = '') {
 
     $facility = sql_fetch($sql);
 
-    if (!$facility['fc_id']) {
+    if (!$facility || !$facility['fc_id']) {
         return null;
     }
 
