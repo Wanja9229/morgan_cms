@@ -12,7 +12,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Test FTP - check directory structure
+      - name: Test FTP - upload concierge.php
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq lftp
 
@@ -23,12 +23,8 @@ jobs:
             set net:reconnect-interval-base 5;
             open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASS }} \
               ftp://${{ secrets.FTP_HOST }};
-            echo '=== FTP root ===';
-            ls;
-            echo '=== www/ ===';
-            ls www/ || echo 'www/ not found';
-            echo '=== bbs/ ===';
-            ls bbs/ || echo 'bbs/ not found';
-            echo '=== ./www/bbs/ ===';
-            ls ./www/bbs/ || echo './www/bbs/ not found';
+            put bbs/concierge.php -o ./bbs/concierge.php;
+            echo '--- Upload OK ---';
+            ls ./bbs/concierge.php;
           "
+          echo "Test done."
