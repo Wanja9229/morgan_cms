@@ -500,10 +500,10 @@ A: *주변을 둘러본다*
 
 ## 참고 자료
 
-- VN Engine 기존 코드: `F:\projects\vn_engine`
-- SS Engine 상세 기획: `F:\projects\new_cms\docs\PLAN_SS_ENGINE.md`
-- 익명망 기존 구현: `F:\projects\vn_engine\moonveil\board`
-- Morgan CMS 전체 기획: `F:\projects\new_cms\docs\OVERVIEW.md`
+- VN Engine 상세 기획: `docs/plans/VN_ENGINE.md`
+- SS Engine 상세 기획: `docs/plans/SS_ENGINE_DESIGN.md`
+- 진영 컨텐츠 상세 기획: `docs/plans/FACTION.md`
+- 전체 로드맵: `docs/ROADMAP.md`
 
 ---
 

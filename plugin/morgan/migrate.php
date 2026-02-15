@@ -28,7 +28,9 @@ function mg_run_migrations() {
     $mig_dir = G5_PATH . '/db/migrations';
     if (!is_dir($mig_dir)) return;
 
-    $files = glob($mig_dir . '/*.sql');
+    $sql_files = glob($mig_dir . '/*.sql');
+    $php_files = glob($mig_dir . '/*.php');
+    $files = array_merge($sql_files ?: array(), $php_files ?: array());
     if (!$files) return;
     sort($files);
 
@@ -44,20 +46,33 @@ function mg_run_migrations() {
         $filename = basename($file);
         if (in_array($filename, $applied)) continue;
 
-        $sql_content = file_get_contents($file);
-        if (!trim($sql_content)) continue;
+        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
 
-        // 세미콜론으로 분리 (단순 SQL 전용 — 프로시저/트리거 제외)
-        $statements = array_filter(array_map('trim', explode(';', $sql_content)));
-        $success = true;
-
-        foreach ($statements as $stmt) {
-            if (!$stmt) continue;
-            $ret = @sql_query($stmt, false);
-            if ($ret === false) {
+        if ($ext === 'php') {
+            // PHP 마이그레이션: 파일을 include하여 실행
+            $success = true;
+            try {
+                include($file);
+            } catch (Exception $e) {
                 $success = false;
-                error_log("[Morgan Migration] FAILED: {$filename} — " . substr($stmt, 0, 200));
-                break;
+                error_log("[Morgan Migration] PHP FAILED: {$filename} — " . $e->getMessage());
+            }
+        } else {
+            // SQL 마이그레이션: 세미콜론으로 분리 실행
+            $sql_content = file_get_contents($file);
+            if (!trim($sql_content)) continue;
+
+            $statements = array_filter(array_map('trim', explode(';', $sql_content)));
+            $success = true;
+
+            foreach ($statements as $stmt) {
+                if (!$stmt) continue;
+                $ret = @sql_query($stmt, false);
+                if ($ret === false) {
+                    $success = false;
+                    error_log("[Morgan Migration] FAILED: {$filename} — " . substr($stmt, 0, 200));
+                    break;
+                }
             }
         }
 
