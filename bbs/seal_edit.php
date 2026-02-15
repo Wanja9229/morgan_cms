@@ -284,7 +284,7 @@ if (!empty($seal['seal_image'])) {
                     ?>
                     <button type="button" onclick="setTextColor('<?php echo $hex; ?>')"
                             class="w-7 h-7 rounded-full border border-mg-bg-tertiary flex items-center justify-center <?php echo $active; ?>"
-                            style="<?php echo $hex ? 'background:'.$hex : 'background:#2b2d31;'; ?>"
+                            style="<?php echo $hex ? 'background:'.$hex : 'background:var(--mg-bg-secondary,#2b2d31);'; ?>"
                             title="<?php echo $name; ?>">
                         <?php if (!$hex) { ?><span class="text-[10px] text-mg-text-muted">A</span><?php } ?>
                     </button>

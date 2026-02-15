@@ -458,7 +458,16 @@ include_once(G5_THEME_PATH.'/head.php');
 
     function loadVisGraph() {
         var container = document.getElementById('rel-graph-container');
-        container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#949ba4;">관계도 로딩중...</div>';
+        var _cs = getComputedStyle(document.documentElement);
+        var _clr = {
+            accent: _cs.getPropertyValue('--mg-accent').trim() || '#f59e0b',
+            accentHover: _cs.getPropertyValue('--mg-accent-hover').trim() || '#d97706',
+            bgSec: _cs.getPropertyValue('--mg-bg-secondary').trim() || '#2b2d31',
+            textPri: _cs.getPropertyValue('--mg-text-primary').trim() || '#f2f3f5',
+            textSec: _cs.getPropertyValue('--mg-text-secondary').trim() || '#b5bac1',
+            textMuted: _cs.getPropertyValue('--mg-text-muted').trim() || '#949ba4'
+        };
+        container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--mg-text-muted,#949ba4);">관계도 로딩중...</div>';
 
         // vis.js CDN 로드
         var link = document.createElement('link');
@@ -473,7 +482,7 @@ include_once(G5_THEME_PATH.'/head.php');
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     if (!data.nodes || data.nodes.length === 0) {
-                        container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#949ba4;">표시할 관계가 없습니다.</div>';
+                        container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--mg-text-muted,#949ba4);">표시할 관계가 없습니다.</div>';
                         return;
                     }
                     container.innerHTML = '';
@@ -481,8 +490,8 @@ include_once(G5_THEME_PATH.'/head.php');
                         var nodeOpt = {
                             id: n.ch_id,
                             label: n.ch_name,
-                            color: { background: n.ch_id === <?php echo $ch_id; ?> ? '#f59e0b' : '#2b2d31', border: n.ch_id === <?php echo $ch_id; ?> ? '#d97706' : '#444' },
-                            font: { color: '#f2f3f5', size: 12 },
+                            color: { background: n.ch_id === <?php echo $ch_id; ?> ? _clr.accent : _clr.bgSec, border: n.ch_id === <?php echo $ch_id; ?> ? _clr.accentHover : '#444' },
+                            font: { color: _clr.textPri, size: 12 },
                             borderWidth: n.ch_id === <?php echo $ch_id; ?> ? 3 : 1,
                         };
                         if (n.ch_thumb) {
@@ -498,9 +507,9 @@ include_once(G5_THEME_PATH.'/head.php');
                         return {
                             from: e.ch_id_a, to: e.ch_id_b,
                             label: e.label_display || '',
-                            color: { color: e.edge_color || '#666', highlight: '#f59e0b' },
+                            color: { color: e.edge_color || '#666', highlight: _clr.accent },
                             width: e.edge_width || 2,
-                            font: { color: '#b5bac1', size: 10, strokeWidth: 3, strokeColor: '#1a1a1a' },
+                            font: { color: _clr.textSec, size: 10, strokeWidth: 3, strokeColor: '#1a1a1a' },
                             smooth: { type: 'continuous' }
                         };
                     }));

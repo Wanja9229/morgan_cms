@@ -31,17 +31,36 @@ if (isset($menu)) {
     <style>
         /* Morgan Admin Base Styles */
         :root {
-            --mg-bg-primary: #1e1f22;
-            --mg-bg-secondary: #2b2d31;
-            --mg-bg-tertiary: #313338;
+            <?php
+            // DB에서 관리자 설정 색상 로드
+            $_adm_accent = function_exists('mg_config') ? mg_config('color_accent', '#f59f0a') : '#f59f0a';
+            $_adm_bg_pri = function_exists('mg_config') ? mg_config('color_bg_primary', '#1e1f22') : '#1e1f22';
+            $_adm_bg_sec = function_exists('mg_config') ? mg_config('color_bg_secondary', '#2b2d31') : '#2b2d31';
+            $_adm_border = function_exists('mg_config') ? mg_config('color_border', '#313338') : '#313338';
+            ?>
+            --mg-bg-primary: <?php echo $_adm_bg_pri; ?>;
+            --mg-bg-secondary: <?php echo $_adm_bg_sec; ?>;
+            --mg-bg-tertiary: <?php echo $_adm_border; ?>;
             --mg-text-primary: #f2f3f5;
             --mg-text-secondary: #b5bac1;
             --mg-text-muted: #949ba4;
-            --mg-accent: #f59f0a;
-            --mg-accent-hover: #d97706;
+            --mg-accent: <?php echo $_adm_accent; ?>;
+            --mg-accent-hover: <?php echo function_exists('mg_darken_color') ? mg_darken_color($_adm_accent, 15) : '#d97706'; ?>;
             --mg-success: #22c55e;
             --mg-error: #ef4444;
             --mg-warning: #f59e0b;
+            /* Tailwind v4 연동 */
+            --color-mg-bg-primary: var(--mg-bg-primary);
+            --color-mg-bg-secondary: var(--mg-bg-secondary);
+            --color-mg-bg-tertiary: var(--mg-bg-tertiary);
+            --color-mg-text-primary: var(--mg-text-primary);
+            --color-mg-text-secondary: var(--mg-text-secondary);
+            --color-mg-text-muted: var(--mg-text-muted);
+            --color-mg-accent: var(--mg-accent);
+            --color-mg-accent-hover: var(--mg-accent-hover);
+            --color-mg-success: var(--mg-success);
+            --color-mg-warning: var(--mg-warning);
+            --color-mg-error: var(--mg-error);
         }
 
         * {

@@ -87,14 +87,31 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
     <!-- CSS 변수 (테마 컬러) -->
     <style>
         :root {
-            --mg-bg-primary: <?php echo $mg_theme_colors['bg-primary']; ?>;
-            --mg-bg-secondary: <?php echo $mg_theme_colors['bg-secondary']; ?>;
-            --mg-bg-tertiary: <?php echo $mg_theme_colors['bg-tertiary']; ?>;
-            --mg-text-primary: <?php echo $mg_theme_colors['text-primary']; ?>;
-            --mg-text-secondary: <?php echo $mg_theme_colors['text-secondary']; ?>;
-            --mg-text-muted: <?php echo $mg_theme_colors['text-muted']; ?>;
-            --mg-accent: <?php echo $mg_theme_colors['accent']; ?>;
-            --mg-accent-hover: <?php echo $mg_theme_colors['accent-hover']; ?>;
+            /* Tailwind v4 연동 (--color- 접두사) */
+            --color-mg-bg-primary: <?php echo $mg_theme_colors['bg-primary']; ?>;
+            --color-mg-bg-secondary: <?php echo $mg_theme_colors['bg-secondary']; ?>;
+            --color-mg-bg-tertiary: <?php echo $mg_theme_colors['bg-tertiary']; ?>;
+            --color-mg-text-primary: <?php echo $mg_theme_colors['text-primary']; ?>;
+            --color-mg-text-secondary: <?php echo $mg_theme_colors['text-secondary']; ?>;
+            --color-mg-text-muted: <?php echo $mg_theme_colors['text-muted']; ?>;
+            --color-mg-accent: <?php echo $mg_theme_colors['accent']; ?>;
+            --color-mg-accent-hover: <?php echo $mg_theme_colors['accent-hover']; ?>;
+            --color-mg-success: #22c55e;
+            --color-mg-warning: #eab308;
+            --color-mg-error: #ef4444;
+
+            /* 호환 별칭 — var(--mg-*) 직접 참조용 (관리자·위젯·인라인 등 47개 파일) */
+            --mg-bg-primary: var(--color-mg-bg-primary);
+            --mg-bg-secondary: var(--color-mg-bg-secondary);
+            --mg-bg-tertiary: var(--color-mg-bg-tertiary);
+            --mg-text-primary: var(--color-mg-text-primary);
+            --mg-text-secondary: var(--color-mg-text-secondary);
+            --mg-text-muted: var(--color-mg-text-muted);
+            --mg-accent: var(--color-mg-accent);
+            --mg-accent-hover: var(--color-mg-accent-hover);
+            --mg-success: var(--color-mg-success);
+            --mg-warning: var(--color-mg-warning);
+            --mg-error: var(--color-mg-error);
             --mg-button: <?php echo isset($mg_theme_colors['button']) ? $mg_theme_colors['button'] : $mg_theme_colors['accent']; ?>;
             --mg-button-hover: <?php echo isset($mg_theme_colors['button-hover']) ? $mg_theme_colors['button-hover'] : $mg_theme_colors['accent-hover']; ?>;
             --mg-content-width: <?php echo function_exists('mg_config') ? mg_config('content_max_width', '72rem') : '72rem'; ?>;
