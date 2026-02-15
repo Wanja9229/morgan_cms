@@ -74,13 +74,14 @@ Morgan 자체 시스템(캐릭터, 상점, 역극, 개척, 보상, 업적, 인�
 17. 캐릭터 관계 (관계도, vis.js 그래프, UI 재배치)
 18. 댓글 주사위 + 이모티콘 피커 보완
 
-### 미구현 (1차 마지막)
+### 미구현 (1차)
 - **Phase 19**: 탐색 파견 (개척 확장, 파트너 시스템) → `docs/plans/PIONEER_EXPEDITION.md`
+- **Phase 20**: 의뢰 매칭 (창작 협업 의뢰/지원/매칭) → `docs/plans/CONCIERGE.md`
 
 ### 2차 작업 (별도 진행)
 - **2차-A**: 연구 트리 (공동 투자, 시설 해금) → `docs/plans/RESEARCH_TREE.md`
 - **2차-B**: SS Engine (세미 턴제 RPG) → `docs/plans/SS_ENGINE_DESIGN.md`
-- **2차-C**: 진영 컨텐츠 (익명망 + 대립) → `docs/MODULES.md`
+- **2차-C**: 진영 컨텐츠 (익명망 + 카드배틀 + 점령전) → `docs/plans/FACTION.md`
 
 ### 프리미엄 모듈 (별도 패키지)
 - VN Engine, 마이룸 → `docs/MODULES.md`
