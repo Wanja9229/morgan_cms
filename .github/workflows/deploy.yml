@@ -11,42 +11,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
 
-      - name: Install git-ftp
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq git-ftp
-
-      - name: Deploy via git-ftp
+      - name: Test SFTP - upload concierge.php only
         run: |
-          git ftp push \
-            --user "${{ secrets.FTP_USER }}" \
-            --passwd "${{ secrets.FTP_PASS }}" \
-            --insecure \
-            "ftp://${{ secrets.FTP_HOST }}" \
-          || {
-            echo "No sync state found. Uploading key files manually..."
-            FTP_URL="ftp://${{ secrets.FTP_HOST }}"
-            FTP_AUTH="${{ secrets.FTP_USER }}:${{ secrets.FTP_PASS }}"
+          sudo apt-get update -qq && sudo apt-get install -y -qq lftp
 
-            # Upload mobile nav changes
-            curl -s --insecure --ftp-create-dirs -u "$FTP_AUTH" \
-              -T "theme/morgan/head.php" "$FTP_URL/theme/morgan/head.php"
-            echo "  Uploaded: theme/morgan/head.php"
-
-            curl -s --insecure --ftp-create-dirs -u "$FTP_AUTH" \
-              -T "theme/morgan/js/app.js" "$FTP_URL/theme/morgan/js/app.js"
-            echo "  Uploaded: theme/morgan/js/app.js"
-
-            curl -s --insecure -u "$FTP_AUTH" \
-              -T ".gitattributes" "$FTP_URL/.gitattributes"
-            echo "  Uploaded: .gitattributes"
-
-            # Set sync point so future 'push' works
-            COMMIT=$(git log -1 --format="%H")
-            echo "$COMMIT" > /tmp/.git-ftp.log
-            curl -s --insecure -u "$FTP_AUTH" \
-              -T /tmp/.git-ftp.log "$FTP_URL/.git-ftp.log"
-            echo "  Sync point set to $COMMIT"
-            echo "Done. Future pushes will upload only changed files."
-          }
+          lftp -c "
+            set sftp:auto-confirm yes;
+            set net:max-retries 3;
+            set net:reconnect-interval-base 5;
+            open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASS }} \
+              sftp://${{ secrets.FTP_HOST }}:2222;
+            put bbs/concierge.php -o ./www/bbs/concierge.php;
+            echo '--- Upload complete ---';
+            ls ./www/bbs/concierge.php;
+          "
+          echo "Test done."
