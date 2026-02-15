@@ -12,16 +12,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Test SFTP - upload concierge.php only
+      - name: Test FTP via lftp - upload concierge.php only
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq lftp
 
           lftp -c "
-            set sftp:auto-confirm yes;
-            set net:max-retries 3;
+            set ftp:ssl-allow yes;
+            set ssl:verify-certificate no;
+            set net:max-retries 5;
             set net:reconnect-interval-base 5;
             open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASS }} \
-              sftp://${{ secrets.FTP_HOST }}:2222;
+              ftp://${{ secrets.FTP_HOST }};
             put bbs/concierge.php -o ./www/bbs/concierge.php;
             echo '--- Upload complete ---';
             ls ./www/bbs/concierge.php;
