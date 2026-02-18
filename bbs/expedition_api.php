@@ -30,6 +30,8 @@ switch ($action) {
             'active' => $active,
             'max_slots' => $max_slots,
             'used_slots' => count($active),
+            'ui_mode' => mg_config('expedition_ui_mode', 'list'),
+            'map_image' => mg_config('expedition_map_image', ''),
         ));
         break;
 

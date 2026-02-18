@@ -18,12 +18,12 @@ $menu["menu800"] = array(
     array('800160', '위키 카테고리', $mg_admin_url . '/lore_category.php', 'mg_lore', '세계관'),
     array('800170', '위키 문서', $mg_admin_url . '/lore_article.php', 'mg_lore'),
     array('800175', '타임라인', $mg_admin_url . '/lore_timeline.php', 'mg_lore'),
+    array('800178', '지도', $mg_admin_url . '/lore_map.php', 'mg_lore'),
     // 회원 / 캐릭터
     array('800190', '회원 관리', $mg_admin_url . '/member_list.php', 'mg_member', '회원 / 캐릭터'),
     array('800200', '캐릭터 관리', $mg_admin_url . '/character_list.php', 'mg_character'),
     array('800300', '프로필 필드 관리', $mg_admin_url . '/profile_field.php', 'mg_profile'),
     array('800400', '진영/클래스 관리', $mg_admin_url . '/side_class.php', 'mg_side_class'),
-    array('801600', '관계 아이콘', $mg_admin_url . '/relation_icon.php', 'mg_relation'),
     array('801700', '관계 관리', $mg_admin_url . '/relation.php', 'mg_relation'),
     array('801300', '인장 관리', $mg_admin_url . '/seal.php', 'mg_seal'),
     // 활동

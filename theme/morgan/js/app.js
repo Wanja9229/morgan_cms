@@ -413,7 +413,7 @@
                         activeId = 'inventory';
                     } else if (script === 'notification.php') {
                         activeId = 'notification';
-                    } else if (script === 'lore.php' || script === 'lore_view.php' || script === 'lore_timeline.php') {
+                    } else if (script === 'lore.php' || script === 'lore_view.php' || script === 'lore_timeline.php' || script === 'lore_map.php') {
                         activeId = 'lore';
                     } else if (script === 'pioneer.php') {
                         activeId = 'pioneer';

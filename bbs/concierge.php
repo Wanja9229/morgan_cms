@@ -94,7 +94,7 @@ include_once(G5_THEME_PATH.'/head.php');
            class="card block hover:border-mg-accent border border-transparent transition-colors <?php if ($is_highlighted) echo 'ring-1 ring-mg-accent'; ?>">
             <div class="flex items-start gap-3">
                 <?php if ($item['ch_thumb']) { ?>
-                <img src="<?php echo htmlspecialchars($item['ch_thumb']); ?>" class="w-10 h-10 rounded-full object-cover flex-shrink-0">
+                <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.htmlspecialchars($item['ch_thumb']); ?>" class="w-10 h-10 rounded-full object-cover flex-shrink-0">
                 <?php } else { ?>
                 <div class="w-10 h-10 rounded-full bg-mg-bg-tertiary flex items-center justify-center text-mg-text-muted flex-shrink-0">?</div>
                 <?php } ?>

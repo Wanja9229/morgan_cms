@@ -15,4 +15,10 @@ $faction_id = isset($_GET['faction_id']) ? (int)$_GET['faction_id'] : 0;
 
 $data = mg_get_relation_graph($ch_id, $depth, $category, $faction_id);
 
+// 저장된 노드 배치 좌표
+if ($ch_id) {
+    $char = sql_fetch("SELECT ch_graph_layout FROM {$g5['mg_character_table']} WHERE ch_id = {$ch_id}");
+    $data['layout'] = $char['ch_graph_layout'] ? json_decode($char['ch_graph_layout'], true) : null;
+}
+
 echo json_encode($data);

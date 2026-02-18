@@ -138,13 +138,18 @@ if (!empty($list)) {
     <?php } ?>
 
     <!-- 댓글 작성 폼 -->
+    <?php
+    // 댓글 토큰 생성
+    $comment_token = _token();
+    set_session('ss_comment_token', $comment_token);
+    ?>
     <?php if ($is_comment_write) { ?>
     <form name="fcomment" id="fcomment" action="<?php echo $comment_action_url; ?>" method="post" onsubmit="return fcomment_submit(this);">
         <input type="hidden" name="w" value="">
         <input type="hidden" name="bo_table" value="<?php echo $bo_table; ?>">
         <input type="hidden" name="wr_id" value="<?php echo $wr_id; ?>">
         <input type="hidden" name="comment_id" value="">
-        <input type="hidden" name="token" value="">
+        <input type="hidden" name="token" value="<?php echo $comment_token; ?>">
 
         <?php if (!$is_member) { ?>
         <div class="flex gap-2 mb-3">
@@ -216,7 +221,7 @@ function comment_reply(cmt_id) {
     html += '<input type="hidden" name="bo_table" value="<?php echo $bo_table; ?>">';
     html += '<input type="hidden" name="wr_id" value="<?php echo $wr_id; ?>">';
     html += '<input type="hidden" name="comment_id" value="' + cmt_id + '">';
-    html += '<input type="hidden" name="token" value="">';
+    html += '<input type="hidden" name="token" value="<?php echo $comment_token; ?>">';
     <?php if (!$is_member) { ?>
     html += '<div class="flex gap-2 mb-2">';
     html += '<input type="text" name="wr_name" class="input w-24 text-sm" placeholder="이름" required>';

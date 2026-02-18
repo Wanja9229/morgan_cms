@@ -47,7 +47,7 @@ include_once(G5_THEME_PATH.'/head.php');
     <div class="card mb-4">
         <div class="flex items-start gap-3 mb-4">
             <?php if ($cc['ch_thumb']) { ?>
-            <img src="<?php echo htmlspecialchars($cc['ch_thumb']); ?>" class="w-12 h-12 rounded-full object-cover">
+            <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.htmlspecialchars($cc['ch_thumb']); ?>" class="w-12 h-12 rounded-full object-cover">
             <?php } else { ?>
             <div class="w-12 h-12 rounded-full bg-mg-bg-tertiary flex items-center justify-center text-mg-text-muted">?</div>
             <?php } ?>
@@ -118,7 +118,7 @@ include_once(G5_THEME_PATH.'/head.php');
             ?>
             <div class="flex items-center gap-3 p-3 bg-mg-bg-primary rounded-lg">
                 <?php if ($a['ch_thumb']) { ?>
-                <img src="<?php echo htmlspecialchars($a['ch_thumb']); ?>" class="w-8 h-8 rounded-full object-cover">
+                <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.htmlspecialchars($a['ch_thumb']); ?>" class="w-8 h-8 rounded-full object-cover">
                 <?php } else { ?>
                 <div class="w-8 h-8 rounded-full bg-mg-bg-tertiary flex items-center justify-center text-mg-text-muted text-sm">?</div>
                 <?php } ?>

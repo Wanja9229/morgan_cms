@@ -20,11 +20,11 @@ switch ($action) {
     case 'request':
         $from_ch_id = (int)($_POST['from_ch_id'] ?? 0);
         $to_ch_id = (int)($_POST['to_ch_id'] ?? 0);
-        $ri_id = (int)($_POST['ri_id'] ?? 0);
         $label = trim($_POST['label'] ?? '');
+        $color = trim($_POST['color'] ?? '#95a5a6');
         $memo = trim($_POST['memo'] ?? '');
 
-        if (!$from_ch_id || !$to_ch_id || !$ri_id || !$label) {
+        if (!$from_ch_id || !$to_ch_id || !$label) {
             echo json_encode(array('success' => false, 'message' => '필수 항목을 입력해주세요.'));
             exit;
         }
@@ -43,7 +43,7 @@ switch ($action) {
             exit;
         }
 
-        $result = mg_request_relation($from_ch_id, $to_ch_id, $ri_id, $label, $memo);
+        $result = mg_request_relation($from_ch_id, $to_ch_id, $label, $color, $memo);
         echo json_encode($result);
         break;
 
@@ -52,7 +52,7 @@ switch ($action) {
         $cr_id = (int)($_POST['cr_id'] ?? 0);
         $label_b = trim($_POST['label_b'] ?? '');
         $memo_b = trim($_POST['memo_b'] ?? '');
-        $icon_b = trim($_POST['icon_b'] ?? '');
+        $color = trim($_POST['color'] ?? '');
 
         if (!$cr_id) {
             echo json_encode(array('success' => false, 'message' => '관계 ID가 없습니다.'));
@@ -72,7 +72,7 @@ switch ($action) {
             exit;
         }
 
-        $result = mg_accept_relation($cr_id, $label_b, $memo_b, $icon_b);
+        $result = mg_accept_relation($cr_id, $label_b, $memo_b, $color);
         echo json_encode($result);
         break;
 
@@ -125,7 +125,7 @@ switch ($action) {
         $my_ch_id = (int)($_POST['my_ch_id'] ?? 0);
         $label = trim($_POST['label'] ?? '');
         $memo = trim($_POST['memo'] ?? '');
-        $icon = trim($_POST['icon'] ?? '');
+        $color = trim($_POST['color'] ?? '');
 
         $my_char = mg_get_character($my_ch_id);
         if (!$my_char || $my_char['mb_id'] !== $member['mb_id']) {
@@ -133,7 +133,7 @@ switch ($action) {
             exit;
         }
 
-        $result = mg_update_relation_side($cr_id, $my_ch_id, $label, $memo, $icon);
+        $result = mg_update_relation_side($cr_id, $my_ch_id, $label, $memo, $color);
         echo json_encode($result);
         break;
 
@@ -162,6 +162,37 @@ switch ($action) {
             );
         }
         echo json_encode($chars);
+        break;
+
+    // 관계도 배치 저장
+    case 'save_layout':
+        $ch_id = (int)($_POST['ch_id'] ?? 0);
+        $layout_raw = stripslashes(trim($_POST['layout'] ?? ''));
+
+        if (!$ch_id || !$layout_raw) {
+            echo json_encode(array('success' => false, 'message' => '필수 항목이 없습니다.'));
+            exit;
+        }
+
+        // 내 캐릭터인지 확인
+        $my_char = mg_get_character($ch_id);
+        if (!$my_char || $my_char['mb_id'] !== $member['mb_id']) {
+            echo json_encode(array('success' => false, 'message' => '권한이 없습니다.'));
+            exit;
+        }
+
+        // JSON 유효성 체크
+        $decoded = json_decode($layout_raw, true);
+        if (!is_array($decoded)) {
+            echo json_encode(array('success' => false, 'message' => '잘못된 데이터입니다.'));
+            exit;
+        }
+
+        // 정규화된 JSON으로 저장
+        $layout_clean = json_encode($decoded, JSON_UNESCAPED_UNICODE);
+        $layout_esc = sql_real_escape_string($layout_clean);
+        sql_query("UPDATE {$g5['mg_character_table']} SET ch_graph_layout = '{$layout_esc}' WHERE ch_id = {$ch_id}");
+        echo json_encode(array('success' => true, 'message' => '배치를 저장했습니다.'));
         break;
 
     default:

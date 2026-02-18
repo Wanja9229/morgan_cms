@@ -553,6 +553,7 @@ function resetColors() {
     document.getElementById('color_bg_primary').value = '#1e1f22';
     document.getElementById('color_bg_secondary').value = '#2b2d31';
 }
+
 </script>
 
 <?php

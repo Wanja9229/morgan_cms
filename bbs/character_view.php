@@ -84,11 +84,7 @@ if ($is_member && !$is_owner && $char['ch_state'] == 'approved') {
     }
 }
 
-// 관계 아이콘 (신청 모달용)
-$relation_icons = array();
-if ($can_request_relation) {
-    $relation_icons = mg_get_relation_icons(true);
-}
+// (관계 아이콘 프리셋 제거됨 — 유저가 직접 설정)
 
 $g5['title'] = $char['ch_name'].' - 캐릭터 프로필';
 
@@ -274,7 +270,12 @@ include_once(G5_THEME_PATH.'/head.php');
     <div class="mt-6 bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
         <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary flex items-center justify-between">
             <h2 class="font-medium text-mg-text-primary">관계</h2>
-            <button type="button" id="rel-graph-toggle" class="text-xs text-mg-accent hover:underline">관계도 보기</button>
+            <div class="flex items-center gap-2">
+                <?php if ($is_owner) { ?>
+                <button type="button" id="rel-graph-save" class="text-xs text-mg-text-muted hover:text-mg-accent hidden">배치 저장</button>
+                <?php } ?>
+                <button type="button" id="rel-graph-toggle" class="text-xs text-mg-accent hover:underline">관계도 보기</button>
+            </div>
         </div>
         <div class="divide-y divide-mg-bg-tertiary">
             <?php foreach ($char_relations as $rel) {
@@ -283,18 +284,18 @@ include_once(G5_THEME_PATH.'/head.php');
                 $other_thumb = $is_a ? $rel['thumb_b'] : $rel['thumb_a'];
                 $other_ch_id = $is_a ? $rel['ch_id_b'] : $rel['ch_id_a'];
                 $my_label = $is_a ? ($rel['cr_label_a'] ?: $rel['cr_label_b']) : ($rel['cr_label_b'] ?: $rel['cr_label_a']);
-                $my_icon = $is_a ? ($rel['cr_icon_a'] ?: $rel['ri_icon']) : ($rel['cr_icon_b'] ?: $rel['ri_icon']);
+                $rel_color = $rel['cr_color'] ?: '#95a5a6';
             ?>
-            <a href="<?php echo G5_BBS_URL; ?>/character_view.php?ch_id=<?php echo $other_ch_id; ?>" class="px-4 py-3 flex items-center gap-3 hover:bg-mg-bg-tertiary/30 transition-colors">
+            <div class="px-4 py-3 flex items-center gap-3">
                 <?php if ($other_thumb) { ?>
                 <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.$other_thumb; ?>" class="w-9 h-9 rounded-full object-cover flex-shrink-0" alt="">
                 <?php } else { ?>
                 <div class="w-9 h-9 rounded-full bg-mg-bg-tertiary flex items-center justify-center text-mg-text-muted text-sm flex-shrink-0">?</div>
                 <?php } ?>
-                <span class="text-base"><?php echo $my_icon; ?></span>
+                <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:<?php echo htmlspecialchars($rel_color); ?>"></span>
                 <span class="text-sm text-mg-text-secondary"><?php echo htmlspecialchars($my_label); ?></span>
-                <span class="text-sm font-medium text-mg-text-primary ml-auto"><?php echo htmlspecialchars($other_name); ?></span>
-            </a>
+                <a href="<?php echo G5_BBS_URL; ?>/character_view.php?ch_id=<?php echo $other_ch_id; ?>" class="text-sm font-medium text-mg-accent hover:underline ml-auto"><?php echo htmlspecialchars($other_name); ?></a>
+            </div>
             <?php } ?>
         </div>
 
@@ -340,23 +341,19 @@ include_once(G5_THEME_PATH.'/head.php');
                     </select>
                 </div>
 
-                <!-- 아이콘 팔레트 -->
-                <div>
-                    <label class="block text-sm text-mg-text-secondary mb-1">관계 아이콘</label>
-                    <div id="rr-icon-palette" class="flex flex-wrap gap-2">
-                        <?php foreach ($relation_icons as $icon) { ?>
-                        <button type="button" class="rr-icon-btn w-10 h-10 flex items-center justify-center rounded-lg border border-mg-bg-tertiary hover:border-mg-accent transition-colors text-lg" data-ri-id="<?php echo $icon['ri_id']; ?>" title="<?php echo htmlspecialchars($icon['ri_label']); ?>">
-                            <?php echo $icon['ri_icon']; ?>
-                        </button>
-                        <?php } ?>
-                    </div>
-                    <input type="hidden" id="rr-ri-id">
-                </div>
-
                 <!-- 관계명 -->
                 <div>
                     <label class="block text-sm text-mg-text-secondary mb-1">관계명</label>
                     <input type="text" id="rr-label" class="w-full bg-mg-bg-primary border border-mg-bg-tertiary rounded-lg px-3 py-2 text-sm text-mg-text-primary" placeholder="예: 첫사랑, 라이벌, 동료..." maxlength="50">
+                </div>
+
+                <!-- 색상 -->
+                <div>
+                    <label class="block text-sm text-mg-text-secondary mb-1">관계선 색상</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" id="rr-color" value="#95a5a6" class="w-10 h-10 rounded border border-mg-bg-tertiary cursor-pointer" style="padding:2px;">
+                        <span id="rr-color-hex" class="text-xs text-mg-text-muted">#95a5a6</span>
+                    </div>
                 </div>
 
                 <!-- 메모 -->
@@ -386,33 +383,29 @@ include_once(G5_THEME_PATH.'/head.php');
         document.getElementById('rel-request-modal').classList.add('hidden');
     };
 
-    // 아이콘 팔레트
-    document.querySelectorAll('.rr-icon-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.rr-icon-btn').forEach(function(b) {
-                b.classList.remove('!border-mg-accent', 'bg-mg-accent/10');
-            });
-            this.classList.add('!border-mg-accent', 'bg-mg-accent/10');
-            document.getElementById('rr-ri-id').value = this.dataset.riId;
+    // 색상 hex 표시
+    var rrColor = document.getElementById('rr-color');
+    if (rrColor) {
+        rrColor.addEventListener('input', function() {
+            document.getElementById('rr-color-hex').textContent = this.value;
         });
-    });
+    }
 
     // 신청 제출
     window.submitRelRequest = function() {
         var fromCh = document.getElementById('rr-from-ch').value;
-        var riId = document.getElementById('rr-ri-id').value;
         var label = document.getElementById('rr-label').value.trim();
+        var color = document.getElementById('rr-color').value;
         var memo = document.getElementById('rr-memo').value.trim();
 
-        if (!riId) { alert('아이콘을 선택해주세요.'); return; }
         if (!label) { alert('관계명을 입력해주세요.'); return; }
 
         var data = new FormData();
         data.append('action', 'request');
         data.append('from_ch_id', fromCh);
         data.append('to_ch_id', TARGET_CH_ID);
-        data.append('ri_id', riId);
         data.append('label', label);
+        data.append('color', color);
         data.append('memo', memo);
 
         fetch(REL_API, { method: 'POST', body: data })
@@ -456,6 +449,10 @@ include_once(G5_THEME_PATH.'/head.php');
         }
     });
 
+    var isOwner = <?php echo $is_owner ? 'true' : 'false'; ?>;
+    var saveBtn = document.getElementById('rel-graph-save');
+    var _network = null;
+
     function loadVisGraph() {
         var container = document.getElementById('rel-graph-container');
         var _cs = getComputedStyle(document.documentElement);
@@ -486,14 +483,29 @@ include_once(G5_THEME_PATH.'/head.php');
                         return;
                     }
                     container.innerHTML = '';
+                    var savedLayout = data.layout || null;
+                    var hasLayout = savedLayout && Object.keys(savedLayout).length > 0;
+
                     var nodes = new vis.DataSet(data.nodes.map(function(n) {
+                        var isCurrent = n.ch_id === <?php echo $ch_id; ?>;
                         var nodeOpt = {
                             id: n.ch_id,
                             label: n.ch_name,
-                            color: { background: n.ch_id === <?php echo $ch_id; ?> ? _clr.accent : _clr.bgSec, border: n.ch_id === <?php echo $ch_id; ?> ? _clr.accentHover : '#444' },
+                            color: {
+                                background: _clr.bgSec,
+                                border: isCurrent ? _clr.accent : '#444',
+                                hover: { background: _clr.bgSec, border: isCurrent ? _clr.accent : '#444' },
+                                highlight: { background: _clr.bgSec, border: isCurrent ? _clr.accent : '#444' }
+                            },
                             font: { color: _clr.textPri, size: 12 },
-                            borderWidth: n.ch_id === <?php echo $ch_id; ?> ? 3 : 1,
+                            borderWidth: isCurrent ? 3 : 1,
                         };
+                        // 저장된 좌표가 있으면 적용
+                        if (hasLayout && savedLayout[String(n.ch_id)]) {
+                            nodeOpt.x = savedLayout[String(n.ch_id)].x;
+                            nodeOpt.y = savedLayout[String(n.ch_id)].y;
+                            nodeOpt.fixed = !isOwner;
+                        }
                         if (n.ch_thumb) {
                             nodeOpt.shape = 'circularImage';
                             nodeOpt.image = n.ch_thumb;
@@ -504,32 +516,99 @@ include_once(G5_THEME_PATH.'/head.php');
                         return nodeOpt;
                     }));
                     var edges = new vis.DataSet(data.edges.map(function(e) {
+                        var ec = e.edge_color || '#666';
                         return {
                             from: e.ch_id_a, to: e.ch_id_b,
                             label: e.label_display || '',
-                            color: { color: e.edge_color || '#666', highlight: _clr.accent },
+                            color: { color: ec, hover: ec, highlight: ec },
                             width: e.edge_width || 2,
                             font: { color: _clr.textSec, size: 10, strokeWidth: 3, strokeColor: '#1a1a1a' },
                             smooth: { type: 'continuous' }
                         };
                     }));
-                    var network = new vis.Network(container, { nodes: nodes, edges: edges }, {
-                        physics: { stabilization: { iterations: 100 }, barnesHut: { gravitationalConstant: -3000, springLength: 150 } },
-                        interaction: { hover: true, zoomView: true, dragView: true },
-                        layout: { improvedLayout: true }
-                    });
-                    // 노드 클릭 시 해당 캐릭터 페이지로 이동
-                    network.on('doubleClick', function(params) {
-                        if (params.nodes.length > 0) {
-                            var nodeId = params.nodes[0];
-                            if (nodeId !== <?php echo $ch_id; ?>) {
-                                window.location.href = '<?php echo G5_BBS_URL; ?>/character_view.php?ch_id=' + nodeId;
-                            }
+
+                    var options = {
+                        physics: hasLayout
+                            ? { enabled: false }
+                            : { stabilization: { iterations: 200 }, barnesHut: { gravitationalConstant: -3000, springLength: 150 } },
+                        interaction: {
+                            dragNodes: isOwner,
+                            dragView: false,
+                            zoomView: false,
+                            selectable: false,
+                            hover: true
+                        },
+                        layout: {
+                            improvedLayout: true,
+                            randomSeed: <?php echo $ch_id; ?>
                         }
-                    });
+                    };
+
+                    _network = new vis.Network(container, { nodes: nodes, edges: edges }, options);
+
+                    // 저장된 좌표가 없으면 시뮬레이션 후 정지
+                    if (!hasLayout) {
+                        _network.once('stabilizationIterationsDone', function() {
+                            _network.setOptions({ physics: false });
+                        });
+                    }
+
+                    // 주인: 저장 버튼 표시
+                    if (isOwner && saveBtn) {
+                        saveBtn.classList.remove('hidden');
+                    }
+
+                    // 비주인: 클릭으로 캐릭터 이동
+                    if (!isOwner) {
+                        _network.on('click', function(params) {
+                            if (params.nodes.length > 0) {
+                                var nodeId = params.nodes[0];
+                                if (nodeId !== <?php echo $ch_id; ?>) {
+                                    window.location.href = '<?php echo G5_BBS_URL; ?>/character_view.php?ch_id=' + nodeId;
+                                }
+                            }
+                        });
+                    }
+                    // 주인: 더블클릭으로 이동 (싱글클릭은 드래그와 충돌)
+                    if (isOwner) {
+                        _network.on('doubleClick', function(params) {
+                            if (params.nodes.length > 0) {
+                                var nodeId = params.nodes[0];
+                                if (nodeId !== <?php echo $ch_id; ?>) {
+                                    window.location.href = '<?php echo G5_BBS_URL; ?>/character_view.php?ch_id=' + nodeId;
+                                }
+                            }
+                        });
+                    }
                 });
         };
         document.head.appendChild(script);
+    }
+
+    // 배치 저장
+    if (isOwner && saveBtn) {
+        saveBtn.addEventListener('click', function() {
+            if (!_network) return;
+            var positions = _network.getPositions();
+            var layout = {};
+            for (var id in positions) {
+                layout[id] = { x: Math.round(positions[id].x), y: Math.round(positions[id].y) };
+            }
+            var fd = new FormData();
+            fd.append('action', 'save_layout');
+            fd.append('ch_id', <?php echo $ch_id; ?>);
+            fd.append('layout', JSON.stringify(layout));
+            fetch('<?php echo G5_BBS_URL; ?>/relation_api.php', { method: 'POST', body: fd })
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    if (res.success) {
+                        saveBtn.textContent = '저장됨';
+                        setTimeout(function() { saveBtn.textContent = '배치 저장'; }, 1500);
+                    } else {
+                        alert(res.message);
+                    }
+                });
+        });
     }
 })();
 </script>

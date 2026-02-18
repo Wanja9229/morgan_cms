@@ -86,11 +86,11 @@ if ($is_edit) {
     $my_relations = mg_get_relations($ch_id, 'active');
 
     // 받은 대기 신청 (이 캐릭터가 대상인 pending)
-    $sql = "SELECT r.*, ri.ri_icon, ri.ri_label, ri.ri_color, ri.ri_category,
+    $sql = "SELECT r.*, ri.ri_icon, ri.ri_label, ri.ri_color,
                    ca.ch_name AS name_a, ca.ch_thumb AS thumb_a,
                    cb.ch_name AS name_b, cb.ch_thumb AS thumb_b
             FROM {$g5['mg_relation_table']} r
-            JOIN {$g5['mg_relation_icon_table']} ri ON r.ri_id = ri.ri_id
+            LEFT JOIN {$g5['mg_relation_icon_table']} ri ON r.ri_id = ri.ri_id
             JOIN {$g5['mg_character_table']} ca ON r.ch_id_a = ca.ch_id
             JOIN {$g5['mg_character_table']} cb ON r.ch_id_b = cb.ch_id
             WHERE r.cr_status = 'pending'
@@ -107,7 +107,7 @@ if ($is_edit) {
                    ca.ch_name AS name_a, ca.ch_thumb AS thumb_a,
                    cb.ch_name AS name_b, cb.ch_thumb AS thumb_b
             FROM {$g5['mg_relation_table']} r
-            JOIN {$g5['mg_relation_icon_table']} ri ON r.ri_id = ri.ri_id
+            LEFT JOIN {$g5['mg_relation_icon_table']} ri ON r.ri_id = ri.ri_id
             JOIN {$g5['mg_character_table']} ca ON r.ch_id_a = ca.ch_id
             JOIN {$g5['mg_character_table']} cb ON r.ch_id_b = cb.ch_id
             WHERE r.cr_status = 'pending' AND r.ch_id_from = {$ch_id}
@@ -117,8 +117,7 @@ if ($is_edit) {
         $sent_pending[] = $row;
     }
 
-    // 관계 아이콘 (승인 모달에서 사용)
-    $relation_icons = mg_get_relation_icons(true);
+    // (관계 아이콘 프리셋 제거됨 — 유저가 직접 설정)
 }
 
 // URL 탭 파라미터
@@ -403,7 +402,7 @@ include_once(G5_THEME_PATH.'/head.php');
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 flex-wrap">
                                 <span class="font-medium text-mg-text-primary"><?php echo htmlspecialchars($from_name); ?></span>
-                                <span class="text-lg"><?php echo $rel['ri_icon']; ?></span>
+                                <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:<?php echo htmlspecialchars($rel['cr_color'] ?: '#95a5a6'); ?>"></span>
                                 <span class="text-sm text-mg-text-secondary"><?php echo htmlspecialchars($from_label); ?></span>
                             </div>
                             <?php if ($from_memo) { ?>
@@ -439,7 +438,7 @@ include_once(G5_THEME_PATH.'/head.php');
                         $other_ch_id = $is_a ? $rel['ch_id_b'] : $rel['ch_id_a'];
                         $my_label = $is_a ? ($rel['cr_label_a'] ?: $rel['cr_label_b']) : ($rel['cr_label_b'] ?: $rel['cr_label_a']);
                         $my_memo = $is_a ? $rel['cr_memo_a'] : $rel['cr_memo_b'];
-                        $my_icon = $is_a ? ($rel['cr_icon_a'] ?: $rel['ri_icon']) : ($rel['cr_icon_b'] ?: $rel['ri_icon']);
+                        $rel_color = $rel['cr_color'] ?: '#95a5a6';
                     ?>
                     <div class="px-4 py-3 flex items-center gap-3 hover:bg-mg-bg-tertiary/30 transition-colors">
                         <a href="<?php echo G5_BBS_URL; ?>/character_view.php?ch_id=<?php echo $other_ch_id; ?>" class="flex-shrink-0">
@@ -451,7 +450,7 @@ include_once(G5_THEME_PATH.'/head.php');
                         </a>
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2">
-                                <span class="text-base"><?php echo $my_icon; ?></span>
+                                <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:<?php echo htmlspecialchars($rel_color); ?>"></span>
                                 <span class="text-sm font-medium text-mg-text-primary truncate"><?php echo htmlspecialchars($my_label); ?></span>
                                 <span class="text-xs text-mg-text-muted">→</span>
                                 <a href="<?php echo G5_BBS_URL; ?>/character_view.php?ch_id=<?php echo $other_ch_id; ?>" class="text-sm text-mg-accent hover:underline truncate"><?php echo htmlspecialchars($other_name); ?></a>
@@ -461,7 +460,7 @@ include_once(G5_THEME_PATH.'/head.php');
                             <?php } ?>
                         </div>
                         <div class="flex-shrink-0 flex gap-1">
-                            <button type="button" onclick="openCfEditModal(<?php echo $rel['cr_id']; ?>, <?php echo $ch_id; ?>, <?php echo htmlspecialchars(json_encode($my_label), ENT_QUOTES); ?>, <?php echo htmlspecialchars(json_encode($my_memo ?: ''), ENT_QUOTES); ?>)" class="text-xs text-mg-text-muted hover:text-mg-text-primary px-2 py-1 rounded hover:bg-mg-bg-tertiary transition-colors" title="수정">
+                            <button type="button" onclick="openCfEditModal(<?php echo $rel['cr_id']; ?>, <?php echo $ch_id; ?>, <?php echo htmlspecialchars(json_encode($my_label), ENT_QUOTES); ?>, <?php echo htmlspecialchars(json_encode($my_memo ?: ''), ENT_QUOTES); ?>, <?php echo htmlspecialchars(json_encode($rel['cr_color'] ?: '#95a5a6'), ENT_QUOTES); ?>)" class="text-xs text-mg-text-muted hover:text-mg-text-primary px-2 py-1 rounded hover:bg-mg-bg-tertiary transition-colors" title="수정">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                             </button>
                             <button type="button" onclick="cfDeleteRelation(<?php echo $rel['cr_id']; ?>, <?php echo $ch_id; ?>)" class="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-mg-bg-tertiary transition-colors" title="해제">
@@ -498,7 +497,7 @@ include_once(G5_THEME_PATH.'/head.php');
                     <?php } ?>
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2">
-                            <span><?php echo $rel['ri_icon']; ?></span>
+                            <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:<?php echo htmlspecialchars($rel['cr_color'] ?: '#95a5a6'); ?>"></span>
                             <span class="text-sm text-mg-text-secondary"><?php echo htmlspecialchars($from_label); ?></span>
                             <span class="text-xs text-mg-text-muted">→</span>
                             <span class="text-sm font-medium text-mg-text-primary"><?php echo htmlspecialchars($to_name); ?></span>
@@ -522,10 +521,14 @@ include_once(G5_THEME_PATH.'/head.php');
                 </div>
                 <div class="p-5 space-y-4">
                     <input type="hidden" id="cf-accept-cr-id">
-                    <p class="text-sm text-mg-text-secondary">내 쪽 관계명을 입력해주세요. 비워두면 상대와 같은 관계명이 표시됩니다.</p>
+                    <p class="text-sm text-mg-text-secondary">내 쪽 설정을 입력해주세요. 비워두면 상대와 같은 값이 적용됩니다.</p>
                     <div>
                         <label class="block text-sm text-mg-text-secondary mb-1">내 관계명 <span class="text-mg-text-muted">(선택)</span></label>
                         <input type="text" id="cf-accept-label" class="w-full bg-mg-bg-primary border border-mg-bg-tertiary rounded-lg px-3 py-2 text-sm text-mg-text-primary" placeholder="예: 귀찮은 소꿉친구..." maxlength="50">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-mg-text-secondary mb-1">관계선 색상 <span class="text-mg-text-muted">(선택)</span></label>
+                        <input type="color" id="cf-accept-color" value="#95a5a6" class="w-10 h-10 rounded border border-mg-bg-tertiary cursor-pointer" style="padding:2px;">
                     </div>
                     <div>
                         <label class="block text-sm text-mg-text-secondary mb-1">한줄 메모 <span class="text-mg-text-muted">(선택)</span></label>
@@ -554,6 +557,10 @@ include_once(G5_THEME_PATH.'/head.php');
                     <div>
                         <label class="block text-sm text-mg-text-secondary mb-1">관계명</label>
                         <input type="text" id="cf-edit-label" class="w-full bg-mg-bg-primary border border-mg-bg-tertiary rounded-lg px-3 py-2 text-sm text-mg-text-primary" maxlength="50">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-mg-text-secondary mb-1">관계선 색상</label>
+                        <input type="color" id="cf-edit-color" value="#95a5a6" class="w-10 h-10 rounded border border-mg-bg-tertiary cursor-pointer" style="padding:2px;">
                     </div>
                     <div>
                         <label class="block text-sm text-mg-text-secondary mb-1">한줄 메모</label>
@@ -631,6 +638,7 @@ function closeCfModal(id) { document.getElementById(id).classList.add('hidden');
 window.openCfAcceptModal = function(crId) {
     document.getElementById('cf-accept-cr-id').value = crId;
     document.getElementById('cf-accept-label').value = '';
+    document.getElementById('cf-accept-color').value = '#95a5a6';
     document.getElementById('cf-accept-memo').value = '';
     document.getElementById('cf-accept-modal').classList.remove('hidden');
 };
@@ -640,6 +648,7 @@ window.cfSubmitAccept = function() {
     data.append('action', 'accept');
     data.append('cr_id', document.getElementById('cf-accept-cr-id').value);
     data.append('label_b', document.getElementById('cf-accept-label').value);
+    data.append('color', document.getElementById('cf-accept-color').value);
     data.append('memo_b', document.getElementById('cf-accept-memo').value);
     fetch(CF_REL_API, { method: 'POST', body: data })
         .then(function(r) { return r.json(); })
@@ -664,10 +673,11 @@ window.cfRejectRelation = function(crId) {
 };
 
 // 수정 모달
-window.openCfEditModal = function(crId, chId, label, memo) {
+window.openCfEditModal = function(crId, chId, label, memo, color) {
     document.getElementById('cf-edit-cr-id').value = crId;
     document.getElementById('cf-edit-ch-id').value = chId;
     document.getElementById('cf-edit-label').value = label;
+    document.getElementById('cf-edit-color').value = color || '#95a5a6';
     document.getElementById('cf-edit-memo').value = memo;
     document.getElementById('cf-edit-modal').classList.remove('hidden');
 };
@@ -678,6 +688,7 @@ window.cfSubmitEdit = function() {
     data.append('cr_id', document.getElementById('cf-edit-cr-id').value);
     data.append('my_ch_id', document.getElementById('cf-edit-ch-id').value);
     data.append('label', document.getElementById('cf-edit-label').value);
+    data.append('color', document.getElementById('cf-edit-color').value);
     data.append('memo', document.getElementById('cf-edit-memo').value);
     fetch(CF_REL_API, { method: 'POST', body: data })
         .then(function(r) { return r.json(); })

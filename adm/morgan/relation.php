@@ -37,7 +37,6 @@ if (isset($_POST['rel_action'])) {
 
 // 필터
 $status_filter = isset($_GET['status']) ? trim($_GET['status']) : '';
-$category_filter = isset($_GET['category']) ? trim($_GET['category']) : '';
 $search = isset($_GET['q']) ? trim($_GET['q']) : '';
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
 $per_page = 30;
@@ -47,9 +46,6 @@ $where = "1";
 if ($status_filter) {
     $where .= " AND r.cr_status = '".sql_real_escape_string($status_filter)."'";
 }
-if ($category_filter) {
-    $where .= " AND ri.ri_category = '".sql_real_escape_string($category_filter)."'";
-}
 if ($search) {
     $s = sql_real_escape_string($search);
     $where .= " AND (ca.ch_name LIKE '%{$s}%' OR cb.ch_name LIKE '%{$s}%' OR r.cr_label_a LIKE '%{$s}%' OR r.cr_label_b LIKE '%{$s}%')";
@@ -58,19 +54,18 @@ if ($search) {
 // 총 수
 $cnt_sql = "SELECT COUNT(*) AS cnt
     FROM {$g5['mg_relation_table']} r
-    JOIN {$g5['mg_relation_icon_table']} ri ON r.ri_id = ri.ri_id
     JOIN {$g5['mg_character_table']} ca ON r.ch_id_a = ca.ch_id
     JOIN {$g5['mg_character_table']} cb ON r.ch_id_b = cb.ch_id
     WHERE {$where}";
 $total = sql_fetch($cnt_sql);
-$total_count = $total['cnt'];
-$total_pages = ceil($total_count / $per_page);
+$total_count = (int)$total['cnt'];
+$total_pages = max(1, ceil($total_count / $per_page));
 
 // 목록
-$sql = "SELECT r.*, ri.ri_icon, ri.ri_label, ri.ri_color, ri.ri_category,
+$sql = "SELECT r.*, ri.ri_icon, ri.ri_label, ri.ri_color,
                ca.ch_name AS name_a, cb.ch_name AS name_b
         FROM {$g5['mg_relation_table']} r
-        JOIN {$g5['mg_relation_icon_table']} ri ON r.ri_id = ri.ri_id
+        LEFT JOIN {$g5['mg_relation_icon_table']} ri ON r.ri_id = ri.ri_id
         JOIN {$g5['mg_character_table']} ca ON r.ch_id_a = ca.ch_id
         JOIN {$g5['mg_character_table']} cb ON r.ch_id_b = cb.ch_id
         WHERE {$where}
@@ -82,155 +77,132 @@ while ($row = sql_fetch_array($result)) {
     $relations[] = $row;
 }
 
-// 통계
-$stats = array();
-$stat_result = sql_query("SELECT ri.ri_category, COUNT(*) AS cnt
-    FROM {$g5['mg_relation_table']} r
-    JOIN {$g5['mg_relation_icon_table']} ri ON r.ri_id = ri.ri_id
-    WHERE r.cr_status = 'active'
-    GROUP BY ri.ri_category ORDER BY cnt DESC");
-while ($row = sql_fetch_array($stat_result)) {
-    $stats[$row['ri_category']] = $row['cnt'];
-}
+// 상태별 통계
+$stat_pending = (int)sql_fetch("SELECT COUNT(*) AS cnt FROM {$g5['mg_relation_table']} WHERE cr_status = 'pending'")['cnt'];
+$stat_active = (int)sql_fetch("SELECT COUNT(*) AS cnt FROM {$g5['mg_relation_table']} WHERE cr_status = 'active'")['cnt'];
+$stat_rejected = (int)sql_fetch("SELECT COUNT(*) AS cnt FROM {$g5['mg_relation_table']} WHERE cr_status = 'rejected'")['cnt'];
 
 include_once('./_head.php');
 ?>
 
-<div class="local_desc01 local_desc">
-    <span class="title01">관계 관리</span>
-    <span class="title02">캐릭터 간 관계를 관리합니다. 총 <?php echo $total_count; ?>건</span>
-</div>
+<div class="mg-card">
+    <div class="mg-card-header">
+        <h2>관계 관리</h2>
+        <span class="mg-card-desc">캐릭터 간 관계를 관리합니다. 총 <?php echo $total_count; ?>건</span>
+    </div>
+    <div class="mg-card-body">
 
-<style>
-.ri-table { width:100%; border-collapse:collapse; }
-.ri-table th, .ri-table td { padding:8px 12px; border:1px solid #444; text-align:left; font-size:13px; }
-.ri-table th { background:#2a2a2a; color:#ccc; }
-.ri-table td { background:#1a1a1a; color:#e0e0e0; }
-.ri-table tr:hover td { background:#222; }
-.ri-btn { padding:4px 10px; border-radius:4px; font-size:12px; cursor:pointer; border:none; }
-.ri-btn-primary { background:#8a0000; color:white; }
-.ri-btn-danger { background:#444; color:#e74c3c; }
-.ri-input { background:#111; border:1px solid #444; color:#e0e0e0; padding:4px 8px; border-radius:4px; font-size:13px; }
-.stat-box { display:inline-block; padding:8px 16px; background:#222; border:1px solid #444; border-radius:6px; margin:0 8px 8px 0; font-size:13px; color:#ccc; }
-.stat-box strong { color:#e0e0e0; }
-.status-badge { padding:2px 8px; border-radius:10px; font-size:11px; }
-.status-pending { background:#f39c12; color:#000; }
-.status-active { background:#27ae60; color:#fff; }
-.status-rejected { background:#e74c3c; color:#fff; }
-.pager { margin:20px 0; text-align:center; }
-.pager a, .pager span { display:inline-block; padding:4px 10px; margin:0 2px; border:1px solid #444; border-radius:4px; color:#ccc; text-decoration:none; font-size:13px; }
-.pager span { background:#8a0000; color:#fff; border-color:#8a0000; }
-.pager a:hover { background:#333; }
-</style>
+        <!-- 통계 -->
+        <div class="mg-stats-grid" style="margin-bottom:16px;">
+            <div class="mg-stat-card">
+                <div class="mg-stat-label">대기중</div>
+                <div class="mg-stat-value"><?php echo $stat_pending; ?></div>
+            </div>
+            <div class="mg-stat-card">
+                <div class="mg-stat-label">활성</div>
+                <div class="mg-stat-value"><?php echo $stat_active; ?></div>
+            </div>
+            <div class="mg-stat-card">
+                <div class="mg-stat-label">거절</div>
+                <div class="mg-stat-value"><?php echo $stat_rejected; ?></div>
+            </div>
+        </div>
 
-<!-- 통계 -->
-<div style="margin:16px 0;">
-    <?php
-    $cat_labels = array('love' => '애정', 'friendship' => '우정', 'family' => '가족', 'rival' => '적대', 'mentor' => '사제', 'etc' => '기타');
-    foreach ($stats as $cat => $cnt) {
-        $label = $cat_labels[$cat] ?? $cat;
-    ?>
-    <div class="stat-box"><strong><?php echo $label; ?></strong>: <?php echo $cnt; ?>건</div>
-    <?php } ?>
-</div>
+        <!-- 필터 -->
+        <form method="get" style="margin-bottom:16px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <select name="status" class="mg-form-select">
+                <option value="">전체 상태</option>
+                <option value="pending" <?php echo $status_filter === 'pending' ? 'selected' : ''; ?>>대기중</option>
+                <option value="active" <?php echo $status_filter === 'active' ? 'selected' : ''; ?>>활성</option>
+                <option value="rejected" <?php echo $status_filter === 'rejected' ? 'selected' : ''; ?>>거절</option>
+            </select>
+            <input type="text" name="q" class="mg-form-input" value="<?php echo htmlspecialchars($search); ?>" placeholder="캐릭터명/관계명 검색" style="width:200px;">
+            <button type="submit" class="mg-btn mg-btn-primary mg-btn-sm">검색</button>
+            <?php if ($status_filter || $search) { ?>
+            <a href="?" class="mg-btn mg-btn-secondary mg-btn-sm">초기화</a>
+            <?php } ?>
+        </form>
 
-<!-- 필터 -->
-<form method="get" style="margin:16px 0; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-    <select name="status" class="ri-input">
-        <option value="">전체 상태</option>
-        <option value="pending" <?php echo $status_filter === 'pending' ? 'selected' : ''; ?>>대기중</option>
-        <option value="active" <?php echo $status_filter === 'active' ? 'selected' : ''; ?>>활성</option>
-        <option value="rejected" <?php echo $status_filter === 'rejected' ? 'selected' : ''; ?>>거절</option>
-    </select>
-    <select name="category" class="ri-input">
-        <option value="">전체 카테고리</option>
-        <?php foreach ($cat_labels as $cat => $label) { ?>
-        <option value="<?php echo $cat; ?>" <?php echo $category_filter === $cat ? 'selected' : ''; ?>><?php echo $label; ?></option>
-        <?php } ?>
-    </select>
-    <input type="text" name="q" class="ri-input" value="<?php echo htmlspecialchars($search); ?>" placeholder="캐릭터명/관계명 검색" style="width:200px;">
-    <button type="submit" class="ri-btn ri-btn-primary">검색</button>
-    <?php if ($status_filter || $category_filter || $search) { ?>
-    <a href="?" style="color:#999; font-size:12px;">초기화</a>
-    <?php } ?>
-</form>
-
-<table class="ri-table">
-    <thead>
-        <tr>
-            <th style="width:50px">ID</th>
-            <th>캐릭터 A</th>
-            <th style="width:50px; text-align:center;"></th>
-            <th>캐릭터 B</th>
-            <th>아이콘</th>
-            <th>관계명 A</th>
-            <th>관계명 B</th>
-            <th style="width:80px">상태</th>
-            <th style="width:120px">신청일</th>
-            <th style="width:120px">관리</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php if (empty($relations)) { ?>
-        <tr><td colspan="10" style="text-align:center; color:#666; padding:30px;">관계가 없습니다.</td></tr>
-        <?php } ?>
-        <?php foreach ($relations as $rel) { ?>
-        <tr id="rel-<?php echo $rel['cr_id']; ?>">
-            <td><?php echo $rel['cr_id']; ?></td>
-            <td><?php echo htmlspecialchars($rel['name_a']); ?></td>
-            <td style="text-align:center; font-size:18px;"><?php echo $rel['ri_icon']; ?></td>
-            <td><?php echo htmlspecialchars($rel['name_b']); ?></td>
-            <td><span style="color:<?php echo $rel['ri_color']; ?>"><?php echo htmlspecialchars($rel['ri_label']); ?></span></td>
-            <td><?php echo htmlspecialchars($rel['cr_label_a']); ?></td>
-            <td><?php echo htmlspecialchars($rel['cr_label_b'] ?: '-'); ?></td>
-            <td>
-                <?php
-                $status_class = 'status-' . $rel['cr_status'];
-                $status_text = array('pending' => '대기', 'active' => '활성', 'rejected' => '거절');
-                ?>
-                <span class="status-badge <?php echo $status_class; ?>"><?php echo $status_text[$rel['cr_status']] ?? $rel['cr_status']; ?></span>
-            </td>
-            <td><?php echo date('Y-m-d H:i', strtotime($rel['cr_datetime'])); ?></td>
-            <td>
-                <?php if ($rel['cr_status'] === 'pending') { ?>
-                <button class="ri-btn ri-btn-primary" onclick="adminAction(<?php echo $rel['cr_id']; ?>, 'force_approve')">승인</button>
+        <!-- 테이블 -->
+        <table class="mg-table">
+            <thead>
+                <tr>
+                    <th style="width:50px">ID</th>
+                    <th>캐릭터 A</th>
+                    <th style="width:60px">색상</th>
+                    <th>캐릭터 B</th>
+                    <th>관계명 A</th>
+                    <th>관계명 B</th>
+                    <th style="width:70px">상태</th>
+                    <th style="width:110px">신청일</th>
+                    <th style="width:120px">관리</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (empty($relations)) { ?>
+                <tr><td colspan="9" style="text-align:center; padding:30px;" class="text-mg-text-muted">관계가 없습니다.</td></tr>
                 <?php } ?>
-                <button class="ri-btn ri-btn-danger" onclick="adminAction(<?php echo $rel['cr_id']; ?>, 'force_delete')">삭제</button>
-            </td>
-        </tr>
-        <?php } ?>
-    </tbody>
-</table>
+                <?php foreach ($relations as $rel) {
+                    $display_color = $rel['cr_color'] ?: ($rel['ri_color'] ?? '#95a5a6');
 
-<!-- 페이지네이션 -->
-<?php if ($total_pages > 1) { ?>
-<div class="pager">
-    <?php
-    $base_url = '?' . http_build_query(array_filter(array('status' => $status_filter, 'category' => $category_filter, 'q' => $search)));
-    $base_url .= ($status_filter || $category_filter || $search) ? '&' : '';
-    for ($i = 1; $i <= $total_pages; $i++) {
-        if ($i == $page) {
-            echo '<span>'.$i.'</span>';
-        } else {
-            echo '<a href="'.$base_url.'page='.$i.'">'.$i.'</a>';
-        }
-    }
-    ?>
+                    $badge_class = 'mg-badge-secondary';
+                    $status_text = $rel['cr_status'];
+                    if ($rel['cr_status'] === 'pending') { $badge_class = 'mg-badge-warning'; $status_text = '대기'; }
+                    elseif ($rel['cr_status'] === 'active') { $badge_class = 'mg-badge-success'; $status_text = '활성'; }
+                    elseif ($rel['cr_status'] === 'rejected') { $badge_class = 'mg-badge-danger'; $status_text = '거절'; }
+                ?>
+                <tr id="rel-<?php echo $rel['cr_id']; ?>">
+                    <td><?php echo $rel['cr_id']; ?></td>
+                    <td><?php echo htmlspecialchars($rel['name_a']); ?></td>
+                    <td><span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:<?php echo htmlspecialchars($display_color); ?>;vertical-align:middle;"></span></td>
+                    <td><?php echo htmlspecialchars($rel['name_b']); ?></td>
+                    <td><?php echo htmlspecialchars($rel['cr_label_a'] ?? ''); ?></td>
+                    <td><?php echo htmlspecialchars($rel['cr_label_b'] ?: '-'); ?></td>
+                    <td><span class="mg-badge <?php echo $badge_class; ?>"><?php echo $status_text; ?></span></td>
+                    <td><?php echo date('Y-m-d H:i', strtotime($rel['cr_datetime'])); ?></td>
+                    <td>
+                        <?php if ($rel['cr_status'] === 'pending') { ?>
+                        <button class="mg-btn mg-btn-primary mg-btn-sm" onclick="adminAction(<?php echo $rel['cr_id']; ?>, 'force_approve')">승인</button>
+                        <?php } ?>
+                        <button class="mg-btn mg-btn-danger mg-btn-sm" onclick="adminAction(<?php echo $rel['cr_id']; ?>, 'force_delete')">삭제</button>
+                    </td>
+                </tr>
+                <?php } ?>
+            </tbody>
+        </table>
+
+        <!-- 페이지네이션 -->
+        <?php if ($total_pages > 1) { ?>
+        <div class="mg-pagination">
+            <?php
+            $base_url = '?' . http_build_query(array_filter(array('status' => $status_filter, 'q' => $search)));
+            $base_url .= ($status_filter || $search) ? '&' : '';
+            for ($i = 1; $i <= $total_pages; $i++) {
+                if ($i == $page) {
+                    echo '<span class="active">'.$i.'</span>';
+                } else {
+                    echo '<a href="'.$base_url.'page='.$i.'">'.$i.'</a>';
+                }
+            }
+            ?>
+        </div>
+        <?php } ?>
+
+    </div>
 </div>
-<?php } ?>
 
 <script>
 function adminAction(crId, action) {
-    const msg = action === 'force_delete' ? '이 관계를 삭제하시겠습니까?' : '이 관계를 강제 승인하시겠습니까?';
+    var msg = action === 'force_delete' ? '이 관계를 삭제하시겠습니까?' : '이 관계를 강제 승인하시겠습니까?';
     if (!confirm(msg)) return;
 
-    const data = new FormData();
+    var data = new FormData();
     data.append('rel_action', action);
     data.append('cr_id', crId);
 
     fetch(location.href, { method: 'POST', body: data })
-        .then(r => r.json())
-        .then(res => {
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
             alert(res.message);
             if (res.success) location.reload();
         });
