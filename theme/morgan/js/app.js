@@ -310,8 +310,12 @@
 
                     // 페이지 타이틀 업데이트
                     const pageTitle = response.headers.get('X-Page-Title');
+                    const siteName = (typeof g5_site_title !== 'undefined') ? g5_site_title : '';
                     if (pageTitle) {
-                        document.title = decodeURIComponent(pageTitle);
+                        const decoded = decodeURIComponent(pageTitle);
+                        document.title = decoded ? (siteName + ' | ' + decoded) : siteName;
+                    } else {
+                        document.title = siteName;
                     }
 
                     // 콘텐츠 추출 및 삽입

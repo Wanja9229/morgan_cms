@@ -41,20 +41,18 @@ $is_ajax_request = (
 
 // AJAX 요청이면 레이아웃 없이 콘텐츠만 출력
 if ($is_ajax_request) {
-    // 타이틀 정보는 JSON 헤더로 전달
-    if (!isset($g5['title'])) {
-        $g5['title'] = $config['cf_title'];
-    }
-    header('X-Page-Title: ' . rawurlencode(strip_tags($g5['title'])));
+    // 페이지명만 헤더로 전달 (JS에서 사이트명 조합)
+    $page_title = isset($g5['title']) ? strip_tags($g5['title']) : '';
+    header('X-Page-Title: ' . rawurlencode($page_title));
     header('Content-Type: text/html; charset=utf-8');
     return; // head.sub.php 나머지 건너뛰기
 }
 
-if (!isset($g5['title'])) {
+if (!isset($g5['title']) || $g5['title'] === $config['cf_title']) {
     $g5['title'] = $config['cf_title'];
-    $g5_head_title = $g5['title'];
+    $g5_head_title = $config['cf_title'];
 } else {
-    $g5_head_title = implode(' | ', array_filter(array($g5['title'], $config['cf_title'])));
+    $g5_head_title = $config['cf_title'] . ' | ' . $g5['title'];
 }
 
 $g5['title'] = strip_tags($g5['title']);
@@ -174,6 +172,7 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
     var g5_sca       = "<?php echo isset($sca)?$sca:''; ?>";
     var g5_editor    = "<?php echo ($config['cf_editor'] && isset($board['bo_use_dhtml_editor']) && $board['bo_use_dhtml_editor'])?$config['cf_editor']:''; ?>";
     var g5_cookie_domain = "<?php echo G5_COOKIE_DOMAIN ?>";
+    var g5_site_title = "<?php echo addslashes($config['cf_title']); ?>";
     <?php if(defined('G5_IS_ADMIN')) { ?>
     var g5_admin_url = "<?php echo G5_ADMIN_URL; ?>";
     <?php } ?>
