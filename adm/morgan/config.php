@@ -374,16 +374,24 @@ function _cfg_radio($name, $configs, $default = '1', $labels = array('사용', '
                 </div>
                 <div class="mg-form-group">
                     <label class="mg-form-label" for="concierge_max_slots">동시 등록 가능 의뢰 수</label>
-                    <input type="number" name="concierge_max_slots" id="concierge_max_slots" value="<?php echo isset($mg_configs['concierge_max_slots']) ? $mg_configs['concierge_max_slots'] : '2'; ?>" class="mg-form-input" min="1" max="10">
+                    <input type="number" name="concierge_max_slots" id="concierge_max_slots" value="<?php echo isset($mg_configs['concierge_max_slots']) ? $mg_configs['concierge_max_slots'] : '1'; ?>" class="mg-form-input" min="1" max="10">
                 </div>
                 <div class="mg-form-group">
-                    <label class="mg-form-label" for="concierge_reward_normal">일반 의뢰 보상 (P)</label>
-                    <input type="number" name="concierge_reward_normal" id="concierge_reward_normal" value="<?php echo isset($mg_configs['concierge_reward_normal']) ? $mg_configs['concierge_reward_normal'] : '50'; ?>" class="mg-form-input" min="0">
+                    <label class="mg-form-label" for="concierge_max_applies">동시 지원 가능 수</label>
+                    <input type="number" name="concierge_max_applies" id="concierge_max_applies" value="<?php echo isset($mg_configs['concierge_max_applies']) ? $mg_configs['concierge_max_applies'] : '3'; ?>" class="mg-form-input" min="1" max="10">
                 </div>
                 <div class="mg-form-group">
-                    <label class="mg-form-label" for="concierge_reward_urgent">긴급 의뢰 보상/비용 (P)</label>
-                    <input type="number" name="concierge_reward_urgent" id="concierge_reward_urgent" value="<?php echo isset($mg_configs['concierge_reward_urgent']) ? $mg_configs['concierge_reward_urgent'] : '100'; ?>" class="mg-form-input" min="0">
-                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">등록 시 선불 차감, 수행 완료 시 수행자에게 지급</small>
+                    <label class="mg-form-label" for="concierge_reward">의뢰 수행 보상 (P)</label>
+                    <input type="number" name="concierge_reward" id="concierge_reward" value="<?php echo isset($mg_configs['concierge_reward']) ? $mg_configs['concierge_reward'] : '50'; ?>" class="mg-form-input" min="0">
+                </div>
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="concierge_penalty_count">미이행 제한 횟수</label>
+                    <input type="number" name="concierge_penalty_count" id="concierge_penalty_count" value="<?php echo isset($mg_configs['concierge_penalty_count']) ? $mg_configs['concierge_penalty_count'] : '3'; ?>" class="mg-form-input" min="1" max="20">
+                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">이 횟수 이상 미이행 시 의뢰 이용 제한</small>
+                </div>
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="concierge_penalty_days">미이행 제한 기간 (일)</label>
+                    <input type="number" name="concierge_penalty_days" id="concierge_penalty_days" value="<?php echo isset($mg_configs['concierge_penalty_days']) ? $mg_configs['concierge_penalty_days'] : '30'; ?>" class="mg-form-input" min="1" max="365">
                 </div>
             </div>
 

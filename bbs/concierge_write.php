@@ -10,6 +10,12 @@ if (!$is_member) {
     alert_close('로그인이 필요합니다.');
 }
 
+// 페널티 체크
+$_penalty = mg_check_concierge_penalty($member['mb_id']);
+if ($_penalty['banned']) {
+    alert_close("의뢰 이용이 제한되었습니다. ({$_penalty['until']}까지, 미이행 {$_penalty['count']}회)");
+}
+
 $characters = mg_get_usable_characters($member['mb_id']);
 $api_url = G5_BBS_URL . '/concierge_api.php';
 
@@ -65,18 +71,15 @@ include_once(G5_THEME_PATH.'/head.php');
                     <input type="number" id="cc_max_members" class="w-full px-3 py-2 bg-mg-bg-tertiary border border-mg-bg-tertiary text-mg-text-primary rounded-lg" min="1" max="5" value="1">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-mg-text-primary mb-1">보상 티어</label>
-                    <select id="cc_tier" class="w-full px-3 py-2 bg-mg-bg-tertiary border border-mg-bg-tertiary text-mg-text-primary rounded-lg">
-                        <option value="normal">일반 (무료, 수행자 <?php echo mg_config('concierge_reward_normal', 50); ?>P)</option>
-                        <option value="urgent">긴급 (<?php echo mg_config('concierge_reward_urgent', 100); ?>P 선불, 수행자 <?php echo mg_config('concierge_reward_urgent', 100); ?>P)</option>
-                    </select>
-                </div>
-                <div>
                     <label class="block text-sm font-medium text-mg-text-primary mb-1">매칭 방식</label>
                     <select id="cc_match_mode" class="w-full px-3 py-2 bg-mg-bg-tertiary border border-mg-bg-tertiary text-mg-text-primary rounded-lg">
                         <option value="direct">직접 선택</option>
                         <option value="lottery">추첨</option>
                     </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-mg-text-primary mb-1">수행 보상</label>
+                    <div class="px-3 py-2 bg-mg-bg-tertiary text-mg-text-secondary rounded-lg text-sm"><?php echo mg_config('concierge_reward', 50); ?>P</div>
                 </div>
             </div>
 
@@ -104,7 +107,6 @@ document.getElementById('concierge-form').addEventListener('submit', function(e)
     fd.append('cc_content', document.getElementById('cc_content').value);
     fd.append('cc_type', document.getElementById('cc_type').value);
     fd.append('cc_max_members', document.getElementById('cc_max_members').value);
-    fd.append('cc_tier', document.getElementById('cc_tier').value);
     fd.append('cc_match_mode', document.getElementById('cc_match_mode').value);
     fd.append('cc_deadline', document.getElementById('cc_deadline').value);
 

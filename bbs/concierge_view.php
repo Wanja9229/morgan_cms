@@ -53,9 +53,6 @@ include_once(G5_THEME_PATH.'/head.php');
             <?php } ?>
             <div class="flex-1">
                 <div class="flex items-center gap-2 flex-wrap mb-1">
-                    <?php if ($cc['cc_tier'] === 'urgent') { ?>
-                    <span class="px-1.5 py-0.5 text-xs font-bold rounded bg-mg-accent/20 text-mg-accent">긴급</span>
-                    <?php } ?>
                     <h1 class="text-xl font-bold text-mg-text-primary"><?php echo htmlspecialchars($cc['cc_title']); ?></h1>
                 </div>
                 <div class="flex items-center gap-3 text-sm text-mg-text-muted">
@@ -81,18 +78,32 @@ include_once(G5_THEME_PATH.'/head.php');
                     case 'completed': echo '<span class="text-mg-success font-medium">완료</span>'; break;
                     case 'expired': echo '<span class="text-mg-text-muted">만료</span>'; break;
                     case 'cancelled': echo '<span class="text-mg-text-muted">취소</span>'; break;
+                    case 'force_closed': echo '<span class="text-red-400 font-medium">미이행</span>'; break;
                 }
                 ?>
             </span>
         </div>
 
         <!-- 의뢰자 액션 -->
-        <?php if ($is_owner && $cc['cc_status'] === 'recruiting') { ?>
+        <?php if ($is_owner && in_array($cc['cc_status'], array('recruiting', 'matched'))) { ?>
         <div class="flex gap-2 mt-4 pt-3 border-t border-mg-bg-tertiary">
-            <?php if ($cc['cc_match_mode'] === 'lottery') { ?>
+            <?php if ($cc['cc_status'] === 'recruiting' && $cc['cc_match_mode'] === 'lottery') { ?>
             <button onclick="doLottery()" class="px-4 py-2 bg-mg-accent text-mg-bg-primary rounded-lg text-sm font-medium hover:bg-mg-accent-hover transition-colors">추첨 실행</button>
             <?php } ?>
+            <?php if ($cc['cc_status'] === 'matched') { ?>
+            <button onclick="doForceClose()" class="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg text-sm font-medium hover:bg-red-500/30 transition-colors">미이행 종료</button>
+            <?php } ?>
             <button onclick="doCancel()" class="px-4 py-2 border border-mg-bg-tertiary text-mg-text-secondary rounded-lg text-sm hover:bg-mg-bg-tertiary transition-colors">의뢰 취소</button>
+        </div>
+        <?php } ?>
+
+        <!-- 수행자: 결과물 등록 -->
+        <?php if ($my_apply && $my_apply['ca_status'] === 'selected' && $cc['cc_status'] === 'matched') { ?>
+        <div class="mt-4 pt-3 border-t border-mg-bg-tertiary">
+            <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=concierge_result&w=w&mg_concierge_id=<?php echo $cc_id; ?>"
+               class="inline-flex items-center gap-2 px-4 py-2 bg-mg-accent text-mg-bg-primary rounded-lg text-sm font-medium hover:bg-mg-accent-hover transition-colors">
+                결과물 등록
+            </a>
         </div>
         <?php } ?>
     </div>
@@ -114,6 +125,7 @@ include_once(G5_THEME_PATH.'/head.php');
                     case 'pending': $a_status_class = 'bg-mg-bg-tertiary text-mg-text-muted'; $a_status_text = '대기'; break;
                     case 'selected': $a_status_class = 'bg-mg-success/20 text-mg-success'; $a_status_text = '선정'; break;
                     case 'rejected': $a_status_class = 'bg-mg-bg-tertiary text-mg-text-muted'; $a_status_text = '미선정'; break;
+                    case 'force_closed': $a_status_class = 'bg-red-500/20 text-red-400'; $a_status_text = '미이행'; break;
                 }
             ?>
             <div class="flex items-center gap-3 p-3 bg-mg-bg-primary rounded-lg">
@@ -130,6 +142,11 @@ include_once(G5_THEME_PATH.'/head.php');
                         <?php if ($a['ca_has_boost']) { ?>
                         <span class="text-xs text-mg-accent">확률UP</span>
                         <?php } ?>
+                        <?php if ($is_owner) {
+                            $_fc = mg_check_concierge_penalty($a['mb_id']);
+                            if ($_fc['count'] > 0) { ?>
+                        <span class="text-xs text-red-400" title="미이행 <?php echo $_fc['count']; ?>회">미이행 <?php echo $_fc['count']; ?></span>
+                        <?php } } ?>
                     </div>
                     <?php if ($a['ca_message']) { ?>
                     <div class="text-xs text-mg-text-secondary mt-1"><?php echo htmlspecialchars($a['ca_message']); ?></div>
@@ -258,6 +275,18 @@ function doLottery() {
 
     var fd = new FormData();
     fd.append('action', 'lottery');
+    fd.append('cc_id', CC_ID);
+
+    fetch(API, { method: 'POST', body: fd, credentials: 'same-origin' })
+        .then(function(r) { return r.json(); })
+        .then(function(data) { alert(data.message); if (data.success) location.reload(); });
+}
+
+function doForceClose() {
+    if (!confirm('수행자 미이행으로 의뢰를 종료하시겠습니까?\n수행자에게 미이행 기록이 남습니다.')) return;
+
+    var fd = new FormData();
+    fd.append('action', 'force_close');
     fd.append('cc_id', CC_ID);
 
     fetch(API, { method: 'POST', body: fd, credentials: 'same-origin' })

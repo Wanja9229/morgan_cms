@@ -132,8 +132,10 @@ $config_keys = array(
     // 의뢰 설정
     'concierge_use',
     'concierge_max_slots',
-    'concierge_reward_normal',
-    'concierge_reward_urgent',
+    'concierge_max_applies',
+    'concierge_reward',
+    'concierge_penalty_count',
+    'concierge_penalty_days',
     // 레이아웃 설정
     'content_max_width',
     // 디자인 설정

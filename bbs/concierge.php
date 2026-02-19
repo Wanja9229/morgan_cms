@@ -67,7 +67,6 @@ include_once(G5_THEME_PATH.'/head.php');
     <div class="space-y-3">
         <?php foreach ($result['items'] as $item) {
             $type_label = isset($type_labels[$item['cc_type']]) ? $type_labels[$item['cc_type']] : $item['cc_type'];
-            $is_urgent = $item['cc_tier'] === 'urgent';
             $is_highlighted = $item['cc_highlight'] && strtotime($item['cc_highlight']) > time();
 
             $status_class = '';
@@ -78,6 +77,7 @@ include_once(G5_THEME_PATH.'/head.php');
                 case 'completed': $status_class = 'bg-mg-success/20 text-mg-success'; $status_text = '완료'; break;
                 case 'expired': $status_class = 'bg-mg-bg-tertiary text-mg-text-muted'; $status_text = '만료'; break;
                 case 'cancelled': $status_class = 'bg-mg-bg-tertiary text-mg-text-muted'; $status_text = '취소'; break;
+                case 'force_closed': $status_class = 'bg-red-500/20 text-red-400'; $status_text = '미이행'; break;
             }
 
             $deadline_diff = strtotime($item['cc_deadline']) - time();
@@ -100,9 +100,6 @@ include_once(G5_THEME_PATH.'/head.php');
                 <?php } ?>
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-2 flex-wrap">
-                        <?php if ($is_urgent) { ?>
-                        <span class="px-1.5 py-0.5 text-xs font-bold rounded bg-mg-accent/20 text-mg-accent">긴급</span>
-                        <?php } ?>
                         <span class="font-semibold text-mg-text-primary truncate"><?php echo htmlspecialchars($item['cc_title']); ?></span>
                         <span class="px-2 py-0.5 text-xs rounded <?php echo $status_class; ?>"><?php echo $status_text; ?></span>
                     </div>

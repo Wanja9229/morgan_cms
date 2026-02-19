@@ -201,8 +201,9 @@ if (!defined('MG_MIGRATION_CHECKED')) {
     define('MG_MIGRATION_CHECKED', true);
     $mig_dir = G5_PATH . '/db/migrations';
     if (is_dir($mig_dir)) {
-        $mig_files = glob($mig_dir . '/*.sql');
-        $mig_count = $mig_files ? count($mig_files) : 0;
+        $mig_sql = glob($mig_dir . '/*.sql') ?: array();
+        $mig_php = glob($mig_dir . '/*.php') ?: array();
+        $mig_count = count($mig_sql) + count($mig_php);
         $mig_cache = isset($_SESSION['mg_mig_count']) ? (int)$_SESSION['mg_mig_count'] : -1;
         if ($mig_count > 0 && $mig_cache !== $mig_count) {
             include_once(G5_PLUGIN_PATH . '/morgan/migrate.php');
@@ -4057,8 +4058,8 @@ function mg_get_expedition_partner_candidates($ch_id) {
                 'ch_name' => $rel['name_b'],
                 'ch_thumb' => $rel['thumb_b'],
                 'mb_id' => $rel['mb_id_b'],
-                'relation_label' => $rel['ri_label'],
-                'relation_icon' => $rel['ri_icon'],
+                'relation_label' => $rel['cr_label_a'] ?: $rel['cr_label_b'],
+                'relation_icon' => $rel['cr_icon_a'] ?: '',
             );
         } else {
             $partner = array(
@@ -4066,8 +4067,8 @@ function mg_get_expedition_partner_candidates($ch_id) {
                 'ch_name' => $rel['name_a'],
                 'ch_thumb' => $rel['thumb_a'],
                 'mb_id' => $rel['mb_id_a'],
-                'relation_label' => $rel['ri_label'],
-                'relation_icon' => $rel['ri_icon'],
+                'relation_label' => $rel['cr_label_b'] ?: $rel['cr_label_a'],
+                'relation_icon' => $rel['cr_icon_b'] ?: '',
             );
         }
 
@@ -4146,7 +4147,7 @@ function mg_get_concierge_list($status = null, $type = null, $page = 1, $per_pag
             LEFT JOIN {$g5['member_table']} m ON cc.mb_id = m.mb_id
             LEFT JOIN {$g5['mg_character_table']} ch ON cc.ch_id = ch.ch_id
             WHERE {$where}
-            ORDER BY cc.cc_highlight DESC, cc.cc_tier = 'urgent' DESC, cc.cc_datetime DESC
+            ORDER BY cc.cc_highlight DESC, cc.cc_datetime DESC
             LIMIT {$offset}, {$per_page}";
     $result = sql_query($sql);
     $list = array();
@@ -4206,6 +4207,13 @@ function mg_create_concierge($mb_id, $data) {
     global $g5;
 
     $mb_id_esc = sql_real_escape_string($mb_id);
+
+    // 페널티 체크
+    $penalty = mg_check_concierge_penalty($mb_id);
+    if ($penalty['banned']) {
+        return array('success' => false, 'message' => "의뢰 이용이 제한되었습니다. ({$penalty['until']}까지, 미이행 {$penalty['count']}회)");
+    }
+
     $ch_id = (int)$data['ch_id'];
 
     // 캐릭터 소유 확인
@@ -4216,7 +4224,7 @@ function mg_create_concierge($mb_id, $data) {
     }
 
     // 동시 등록 제한
-    $max_slots = (int)mg_config('concierge_max_slots', 2);
+    $max_slots = (int)mg_config('concierge_max_slots', 1);
     $active_row = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_concierge_table']}
                               WHERE mb_id = '{$mb_id_esc}' AND cc_status IN ('recruiting', 'matched')");
     if ((int)$active_row['cnt'] >= $max_slots) {
@@ -4227,7 +4235,6 @@ function mg_create_concierge($mb_id, $data) {
     $content = sql_real_escape_string(clean_xss_tags($data['cc_content'], 0, 0, 0, 0));
     $type = in_array($data['cc_type'], array('collaboration', 'illustration', 'novel', 'other')) ? $data['cc_type'] : 'collaboration';
     $max_members = max(1, min(5, (int)$data['cc_max_members']));
-    $tier = in_array($data['cc_tier'], array('normal', 'urgent')) ? $data['cc_tier'] : 'normal';
     $match_mode = in_array($data['cc_match_mode'], array('direct', 'lottery')) ? $data['cc_match_mode'] : 'direct';
     $deadline = $data['cc_deadline'];
 
@@ -4238,29 +4245,12 @@ function mg_create_concierge($mb_id, $data) {
         return array('success' => false, 'message' => '마감일은 현재 시각 이후여야 합니다.');
     }
 
-    // 긴급 의뢰: 포인트 선불 차감
-    if ($tier === 'urgent') {
-        $cost = (int)mg_config('concierge_reward_urgent', 100);
-        $mb_point = (int)sql_fetch("SELECT mb_point FROM {$g5['member_table']} WHERE mb_id = '{$mb_id_esc}'")['mb_point'];
-        if ($mb_point < $cost) {
-            return array('success' => false, 'message' => "긴급 의뢰 등록에 {$cost}P가 필요합니다. (보유: {$mb_point}P)");
-        }
-        insert_point($mb_id, -$cost, '긴급 의뢰 등록 (선불)', 'mg_concierge', 0, '긴급등록');
-    }
-
     $deadline_esc = sql_real_escape_string($deadline);
     sql_query("INSERT INTO {$g5['mg_concierge_table']}
-               (mb_id, ch_id, cc_title, cc_content, cc_type, cc_max_members, cc_tier, cc_match_mode, cc_deadline)
+               (mb_id, ch_id, cc_title, cc_content, cc_type, cc_max_members, cc_match_mode, cc_deadline)
                VALUES ('{$mb_id_esc}', {$ch_id}, '{$title}', '{$content}', '{$type}', {$max_members},
-                       '{$tier}', '{$match_mode}', '{$deadline_esc}')");
+                       '{$match_mode}', '{$deadline_esc}')");
     $cc_id = sql_insert_id();
-
-    // 긴급 의뢰 포인트 rel_id 업데이트
-    if ($tier === 'urgent') {
-        sql_query("UPDATE {$g5['point_table']} SET po_rel_id = '{$cc_id}'
-                   WHERE mb_id = '{$mb_id_esc}' AND po_rel_table = 'mg_concierge' AND po_rel_id = '0' AND po_rel_action = '긴급등록'
-                   ORDER BY po_id DESC LIMIT 1");
-    }
 
     return array('success' => true, 'message' => '의뢰가 등록되었습니다.', 'cc_id' => $cc_id);
 }
@@ -4274,6 +4264,12 @@ function mg_apply_concierge($mb_id, $cc_id, $ch_id, $message = '') {
     $mb_id_esc = sql_real_escape_string($mb_id);
     $cc_id = (int)$cc_id;
     $ch_id = (int)$ch_id;
+
+    // 페널티 체크
+    $penalty = mg_check_concierge_penalty($mb_id);
+    if ($penalty['banned']) {
+        return array('success' => false, 'message' => "의뢰 이용이 제한되었습니다. ({$penalty['until']}까지, 미이행 {$penalty['count']}회)");
+    }
 
     $cc = sql_fetch("SELECT * FROM {$g5['mg_concierge_table']} WHERE cc_id = {$cc_id}");
     if (!$cc || $cc['cc_status'] !== 'recruiting') {
@@ -4290,6 +4286,18 @@ function mg_apply_concierge($mb_id, $cc_id, $ch_id, $message = '') {
                            WHERE cc_id = {$cc_id} AND mb_id = '{$mb_id_esc}'");
     if ($existing && $existing['ca_id']) {
         return array('success' => false, 'message' => '이미 지원한 의뢰입니다.');
+    }
+
+    // 동시 지원 제한
+    $max_applies = (int)mg_config('concierge_max_applies', 3);
+    $active_applies = sql_fetch("SELECT COUNT(*) as cnt
+        FROM {$g5['mg_concierge_apply_table']} ca
+        JOIN {$g5['mg_concierge_table']} cc2 ON ca.cc_id = cc2.cc_id
+        WHERE ca.mb_id = '{$mb_id_esc}'
+        AND ca.ca_status IN ('pending', 'selected')
+        AND cc2.cc_status IN ('recruiting', 'matched')");
+    if ((int)$active_applies['cnt'] >= $max_applies) {
+        return array('success' => false, 'message' => "동시 지원 가능 수({$max_applies}개)를 초과했습니다.");
     }
 
     // 캐릭터 확인
@@ -4467,8 +4475,7 @@ function mg_complete_concierge($mb_id, $cc_id, $bo_table, $wr_id) {
 
     // 수행자 보상 지급
     if ($ca_id > 0) {
-        $reward_key = $cc['cc_tier'] === 'urgent' ? 'concierge_reward_urgent' : 'concierge_reward_normal';
-        $reward = (int)mg_config($reward_key, $cc['cc_tier'] === 'urgent' ? 100 : 50);
+        $reward = (int)mg_config('concierge_reward', 50);
         if ($reward > 0) {
             insert_point($mb_id, $reward, '의뢰 수행 완료 보상 (' . $cc['cc_title'] . ')',
                         'mg_concierge', $cc_id, '수행완료');
@@ -4495,8 +4502,12 @@ function mg_complete_concierge($mb_id, $cc_id, $bo_table, $wr_id) {
                  G5_BBS_URL . '/concierge_view.php?cc_id=' . $cc_id);
     }
 
+    // 업적: 수행자 + 의뢰자 쌍방 트리거
     if (function_exists('mg_trigger_achievement')) {
         mg_trigger_achievement($mb_id, 'concierge_complete_count');
+        if ($cc['mb_id'] !== $mb_id) {
+            mg_trigger_achievement($cc['mb_id'], 'concierge_request_count');
+        }
     }
 
     return array('success' => true, 'message' => '의뢰 결과가 등록되었습니다.');
@@ -4519,14 +4530,72 @@ function mg_cancel_concierge($mb_id, $cc_id) {
 
     sql_query("UPDATE {$g5['mg_concierge_table']} SET cc_status = 'cancelled' WHERE cc_id = {$cc_id}");
 
-    // 긴급 의뢰 환불
-    if ($cc['cc_tier'] === 'urgent') {
-        $cost = (int)mg_config('concierge_reward_urgent', 100);
-        insert_point($mb_id, $cost, '긴급 의뢰 취소 환불 (' . $cc['cc_title'] . ')',
-                    'mg_concierge', $cc_id, '환불');
+    return array('success' => true, 'message' => '의뢰가 취소되었습니다.');
+}
+
+/**
+ * 의뢰 미이행 강제 종료
+ */
+function mg_force_close_concierge($mb_id, $cc_id) {
+    global $g5;
+
+    $cc_id = (int)$cc_id;
+    $cc = sql_fetch("SELECT * FROM {$g5['mg_concierge_table']} WHERE cc_id = {$cc_id}");
+    if (!$cc || $cc['mb_id'] !== $mb_id) {
+        return array('success' => false, 'message' => '권한이 없습니다.');
+    }
+    if ($cc['cc_status'] !== 'matched') {
+        return array('success' => false, 'message' => '매칭 완료 상태의 의뢰만 미이행 종료할 수 있습니다.');
     }
 
-    return array('success' => true, 'message' => '의뢰가 취소되었습니다.' . ($cc['cc_tier'] === 'urgent' ? ' 선불 포인트가 환불됩니다.' : ''));
+    // 선정된 수행자 전원 force_closed
+    $selected = sql_query("SELECT ca_id, mb_id FROM {$g5['mg_concierge_apply_table']}
+                           WHERE cc_id = {$cc_id} AND ca_status = 'selected'");
+    while ($row = sql_fetch_array($selected)) {
+        sql_query("UPDATE {$g5['mg_concierge_apply_table']}
+                   SET ca_status = 'force_closed' WHERE ca_id = " . (int)$row['ca_id']);
+        mg_notify($row['mb_id'], 'concierge_force_close',
+                 '의뢰 미이행 종료',
+                 '"' . $cc['cc_title'] . '" 의뢰가 미이행으로 종료되었습니다.',
+                 G5_BBS_URL . '/concierge_view.php?cc_id=' . $cc_id);
+    }
+
+    // 의뢰 상태 변경
+    sql_query("UPDATE {$g5['mg_concierge_table']} SET cc_status = 'force_closed' WHERE cc_id = {$cc_id}");
+
+    return array('success' => true, 'message' => '의뢰가 미이행으로 종료되었습니다.');
+}
+
+/**
+ * 의뢰 페널티 체크
+ */
+function mg_check_concierge_penalty($mb_id) {
+    global $g5;
+
+    $mb_id_esc = sql_real_escape_string($mb_id);
+    $penalty_count = (int)mg_config('concierge_penalty_count', 3);
+    $penalty_days = (int)mg_config('concierge_penalty_days', 30);
+
+    $cnt = (int)sql_fetch("SELECT COUNT(*) as cnt
+        FROM {$g5['mg_concierge_apply_table']}
+        WHERE mb_id = '{$mb_id_esc}' AND ca_status = 'force_closed'")['cnt'];
+
+    if ($cnt < $penalty_count) {
+        return array('banned' => false, 'count' => $cnt, 'threshold' => $penalty_count);
+    }
+
+    // 마지막 force_closed 시점 기준
+    $last = sql_fetch("SELECT MAX(ca_datetime) as last_dt
+        FROM {$g5['mg_concierge_apply_table']}
+        WHERE mb_id = '{$mb_id_esc}' AND ca_status = 'force_closed'");
+    $last_dt = strtotime($last['last_dt']);
+    $ban_until = $last_dt + ($penalty_days * 86400);
+
+    if (time() < $ban_until) {
+        return array('banned' => true, 'count' => $cnt, 'until' => date('Y-m-d', $ban_until));
+    }
+
+    return array('banned' => false, 'count' => $cnt, 'threshold' => $penalty_count);
 }
 
 /**
@@ -6253,43 +6322,16 @@ function mg_upload_prompt_banner($file, $pm_id = 0)
 // ======================================
 
 /**
- * 관계 아이콘 목록
- */
-function mg_get_relation_icons($active_only = true)
-{
-    global $g5;
-    $where = $active_only ? "WHERE ri_active = 1" : "";
-    $sql = "SELECT * FROM {$g5['mg_relation_icon_table']} {$where} ORDER BY ri_order, ri_id";
-    $result = sql_query($sql);
-    $icons = array();
-    while ($row = sql_fetch_array($result)) {
-        $icons[] = $row;
-    }
-    return $icons;
-}
-
-/**
- * 관계 아이콘 단건
- */
-function mg_get_relation_icon($ri_id)
-{
-    global $g5;
-    $ri_id = (int)$ri_id;
-    return sql_fetch("SELECT * FROM {$g5['mg_relation_icon_table']} WHERE ri_id = {$ri_id}");
-}
-
-/**
- * 관계 단건 (아이콘+캐릭터 조인)
+ * 관계 단건 (캐릭터 조인)
  */
 function mg_get_relation($cr_id)
 {
     global $g5;
     $cr_id = (int)$cr_id;
-    $sql = "SELECT r.*, ri.ri_icon, ri.ri_label, ri.ri_color, ri.ri_width,
+    $sql = "SELECT r.*,
                    ca.ch_name AS name_a, ca.ch_thumb AS thumb_a, ca.mb_id AS mb_id_a,
                    cb.ch_name AS name_b, cb.ch_thumb AS thumb_b, cb.mb_id AS mb_id_b
             FROM {$g5['mg_relation_table']} r
-            LEFT JOIN {$g5['mg_relation_icon_table']} ri ON r.ri_id = ri.ri_id
             JOIN {$g5['mg_character_table']} ca ON r.ch_id_a = ca.ch_id
             JOIN {$g5['mg_character_table']} cb ON r.ch_id_b = cb.ch_id
             WHERE r.cr_id = {$cr_id}";
@@ -6304,11 +6346,10 @@ function mg_get_relations($ch_id, $status = 'active')
     global $g5;
     $ch_id = (int)$ch_id;
     $status_cond = $status ? "AND r.cr_status = '".sql_real_escape_string($status)."'" : "";
-    $sql = "SELECT r.*, ri.ri_icon, ri.ri_label, ri.ri_color, ri.ri_width,
+    $sql = "SELECT r.*,
                    ca.ch_name AS name_a, ca.ch_thumb AS thumb_a, ca.mb_id AS mb_id_a,
                    cb.ch_name AS name_b, cb.ch_thumb AS thumb_b, cb.mb_id AS mb_id_b
             FROM {$g5['mg_relation_table']} r
-            LEFT JOIN {$g5['mg_relation_icon_table']} ri ON r.ri_id = ri.ri_id
             JOIN {$g5['mg_character_table']} ca ON r.ch_id_a = ca.ch_id
             JOIN {$g5['mg_character_table']} cb ON r.ch_id_b = cb.ch_id
             WHERE (r.ch_id_a = {$ch_id} OR r.ch_id_b = {$ch_id}) {$status_cond}
@@ -6435,6 +6476,16 @@ function mg_accept_relation($cr_id, $label_b = '', $memo_b = '', $color = '')
             G5_BBS_URL . '/relation.php');
     }
 
+    // 업적 트리거: 양쪽 회원 모두 관계 수 달성 체크
+    if (function_exists('mg_trigger_achievement')) {
+        if ($from_char && $from_char['mb_id']) {
+            mg_trigger_achievement($from_char['mb_id'], 'relation_count');
+        }
+        if ($approver_char && $approver_char['mb_id']) {
+            mg_trigger_achievement($approver_char['mb_id'], 'relation_count');
+        }
+    }
+
     return array('success' => true, 'message' => '관계를 승인했습니다.');
 }
 
@@ -6533,11 +6584,10 @@ function mg_update_relation_side($cr_id, $ch_id, $label = '', $memo = '', $color
  *
  * @param int $ch_id 중심 캐릭터 (0이면 전체)
  * @param int $depth 탐색 깊이 (1~3)
- * @param string $category 카테고리 필터 (콤마 구분)
- * @param int $faction_id 세력 필터
+ * @param int $faction_id 세력 필터 (향후 진영 시스템용)
  * @return array ['nodes' => [...], 'edges' => [...]]
  */
-function mg_get_relation_graph($ch_id = 0, $depth = 2, $category = '', $faction_id = 0)
+function mg_get_relation_graph($ch_id = 0, $depth = 2, $faction_id = 0)
 {
     global $g5;
     $ch_id = (int)$ch_id;
@@ -6554,9 +6604,8 @@ function mg_get_relation_graph($ch_id = 0, $depth = 2, $category = '', $faction_
             if (empty($current_ids)) break;
             $id_list = implode(',', array_map('intval', $current_ids));
 
-            $sql = "SELECT r.*, ri.ri_icon, ri.ri_label, ri.ri_color, ri.ri_width
+            $sql = "SELECT r.*
                     FROM {$g5['mg_relation_table']} r
-                    LEFT JOIN {$g5['mg_relation_icon_table']} ri ON r.ri_id = ri.ri_id
                     WHERE r.cr_status = 'active'
                     AND (r.ch_id_a IN ({$id_list}) OR r.ch_id_b IN ({$id_list}))";
             $result = sql_query($sql);
@@ -6578,9 +6627,8 @@ function mg_get_relation_graph($ch_id = 0, $depth = 2, $category = '', $faction_
         $edges = array_values($all_relations);
     } else {
         // 전체 관계도
-        $sql = "SELECT r.*, ri.ri_icon, ri.ri_label, ri.ri_color, ri.ri_width
+        $sql = "SELECT r.*
                 FROM {$g5['mg_relation_table']} r
-                LEFT JOIN {$g5['mg_relation_icon_table']} ri ON r.ri_id = ri.ri_id
                 WHERE r.cr_status = 'active'
                 LIMIT 500";
         $result = sql_query($sql);
@@ -6635,7 +6683,7 @@ function mg_get_relation_graph($ch_id = 0, $depth = 2, $category = '', $faction_
             'label_a' => $label_a,
             'label_b' => $label_b,
             'label_display' => $label_display,
-            'edge_color' => $e['cr_color'] ?: ($e['ri_color'] ?? '#95a5a6'),
+            'edge_color' => $e['cr_color'] ?: '#95a5a6',
             'edge_width' => 2,
             'memo_a' => $e['cr_memo_a'] ?: '',
             'memo_b' => $e['cr_memo_b'] ?: '',
@@ -6661,11 +6709,10 @@ function mg_get_pending_relations($mb_id)
     $id_list = implode(',', $my_ch_ids);
 
     // 내 캐릭터가 대상(B)이면서 신청자(from)가 아닌 pending 관계
-    $sql = "SELECT r.*, ri.ri_icon, ri.ri_label, ri.ri_color,
+    $sql = "SELECT r.*,
                    ca.ch_name AS name_a, ca.ch_thumb AS thumb_a, ca.mb_id AS mb_id_a,
                    cb.ch_name AS name_b, cb.ch_thumb AS thumb_b, cb.mb_id AS mb_id_b
             FROM {$g5['mg_relation_table']} r
-            LEFT JOIN {$g5['mg_relation_icon_table']} ri ON r.ri_id = ri.ri_id
             JOIN {$g5['mg_character_table']} ca ON r.ch_id_a = ca.ch_id
             JOIN {$g5['mg_character_table']} cb ON r.ch_id_b = cb.ch_id
             WHERE r.cr_status = 'pending'

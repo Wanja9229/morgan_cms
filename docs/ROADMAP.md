@@ -1,7 +1,7 @@
 # Morgan Edition - 개발 로드맵
 
 > 작성일: 2026-02-04
-> 최종 업데이트: 2026-02-16
+> 최종 업데이트: 2026-02-19
 
 ---
 
@@ -17,9 +17,9 @@
 
 ---
 
-## 현재 상태: 1차 개발 완료 → 검수 및 테스트 진행중
+## 현재 상태: 1차 마무리 (잔여 구현) 진행중
 
-> Phase 1~18 전체 기능 구현 완료. 현재 UI/UX 개선, 버그 수정, 사이드바 정리 등 검수 작업 진행중.
+> Phase 1~18 핵심 기능 구현 + 검수 완료. 현재 1차 잔여 기능(M1~M7) 순차 구현 중.
 
 ---
 
@@ -415,7 +415,13 @@
 - [x] 세계관 연대기 관리 (시대 + 사건)
 - [x] 프론트 타임라인 시각화 (timeline.php)
 
-### 14.3 부가
+### 14.3 세계관 맵
+- [x] 세계관 맵 페이지 (lore_map.php — 파견지 마커 + 팝업)
+- [x] 관리자 맵 설정 (lore_map.php — 이미지 업로드, 마커 스타일 선택)
+- [x] 맵 마커 4종 (pin/circle/diamond/flag), 잠금 지역 반투명 처리
+- [x] 위키 탭에 "세계관 맵" 추가 (전체/타임라인/맵)
+
+### 14.4 부가
 - [x] 사이드바 세계관 아이콘 + 2뎁스 패널
 - [x] 콘텐츠 최대 폭 통일 (72rem)
 
@@ -463,6 +469,7 @@
 - [x] 핵심 함수 12개 (CRUD, 신청/승인/거절/해제, 그래프 데이터)
 - [x] 승인/거절 + 알림 시스템 연동
 - [x] 관계 수정/해제
+- [x] 유저 커스텀 아이콘/색상 (프리셋 → 자유 설정 리팩토링, cr_icon_a/b, cr_color)
 
 ### 16.2 관계도 시각화 + UI 재배치
 - [x] vis.js Network 그래프 렌더링 구현
@@ -472,6 +479,7 @@
 - [x] 캐릭터 관리에 관계 탭 (받은 신청/내 관계/보낸 신청)
 - [x] 사이드바 독립 아이콘 제거
 - [x] 독립 페이지 리다이렉트 처리 (relation.php, relation_graph.php)
+- [x] 관계도 노드 배치 저장 (ch_graph_layout — JSON, 드래그 후 위치 유지)
 
 ### 16.3 관계 관리자
 - [x] 아이콘 관리 CRUD (커스텀 카테고리)
@@ -517,6 +525,7 @@
 - [x] 수령 화면 (드롭 결과, 레어 강조)
 - [x] 개척 메인 탭 추가 (시설 건설 / 탐색 파견)
 - [x] 관리자 파견 로그 조회
+- [x] 맵 모드 UI (ea_map_x/y 좌표, expedition_ui_mode config, 세계관 맵 연동)
 
 ---
 
@@ -586,6 +595,56 @@
 - [x] 미션 상세 모달 추가 (HTML 설명 렌더링, 참여 현황)
 - [x] 관리자 미션 설명 에디터 → Toast UI Editor
 - [x] 미션 글쓰기 페이지 외부 이모티콘 버튼 제거
+
+### 기타 개선
+- [x] 페이지 타이틀 형식 통일 ("사이트명 | 페이지명") + SPA 타이틀 잔류 버그 수정
+- [x] 배포 방식 전환 (git-ftp → lftp mirror 전체 배포)
+- [x] DB 마이그레이션 엔진 (plugin/morgan/migrate.php — mg_migrations 테이블, 세션당 1회 자동 체크)
+- [x] Toast UI Editor 플러그인 설치 (plugin/editor/toastui/ — 다크테마, 이미지 업로드)
+- [x] 시드 데이터 마이그레이션 3건 (이모티콘 샘플, 위키 달그늘 데이터, 캐릭터 세력/종족/프로필)
+
+---
+
+## 1차 마무리 (잔여 구현)
+
+> 1차 Phase에서 빠졌거나 후순위로 밀린 기능들을 순차 구현.
+> 검수 작업(위)은 버그/UI 개선, 여기는 미구현 기능 채우기.
+
+### M1. 관계 시스템 정리 (from Phase 16.3) ✅
+- [x] 데드코드 제거 (relation_icon.php, 미사용 함수 2개, category 파라미터)
+- [x] LEFT JOIN mg_relation_icon 8개 제거 (ri_id 항상 0, 유저 커스텀으로 전환 완료)
+- [x] 파견 파트너 코드 ri_ → cr_ 필드 참조 수정
+- [x] 관계 승인 시 업적 트리거 추가 (relation_count)
+- ~~관계도 설정 / 통계~~ → 관리자 개입 최소화 방침으로 스킵
+
+### M2. 의뢰 상점 아이템 (from Phase 18.3)
+- [ ] 상점 아이템 (슬롯 추가, 추첨 확률 UP, 하이라이트)
+
+### M3. 회원 설정 보완 (from Phase 1.2)
+- [ ] 닉네임 변경 주기 설정
+- [ ] 회원 레벨별 권한 설정
+
+### M4. 미션 확장 (from Phase 15.2~15.3)
+- [ ] vote 모드: 추천수 기준 상위 N명 보상
+- [ ] 기한 만료 자동 종료 (패시브)
+- [ ] 태그 필터링
+- [ ] 미션 복제 (재활용)
+- [ ] 대시보드 위젯 (활성 미션, 검수 대기)
+- [ ] 미션별 참여 통계
+
+### M5. 스태프 권한 시스템 (from Phase 9.3)
+- [ ] DB 테이블 (mg_staff_auth)
+- [ ] 스태프 목록
+- [ ] 권한 설정 UI
+- [ ] 권한별 메뉴 접근 제어
+
+### M6. 미니게임 추가 (from Phase 3.3~3.4)
+- [ ] 운세뽑기 (DB, 게임 클래스, 운세 데이터 관리)
+- [ ] 종이뽑기 (DB 3테이블, 게임 클래스, 등수별 상품, 판 완성 보너스)
+
+### M7. 캐릭터 장비 (from Phase 5.3) → 2차-B와 병행
+- [ ] DB 테이블 (mg_character_equip)
+- [ ] 캐릭터별 장비 적용
 
 ---
 
@@ -805,11 +864,16 @@ new_cms/
 │   ├── seal.php                # 인장 관리
 │   ├── lore.php                # 세계관 위키 관리
 │   ├── lore_update.php         # 위키 처리
+│   ├── lore_map.php            # 세계관 맵 관리
+│   ├── lore_map_update.php     # 맵 설정 저장
 │   ├── prompt.php              # 미션 관리 (Toast UI Editor)
 │   ├── prompt_update.php       # 미션 처리
 │   ├── relation.php            # 캐릭터 관계 관리
 │   ├── relation_icon.php       # 관계 아이콘 관리
-│   └── concierge.php           # 의뢰 관리
+│   ├── concierge.php           # 의뢰 관리
+│   ├── expedition_area.php     # 파견지 관리
+│   ├── expedition_area_update.php # 파견지 저장
+│   └── expedition_log.php      # 파견 로그
 │
 ├── bbs/                        # 프론트 페이지
 │   ├── character*.php          # 캐릭터 관련
@@ -823,20 +887,27 @@ new_cms/
 │   ├── concierge_view.php      # 의뢰 상세
 │   ├── concierge_write.php     # 의뢰 등록
 │   ├── concierge_api.php       # 의뢰 AJAX API
+│   ├── expedition_api.php      # 파견 AJAX API
 │   ├── mypage.php              # 마이 페이지 허브
 │   ├── wiki.php                # 세계관 위키
 │   ├── wiki_view.php           # 위키 문서 보기
+│   ├── lore_map.php            # 세계관 맵 (파견지 마커)
 │   ├── timeline.php            # 세계관 타임라인
 │   ├── notification.php        # 알림 목록
 │   ├── comment_dice.php        # 댓글 주사위 처리
 │   └── search.php              # 검색 (sql_num_rows 수정됨)
 │
 ├── plugin/morgan/              # Morgan 플러그인
-│   ├── morgan.php              # 메인 플러그인 (테이블 등록, 마이그레이션)
-│   ├── migrate.php             # DB 마이그레이션 엔진
+│   ├── morgan.php              # 메인 플러그인 (테이블 등록, 헬퍼 함수)
+│   ├── migrate.php             # DB 마이그레이션 엔진 (mg_migrations 테이블)
 │   ├── install/                # 설치 SQL
 │   ├── widgets/                # 위젯 클래스
 │   └── games/                  # 미니게임 클래스
+│
+├── plugin/editor/toastui/      # Toast UI Editor 플러그인
+│   ├── editor.lib.php          # 에디터 초기화
+│   ├── morgan-dark.css         # 다크테마 CSS
+│   └── imageUpload/            # 이미지 업로드 핸들러
 │
 ├── theme/morgan/               # Morgan 테마
 │   ├── head.php                # 메인 레이아웃 (사이드바, 헤더)
@@ -899,6 +970,8 @@ new_cms/
 | 2026-02-15 | Phase 18~19 완료 (탐색 파견, 의뢰 매칭). 연구 트리/SS Engine/진영/마이룸을 2차로 분리 |
 | 2026-02-16 | Phase 번호 재정렬 (1~18), 마이룸 → 2차-D로 이동, 검수 작업 섹션 추가, 현재 상태 표시 |
 | 2026-02-16 | 2차-E: VN Engine 기획 추가 (docs/plans/VN_ENGINE.md) |
+| 2026-02-19 | 검수 누락 반영: 세계관 맵, 관계 커스텀/레이아웃 저장, 파견 맵 모드, 타이틀 통일, 마이그레이션 엔진, Toast UI, 시드 데이터 |
+| 2026-02-19 | "1차 마무리 (잔여 구현)" 섹션 추가 — M1~M7 순차 구현 목록 정리 |
 
 ---
 

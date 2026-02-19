@@ -70,6 +70,7 @@ $status_badges = array(
     'completed' => '<span class="mg-badge mg-badge-success">완료</span>',
     'expired' => '<span class="mg-badge">만료</span>',
     'cancelled' => '<span class="mg-badge">취소</span>',
+    'force_closed' => '<span class="mg-badge mg-badge-danger">미이행</span>',
 );
 
 $g5['title'] = '의뢰 관리';
@@ -93,6 +94,7 @@ require_once __DIR__.'/_head.php';
                     <option value="completed" <?php echo $search_status === 'completed' ? 'selected' : ''; ?>>완료</option>
                     <option value="expired" <?php echo $search_status === 'expired' ? 'selected' : ''; ?>>만료</option>
                     <option value="cancelled" <?php echo $search_status === 'cancelled' ? 'selected' : ''; ?>>취소</option>
+                    <option value="force_closed" <?php echo $search_status === 'force_closed' ? 'selected' : ''; ?>>미이행</option>
                 </select>
             </div>
             <div class="mg-form-group" style="margin-bottom:0;">
@@ -127,7 +129,6 @@ require_once __DIR__.'/_head.php';
                     <th>캐릭터</th>
                     <th>제목</th>
                     <th style="width:70px;">유형</th>
-                    <th style="width:60px;">티어</th>
                     <th style="width:70px;">지원/모집</th>
                     <th style="width:80px;">매칭</th>
                     <th>마감일</th>
@@ -139,7 +140,6 @@ require_once __DIR__.'/_head.php';
                 <?php foreach ($items as $item) {
                     $badge = isset($status_badges[$item['cc_status']]) ? $status_badges[$item['cc_status']] : $item['cc_status'];
                     $type_label = isset($type_labels[$item['cc_type']]) ? $type_labels[$item['cc_type']] : $item['cc_type'];
-                    $tier_label = $item['cc_tier'] === 'urgent' ? '<span style="color:#f59e0b;font-weight:bold;">긴급</span>' : '일반';
                 ?>
                 <tr>
                     <td style="text-align:center;"><?php echo $item['cc_id']; ?></td>
@@ -150,7 +150,6 @@ require_once __DIR__.'/_head.php';
                         <?php if (mb_strlen($item['cc_title']) > 30) echo '...'; ?>
                     </td>
                     <td style="text-align:center;"><?php echo $type_label; ?></td>
-                    <td style="text-align:center;"><?php echo $tier_label; ?></td>
                     <td style="text-align:center;"><?php echo $item['apply_count']; ?>/<?php echo $item['cc_max_members']; ?></td>
                     <td style="text-align:center;"><?php echo $item['cc_match_mode'] === 'lottery' ? '추첨' : '직접'; ?></td>
                     <td style="font-size:0.8rem;"><?php echo substr($item['cc_deadline'], 0, 16); ?></td>
@@ -163,7 +162,7 @@ require_once __DIR__.'/_head.php';
                 </tr>
                 <?php } ?>
                 <?php if (empty($items)) { ?>
-                <tr><td colspan="11" style="text-align:center;padding:2rem;color:var(--mg-text-muted);">등록된 의뢰가 없습니다.</td></tr>
+                <tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--mg-text-muted);">등록된 의뢰가 없습니다.</td></tr>
                 <?php } ?>
             </tbody>
         </table>

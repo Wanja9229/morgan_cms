@@ -19,14 +19,6 @@ if ($w === 'cancel' && $cc_id > 0) {
     $cc = sql_fetch("SELECT * FROM {$g5['mg_concierge_table']} WHERE cc_id = {$cc_id}");
     if ($cc && in_array($cc['cc_status'], array('recruiting', 'matched'))) {
         sql_query("UPDATE {$g5['mg_concierge_table']} SET cc_status = 'cancelled' WHERE cc_id = {$cc_id}");
-
-        // 긴급 의뢰 환불
-        if ($cc['cc_tier'] === 'urgent') {
-            $cost = (int)mg_config('concierge_reward_urgent', 100);
-            insert_point($cc['mb_id'], $cost, '긴급 의뢰 관리자 취소 환불',
-                        'mg_concierge', $cc_id, '관리자환불');
-        }
-
         alert('의뢰가 취소되었습니다.', $redirect_url);
     } else {
         alert('취소할 수 없는 상태입니다.', $redirect_url);

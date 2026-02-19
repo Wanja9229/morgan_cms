@@ -51,7 +51,6 @@ switch ($action) {
             'cc_content' => isset($_POST['cc_content']) ? trim($_POST['cc_content']) : '',
             'cc_type' => isset($_POST['cc_type']) ? $_POST['cc_type'] : 'collaboration',
             'cc_max_members' => isset($_POST['cc_max_members']) ? (int)$_POST['cc_max_members'] : 1,
-            'cc_tier' => isset($_POST['cc_tier']) ? $_POST['cc_tier'] : 'normal',
             'cc_match_mode' => isset($_POST['cc_match_mode']) ? $_POST['cc_match_mode'] : 'direct',
             'cc_deadline' => isset($_POST['cc_deadline']) ? $_POST['cc_deadline'] : '',
         );
@@ -101,6 +100,18 @@ switch ($action) {
         }
 
         $result = mg_lottery_concierge($mb_id, $cc_id);
+        echo json_encode($result);
+        break;
+
+    // 미이행 강제 종료
+    case 'force_close':
+        $cc_id = isset($_POST['cc_id']) ? (int)$_POST['cc_id'] : 0;
+        if (!$cc_id) {
+            echo json_encode(array('success' => false, 'message' => '잘못된 요청입니다.'));
+            exit;
+        }
+
+        $result = mg_force_close_concierge($mb_id, $cc_id);
         echo json_encode($result);
         break;
 
