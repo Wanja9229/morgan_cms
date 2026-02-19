@@ -86,11 +86,10 @@ if ($is_edit) {
     $my_relations = mg_get_relations($ch_id, 'active');
 
     // 받은 대기 신청 (이 캐릭터가 대상인 pending)
-    $sql = "SELECT r.*, ri.ri_icon, ri.ri_label, ri.ri_color,
+    $sql = "SELECT r.*,
                    ca.ch_name AS name_a, ca.ch_thumb AS thumb_a,
                    cb.ch_name AS name_b, cb.ch_thumb AS thumb_b
             FROM {$g5['mg_relation_table']} r
-            LEFT JOIN {$g5['mg_relation_icon_table']} ri ON r.ri_id = ri.ri_id
             JOIN {$g5['mg_character_table']} ca ON r.ch_id_a = ca.ch_id
             JOIN {$g5['mg_character_table']} cb ON r.ch_id_b = cb.ch_id
             WHERE r.cr_status = 'pending'
@@ -103,11 +102,10 @@ if ($is_edit) {
     $pending_count = count($received_pending);
 
     // 보낸 대기 신청 (이 캐릭터가 신청자인 pending)
-    $sql = "SELECT r.*, ri.ri_icon, ri.ri_label, ri.ri_color,
+    $sql = "SELECT r.*,
                    ca.ch_name AS name_a, ca.ch_thumb AS thumb_a,
                    cb.ch_name AS name_b, cb.ch_thumb AS thumb_b
             FROM {$g5['mg_relation_table']} r
-            LEFT JOIN {$g5['mg_relation_icon_table']} ri ON r.ri_id = ri.ri_id
             JOIN {$g5['mg_character_table']} ca ON r.ch_id_a = ca.ch_id
             JOIN {$g5['mg_character_table']} cb ON r.ch_id_b = cb.ch_id
             WHERE r.cr_status = 'pending' AND r.ch_id_from = {$ch_id}

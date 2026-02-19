@@ -62,10 +62,9 @@ $total_count = (int)$total['cnt'];
 $total_pages = max(1, ceil($total_count / $per_page));
 
 // 목록
-$sql = "SELECT r.*, ri.ri_icon, ri.ri_label, ri.ri_color,
+$sql = "SELECT r.*,
                ca.ch_name AS name_a, cb.ch_name AS name_b
         FROM {$g5['mg_relation_table']} r
-        LEFT JOIN {$g5['mg_relation_icon_table']} ri ON r.ri_id = ri.ri_id
         JOIN {$g5['mg_character_table']} ca ON r.ch_id_a = ca.ch_id
         JOIN {$g5['mg_character_table']} cb ON r.ch_id_b = cb.ch_id
         WHERE {$where}
@@ -143,7 +142,7 @@ include_once('./_head.php');
                 <tr><td colspan="9" style="text-align:center; padding:30px;" class="text-mg-text-muted">관계가 없습니다.</td></tr>
                 <?php } ?>
                 <?php foreach ($relations as $rel) {
-                    $display_color = $rel['cr_color'] ?: ($rel['ri_color'] ?? '#95a5a6');
+                    $display_color = $rel['cr_color'] ?: '#95a5a6';
 
                     $badge_class = 'mg-badge-secondary';
                     $status_text = $rel['cr_status'];

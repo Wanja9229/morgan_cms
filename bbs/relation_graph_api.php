@@ -10,10 +10,9 @@ header('Content-Type: application/json; charset=utf-8');
 
 $ch_id = isset($_GET['ch_id']) ? (int)$_GET['ch_id'] : 0;
 $depth = isset($_GET['depth']) ? (int)$_GET['depth'] : 2;
-$category = isset($_GET['category']) ? trim($_GET['category']) : '';
 $faction_id = isset($_GET['faction_id']) ? (int)$_GET['faction_id'] : 0;
 
-$data = mg_get_relation_graph($ch_id, $depth, $category, $faction_id);
+$data = mg_get_relation_graph($ch_id, $depth, $faction_id);
 
 // 저장된 노드 배치 좌표
 if ($ch_id) {
