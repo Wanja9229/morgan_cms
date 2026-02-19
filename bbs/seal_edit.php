@@ -14,6 +14,10 @@ if (!mg_config('seal_enable', 1)) {
     alert('인장 시스템이 비활성화되어 있습니다.');
 }
 
+// 회원 레벨 체크
+$_lv = mg_check_member_level('seal', $member['mb_level']);
+if (!$_lv['allowed']) { alert_close("인장은 회원 레벨 {$_lv['required']} 이상부터 이용 가능합니다."); }
+
 $mb_id = $member['mb_id'];
 
 // 인장 데이터 로드

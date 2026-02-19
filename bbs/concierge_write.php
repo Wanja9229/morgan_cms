@@ -10,6 +10,10 @@ if (!$is_member) {
     alert_close('로그인이 필요합니다.');
 }
 
+// 회원 레벨 체크
+$_lv = mg_check_member_level('concierge', $member['mb_level']);
+if (!$_lv['allowed']) { alert_close("의뢰는 회원 레벨 {$_lv['required']} 이상부터 이용 가능합니다."); }
+
 // 페널티 체크
 $_penalty = mg_check_concierge_penalty($member['mb_id']);
 if ($_penalty['banned']) {

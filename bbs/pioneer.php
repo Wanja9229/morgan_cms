@@ -15,6 +15,10 @@ if (!mg_pioneer_enabled()) {
     alert_close('개척 시스템이 비활성화되어 있습니다.');
 }
 
+// 회원 레벨 체크
+$_lv = mg_check_member_level('pioneer', $member['mb_level']);
+if (!$_lv['allowed']) { alert_close("개척은 회원 레벨 {$_lv['required']} 이상부터 이용 가능합니다."); }
+
 // 파라미터
 $fc_id = isset($_GET['fc_id']) ? (int)$_GET['fc_id'] : 0;
 $view = isset($_GET['view']) ? clean_xss_tags($_GET['view']) : 'list';

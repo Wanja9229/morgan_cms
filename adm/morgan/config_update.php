@@ -136,6 +136,13 @@ $config_keys = array(
     'concierge_reward',
     'concierge_penalty_count',
     'concierge_penalty_days',
+    // 회원 레벨 설정
+    'rp_min_level',
+    'concierge_min_level',
+    'pioneer_min_level',
+    'seal_min_level',
+    'emoticon_min_level',
+    'prompt_min_level',
     // 레이아웃 설정
     'content_max_width',
     // 디자인 설정
@@ -163,6 +170,19 @@ foreach ($config_keys as $key) {
         $sql = "INSERT INTO {$g5['mg_config_table']} (cf_key, cf_value) VALUES ('".sql_escape_string($key)."', '".sql_escape_string($value)."')";
     }
     sql_query($sql);
+}
+
+// Gnuboard 설정 (g5_config 단일행 테이블)
+$g5_updates = array();
+if (isset($_POST['cf_nick_modify'])) {
+    $g5_updates[] = "`cf_nick_modify` = '".(int)$_POST['cf_nick_modify']."'";
+}
+if (isset($_POST['cf_register_level'])) {
+    $val = max(1, min(9, (int)$_POST['cf_register_level']));
+    $g5_updates[] = "`cf_register_level` = '{$val}'";
+}
+if ($g5_updates) {
+    sql_query("UPDATE `{$g5['config_table']}` SET ".implode(', ', $g5_updates));
 }
 
 // 업로드 디렉토리

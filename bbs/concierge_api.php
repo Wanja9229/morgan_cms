@@ -16,6 +16,15 @@ if (!$is_member) {
 $action = isset($_POST['action']) ? $_POST['action'] : (isset($_GET['action']) ? $_GET['action'] : '');
 $mb_id = $member['mb_id'];
 
+// 회원 레벨 체크 (등록/지원만)
+if (in_array($action, array('create', 'apply'))) {
+    $_lv = mg_check_member_level('concierge', $member['mb_level']);
+    if (!$_lv['allowed']) {
+        echo json_encode(array('success' => false, 'message' => "의뢰는 회원 레벨 {$_lv['required']} 이상부터 이용 가능합니다."));
+        exit;
+    }
+}
+
 switch ($action) {
 
     // 의뢰 목록

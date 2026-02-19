@@ -157,6 +157,61 @@ function _cfg_radio($name, $configs, $default = '1', $labels = array('사용', '
     </div>
 
     <!-- ======================================== -->
+    <!-- 회원 관리 -->
+    <!-- ======================================== -->
+    <div class="mg-card" style="margin-top:1.5rem;">
+        <div class="mg-card-header"><h3>회원 관리</h3></div>
+        <div class="mg-card-body">
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:1.5rem; margin-bottom:1.5rem;">
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="cf_nick_modify">닉네임 변경 주기 (일)</label>
+                    <input type="number" name="cf_nick_modify" id="cf_nick_modify" value="<?php echo (int)$config['cf_nick_modify']; ?>" class="mg-form-input" min="0" max="365">
+                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">닉네임 변경 후 다시 변경 가능하기까지의 일수 (0: 제한없음)</small>
+                </div>
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="cf_register_level">가입 시 기본 레벨</label>
+                    <input type="number" name="cf_register_level" id="cf_register_level" value="<?php echo (int)$config['cf_register_level']; ?>" class="mg-form-input" min="1" max="9">
+                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">신규 가입 회원에게 부여되는 기본 레벨 (1~9)</small>
+                </div>
+            </div>
+
+            <hr style="border:0;border-top:1px solid var(--mg-bg-tertiary);margin:1.5rem 0;">
+
+            <h4 style="font-size:0.9rem;font-weight:600;margin-bottom:1rem;color:var(--mg-text-secondary);">기능별 최소 회원 레벨</h4>
+            <p style="font-size:0.75rem;color:var(--mg-text-muted);margin-bottom:1rem;">해당 레벨 미만 회원은 기능 이용(생성/참여)이 제한됩니다. 열람은 제한하지 않습니다.</p>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem;">
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="rp_min_level">역극</label>
+                    <input type="number" name="rp_min_level" id="rp_min_level" value="<?php echo isset($mg_configs['rp_min_level']) ? $mg_configs['rp_min_level'] : '2'; ?>" class="mg-form-input" min="1" max="9">
+                </div>
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="concierge_min_level">의뢰</label>
+                    <input type="number" name="concierge_min_level" id="concierge_min_level" value="<?php echo isset($mg_configs['concierge_min_level']) ? $mg_configs['concierge_min_level'] : '2'; ?>" class="mg-form-input" min="1" max="9">
+                </div>
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="pioneer_min_level">개척</label>
+                    <input type="number" name="pioneer_min_level" id="pioneer_min_level" value="<?php echo isset($mg_configs['pioneer_min_level']) ? $mg_configs['pioneer_min_level'] : '2'; ?>" class="mg-form-input" min="1" max="9">
+                </div>
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="seal_min_level">인장</label>
+                    <input type="number" name="seal_min_level" id="seal_min_level" value="<?php echo isset($mg_configs['seal_min_level']) ? $mg_configs['seal_min_level'] : '2'; ?>" class="mg-form-input" min="1" max="9">
+                </div>
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="emoticon_min_level">이모티콘 제작</label>
+                    <input type="number" name="emoticon_min_level" id="emoticon_min_level" value="<?php echo isset($mg_configs['emoticon_min_level']) ? $mg_configs['emoticon_min_level'] : '2'; ?>" class="mg-form-input" min="1" max="9">
+                </div>
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="prompt_min_level">미션</label>
+                    <input type="number" name="prompt_min_level" id="prompt_min_level" value="<?php echo isset($mg_configs['prompt_min_level']) ? $mg_configs['prompt_min_level'] : '2'; ?>" class="mg-form-input" min="1" max="9">
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ======================================== -->
     <!-- 컨텐츠 사용 설정 -->
     <!-- ======================================== -->
     <div class="mg-card" style="margin-top:1.5rem;">

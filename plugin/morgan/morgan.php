@@ -477,6 +477,26 @@ function mg_config_set($key, $value, $desc = '') {
 }
 
 // ======================================
+// 회원 레벨 체크
+// ======================================
+
+/**
+ * 피처별 최소 회원 레벨 체크
+ *
+ * @param string $feature 피처 키 (rp, concierge, pioneer, seal, emoticon, prompt)
+ * @param int $mb_level 회원 레벨
+ * @return array ['allowed' => bool, 'required' => int, 'current' => int]
+ */
+function mg_check_member_level($feature, $mb_level) {
+    $required = (int)mg_config($feature . '_min_level', 2);
+    return array(
+        'allowed'  => (int)$mb_level >= $required,
+        'required' => $required,
+        'current'  => (int)$mb_level
+    );
+}
+
+// ======================================
 // 캐릭터 함수
 // ======================================
 
@@ -2771,8 +2791,18 @@ function mg_can_create_emoticon($mb_id) {
         return array('can' => false, 'count' => 0, 'si_id' => 0);
     }
 
-    // emoticon_reg 타입 아이템 보유 확인
+    // 회원 레벨 체크
+    global $g5;
     $mb_id_esc = sql_real_escape_string($mb_id);
+    $mb_row = sql_fetch("SELECT mb_level FROM {$g5['member_table']} WHERE mb_id = '{$mb_id_esc}'");
+    if ($mb_row) {
+        $_lv = mg_check_member_level('emoticon', $mb_row['mb_level']);
+        if (!$_lv['allowed']) {
+            return array('can' => false, 'count' => 0, 'si_id' => 0, 'message' => "이모티콘 제작은 회원 레벨 {$_lv['required']} 이상부터 가능합니다.");
+        }
+    }
+
+    // emoticon_reg 타입 아이템 보유 확인
     $sql = "SELECT iv.si_id, iv.iv_count
             FROM {$mg['inventory_table']} iv
             JOIN {$mg['shop_item_table']} si ON iv.si_id = si.si_id
@@ -6130,6 +6160,13 @@ function mg_prompt_after_write($bo_table, $wr_id, $mb_id, $wr_content = '')
 
     $pm_id = (int)(isset($_POST['pm_id']) ? $_POST['pm_id'] : 0);
     if (!$pm_id) return false;
+
+    // 회원 레벨 체크
+    $mb_row = sql_fetch("SELECT mb_level FROM {$g5['member_table']} WHERE mb_id = '".sql_real_escape_string($mb_id)."'");
+    if ($mb_row) {
+        $_lv = mg_check_member_level('prompt', $mb_row['mb_level']);
+        if (!$_lv['allowed']) return false;
+    }
 
     $prompt = mg_get_prompt($pm_id);
     if (!$prompt || !$prompt['pm_id']) return false;

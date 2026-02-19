@@ -8,6 +8,10 @@ include_once(G5_PATH.'/plugin/morgan/morgan.php');
 
 if (!$is_member) { alert_close('로그인이 필요합니다.'); }
 
+// 회원 레벨 체크
+$_lv = mg_check_member_level('rp', $member['mb_level']);
+if (!$_lv['allowed']) { alert_close("역극은 회원 레벨 {$_lv['required']} 이상부터 이용 가능합니다. (현재 레벨: {$_lv['current']})"); }
+
 // Morgan: 개척 시스템 해금 체크
 if (function_exists('mg_is_board_unlocked') && !mg_is_board_unlocked('roleplay')) {
     alert('역극은 아직 개척되지 않았습니다.');
