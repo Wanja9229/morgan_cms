@@ -16,10 +16,20 @@ $tab = isset($_GET['tab']) ? $_GET['tab'] : 'settings';
 
 // 현재 설정값
 $attendance_game = mg_get_config('attendance_game', 'dice');
-$dice_min = mg_get_config('dice_min', '10');
-$dice_max = mg_get_config('dice_max', '100');
 $dice_bonus_multiplier = mg_get_config('dice_bonus_multiplier', '2');
 $attendance_streak_bonus_days = mg_get_config('attendance_streak_bonus_days', '7');
+$dice_count = mg_get_config('dice_count', '5');
+$dice_sides = mg_get_config('dice_sides', '6');
+$dice_combo_enabled = mg_get_config('dice_combo_enabled', '1');
+$dice_reroll_count = mg_get_config('dice_reroll_count', '2');
+
+// 족보 정의 + 현재 설정 포인트 로드
+include_once(G5_PLUGIN_PATH.'/morgan/games/MG_Game_Dice.php');
+$combo_defs = MG_Game_Dice::getComboDefinitions();
+foreach ($combo_defs as $key => $combo) {
+    $configVal = mg_get_config($combo['config_key'], '');
+    $combo_defs[$key]['current_bonus'] = ($configVal !== '') ? (int)$configVal : $combo['bonus'];
+}
 
 // 기간 설정 (통계용)
 $start_date = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-m-01');
@@ -120,14 +130,14 @@ $game_names = [
         <div class="mg-card-body">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
                 <div class="mg-form-group">
-                    <label class="mg-form-label" for="dice_min">최소 포인트</label>
-                    <input type="number" name="dice_min" id="dice_min" value="<?php echo $dice_min; ?>" class="mg-form-input" min="1">
-                    <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;">주사위 합이 2일 때 받는 포인트</div>
+                    <label class="mg-form-label" for="dice_count">주사위 개수</label>
+                    <input type="number" name="dice_count" id="dice_count" value="<?php echo $dice_count; ?>" class="mg-form-input" min="1" max="5">
+                    <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;">굴릴 주사위 개수 (1~5, 기본 5)</div>
                 </div>
                 <div class="mg-form-group">
-                    <label class="mg-form-label" for="dice_max">최대 포인트</label>
-                    <input type="number" name="dice_max" id="dice_max" value="<?php echo $dice_max; ?>" class="mg-form-input" min="1">
-                    <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;">주사위 합이 12일 때 받는 포인트</div>
+                    <label class="mg-form-label" for="dice_sides">주사위 면 수</label>
+                    <input type="number" name="dice_sides" id="dice_sides" value="<?php echo $dice_sides; ?>" class="mg-form-input" min="6">
+                    <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;">주사위 면 수 (기본 6 = d6)</div>
                 </div>
             </div>
 
@@ -145,7 +155,61 @@ $game_names = [
             </div>
 
             <div class="mg-alert mg-alert-info" style="margin-top:1rem;">
-                <strong>더블 보너스:</strong> 주사위 두 개가 같은 숫자가 나오면 포인트 1.5배가 추가로 적용됩니다.
+                <strong>포인트 계산:</strong> 족보 적중 시 해당 족보 포인트 지급, 꽝이면 주사위 합산만큼 지급.<br>
+                <strong>크리티컬:</strong> 최대값(d6에서 6) 등장 시 ×1.5배 (야찌 제외).
+                <strong>연속 출석:</strong> <?php echo $attendance_streak_bonus_days; ?>일 연속 시 ×<?php echo $dice_bonus_multiplier; ?>배.
+            </div>
+        </div>
+    </div>
+
+    <div class="mg-card" style="margin-bottom:1.5rem;">
+        <div class="mg-card-header">족보 콤보 & 리롤</div>
+        <div class="mg-card-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="dice_combo_enabled">족보 콤보 시스템</label>
+                    <select name="dice_combo_enabled" id="dice_combo_enabled" class="mg-form-input">
+                        <option value="1" <?php echo $dice_combo_enabled == '1' ? 'selected' : ''; ?>>사용</option>
+                        <option value="0" <?php echo $dice_combo_enabled == '0' ? 'selected' : ''; ?>>미사용</option>
+                    </select>
+                    <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;">족보 조합에 따른 보너스 포인트 (5d6 권장)</div>
+                </div>
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="dice_reroll_count">리롤 횟수</label>
+                    <input type="number" name="dice_reroll_count" id="dice_reroll_count" value="<?php echo $dice_reroll_count; ?>" class="mg-form-input" min="0" max="5">
+                    <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;">다시 굴리기 기회 (0=리롤 없이 즉시 결과, 기본 2)</div>
+                </div>
+            </div>
+
+            <!-- 족보별 포인트 설정 -->
+            <div style="margin-top:1rem;">
+                <div style="font-size:0.85rem;font-weight:600;color:var(--mg-text-primary);margin-bottom:0.5rem;">족보별 포인트 설정</div>
+                <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-bottom:0.75rem;">족보 적중 시 지급할 포인트. 0으로 설정하면 해당 족보 비활성화. 꽝 = 주사위 합산 지급.</div>
+                <table class="mg-table" style="font-size:0.8rem;">
+                    <thead>
+                        <tr>
+                            <th>족보</th>
+                            <th>조건</th>
+                            <th style="text-align:right;width:120px;">포인트</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($combo_defs as $key => $combo) { ?>
+                        <tr>
+                            <td style="font-weight:600;color:var(--mg-accent);"><?php echo htmlspecialchars($combo['name']); ?></td>
+                            <td style="color:var(--mg-text-secondary);"><?php echo htmlspecialchars($combo['desc']); ?></td>
+                            <td style="text-align:right;">
+                                <input type="number" name="<?php echo $combo['config_key']; ?>" value="<?php echo $combo['current_bonus']; ?>" class="mg-form-input" style="width:100px;text-align:right;" min="0">
+                            </td>
+                        </tr>
+                        <?php } ?>
+                        <tr>
+                            <td style="color:var(--mg-text-muted);">꽝</td>
+                            <td style="color:var(--mg-text-muted);">위 족보 미적중</td>
+                            <td style="text-align:right;color:var(--mg-text-muted);font-size:0.75rem;">주사위 합산</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

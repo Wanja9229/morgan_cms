@@ -4,6 +4,9 @@
  */
 
 if (!defined('_GNUBOARD_')) exit;
+
+// Dice-Box 로더
+include_once(G5_PLUGIN_PATH.'/dice-box/dice-box-loader.php');
 ?>
 
 <div class="mg-inner">
@@ -32,6 +35,7 @@ if (!defined('_GNUBOARD_')) exit;
 
         <?php if ($hasAttended): ?>
             <!-- 이미 출석한 경우 -->
+            <?php $resultData = json_decode($todayAttendance['at_game_result'], true); ?>
             <div class="text-center py-8">
                 <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-mg-success/20 flex items-center justify-center">
                     <svg class="w-10 h-10 text-mg-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -39,12 +43,20 @@ if (!defined('_GNUBOARD_')) exit;
                     </svg>
                 </div>
                 <p class="text-lg font-semibold text-mg-text-primary mb-2">오늘 출석 완료!</p>
+                <?php if (!empty($resultData['dice'])): ?>
+                <div class="mg-dice-result" style="margin-bottom:0.75rem;">
+                    <?php foreach ($resultData['dice'] as $val): ?>
+                    <span class="mg-die mg-die--settled" data-value="<?php echo $val; ?>"><?php echo $val; ?></span>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
                 <p class="text-mg-text-muted">
                     <?php
-                    $resultData = json_decode($todayAttendance['at_game_result'], true);
                     echo '+' . number_format($todayAttendance['at_point']) . 'P 획득';
-                    if (!empty($resultData['isDouble'])) echo ' (더블!)';
-                    if (!empty($resultData['isBonus'])) echo ' (7일 연속!)';
+                    if (!empty($resultData['comboName'])) echo ' (' . htmlspecialchars($resultData['comboName']) . '!)';
+                    if (!empty($resultData['isCritical'])) echo ' (크리티컬!)';
+                    elseif (!empty($resultData['isDouble'])) echo ' (더블!)';
+                    if (!empty($resultData['isBonus'])) echo ' (' . (int)mg_get_config('attendance_streak_bonus_days', 7) . '일 연속!)';
                     ?>
                 </p>
             </div>
@@ -133,6 +145,11 @@ if (!defined('_GNUBOARD_')) exit;
 .mg-success { color: #22c55e; }
 .bg-mg-success\/20 { background-color: rgba(34, 197, 94, 0.2); }
 </style>
+
+<!-- Dice-Box 3D (출석 전에만 로드) -->
+<?php if (!$hasAttended): ?>
+<?php mg_dice_box_scripts(); ?>
+<?php endif; ?>
 
 <!-- 게임 JS -->
 <script>

@@ -12,6 +12,7 @@ $menu["menu800"] = array(
     array('800000', 'Morgan Edition', $mg_admin_url . '/dashboard.php', 'morgan'),
     // 설정
     array('800050', '대시보드', $mg_admin_url . '/dashboard.php', 'mg_dashboard', '설정'),
+    array('800060', '스태프 관리', $mg_admin_url . '/staff.php', 'mg_staff'),
     array('800100', '기본 설정', $mg_admin_url . '/config.php', 'mg_config'),
     array('800150', '메인 페이지 빌더', $mg_admin_url . '/main_builder.php', 'mg_main_builder'),
     // 세계관

@@ -86,6 +86,9 @@ $g5['mg_expedition_log_table'] = 'mg_expedition_log';
 $g5['mg_concierge_table'] = 'mg_concierge';
 $g5['mg_concierge_apply_table'] = 'mg_concierge_apply';
 $g5['mg_concierge_result_table'] = 'mg_concierge_result';
+// 스태프 권한
+$g5['mg_staff_role_table'] = 'mg_staff_role';
+$g5['mg_staff_member_table'] = 'mg_staff_member';
 // 마이그레이션
 $g5['mg_migrations_table'] = 'mg_migrations';
 
@@ -6806,4 +6809,316 @@ function mg_get_pending_relations($mb_id)
         $relations[] = $row;
     }
     return $relations;
+}
+
+// ==========================================
+// 스태프 권한 시스템
+// ==========================================
+
+/**
+ * Morgan 권한키 → g5_auth 메뉴ID 매핑
+ */
+function mg_staff_perm_menu_map()
+{
+    return array(
+        'mg_dashboard'        => array('800050'),
+        'mg_config'           => array('800100'),
+        'mg_main_builder'     => array('800150'),
+        'mg_lore'             => array('800160','800170','800175','800178'),
+        'mg_member'           => array('800190'),
+        'mg_character'        => array('800200'),
+        'mg_profile'          => array('800300'),
+        'mg_side_class'       => array('800400'),
+        'mg_relation'         => array('801700'),
+        'mg_seal'             => array('801300'),
+        'mg_attendance'       => array('800500'),
+        'mg_notification'     => array('800600'),
+        'mg_achievement'      => array('801200'),
+        'mg_rp'               => array('800650'),
+        'mg_board'            => array('800180'),
+        'mg_prompt'           => array('801500'),
+        'mg_concierge'        => array('801800'),
+        'mg_point'            => array('800550'),
+        'mg_reward'           => array('800570'),
+        'mg_shop'             => array('800700'),
+        'mg_shop_log'         => array('800900'),
+        'mg_emoticon'         => array('800950'),
+        'mg_pioneer'          => array('801000'),
+        'mg_pioneer_material' => array('801100'),
+        'mg_expedition'       => array('801110'),
+        'mg_expedition_log'   => array('801120'),
+        'mg_staff'            => array('800060'),
+    );
+}
+
+/**
+ * 모든 Morgan 관련 g5_auth 메뉴ID 목록
+ */
+function mg_staff_all_menu_ids()
+{
+    $map = mg_staff_perm_menu_map();
+    $ids = array();
+    foreach ($map as $menus) {
+        foreach ($menus as $mid) {
+            $ids[] = "'" . $mid . "'";
+        }
+    }
+    return $ids;
+}
+
+/**
+ * 권한 그룹 정의 (관리자 UI용)
+ */
+function mg_staff_perm_groups()
+{
+    return array(
+        '설정' => array(
+            'mg_dashboard'    => '대시보드',
+            'mg_config'       => '기본 설정',
+            'mg_main_builder' => '메인 빌더',
+            'mg_staff'        => '스태프 관리',
+        ),
+        '세계관' => array(
+            'mg_lore' => '위키',
+        ),
+        '회원 / 캐릭터' => array(
+            'mg_member'    => '회원 관리',
+            'mg_character' => '캐릭터 관리',
+            'mg_profile'   => '프로필 필드',
+            'mg_side_class'=> '진영/클래스',
+            'mg_relation'  => '관계 관리',
+            'mg_seal'      => '인장 관리',
+        ),
+        '활동' => array(
+            'mg_attendance'   => '출석 관리',
+            'mg_notification' => '알림 관리',
+            'mg_achievement'  => '업적 관리',
+        ),
+        '콘텐츠' => array(
+            'mg_rp'        => '역극 관리',
+            'mg_board'     => '게시판 관리',
+            'mg_prompt'    => '미션 관리',
+            'mg_concierge' => '의뢰 관리',
+        ),
+        '재화 / 상점' => array(
+            'mg_point'    => '포인트 관리',
+            'mg_reward'   => '보상 관리',
+            'mg_shop'     => '상점 관리',
+            'mg_shop_log' => '구매/선물 내역',
+            'mg_emoticon' => '이모티콘 관리',
+        ),
+        '개척' => array(
+            'mg_pioneer'          => '시설 관리',
+            'mg_pioneer_material' => '재료 관리',
+            'mg_expedition'       => '파견지 관리',
+            'mg_expedition_log'   => '파견 로그',
+        ),
+    );
+}
+
+/**
+ * 역할 조회
+ */
+function mg_get_staff_role($sr_id)
+{
+    global $g5;
+    $sr_id = (int)$sr_id;
+    return sql_fetch("SELECT * FROM {$g5['mg_staff_role_table']} WHERE sr_id = {$sr_id}");
+}
+
+/**
+ * 전체 역할 목록
+ */
+function mg_get_staff_roles()
+{
+    global $g5;
+    $result = sql_query("SELECT * FROM {$g5['mg_staff_role_table']} ORDER BY sr_sort, sr_id");
+    $roles = array();
+    while ($row = sql_fetch_array($result)) {
+        $roles[] = $row;
+    }
+    return $roles;
+}
+
+/**
+ * 스태프 목록 (역할 정보 포함)
+ */
+function mg_get_staff_members($sr_id = 0)
+{
+    global $g5;
+    $where = '';
+    if ($sr_id > 0) {
+        $where = " AND sm.sr_id = " . (int)$sr_id;
+    }
+    $sql = "SELECT sm.*, r.sr_name, r.sr_color, m.mb_nick, m.mb_email, m.mb_level
+            FROM {$g5['mg_staff_member_table']} sm
+            JOIN {$g5['mg_staff_role_table']} r ON sm.sr_id = r.sr_id
+            LEFT JOIN {$g5['member_table']} m ON sm.mb_id = m.mb_id
+            WHERE 1 {$where}
+            ORDER BY sm.mb_id, r.sr_sort";
+    $result = sql_query($sql);
+    $members = array();
+    while ($row = sql_fetch_array($result)) {
+        $members[] = $row;
+    }
+    return $members;
+}
+
+/**
+ * 특정 역할의 멤버 수
+ */
+function mg_staff_role_count($sr_id)
+{
+    global $g5;
+    $sr_id = (int)$sr_id;
+    $row = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_staff_member_table']} WHERE sr_id = {$sr_id}");
+    return (int)$row['cnt'];
+}
+
+/**
+ * 회원이 스태프인지 확인
+ */
+function mg_is_staff($mb_id)
+{
+    global $g5;
+    $mb_id = sql_real_escape_string($mb_id);
+    $row = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_staff_member_table']} WHERE mb_id = '{$mb_id}'");
+    return (int)$row['cnt'] > 0;
+}
+
+/**
+ * 회원의 역할 목록
+ */
+function mg_get_member_roles($mb_id)
+{
+    global $g5;
+    $mb_id = sql_real_escape_string($mb_id);
+    $sql = "SELECT r.* FROM {$g5['mg_staff_role_table']} r
+            JOIN {$g5['mg_staff_member_table']} sm ON r.sr_id = sm.sr_id
+            WHERE sm.mb_id = '{$mb_id}'
+            ORDER BY r.sr_sort, r.sr_id";
+    $result = sql_query($sql);
+    $roles = array();
+    while ($row = sql_fetch_array($result)) {
+        $roles[] = $row;
+    }
+    return $roles;
+}
+
+/**
+ * 역할 배정 + g5_auth 동기화
+ */
+function mg_staff_assign($mb_id, $sr_id)
+{
+    global $g5;
+    $mb_id = sql_real_escape_string($mb_id);
+    $sr_id = (int)$sr_id;
+
+    $exists = sql_fetch("SELECT sm_id FROM {$g5['mg_staff_member_table']}
+                         WHERE mb_id = '{$mb_id}' AND sr_id = {$sr_id}");
+    if ($exists['sm_id']) return false;
+
+    sql_query("INSERT INTO {$g5['mg_staff_member_table']}
+               SET mb_id = '{$mb_id}', sr_id = {$sr_id}, sm_created = NOW()");
+
+    mg_staff_sync_auth($mb_id);
+    return true;
+}
+
+/**
+ * 역할 해제 + g5_auth 동기화
+ */
+function mg_staff_unassign($mb_id, $sr_id)
+{
+    global $g5;
+    $mb_id = sql_real_escape_string($mb_id);
+    $sr_id = (int)$sr_id;
+
+    sql_query("DELETE FROM {$g5['mg_staff_member_table']}
+               WHERE mb_id = '{$mb_id}' AND sr_id = {$sr_id}");
+
+    mg_staff_sync_auth($mb_id);
+    return true;
+}
+
+/**
+ * 회원의 모든 역할 해제 + g5_auth Morgan 메뉴 정리
+ */
+function mg_staff_remove_member($mb_id)
+{
+    global $g5;
+    $mb_id = sql_real_escape_string($mb_id);
+
+    sql_query("DELETE FROM {$g5['mg_staff_member_table']} WHERE mb_id = '{$mb_id}'");
+    mg_staff_sync_auth($mb_id);
+}
+
+/**
+ * 특정 회원의 Morgan 역할 → g5_auth 동기화
+ */
+function mg_staff_sync_auth($mb_id)
+{
+    global $g5;
+    $mb_id = sql_real_escape_string($mb_id);
+
+    // 1) 회원의 모든 역할 권한 합산
+    $roles = mg_get_member_roles($mb_id);
+    $merged = array();
+
+    foreach ($roles as $role) {
+        $perms = json_decode($role['sr_permissions'], true);
+        if (!is_array($perms)) continue;
+
+        foreach ($perms as $pkey => $auth_str) {
+            if (!isset($merged[$pkey])) {
+                $merged[$pkey] = array('r' => false, 'w' => false, 'd' => false);
+            }
+            if (strpos($auth_str, 'r') !== false) $merged[$pkey]['r'] = true;
+            if (strpos($auth_str, 'w') !== false) $merged[$pkey]['w'] = true;
+            if (strpos($auth_str, 'd') !== false) $merged[$pkey]['d'] = true;
+        }
+    }
+
+    // 2) Morgan 관련 g5_auth 행 모두 삭제
+    $all_ids = mg_staff_all_menu_ids();
+    if (!empty($all_ids)) {
+        $id_list = implode(',', $all_ids);
+        sql_query("DELETE FROM {$g5['auth_table']}
+                   WHERE mb_id = '{$mb_id}' AND au_menu IN ({$id_list})");
+    }
+
+    // 3) 합산된 권한으로 g5_auth INSERT
+    $map = mg_staff_perm_menu_map();
+    foreach ($merged as $pkey => $flags) {
+        if (!isset($map[$pkey])) continue;
+
+        $auth_parts = array();
+        if ($flags['r']) $auth_parts[] = 'r';
+        if ($flags['w']) $auth_parts[] = 'w';
+        if ($flags['d']) $auth_parts[] = 'd';
+
+        if (empty($auth_parts)) continue;
+
+        $auth_str = implode(',', $auth_parts);
+        $menu_ids = $map[$pkey];
+
+        foreach ($menu_ids as $mid) {
+            sql_query("INSERT INTO {$g5['auth_table']}
+                       SET mb_id = '{$mb_id}', au_menu = '{$mid}', au_auth = '{$auth_str}'");
+        }
+    }
+}
+
+/**
+ * 특정 역할의 모든 멤버를 g5_auth에 동기화
+ */
+function mg_staff_sync_role($sr_id)
+{
+    global $g5;
+    $sr_id = (int)$sr_id;
+
+    $result = sql_query("SELECT mb_id FROM {$g5['mg_staff_member_table']} WHERE sr_id = {$sr_id}");
+    while ($row = sql_fetch_array($result)) {
+        mg_staff_sync_auth($row['mb_id']);
+    }
 }
