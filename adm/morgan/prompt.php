@@ -126,10 +126,21 @@ if ($mode == 'list') {
 // --- EDIT 모드 ---
 $edit_pm = null;
 if ($mode == 'edit') {
+    $clone_id = isset($_GET['clone_id']) ? (int)$_GET['clone_id'] : 0;
     if ($pm_id > 0) {
         $edit_pm = sql_fetch("SELECT * FROM {$g5['mg_prompt_table']} WHERE pm_id = {$pm_id}");
         if (!$edit_pm || !$edit_pm['pm_id']) {
             alert('미션을 찾을 수 없습니다.', './prompt.php');
+        }
+    } elseif ($clone_id > 0) {
+        // 복제: 기존 미션 데이터로 새 미션 폼 프리필
+        $edit_pm = mg_get_prompt($clone_id);
+        if ($edit_pm) {
+            $edit_pm['pm_id'] = 0;
+            $edit_pm['pm_start_date'] = '';
+            $edit_pm['pm_end_date'] = '';
+            $edit_pm['pm_status'] = 'draft';
+            $edit_pm['pm_banner'] = '';
         }
     }
 }
@@ -196,6 +207,23 @@ if ($mode == 'review' && $pm_id > 0) {
     $stat_rejected = mg_get_prompt_entry_count($pm_id, 'rejected');
     $stat_rewarded = mg_get_prompt_entry_count($pm_id, 'rewarded');
     $stat_total = mg_get_prompt_entry_count($pm_id);
+
+    // 확장 통계
+    $chars_sum = 0;
+    $chars_count = 0;
+    foreach ($entries as $e) {
+        if ($e['wr_char_count'] > 0) {
+            $chars_sum += $e['wr_char_count'];
+            $chars_count++;
+        }
+    }
+    $stat_avg_chars = $chars_count > 0 ? round($chars_sum / $chars_count) : 0;
+
+    $stat_total_reward = (int)sql_fetch("SELECT COALESCE(SUM(pe_point), 0) as total
+        FROM {$g5['mg_prompt_entry_table']} WHERE pm_id = {$pm_id} AND pe_status = 'rewarded'")['total'];
+
+    $stat_unique_members = (int)sql_fetch("SELECT COUNT(DISTINCT mb_id) as cnt
+        FROM {$g5['mg_prompt_entry_table']} WHERE pm_id = {$pm_id}")['cnt'];
 }
 
 // 페이지 타이틀
@@ -333,6 +361,7 @@ $entry_status_labels = array(
                     <td style="text-align:center;">
                         <a href="?mode=edit&pm_id=<?php echo $pm['pm_id']; ?>" class="mg-btn mg-btn-secondary mg-btn-sm">편집</a>
                         <a href="?mode=review&pm_id=<?php echo $pm['pm_id']; ?>" class="mg-btn mg-btn-secondary mg-btn-sm">검수</a>
+                        <a href="?mode=edit&clone_id=<?php echo $pm['pm_id']; ?>" class="mg-btn mg-btn-secondary mg-btn-sm">복제</a>
                         <?php if ($pm['pm_status'] == 'active') { ?>
                         <button type="button" class="mg-btn mg-btn-danger mg-btn-sm" onclick="closePrompt(<?php echo $pm['pm_id']; ?>, '<?php echo addslashes($pm['pm_title']); ?>')">종료</button>
                         <?php } ?>
@@ -681,6 +710,18 @@ function deletePrompt(pmId, title) {
         <div class="mg-stat-label">보상완료</div>
         <div class="mg-stat-value" style="color:var(--mg-success);"><?php echo number_format($stat_rewarded); ?></div>
     </div>
+    <div class="mg-stat-card">
+        <div class="mg-stat-label">평균 글자수</div>
+        <div class="mg-stat-value"><?php echo number_format($stat_avg_chars); ?></div>
+    </div>
+    <div class="mg-stat-card">
+        <div class="mg-stat-label">총 보상액</div>
+        <div class="mg-stat-value"><?php echo number_format($stat_total_reward); ?>P</div>
+    </div>
+    <div class="mg-stat-card">
+        <div class="mg-stat-label">참여자</div>
+        <div class="mg-stat-value"><?php echo number_format($stat_unique_members); ?>명</div>
+    </div>
 </div>
 
 <!-- 상태 필터 탭 -->
@@ -701,6 +742,10 @@ function deletePrompt(pmId, title) {
         <button type="button" class="mg-btn mg-btn-success mg-btn-sm" onclick="bulkAction('approve')">선택 일괄 승인</button>
         <button type="button" class="mg-btn mg-btn-primary mg-btn-sm" onclick="bulkAction('bonus')">선택 우수작 선정</button>
         <button type="button" class="mg-btn mg-btn-primary mg-btn-sm" onclick="bulkAction('reward_all')">보상 일괄 지급</button>
+        <?php if ($review_pm['pm_mode'] === 'vote') { ?>
+        <button type="button" class="mg-btn mg-btn-primary mg-btn-sm" onclick="bulkAction('vote_settle')" style="background:var(--mg-accent);color:var(--mg-bg-primary);">투표 정산</button>
+        <span style="font-size:0.75rem;color:var(--mg-text-muted);align-self:center;">추천수 상위 <?php echo (int)$review_pm['pm_bonus_count']; ?>명 보너스 + 전원 기본 보상</span>
+        <?php } ?>
     </div>
 
     <div class="mg-card">
@@ -828,7 +873,7 @@ function toggleAll(el) {
 // 일괄 액션
 function bulkAction(action) {
     var checked = document.querySelectorAll('.entry-chk:checked');
-    if (action !== 'reward_all' && checked.length === 0) {
+    if (action !== 'reward_all' && action !== 'vote_settle' && checked.length === 0) {
         alert('항목을 선택해주세요.');
         return;
     }
@@ -836,6 +881,7 @@ function bulkAction(action) {
     if (action === 'approve') msg = checked.length + '건을 일괄 승인하시겠습니까?';
     else if (action === 'bonus') msg = checked.length + '건을 우수작으로 선정하시겠습니까?';
     else if (action === 'reward_all') msg = '승인된 모든 엔트리에 보상을 일괄 지급하시겠습니까?';
+    else if (action === 'vote_settle') msg = '추천수 기준 투표 정산을 진행하시겠습니까?\n상위 N명에게 보너스, 전원에게 기본 보상이 지급됩니다.';
 
     if (!confirm(msg)) return;
     document.getElementById('bulk-mode').value = action;

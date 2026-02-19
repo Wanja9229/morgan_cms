@@ -26,7 +26,8 @@ class MG_Widget_Factory {
             'latest' => 'latest.widget.php',
             'notice' => 'notice.widget.php',
             'slider' => 'slider.widget.php',
-            'editor' => 'editor.widget.php'  // legacy
+            'editor' => 'editor.widget.php',  // legacy
+            'calendar' => 'calendar.widget.php'
         );
 
         foreach ($widget_files as $type => $file) {

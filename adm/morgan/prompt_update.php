@@ -346,5 +346,23 @@ if ($mode == 'reject') {
     goto_url('./prompt.php');
 }
 
+// ==========================================
+// 투표 정산 (vote 모드)
+// ==========================================
+if ($mode == 'vote_settle') {
+    $pm_id = (int)($_POST['pm_id'] ?? 0);
+    if (!$pm_id) {
+        alert('잘못된 요청입니다.', './prompt.php');
+    }
+
+    $prompt = mg_get_prompt($pm_id);
+    if (!$prompt || $prompt['pm_mode'] !== 'vote') {
+        alert('투표 모드 미션만 정산 가능합니다.', './prompt.php');
+    }
+
+    $count = mg_prompt_vote_settle($pm_id);
+    goto_url('./prompt.php?mode=review&pm_id='.$pm_id);
+}
+
 // 알 수 없는 mode
 goto_url('./prompt.php');

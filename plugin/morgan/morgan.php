@@ -6315,6 +6315,50 @@ function mg_prompt_close($pm_id)
 }
 
 /**
+ * vote 모드: 추천수 기준 상위 N명 자동 선정 + 보상
+ */
+function mg_prompt_vote_settle($pm_id)
+{
+    global $g5;
+    $pm_id = (int)$pm_id;
+    $prompt = mg_get_prompt($pm_id);
+    if (!$prompt || $prompt['pm_mode'] !== 'vote') return false;
+
+    // 미션이 아직 active면 먼저 종료
+    if ($prompt['pm_status'] === 'active') {
+        mg_prompt_close($pm_id);
+    }
+
+    $bonus_count = max(1, (int)$prompt['pm_bonus_count']);
+
+    // submitted 엔트리를 추천수 기준 내림차순 정렬
+    $sql = "SELECT e.pe_id, e.mb_id, e.wr_id, e.bo_table,
+            (SELECT COUNT(*) FROM {$g5['mg_like_log_table']}
+             WHERE bo_table = e.bo_table AND wr_id = e.wr_id) as like_count
+        FROM {$g5['mg_prompt_entry_table']} e
+        WHERE e.pm_id = {$pm_id} AND e.pe_status = 'submitted'
+        ORDER BY like_count DESC, e.pe_datetime ASC";
+    $result = sql_query($sql);
+
+    $rank = 0;
+    while ($row = sql_fetch_array($result)) {
+        $rank++;
+        $is_bonus = ($rank <= $bonus_count);
+
+        // 승인 + 보너스 여부 업데이트
+        sql_query("UPDATE {$g5['mg_prompt_entry_table']}
+            SET pe_status = 'approved', pe_is_bonus = " . ($is_bonus ? 1 : 0) . ",
+                pe_review_date = NOW()
+            WHERE pe_id = " . (int)$row['pe_id']);
+
+        // 보상 지급
+        mg_prompt_give_reward($pm_id, (int)$row['pe_id'], $is_bonus);
+    }
+
+    return $rank;
+}
+
+/**
  * 미션 배너 이미지 업로드
  */
 function mg_upload_prompt_banner($file, $pm_id = 0)

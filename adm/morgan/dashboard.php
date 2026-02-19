@@ -29,6 +29,21 @@ $stat_rp_open = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_rp_thread_table'
 $stat_point_today = sql_fetch("SELECT COALESCE(SUM(po_point),0) as total FROM {$g5['point_table']} WHERE po_point > 0 AND DATE(po_datetime) = CURDATE()")['total'];
 $stat_reward_pending = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_reward_queue_table']} WHERE rq_status = 'pending'")['cnt'];
 $stat_like_today = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_like_log_table']} WHERE DATE(ll_datetime) = CURDATE()")['cnt'];
+$stat_prompt_active = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_prompt_table']} WHERE pm_status = 'active'")['cnt'];
+$stat_prompt_review = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_prompt_entry_table']} WHERE pe_status = 'submitted'")['cnt'];
+
+// ─── 미션 검수 대기 ───
+$pending_prompt_entries = array();
+$result = sql_query("SELECT e.pe_id, e.pm_id, e.mb_id, e.pe_datetime, e.bo_table, e.wr_id,
+        p.pm_title, m.mb_nick
+    FROM {$g5['mg_prompt_entry_table']} e
+    LEFT JOIN {$g5['mg_prompt_table']} p ON e.pm_id = p.pm_id
+    LEFT JOIN {$g5['member_table']} m ON e.mb_id = m.mb_id
+    WHERE e.pe_status = 'submitted'
+    ORDER BY e.pe_datetime DESC LIMIT 5");
+while ($row = sql_fetch_array($result)) {
+    $pending_prompt_entries[] = $row;
+}
 
 // ─── 승인 요청 캐릭터 ───
 $pending_chars = array();
@@ -284,6 +299,14 @@ require_once __DIR__.'/_head.php';
         <div class="mg-stat-label">오늘 달성</div>
         <div class="mg-stat-value" style="<?php echo $stat_achievement_today == 0 ? 'color:var(--mg-text-muted);' : ''; ?>"><?php echo number_format($stat_achievement_today); ?></div>
     </div>
+    <div class="mg-stat-card">
+        <div class="mg-stat-label">활성 미션</div>
+        <div class="mg-stat-value" style="<?php echo $stat_prompt_active == 0 ? 'color:var(--mg-text-muted);' : 'color:var(--mg-accent);'; ?>"><?php echo number_format($stat_prompt_active); ?></div>
+    </div>
+    <div class="mg-stat-card">
+        <div class="mg-stat-label">미션 검수</div>
+        <div class="mg-stat-value <?php echo $stat_prompt_review > 0 ? 'mg-stat-highlight' : ''; ?>" style="<?php echo $stat_prompt_review == 0 ? 'color:var(--mg-text-muted);' : ''; ?>"><?php echo number_format($stat_prompt_review); ?></div>
+    </div>
 </div>
 
 <!-- 위젯 그리드 -->
@@ -367,6 +390,30 @@ require_once __DIR__.'/_head.php';
 
     <!-- 우측 컬럼 -->
     <div class="mg-widget-col" style="display:flex;flex-direction:column;gap:1.25rem;">
+
+        <!-- 미션 검수 대기 -->
+        <div class="mg-card mg-widget">
+            <div class="mg-card-header">
+                <h3>미션 검수 대기</h3>
+                <a href="./prompt.php">전체보기 &rarr;</a>
+            </div>
+            <div class="mg-card-body">
+                <?php if (empty($pending_prompt_entries)) { ?>
+                <div class="mg-widget-empty">검수 대기 중인 제출이 없습니다.</div>
+                <?php } else { ?>
+                <ul class="mg-widget-list">
+                    <?php foreach ($pending_prompt_entries as $pe) { ?>
+                    <li>
+                        <span class="wl-badge" style="background:var(--mg-accent)/20;color:var(--mg-accent);"><?php echo htmlspecialchars(mb_strimwidth($pe['pm_title'], 0, 12, '..')); ?></span>
+                        <span class="wl-nick"><?php echo htmlspecialchars($pe['mb_nick'] ?: $pe['mb_id']); ?></span>
+                        <span class="wl-sub"><?php echo mg_time_ago($pe['pe_datetime']); ?></span>
+                        <a href="./prompt.php?mode=review&pm_id=<?php echo $pe['pm_id']; ?>" class="wl-sub" style="color:var(--mg-accent);">검수</a>
+                    </li>
+                    <?php } ?>
+                </ul>
+                <?php } ?>
+            </div>
+        </div>
 
         <!-- 최신 게시글 -->
         <div class="mg-card mg-widget">

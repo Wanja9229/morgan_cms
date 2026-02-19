@@ -75,6 +75,21 @@ foreach ($active_prompts as $ap) {
     $prompt_entry_counts[$ap['pm_id']] = mg_get_prompt_entry_count($ap['pm_id']);
 }
 
+// 태그 수집
+$all_tags = array();
+foreach (array_merge($active_prompts, $closed_prompts) as $tp) {
+    if (!empty($tp['pm_tags'])) {
+        foreach (explode(',', $tp['pm_tags']) as $_tag) {
+            $_tag = trim($_tag);
+            if ($_tag) {
+                if (!isset($all_tags[$_tag])) $all_tags[$_tag] = array();
+                $all_tags[$_tag][] = (int)$tp['pm_id'];
+            }
+        }
+    }
+}
+$filter_tag = isset($_GET['tag']) ? trim($_GET['tag']) : '';
+
 // 상태 라벨/색상 헬퍼
 function _prompt_status_badge($status) {
     switch ($status) {
@@ -167,8 +182,9 @@ function _prompt_mode_label($mode) {
                 $entry_count = isset($prompt_entry_counts[$ap['pm_id']]) ? $prompt_entry_counts[$ap['pm_id']] : 0;
                 $desc_short = mb_strlen($ap['pm_content']) > 80 ? mb_substr(strip_tags($ap['pm_content']), 0, 80) . '...' : strip_tags($ap['pm_content']);
                 $participate_url = $write_href ? $write_href . (strpos($write_href, '?') !== false ? '&' : '?') . 'pm_id=' . $ap['pm_id'] : '';
+                $_card_tags = $ap['pm_tags'] ? htmlspecialchars(trim($ap['pm_tags'])) : '';
             ?>
-            <div class="card overflow-hidden">
+            <div class="card overflow-hidden prompt-card" data-pm-id="<?php echo $ap['pm_id']; ?>" data-tags="<?php echo $_card_tags; ?>">
                 <?php if ($ap['pm_banner']) { ?>
                 <img src="<?php echo htmlspecialchars($ap['pm_banner']); ?>" alt="" class="prompt-card-banner">
                 <?php } ?>
@@ -219,6 +235,16 @@ function _prompt_mode_label($mode) {
     </div>
     <?php } ?>
 
+    <!-- 태그 필터 -->
+    <?php if (!empty($all_tags)) { ?>
+    <div class="mb-4 flex flex-wrap gap-1">
+        <button type="button" class="badge tag-filter-btn <?php echo !$filter_tag ? 'badge-accent' : ''; ?>" data-tag="">#전체</button>
+        <?php foreach ($all_tags as $_t => $_pm_ids) { ?>
+        <button type="button" class="badge tag-filter-btn <?php echo $filter_tag === $_t ? 'badge-accent' : ''; ?>" data-tag="<?php echo htmlspecialchars($_t); ?>" data-pm-ids="<?php echo implode(',', $_pm_ids); ?>">#<?php echo htmlspecialchars($_t); ?></button>
+        <?php } ?>
+    </div>
+    <?php } ?>
+
     <!-- 카테고리 -->
     <?php if ($is_category) { ?>
     <div class="mb-4 flex flex-wrap gap-2">
@@ -248,7 +274,13 @@ function _prompt_mode_label($mode) {
                         }
                     }
                 ?>
-                <div class="p-4 hover:bg-mg-bg-tertiary/30 transition-colors <?php echo $row['is_notice'] ? 'bg-mg-accent/5' : ''; ?>">
+                <?php
+                    $_row_pm_id = '';
+                    if (isset($mg_list_entries[$row['wr_id']])) {
+                        $_row_pm_id = (int)$mg_list_entries[$row['wr_id']]['pm_id'];
+                    }
+                ?>
+                <div class="p-4 hover:bg-mg-bg-tertiary/30 transition-colors prompt-post-row <?php echo $row['is_notice'] ? 'bg-mg-accent/5' : ''; ?>" <?php if ($_row_pm_id) { ?>data-pm-id="<?php echo $_row_pm_id; ?>"<?php } ?>>
                     <div class="flex items-start gap-4">
                         <?php if ($is_checkbox) { ?>
                         <input type="checkbox" name="chk_wr_id[]" value="<?php echo $row['wr_id']; ?>" id="chk_<?php echo $i; ?>" class="mt-1">
@@ -545,4 +577,50 @@ document.addEventListener('keydown', function(e) {
         }
     }
 });
+
+// 태그 필터
+(function() {
+    var tagBtns = document.querySelectorAll('.tag-filter-btn');
+    if (!tagBtns.length) return;
+
+    tagBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var tag = this.getAttribute('data-tag');
+            var pmIds = this.getAttribute('data-pm-ids');
+
+            // 활성 상태 토글
+            tagBtns.forEach(function(b) { b.classList.remove('badge-accent'); });
+            this.classList.add('badge-accent');
+
+            // 미션 카드 필터링
+            var cards = document.querySelectorAll('.prompt-card');
+            cards.forEach(function(card) {
+                if (!tag) {
+                    card.style.display = '';
+                    return;
+                }
+                var cardTags = (card.getAttribute('data-tags') || '').split(',').map(function(t) { return t.trim(); });
+                card.style.display = cardTags.indexOf(tag) !== -1 ? '' : 'none';
+            });
+
+            // 게시글 목록: 매칭 미션의 pm_id로 필터링
+            var postRows = document.querySelectorAll('.prompt-post-row');
+            if (pmIds && postRows.length) {
+                var ids = pmIds.split(',');
+                postRows.forEach(function(row) {
+                    var rowPmId = row.getAttribute('data-pm-id');
+                    if (!tag) {
+                        row.style.display = '';
+                    } else if (rowPmId && ids.indexOf(rowPmId) !== -1) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            } else {
+                postRows.forEach(function(row) { row.style.display = ''; });
+            }
+        });
+    });
+})();
 </script>
