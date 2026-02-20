@@ -20,8 +20,8 @@ jobs:
 
       - name: Restore file timestamps
         run: |
-          pip install -q git-restore-mtime
-          git restore-mtime
+          wget -qO /tmp/git-restore-mtime https://raw.githubusercontent.com/MestreLion/git-tools/main/git-restore-mtime
+          python3 /tmp/git-restore-mtime
 
       - name: Deploy via FTP (lftp mirror)
         run: |
