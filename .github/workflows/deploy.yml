@@ -15,6 +15,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Restore file timestamps
+        run: |
+          pip install -q git-restore-mtime
+          git restore-mtime
 
       - name: Deploy via FTP (lftp mirror)
         run: |
@@ -29,7 +36,7 @@ jobs:
             set mirror:parallel-transfer-count 3;
             open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASS }} \
               ftp://${{ secrets.FTP_HOST }};
-            mirror --reverse --verbose \
+            mirror --reverse --verbose --no-perms \
               --exclude ^\.git/ \
               --exclude ^\.github/ \
               --exclude ^\.claude/ \
