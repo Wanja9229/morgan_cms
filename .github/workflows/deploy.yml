@@ -25,7 +25,8 @@ jobs:
             set ssl:verify-certificate no;
             set net:max-retries 10;
             set net:reconnect-interval-base 5;
-            set mirror:parallel-transfer-count 5;
+            set net:connection-limit 4;
+            set mirror:parallel-transfer-count 3;
             open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASS }} \
               ftp://${{ secrets.FTP_HOST }};
             mirror --reverse --verbose \
