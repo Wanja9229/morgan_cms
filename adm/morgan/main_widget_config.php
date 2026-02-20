@@ -34,7 +34,10 @@ if (!$widget_instance) {
 }
 
 $widget_types = mg_get_widget_types();
-$allowed_cols = isset($widget_types[$widget['widget_type']]) ? $widget_types[$widget['widget_type']]['allowed_cols'] : array(12);
+$grid_columns = (int)mg_config('grid_columns', 12);
+if ($grid_columns < 1) $grid_columns = 12;
+$current_w = (int)($widget['widget_w'] ?: ($widget['widget_cols'] ?? 6));
+$current_h = (int)($widget['widget_h'] ?: 2);
 ?>
 
 <div class="mg-form-group">
@@ -42,18 +45,15 @@ $allowed_cols = isset($widget_types[$widget['widget_type']]) ? $widget_types[$wi
     <input type="text" value="<?php echo htmlspecialchars($widget_instance->getName()); ?>" class="mg-form-input" readonly style="background:var(--mg-bg-tertiary);">
 </div>
 
-<div class="mg-form-group">
-    <label class="mg-form-label">컬럼 너비</label>
-    <select name="widget_cols" class="mg-form-select">
-        <?php
-        $col_labels = array(12 => '전체', 8 => '2/3', 6 => '절반', 4 => '1/3', 3 => '1/4', 2 => '1/6');
-        $sorted_cols = array(12, 8, 6, 4, 3, 2);
-        foreach ($sorted_cols as $col):
-            if (!in_array($col, $allowed_cols)) continue;
-        ?>
-        <option value="<?php echo $col; ?>" <?php echo $widget['widget_cols'] == $col ? 'selected' : ''; ?>><?php echo $col; ?>칸 (<?php echo $col_labels[$col]; ?>)</option>
-        <?php endforeach; ?>
-    </select>
+<div style="display:flex;gap:1rem;">
+    <div class="mg-form-group" style="flex:1;">
+        <label class="mg-form-label">가로 칸 수 (W) <small style="color:var(--mg-text-muted);">/ <?php echo $grid_columns; ?>칸</small></label>
+        <input type="number" name="widget_w" class="mg-form-input" value="<?php echo $current_w; ?>" min="1" max="<?php echo $grid_columns; ?>" style="padding:0.375rem 0.5rem;">
+    </div>
+    <div class="mg-form-group" style="flex:1;">
+        <label class="mg-form-label">세로 칸 수 (H)</label>
+        <input type="number" name="widget_h" class="mg-form-input" value="<?php echo $current_h; ?>" min="1" max="40" style="padding:0.375rem 0.5rem;">
+    </div>
 </div>
 
 <hr style="border:0;border-top:1px solid var(--mg-bg-tertiary);margin:1rem 0;">

@@ -10,12 +10,14 @@ if (!defined('_GNUBOARD_')) exit;
 require_once __DIR__ . '/MG_Game_Interface.php';
 require_once __DIR__ . '/MG_Game_Base.php';
 require_once __DIR__ . '/MG_Game_Dice.php';
+require_once __DIR__ . '/MG_Game_Fortune.php';
+require_once __DIR__ . '/MG_Game_Lottery.php';
 
 class MG_Game_Factory {
     private static $games = [
-        'dice' => MG_Game_Dice::class,
-        // 'fortune' => MG_Game_Fortune::class,  // 나중에 추가
-        // 'lottery' => MG_Game_Lottery::class,  // 나중에 추가
+        'dice'    => MG_Game_Dice::class,
+        'fortune' => MG_Game_Fortune::class,
+        'lottery' => MG_Game_Lottery::class,
     ];
 
     /**

@@ -89,6 +89,11 @@ $g5['mg_concierge_result_table'] = 'mg_concierge_result';
 // 스태프 권한
 $g5['mg_staff_role_table'] = 'mg_staff_role';
 $g5['mg_staff_member_table'] = 'mg_staff_member';
+// 미니게임
+$g5['mg_game_fortune_table'] = 'mg_game_fortune';
+$g5['mg_game_lottery_prize_table'] = 'mg_game_lottery_prize';
+$g5['mg_game_lottery_board_table'] = 'mg_game_lottery_board';
+$g5['mg_game_lottery_user_table'] = 'mg_game_lottery_user';
 // 마이그레이션
 $g5['mg_migrations_table'] = 'mg_migrations';
 
@@ -907,11 +912,10 @@ function mg_get_main_widgets() {
 }
 
 /**
- * 메인 페이지 렌더링
+ * 메인 페이지 렌더링 (2D 그리드 캔버스)
  *
- * Tailwind Safelist (동적 클래스 생성용):
- * col-span-2 col-span-3 col-span-4 col-span-6 col-span-8 col-span-12
- * md:col-span-2 md:col-span-3 md:col-span-4 md:col-span-6 md:col-span-8 md:col-span-12
+ * CSS Grid로 명시적 배치. 각 위젯은 (x, y, w, h) 좌표를 가짐.
+ * 모바일에서는 flex column으로 세로 스택.
  *
  * @return string HTML
  */
@@ -922,30 +926,76 @@ function mg_render_main() {
         return mg_render_default_main();
     }
 
-    // 위젯 팩토리 로드
     require_once(MG_PLUGIN_PATH.'/widgets/widget.factory.php');
 
-    $row_height = (int)mg_config('widget_row_height', 300);
-    $grid_width = (int)mg_config('widget_grid_width', 1200);
-    $html = '<div class="mg-main-builder grid grid-cols-12 gap-4">';
+    $grid_columns = (int)mg_config('grid_columns', 12);
+    if ($grid_columns < 1) $grid_columns = 12;
+
+    // 실제 사용된 최대 행 계산 (불필요한 빈 공간 제거)
+    $max_row = 0;
+    foreach ($widgets as $w) {
+        $end = (int)($w['widget_y'] ?? 0) + (int)($w['widget_h'] ?? 2);
+        if ($end > $max_row) $max_row = $end;
+    }
+    if ($max_row < 1) $max_row = 1;
+
+    // 정사각형 셀: row 높이를 JS로 계산 (컨테이너 너비 / columns)
+    $canvas_id = 'mgGridCanvas' . mt_rand(1000, 9999);
+    $html = '<div class="mg-grid-canvas" id="'.$canvas_id.'" data-columns="'.$grid_columns.'" data-rows="'.$max_row.'" style="'
+          . 'display:grid;'
+          . 'grid-template-columns:repeat('.$grid_columns.',1fr);'
+          . 'grid-auto-rows:1fr;'
+          . 'gap:0.5rem;">';
+
+    // y→x 순 정렬 (모바일 스택 순서 결정)
+    usort($widgets, function($a, $b) {
+        $dy = ((int)($a['widget_y'] ?? 0)) - ((int)($b['widget_y'] ?? 0));
+        if ($dy !== 0) return $dy;
+        return ((int)($a['widget_x'] ?? 0)) - ((int)($b['widget_x'] ?? 0));
+    });
 
     foreach ($widgets as $widget) {
-        $cols = (int)$widget['widget_cols'];
-        // 컬럼별 너비 계산 및 aspect-ratio 산출
-        $col_width = ($grid_width / 12) * $cols;
-        $aspect_ratio = round($col_width / $row_height, 3);
-        $html .= '<div class="col-span-12 md:col-span-'.$cols.'" style="aspect-ratio:'.$aspect_ratio.';overflow:hidden;">';
+        $x = (int)($widget['widget_x'] ?? 0);
+        $y = (int)($widget['widget_y'] ?? 0);
+        $w = (int)($widget['widget_w'] ?: ($widget['widget_cols'] ?? $grid_columns));
+        $h = (int)($widget['widget_h'] ?: 2);
 
-        // 위젯 렌더링
-        $widget_instance = MG_Widget_Factory::create($widget['widget_type']);
-        if ($widget_instance) {
-            $html .= $widget_instance->render($widget['widget_config']);
+        // CSS Grid은 1-based
+        $col_start = $x + 1;
+        $row_start = $y + 1;
+
+        $html .= '<div class="mg-grid-widget" style="'
+               . 'grid-column:'.$col_start.' / span '.$w.';'
+               . 'grid-row:'.$row_start.' / span '.$h.';'
+               . 'overflow:hidden;">';
+
+        $instance = MG_Widget_Factory::create($widget['widget_type']);
+        if ($instance) {
+            $config = $widget['widget_config'];
+            if (is_string($config)) $config = json_decode($config, true) ?: array();
+            $html .= $instance->render($config);
         }
 
         $html .= '</div>';
     }
 
     $html .= '</div>';
+
+    // 인라인 JS: 정사각형 셀 높이 계산
+    $html .= '<script>
+(function(){
+    var el = document.getElementById("'.$canvas_id.'");
+    if (!el) return;
+    var cols = parseInt(el.dataset.columns) || 12;
+    var rows = parseInt(el.dataset.rows) || 1;
+    function setSquare() {
+        var cellW = el.clientWidth / cols;
+        el.style.gridTemplateRows = "repeat(" + rows + "," + Math.round(cellW) + "px)";
+    }
+    setSquare();
+    var t; window.addEventListener("resize", function(){ clearTimeout(t); t = setTimeout(setSquare, 150); });
+})();
+</script>';
 
     return $html;
 }
@@ -1027,6 +1077,12 @@ function mg_get_widget_types() {
             'desc' => '이미지 슬라이더/캐러셀',
             'allowed_cols' => array(6, 8, 12),
             'icon' => 'image'
+        ),
+        'calendar' => array(
+            'name' => '미션 달력',
+            'desc' => '월별 미션 일정을 달력으로 표시',
+            'allowed_cols' => array(6, 8, 12),
+            'icon' => 'calendar'
         )
     );
 }
@@ -5235,7 +5291,7 @@ function mg_render_achievement_showcase($mb_id)
         if ($icon) {
             $html .= '<img src="'.htmlspecialchars($icon).'" alt="'.htmlspecialchars($name).'" class="w-8 h-8">';
         } else {
-            $html .= '<span class="text-xl">🏆</span>';
+            $html .= '<svg class="w-6 h-6" style="color:var(--mg-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3h14l-1.405 4.544A5.001 5.001 0 0112 13a5.001 5.001 0 01-5.595-5.456L5 3zm7 10v4m-4 4h8m-4-4v4"/></svg>';
         }
         $html .= '<span class="text-xs truncate block text-center mt-1">'.htmlspecialchars($name).'</span>';
         $html .= '</div>';
@@ -6168,7 +6224,10 @@ function mg_prompt_after_write($bo_table, $wr_id, $mb_id, $wr_content = '')
     $mb_row = sql_fetch("SELECT mb_level FROM {$g5['member_table']} WHERE mb_id = '".sql_real_escape_string($mb_id)."'");
     if ($mb_row) {
         $_lv = mg_check_member_level('prompt', $mb_row['mb_level']);
-        if (!$_lv['allowed']) return false;
+        if (!$_lv['allowed']) {
+            $_SESSION['mg_flash_error'] = '접근 권한이 없습니다.';
+            return false;
+        }
     }
 
     $prompt = mg_get_prompt($pm_id);
@@ -6875,7 +6934,7 @@ function mg_staff_perm_groups()
         '설정' => array(
             'mg_dashboard'    => '대시보드',
             'mg_config'       => '기본 설정',
-            'mg_main_builder' => '메인 빌더',
+            'mg_main_builder' => '디자인 관리',
             'mg_staff'        => '스태프 관리',
         ),
         '세계관' => array(

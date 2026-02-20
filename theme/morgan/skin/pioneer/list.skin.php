@@ -136,7 +136,7 @@ if (!defined('_GNUBOARD_')) exit;
 
         <?php if (empty($facilities)) { ?>
         <div class="col-span-full card text-center py-12">
-            <div class="text-4xl mb-4">🏗️</div>
+            <div class="mb-4"><svg class="w-12 h-12 mx-auto" style="color:var(--mg-text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg></div>
             <p class="text-mg-text-muted">등록된 시설이 없습니다.</p>
         </div>
         <?php } ?>

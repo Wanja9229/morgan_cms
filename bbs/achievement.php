@@ -129,7 +129,7 @@ include_once(G5_THEME_PATH.'/head.php');
                 <?php if ($icon) { ?>
                 <img src="<?php echo htmlspecialchars($icon); ?>" class="w-10 h-10 object-contain">
                 <?php } else { ?>
-                <span class="text-2xl">🏆</span>
+                <svg class="w-8 h-8" style="color:var(--mg-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3h14l-1.405 4.544A5.001 5.001 0 0112 13a5.001 5.001 0 01-5.595-5.456L5 3zm7 10v4m-4 4h8m-4-4v4"/></svg>
                 <?php } ?>
                 <span class="text-xs text-mg-text-secondary mt-1 text-center leading-tight"><?php echo htmlspecialchars($name); ?></span>
                 <span class="text-[10px]" style="color:<?php echo $r_color; ?>;"><?php echo $rarity_labels[$rarity] ?? ''; ?></span>
@@ -243,7 +243,7 @@ include_once(G5_THEME_PATH.'/head.php');
                 <?php if ($icon && ($completed || $progress > 0)) { ?>
                 <img src="<?php echo htmlspecialchars($icon); ?>" class="w-10 h-10 object-contain">
                 <?php } elseif ($completed || $progress > 0) { ?>
-                <span class="text-2xl">🏆</span>
+                <svg class="w-8 h-8" style="color:var(--mg-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3h14l-1.405 4.544A5.001 5.001 0 0112 13a5.001 5.001 0 01-5.595-5.456L5 3zm7 10v4m-4 4h8m-4-4v4"/></svg>
                 <?php } else { ?>
                 <span class="text-2xl opacity-30">?</span>
                 <?php } ?>

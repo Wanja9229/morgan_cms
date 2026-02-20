@@ -11,6 +11,8 @@ auth_check_menu($auth, $sub_menu, 'r');
 // Morgan 플러그인 로드
 include_once(G5_PATH.'/plugin/morgan/morgan.php');
 
+$token = get_admin_token();
+
 // 카테고리 목록
 $categories = array();
 $result = sql_query("SELECT * FROM {$g5['mg_shop_category_table']} ORDER BY sc_order, sc_id");

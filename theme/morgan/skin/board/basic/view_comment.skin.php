@@ -121,8 +121,8 @@ if (!empty($list)) {
             <!-- 댓글 내용 -->
             <div id="cmt_txt_<?php echo $row['wr_id']; ?>" class="text-sm text-mg-text-secondary">
                 <?php if ($is_dice) { ?>
-                <span class="text-lg font-bold text-mg-accent">🎲 <?php echo $dice_val; ?></span>
-                <?php if ($is_dice_best) { ?><span class="ml-1 text-yellow-400 font-bold" title="최고값">★</span><?php } ?>
+                <span class="text-lg font-bold text-mg-accent"><svg style="display:inline-block;width:18px;height:18px;vertical-align:middle;margin-right:2px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="3" stroke-width="2"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/></svg> <?php echo $dice_val; ?></span>
+                <?php if ($is_dice_best) { ?><span class="ml-1 text-yellow-400 font-bold" title="최고값">BEST</span><?php } ?>
                 <?php } else { ?>
                 <?php echo mg_render_emoticons($row['content']); ?>
                 <?php } ?>
@@ -175,7 +175,7 @@ if (!empty($list)) {
             include(G5_THEME_PATH.'/skin/emoticon/picker.skin.php');
             ?>
             <?php if ($mg_dice_enabled) { ?>
-            <button type="button" onclick="rollDice()" class="mg-emoticon-btn" title="주사위 굴리기">🎲</button>
+            <button type="button" onclick="rollDice()" class="mg-emoticon-btn" title="주사위 굴리기"><svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="3" stroke-width="2"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/></svg></button>
             <?php } ?>
         </div>
         <?php } ?>
@@ -265,18 +265,18 @@ function rollDice() {
     .then(function(r) { return r.json(); })
     .then(function(data) {
         if (data.success) {
-            alert('🎲 ' + data.dice_value + ' (0~' + data.dice_max + ')');
+            alert('[주사위] ' + data.dice_value + ' (0~' + data.dice_max + ')');
             location.reload();
         } else {
             alert(data.message || '주사위 굴리기 실패');
             btn.disabled = false;
-            btn.textContent = '🎲';
+            btn.innerHTML = '<svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="3" stroke-width="2"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/></svg>';
         }
     })
     .catch(function() {
         alert('요청 실패');
         btn.disabled = false;
-        btn.textContent = '🎲';
+        btn.innerHTML = '<svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="3" stroke-width="2"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/></svg>';
     });
 }
 <?php } ?>

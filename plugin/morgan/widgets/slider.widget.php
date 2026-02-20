@@ -52,7 +52,7 @@ class MG_Slider_Widget extends MG_Widget_Base {
         ob_start();
         ?>
         <div class="mg-size-guide" style="background:var(--mg-bg-tertiary);padding:0.75rem 1rem;border-radius:0.5rem;margin-bottom:1rem;">
-            <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-bottom:0.25rem;">📐 권장 슬라이드 이미지 사이즈</div>
+            <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-bottom:0.25rem;">권장 슬라이드 이미지 사이즈</div>
             <div id="slider_size_guide" style="font-size:0.9rem;color:var(--mg-accent);font-weight:600;">
                 컬럼 너비 선택 시 가이드가 표시됩니다
             </div>
@@ -108,12 +108,17 @@ class MG_Slider_Widget extends MG_Widget_Base {
                 <?php else: ?>
                 <?php foreach ($config['slides'] as $idx => $slide): ?>
                 <div class="slider-slide-item" style="margin-bottom:0.75rem;padding:0.75rem;background:var(--mg-bg-secondary);border-radius:4px;">
+                    <?php if (!empty($slide['image'])): ?>
+                    <div class="slide-thumb" style="margin-bottom:0.5rem;">
+                        <img src="<?php echo htmlspecialchars($slide['image']); ?>" alt="" style="max-width:100%;max-height:80px;object-fit:cover;border-radius:4px;border:1px solid var(--mg-bg-tertiary);">
+                    </div>
+                    <?php endif; ?>
                     <div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.5rem;">
                         <input type="file" accept="image/*" class="mg-form-input" style="flex:1;" onchange="uploadSlideImage(this, <?php echo $idx; ?>)">
                         <button type="button" class="mg-btn mg-btn-sm mg-btn-danger" onclick="this.closest('.slider-slide-item').remove()">삭제</button>
                     </div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
-                        <input type="text" name="widget_config[slides][<?php echo $idx; ?>][image]" id="slide_image_<?php echo $idx; ?>" value="<?php echo htmlspecialchars($slide['image'] ?? ''); ?>" placeholder="이미지 URL" class="mg-form-input">
+                        <input type="text" name="widget_config[slides][<?php echo $idx; ?>][image]" id="slide_image_<?php echo $idx; ?>" value="<?php echo htmlspecialchars($slide['image'] ?? ''); ?>" placeholder="이미지 URL" class="mg-form-input" onchange="updateSlideThumb(this)">
                         <input type="text" name="widget_config[slides][<?php echo $idx; ?>][link]" value="<?php echo htmlspecialchars($slide['link'] ?? ''); ?>" placeholder="링크 URL (선택)" class="mg-form-input">
                     </div>
                     <input type="text" name="widget_config[slides][<?php echo $idx; ?>][title]" value="<?php echo htmlspecialchars($slide['title'] ?? ''); ?>" placeholder="제목 (선택)" class="mg-form-input" style="margin-top:0.5rem;">
@@ -126,17 +131,31 @@ class MG_Slider_Widget extends MG_Widget_Base {
         <script>
         var slideIndex = <?php echo count($config['slides']); ?>;
 
+        function updateSlideThumb(input) {
+            var item = input.closest('.slider-slide-item');
+            var thumb = item.querySelector('.slide-thumb');
+            var url = input.value.trim();
+            if (url) {
+                thumb.innerHTML = '<img src="' + url + '" alt="" style="max-width:100%;max-height:80px;object-fit:cover;border-radius:4px;border:1px solid var(--mg-bg-tertiary);" onerror="this.parentNode.style.display=\'none\'">';
+                thumb.style.display = '';
+            } else {
+                thumb.innerHTML = '';
+                thumb.style.display = 'none';
+            }
+        }
+
         function addSlide() {
             var msg = document.getElementById('no_slides_msg');
             if (msg) msg.remove();
 
             var html = '<div class="slider-slide-item" style="margin-bottom:0.75rem;padding:0.75rem;background:var(--mg-bg-secondary);border-radius:4px;">' +
+                '<div class="slide-thumb" style="margin-bottom:0.5rem;display:none;"></div>' +
                 '<div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.5rem;">' +
                 '<input type="file" accept="image/*" class="mg-form-input" style="flex:1;" onchange="uploadSlideImage(this, ' + slideIndex + ')">' +
                 '<button type="button" class="mg-btn mg-btn-sm mg-btn-danger" onclick="this.closest(\'.slider-slide-item\').remove()">삭제</button>' +
                 '</div>' +
                 '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">' +
-                '<input type="text" name="widget_config[slides][' + slideIndex + '][image]" id="slide_image_' + slideIndex + '" placeholder="이미지 URL" class="mg-form-input">' +
+                '<input type="text" name="widget_config[slides][' + slideIndex + '][image]" id="slide_image_' + slideIndex + '" placeholder="이미지 URL" class="mg-form-input" onchange="updateSlideThumb(this)">' +
                 '<input type="text" name="widget_config[slides][' + slideIndex + '][link]" placeholder="링크 URL (선택)" class="mg-form-input">' +
                 '</div>' +
                 '<input type="text" name="widget_config[slides][' + slideIndex + '][title]" placeholder="제목 (선택)" class="mg-form-input" style="margin-top:0.5rem;">' +

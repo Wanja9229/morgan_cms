@@ -15,6 +15,10 @@ if ($is_admin != 'super') {
 // Morgan 플러그인 로드
 include_once(G5_PATH.'/plugin/morgan/morgan.php');
 
+// 탭 라우팅
+$tab = isset($_GET['tab']) ? $_GET['tab'] : 'basic';
+if (!in_array($tab, array('basic', 'member', 'content'))) $tab = 'basic';
+
 // 설정 로드
 $mg_configs = array();
 $sql = "SELECT * FROM {$g5['mg_config_table']}";
@@ -41,12 +45,20 @@ function _cfg_radio($name, $configs, $default = '1', $labels = array('사용', '
 }
 ?>
 
-<form name="fconfig" id="fconfig" method="post" action="./config_update.php" enctype="multipart/form-data">
-    <input type="hidden" name="token" value="">
+<!-- 탭 바 -->
+<div class="mg-tabs" style="margin-bottom:1.5rem;">
+    <a href="?tab=basic" class="mg-tab <?php echo $tab == 'basic' ? 'active' : ''; ?>">기본 설정</a>
+    <a href="?tab=member" class="mg-tab <?php echo $tab == 'member' ? 'active' : ''; ?>">회원 관리</a>
+    <a href="?tab=content" class="mg-tab <?php echo $tab == 'content' ? 'active' : ''; ?>">컨텐츠 설정</a>
+</div>
 
-    <!-- ======================================== -->
-    <!-- 기본 설정 -->
-    <!-- ======================================== -->
+<?php if ($tab == 'basic') { ?>
+<!-- ======================================== -->
+<!-- 기본 설정 탭 -->
+<!-- ======================================== -->
+<form name="fconfig" method="post" action="./config_update.php" enctype="multipart/form-data">
+    <input type="hidden" name="_redirect" value="config.php?tab=basic">
+
     <div class="mg-card">
         <div class="mg-card-header"><h3>기본 설정</h3></div>
         <div class="mg-card-body">
@@ -83,19 +95,16 @@ function _cfg_radio($name, $configs, $default = '1', $labels = array('사용', '
                     <input type="number" name="login_point" id="login_point" value="<?php echo isset($mg_configs['login_point']) ? $mg_configs['login_point'] : '10'; ?>" class="mg-form-input">
                     <small style="color:var(--mg-text-muted);font-size:0.75rem;">회원 로그인 시 지급되는 포인트</small>
                 </div>
-
                 <div class="mg-form-group">
                     <label class="mg-form-label" for="attendance_point">출석 포인트</label>
                     <input type="number" name="attendance_point" id="attendance_point" value="<?php echo isset($mg_configs['attendance_point']) ? $mg_configs['attendance_point'] : '50'; ?>" class="mg-form-input">
                     <small style="color:var(--mg-text-muted);font-size:0.75rem;">일일 출석체크 시 지급되는 포인트</small>
                 </div>
-
                 <div class="mg-form-group">
                     <label class="mg-form-label" for="character_create_point">캐릭터 생성 비용</label>
                     <input type="number" name="character_create_point" id="character_create_point" value="<?php echo isset($mg_configs['character_create_point']) ? $mg_configs['character_create_point'] : '100'; ?>" class="mg-form-input">
                     <small style="color:var(--mg-text-muted);font-size:0.75rem;">캐릭터 생성 시 필요한 포인트 (0: 무료)</small>
                 </div>
-
                 <div class="mg-form-group">
                     <label class="mg-form-label" for="max_characters">최대 캐릭터 수</label>
                     <input type="number" name="max_characters" id="max_characters" value="<?php echo isset($mg_configs['max_characters']) ? $mg_configs['max_characters'] : '10'; ?>" class="mg-form-input">
@@ -156,10 +165,64 @@ function _cfg_radio($name, $configs, $default = '1', $labels = array('사용', '
         </div>
     </div>
 
-    <!-- ======================================== -->
-    <!-- 회원 관리 -->
-    <!-- ======================================== -->
-    <div class="mg-card" style="margin-top:1.5rem;">
+    <div style="margin-top:1.5rem;">
+        <button type="submit" class="mg-btn mg-btn-primary">설정 저장</button>
+    </div>
+</form>
+
+<script>
+function updateCaptchaToggles() {
+    var siteKey = document.getElementById('recaptcha_site_key').value.trim();
+    var secretKey = document.getElementById('recaptcha_secret_key').value.trim();
+    var toggles = document.getElementById('captcha_toggles');
+    if (!siteKey || !secretKey) {
+        toggles.style.opacity = '0.4';
+        toggles.style.pointerEvents = 'none';
+    } else {
+        toggles.style.opacity = '1';
+        toggles.style.pointerEvents = '';
+    }
+}
+updateCaptchaToggles();
+
+function previewLogo(input) {
+    if (input.files && input.files[0]) {
+        var file = input.files[0];
+        if (file.size > 2 * 1024 * 1024) {
+            alert('로고 파일은 2MB 이하만 가능합니다.');
+            input.value = '';
+            return;
+        }
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('site_logo_preview').innerHTML =
+                '<div style="display:flex;align-items:center;gap:1rem;">' +
+                '<div style="background:var(--mg-bg-tertiary);padding:8px 12px;border-radius:6px;display:inline-flex;align-items:center;">' +
+                '<img src="' + e.target.result + '" alt="미리보기" style="max-height:32px;max-width:160px;">' +
+                '</div>' +
+                '<span style="color:var(--mg-accent);font-size:0.8rem;">새 로고 선택됨</span>' +
+                '</div>';
+            document.getElementById('site_logo_action').value = '';
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function removeLogo() {
+    document.getElementById('site_logo_action').value = '__DELETE__';
+    document.getElementById('site_logo').value = '';
+    document.getElementById('site_logo_preview').innerHTML = '<span style="color:var(--mg-text-muted);font-size:0.8rem;">로고가 삭제됩니다 (저장 시 적용)</span>';
+}
+</script>
+
+<?php } elseif ($tab == 'member') { ?>
+<!-- ======================================== -->
+<!-- 회원 관리 탭 -->
+<!-- ======================================== -->
+<form method="post" action="./config_update.php">
+    <input type="hidden" name="_redirect" value="config.php?tab=member">
+
+    <div class="mg-card">
         <div class="mg-card-header"><h3>회원 관리</h3></div>
         <div class="mg-card-body">
 
@@ -211,10 +274,19 @@ function _cfg_radio($name, $configs, $default = '1', $labels = array('사용', '
         </div>
     </div>
 
-    <!-- ======================================== -->
-    <!-- 컨텐츠 사용 설정 -->
-    <!-- ======================================== -->
-    <div class="mg-card" style="margin-top:1.5rem;">
+    <div style="margin-top:1.5rem;">
+        <button type="submit" class="mg-btn mg-btn-primary">설정 저장</button>
+    </div>
+</form>
+
+<?php } elseif ($tab == 'content') { ?>
+<!-- ======================================== -->
+<!-- 컨텐츠 사용 설정 탭 -->
+<!-- ======================================== -->
+<form method="post" action="./config_update.php">
+    <input type="hidden" name="_redirect" value="config.php?tab=content">
+
+    <div class="mg-card">
         <div class="mg-card-header"><h3>컨텐츠 사용 설정</h3></div>
         <div class="mg-card-body">
 
@@ -453,171 +525,12 @@ function _cfg_radio($name, $configs, $default = '1', $labels = array('사용', '
         </div>
     </div>
 
-    <!-- ======================================== -->
-    <!-- 디자인 설정 -->
-    <!-- ======================================== -->
-    <div class="mg-card" style="margin-top:1.5rem;">
-        <div class="mg-card-header"><h3>디자인 설정</h3></div>
-        <div class="mg-card-body">
-
-            <h4 style="font-size:0.9rem;font-weight:600;margin-bottom:1rem;color:var(--mg-text-secondary);">레이아웃</h4>
-
-            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem; margin-bottom:1.5rem;">
-                <div class="mg-form-group">
-                    <label class="mg-form-label" for="content_max_width">콘텐츠 최대 너비</label>
-                    <input type="text" name="content_max_width" id="content_max_width" value="<?php echo isset($mg_configs['content_max_width']) ? htmlspecialchars($mg_configs['content_max_width']) : '72rem'; ?>" class="mg-form-input" placeholder="72rem">
-                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">모든 페이지 콘텐츠 영역의 최대 너비 (예: 72rem, 1200px, 100%)</small>
-                </div>
-            </div>
-
-            <hr style="border:0;border-top:1px solid var(--mg-bg-tertiary);margin:1.5rem 0;">
-
-            <h4 style="font-size:0.9rem;font-weight:600;margin-bottom:1rem;color:var(--mg-text-secondary);">색상</h4>
-
-            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
-                <div class="mg-form-group">
-                    <label class="mg-form-label" for="color_accent">메인 컬러 (Accent)</label>
-                    <input type="color" name="color_accent" id="color_accent" value="<?php echo isset($mg_configs['color_accent']) ? $mg_configs['color_accent'] : '#f59f0a'; ?>" class="mg-form-input" style="height:44px;padding:4px;">
-                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">강조 색상, 링크 등</small>
-                </div>
-                <div class="mg-form-group">
-                    <label class="mg-form-label" for="color_button">버튼 색상</label>
-                    <input type="color" name="color_button" id="color_button" value="<?php echo isset($mg_configs['color_button']) ? $mg_configs['color_button'] : '#f59f0a'; ?>" class="mg-form-input" style="height:44px;padding:4px;">
-                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">기본 버튼 배경색</small>
-                </div>
-                <div class="mg-form-group">
-                    <label class="mg-form-label" for="color_border">Border 색상</label>
-                    <input type="color" name="color_border" id="color_border" value="<?php echo isset($mg_configs['color_border']) ? $mg_configs['color_border'] : '#313338'; ?>" class="mg-form-input" style="height:44px;padding:4px;">
-                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">테두리, 구분선 색상</small>
-                </div>
-                <div class="mg-form-group">
-                    <label class="mg-form-label" for="color_bg_primary">배경 색상 (Primary)</label>
-                    <input type="color" name="color_bg_primary" id="color_bg_primary" value="<?php echo isset($mg_configs['color_bg_primary']) ? $mg_configs['color_bg_primary'] : '#1e1f22'; ?>" class="mg-form-input" style="height:44px;padding:4px;">
-                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">메인 배경색</small>
-                </div>
-                <div class="mg-form-group">
-                    <label class="mg-form-label" for="color_bg_secondary">배경 색상 (Secondary)</label>
-                    <input type="color" name="color_bg_secondary" id="color_bg_secondary" value="<?php echo isset($mg_configs['color_bg_secondary']) ? $mg_configs['color_bg_secondary'] : '#2b2d31'; ?>" class="mg-form-input" style="height:44px;padding:4px;">
-                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">카드, 섹션 배경색</small>
-                </div>
-            </div>
-
-            <hr style="border:0;border-top:1px solid var(--mg-bg-tertiary);margin:1.5rem 0;">
-
-            <h4 style="font-size:0.9rem;font-weight:600;margin-bottom:1rem;color:var(--mg-text-secondary);">배경 이미지</h4>
-
-            <div class="mg-form-group" style="max-width:500px;">
-                <label class="mg-form-label">배경 이미지</label>
-                <input type="file" name="bg_image" id="bg_image" accept="image/*" class="mg-form-input" onchange="previewBgImage(this)">
-                <input type="hidden" name="bg_image_url" id="bg_image_url" value="<?php echo isset($mg_configs['bg_image']) ? htmlspecialchars($mg_configs['bg_image']) : ''; ?>">
-                <small style="color:var(--mg-text-muted);font-size:0.75rem;">메인 콘텐츠 영역 배경 이미지 (최대 10MB, jpg/png/gif/webp)</small>
-                <div id="bg_image_preview" style="margin-top:0.75rem;">
-                    <?php if (!empty($mg_configs['bg_image'])): ?>
-                    <div style="display:flex;align-items:center;gap:1rem;">
-                        <img src="<?php echo htmlspecialchars($mg_configs['bg_image']); ?>" alt="배경 미리보기" style="max-width:200px;max-height:100px;border-radius:4px;border:1px solid var(--mg-bg-tertiary);">
-                        <button type="button" class="mg-btn mg-btn-sm" style="background:var(--mg-error);color:#fff;" onclick="removeBgImage()">삭제</button>
-                    </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <div class="mg-form-group" style="max-width:500px;margin-top:1rem;">
-                <label class="mg-form-label" for="bg_opacity">배경 이미지 투명도</label>
-                <div style="display:flex;align-items:center;gap:1rem;">
-                    <input type="range" name="bg_opacity" id="bg_opacity" min="0" max="100" value="<?php echo isset($mg_configs['bg_opacity']) ? $mg_configs['bg_opacity'] : '20'; ?>" style="flex:1;">
-                    <span id="bg_opacity_value" style="min-width:40px;"><?php echo isset($mg_configs['bg_opacity']) ? $mg_configs['bg_opacity'] : '20'; ?>%</span>
-                </div>
-                <small style="color:var(--mg-text-muted);font-size:0.75rem;">배경 이미지의 불투명도 (0: 투명, 100: 불투명)</small>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- 저장 버튼 -->
-    <div style="margin-top:1.5rem;display:flex;gap:1rem;align-items:center;">
+    <div style="margin-top:1.5rem;">
         <button type="submit" class="mg-btn mg-btn-primary">설정 저장</button>
-        <button type="button" class="mg-btn mg-btn-secondary" onclick="resetColors()">색상 초기화</button>
     </div>
 </form>
 
-<script>
-function updateCaptchaToggles() {
-    var siteKey = document.getElementById('recaptcha_site_key').value.trim();
-    var secretKey = document.getElementById('recaptcha_secret_key').value.trim();
-    var toggles = document.getElementById('captcha_toggles');
-    if (!siteKey || !secretKey) {
-        toggles.style.opacity = '0.4';
-        toggles.style.pointerEvents = 'none';
-    } else {
-        toggles.style.opacity = '1';
-        toggles.style.pointerEvents = '';
-    }
-}
-updateCaptchaToggles();
-
-document.getElementById('bg_opacity').addEventListener('input', function() {
-    document.getElementById('bg_opacity_value').textContent = this.value + '%';
-});
-
-function previewBgImage(input) {
-    if (input.files && input.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            document.getElementById('bg_image_preview').innerHTML =
-                '<div style="display:flex;align-items:center;gap:1rem;">' +
-                '<img src="' + e.target.result + '" alt="미리보기" style="max-width:200px;max-height:100px;border-radius:4px;border:1px solid var(--mg-bg-tertiary);">' +
-                '<span style="color:var(--mg-accent);font-size:0.8rem;">새 이미지 선택됨</span>' +
-                '</div>';
-        };
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-
-function removeBgImage() {
-    document.getElementById('bg_image_url').value = '__DELETE__';
-    document.getElementById('bg_image').value = '';
-    document.getElementById('bg_image_preview').innerHTML = '<span style="color:var(--mg-text-muted);font-size:0.8rem;">이미지가 삭제됩니다 (저장 시 적용)</span>';
-}
-
-function previewLogo(input) {
-    if (input.files && input.files[0]) {
-        var file = input.files[0];
-        if (file.size > 2 * 1024 * 1024) {
-            alert('로고 파일은 2MB 이하만 가능합니다.');
-            input.value = '';
-            return;
-        }
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            document.getElementById('site_logo_preview').innerHTML =
-                '<div style="display:flex;align-items:center;gap:1rem;">' +
-                '<div style="background:var(--mg-bg-tertiary);padding:8px 12px;border-radius:6px;display:inline-flex;align-items:center;">' +
-                '<img src="' + e.target.result + '" alt="미리보기" style="max-height:32px;max-width:160px;">' +
-                '</div>' +
-                '<span style="color:var(--mg-accent);font-size:0.8rem;">새 로고 선택됨</span>' +
-                '</div>';
-            document.getElementById('site_logo_action').value = '';
-        };
-        reader.readAsDataURL(file);
-    }
-}
-
-function removeLogo() {
-    document.getElementById('site_logo_action').value = '__DELETE__';
-    document.getElementById('site_logo').value = '';
-    document.getElementById('site_logo_preview').innerHTML = '<span style="color:var(--mg-text-muted);font-size:0.8rem;">로고가 삭제됩니다 (저장 시 적용)</span>';
-}
-
-function resetColors() {
-    if (!confirm('모든 색상을 기본값으로 초기화하시겠습니까?')) return;
-    document.getElementById('color_accent').value = '#f59f0a';
-    document.getElementById('color_button').value = '#f59f0a';
-    document.getElementById('color_border').value = '#313338';
-    document.getElementById('color_bg_primary').value = '#1e1f22';
-    document.getElementById('color_bg_secondary').value = '#2b2d31';
-}
-
-</script>
+<?php } ?>
 
 <?php
 require_once __DIR__.'/_tail.php';

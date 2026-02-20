@@ -1,9 +1,9 @@
 <?php
 /**
- * Morgan Edition - 주사위 게임 (5d6 야찌 룰 + Dice-Box 3D)
+ * Morgan Edition - 주사위 게임 (5d6 족보 + Dice-Box 3D)
  *
- * 출석체크 시 5d6 주사위를 굴려 야찌 족보 기반 포인트 획득
- * - 족보: 야찌(1000P) ~ 트리플(100P), 꽝=주사위 합
+ * 출석체크 시 5d6 주사위를 굴려 족보 기반 포인트 획득
+ * - 족보: 퍼펙트(1000P) ~ 트리플(100P), 꽝=주사위 합
  * - 족보별 포인트는 관리자가 설정 가능
  * - 리롤: 킵할 주사위 선택 후 나머지 다시 굴리기 (기본 2회)
  * - 연속 출석: N일 연속 시 배율 적용
@@ -19,13 +19,12 @@ class MG_Game_Dice extends MG_Game_Base {
     private $streakBonusDays = 7;
     private $diceCount = 5;
     private $diceSides = 6;
-    private $comboEnabled = true;
     private $rerollCount = 2;
 
     // 족보 정의 (검사 순서: 높은 것부터)
     // bonus 값은 관리자 설정으로 덮어씀
     private static $COMBOS = [
-        'yahtzee'        => ['name' => '야찌',           'bonus' => 1000, 'desc' => '5개 동일',       'config_key' => 'dice_combo_yahtzee'],
+        'yahtzee'        => ['name' => '퍼펙트',         'bonus' => 1000, 'desc' => '5개 동일',       'config_key' => 'dice_combo_yahtzee'],
         'four_kind'      => ['name' => '포카인드',       'bonus' => 500,  'desc' => '4개 동일',       'config_key' => 'dice_combo_four_kind'],
         'large_straight' => ['name' => '라지 스트레이트', 'bonus' => 400,  'desc' => '5개 연속',       'config_key' => 'dice_combo_large_straight'],
         'full_house'     => ['name' => '풀하우스',       'bonus' => 300,  'desc' => '3개+2개 동일',   'config_key' => 'dice_combo_full_house'],
@@ -41,7 +40,6 @@ class MG_Game_Dice extends MG_Game_Base {
         $this->streakBonusDays = (int)mg_get_config('attendance_streak_bonus_days', 7);
         $this->diceCount = max(1, min(5, (int)mg_get_config('dice_count', 5)));
         $this->diceSides = max(6, (int)mg_get_config('dice_sides', 6));
-        $this->comboEnabled = (int)mg_get_config('dice_combo_enabled', 1) ? true : false;
         $this->rerollCount = max(0, min(5, (int)mg_get_config('dice_reroll_count', 2)));
 
         // 관리자 설정 포인트 로드
@@ -61,10 +59,7 @@ class MG_Game_Dice extends MG_Game_Base {
 
     public function getDescription(): string {
         $maxCombo = $this->comboPoints['yahtzee'] ?? 1000;
-        $desc = "{$this->diceCount}d{$this->diceSides} 주사위를 굴려 포인트를 획득합니다.";
-        if ($this->comboEnabled) {
-            $desc .= " 족보 적중 시 최대 {$maxCombo}P!";
-        }
+        $desc = "{$this->diceCount}d{$this->diceSides} 주사위를 굴려 포인트를 획득합니다. 족보 적중 시 최대 {$maxCombo}P!";
         if ($this->rerollCount > 0) {
             $desc .= " (리롤 {$this->rerollCount}회)";
         }
@@ -116,7 +111,7 @@ class MG_Game_Dice extends MG_Game_Base {
         $sorted = $dice;
         sort($sorted);
 
-        // 야찌: 5개 동일
+        // 퍼펙트: 5개 동일
         if ($freqs[0] >= 5 && $this->comboPoints['yahtzee'] > 0) {
             return ['key' => 'yahtzee', 'name' => self::$COMBOS['yahtzee']['name'], 'bonus' => $this->comboPoints['yahtzee']];
         }
@@ -200,7 +195,7 @@ class MG_Game_Dice extends MG_Game_Base {
     /**
      * 최종 포인트 계산
      * 족보 히트 = 족보 고정 포인트, 꽝 = 주사위 합
-     * + 연속 출석 배율 + 크리티컬(최대값) 1.5배
+     * + 연속 출석 배율
      */
     public function calculatePoint(array $dice, int $streak): array {
         $total = array_sum($dice);
@@ -209,13 +204,11 @@ class MG_Game_Dice extends MG_Game_Base {
         $comboBonus = 0;
         $comboName = '';
         $comboKey = '';
-        if ($this->comboEnabled) {
-            $combo = $this->checkCombo($dice);
-            if (!empty($combo)) {
-                $comboBonus = $combo['bonus'];
-                $comboName = $combo['name'];
-                $comboKey = $combo['key'];
-            }
+        $combo = $this->checkCombo($dice);
+        if (!empty($combo)) {
+            $comboBonus = $combo['bonus'];
+            $comboName = $combo['name'];
+            $comboKey = $combo['key'];
         }
 
         // 기본 포인트: 족보 히트 → 족보 포인트, 꽝 → 주사위 합
@@ -223,18 +216,13 @@ class MG_Game_Dice extends MG_Game_Base {
 
         // 연속 출석 보너스
         $isBonus = ($streak >= ($this->streakBonusDays - 1));
-        $pointAfterStreak = $isBonus ? (int)($basePoint * $this->bonusMultiplier) : $basePoint;
-
-        // 크리티컬 (최대값 등장) — 야찌 제외 (이미 최대)
-        $hasCritical = in_array($this->diceSides, $dice) && $comboKey !== 'yahtzee';
-        $finalPoint = $hasCritical ? (int)($pointAfterStreak * 1.5) : $pointAfterStreak;
+        $finalPoint = $isBonus ? (int)($basePoint * $this->bonusMultiplier) : $basePoint;
 
         return [
             'basePoint' => $basePoint,
             'comboBonus' => $comboBonus,
             'comboName' => $comboName,
             'comboKey' => $comboKey,
-            'isCritical' => $hasCritical,
             'isBonus' => $isBonus,
             'finalPoint' => $finalPoint,
             'diceTotal' => $total,
@@ -273,7 +261,7 @@ class MG_Game_Dice extends MG_Game_Base {
         // 이미 굴린 세션이 있으면 기존 결과 반환 (무한 리롤 방지)
         $existing = $this->getSessionState();
         if ($existing && $existing['mb_id'] === $mb_id) {
-            $combo = $this->comboEnabled ? $this->checkCombo($existing['dice']) : [];
+            $combo = $this->checkCombo($existing['dice']);
             return [
                 'success' => true,
                 'phase' => 'roll',
@@ -301,7 +289,7 @@ class MG_Game_Dice extends MG_Game_Base {
             'mb_id' => $mb_id,
         ]);
 
-        $combo = $this->comboEnabled ? $this->checkCombo($dice) : [];
+        $combo = $this->checkCombo($dice);
 
         return [
             'success' => true,
@@ -342,7 +330,7 @@ class MG_Game_Dice extends MG_Game_Base {
         $state['rerolls_left']--;
         $this->setSessionState($state);
 
-        $combo = $this->comboEnabled ? $this->checkCombo($dice) : [];
+        $combo = $this->checkCombo($dice);
 
         return [
             'success' => true,
@@ -391,7 +379,6 @@ class MG_Game_Dice extends MG_Game_Base {
             'comboKey' => $calc['comboKey'],
             'streak' => $streak + 1,
             'isBonus' => $calc['isBonus'],
-            'isCritical' => $calc['isCritical'],
         ];
 
         $this->saveAttendance($mb_id, $calc['finalPoint'], $gameData);
@@ -399,9 +386,6 @@ class MG_Game_Dice extends MG_Game_Base {
         $message = "{$calc['finalPoint']}P를 획득했습니다!";
         if (!empty($calc['comboName'])) {
             $message = $calc['comboName'] . '! ' . $message;
-        }
-        if ($calc['isCritical']) {
-            $message .= ' (크리티컬!)';
         }
         if ($calc['isBonus']) {
             $message .= " ({$this->streakBonusDays}일 연속 보너스!)";
@@ -482,9 +466,6 @@ class MG_Game_Dice extends MG_Game_Base {
         if (!empty($data['isBonus'])) {
             $parts[] = '연속출석 ×' . $this->bonusMultiplier;
         }
-        if (!empty($data['isCritical'])) {
-            $parts[] = '크리티컬 ×1.5';
-        }
         $pointBreakdown = '<p class="mg-game-breakdown">' . implode(' → ', $parts) . ' = ' . number_format($point) . 'P</p>';
 
         return '<div class="mg-game-result mg-game-result--success">
@@ -506,7 +487,7 @@ class MG_Game_Dice extends MG_Game_Base {
         $hasSession = ($session && isset($session['mb_id']) && $session['mb_id'] === $mb_id && $mb_id);
         $sessionJson = '';
         if ($hasSession) {
-            $combo = $this->comboEnabled ? $this->checkCombo($session['dice']) : [];
+            $combo = $this->checkCombo($session['dice']);
             $sessionJson = htmlspecialchars(json_encode([
                 'dice' => $session['dice'],
                 'rerolls_left' => $session['rerolls_left'],
@@ -561,10 +542,9 @@ class MG_Game_Dice extends MG_Game_Base {
                     <div class="mg-combo-rules">
                         <p class="mg-combo-rules-title">보너스 규칙</p>
                         <ul>
-                            <li><span style="color:#ef4444;font-weight:600;">크리티컬 ×1.5</span> — 주사위 중 ' . $this->diceSides . '이 있으면 최종 포인트 ×1.5 (야찌 제외)</li>
                             <li><span style="color:var(--mg-accent);font-weight:600;">연속출석 ×' . $this->bonusMultiplier . '</span> — ' . $this->streakBonusDays . '일 연속 출석 시 포인트 ×' . $this->bonusMultiplier . '</li>
                         </ul>
-                        <p class="mg-combo-rules-formula">계산: 기본P → 연속출석 → 크리티컬 = 최종P</p>
+                        <p class="mg-combo-rules-formula">계산: 기본P → 연속출석 = 최종P</p>
                     </div>
                 </div>
             </div>
@@ -572,7 +552,7 @@ class MG_Game_Dice extends MG_Game_Base {
 
         $btnStyle = $hasSession ? ' style="display:none;"' : '';
 
-        return '<div class="mg-game-ui mg-game-dice" data-count="' . $this->diceCount . '" data-sides="' . $this->diceSides . '" data-rerolls="' . $this->rerollCount . '" data-combo="' . ($this->comboEnabled ? 1 : 0) . '"' . ($sessionJson ? ' data-session="' . $sessionJson . '"' : '') . '>
+        return '<div class="mg-game-ui mg-game-dice" data-count="' . $this->diceCount . '" data-sides="' . $this->diceSides . '" data-rerolls="' . $this->rerollCount . '"' . ($sessionJson ? ' data-session="' . $sessionJson . '"' : '') . '>
             <div id="dice-box-container" class="dice-box-overlay"></div>
             <div class="mg-dice-tray" id="dice-tray">
                 <div class="mg-dice-container" id="dice-container">' . $diceHtml . '</div>
@@ -583,7 +563,8 @@ class MG_Game_Dice extends MG_Game_Base {
                 <button type="button" class="mg-btn-text" id="btn-combo-info">족보 보기</button>
             </div>
             ' . $comboModal . '
-        </div>';
+        </div>
+        <div id="game-result" style="margin-top:1rem;"></div>';
     }
 
     public function getJavaScript(): string {
@@ -599,7 +580,6 @@ class MG_Game_Dice extends MG_Game_Base {
     var diceCount = parseInt(gameUI.dataset.count) || 5;
     var diceSides = parseInt(gameUI.dataset.sides) || 6;
     var maxRerolls = parseInt(gameUI.dataset.rerolls) || 0;
-    var comboEnabled = parseInt(gameUI.dataset.combo) || 0;
 
     var dies = [];
     for (var i = 0; i < diceCount; i++) {
@@ -661,6 +641,15 @@ class MG_Game_Dice extends MG_Game_Base {
     if (savedSession) {
         currentDice = savedSession.dice;
         rerollsLeft = savedSession.rerolls_left;
+        // 3D 주사위도 복원 (세션 값으로 강제 배치)
+        ensureDiceBox().then(function(ready) {
+            if (ready && currentDice.length > 0) {
+                try {
+                    MorganDice.clear();
+                    MorganDice.roll(diceCount + 'd' + diceSides + '@' + currentDice.join(','));
+                } catch(e) { console.warn('[DiceGame] 3D session restore error:', e); }
+            }
+        });
         if (rerollsLeft <= 0) {
             doFinalize();
         } else {
@@ -777,7 +766,15 @@ class MG_Game_Dice extends MG_Game_Base {
                     if (r) { rerolledIndices.push(idx); rerolledVals.push(currentDice[idx]); }
                 });
                 if (diceBoxReady && rerolledIndices.length > 0) {
-                    try { MorganDice.rerollForced(rerolledIndices, rerolledVals); } catch(e) { console.warn('[DiceGame] 3D reroll error:', e); }
+                    try {
+                        // 3D 주사위가 없으면 (새로고침 후 등) 전체 새로 굴리기
+                        if (!MorganDice._box || !MorganDice._box.diceList || MorganDice._box.diceList.length === 0) {
+                            MorganDice.clear();
+                            MorganDice.roll(diceCount + 'd' + diceSides + '@' + currentDice.join(','));
+                        } else {
+                            MorganDice.rerollForced(rerolledIndices, rerolledVals);
+                        }
+                    } catch(e) { console.warn('[DiceGame] 3D reroll error:', e); }
                 }
 
                 var delay = 0;
@@ -786,7 +783,7 @@ class MG_Game_Dice extends MG_Game_Base {
                         setTimeout(function() {
                             clearInterval(riCopy.interval);
                             settleOneDie(riCopy.idx, currentDice[riCopy.idx]);
-                        }, 300 + d * 200);
+                        }, 450 + d * 250);
                     })(ri, delay);
                     delay++;
                 });
@@ -795,7 +792,7 @@ class MG_Game_Dice extends MG_Game_Base {
                     if (!rerollMask[idx]) die.textContent = currentDice[idx];
                 });
 
-                var totalDelay = 300 + Math.max(0, delay - 1) * 200 + 400;
+                var totalDelay = 450 + Math.max(0, delay - 1) * 250 + 400;
                 setTimeout(function() {
                     if (rerollsLeft <= 0) {
                         // 리롤 소진 → 자동 확정
@@ -899,16 +896,13 @@ class MG_Game_Dice extends MG_Game_Base {
             die.style.cursor = 'pointer';
         });
 
-        var hasCrit = currentDice.indexOf(diceSides) !== -1;
-        var critHtml = hasCrit ? ' <span class="mg-crit-hint">크리티컬 ×1.5</span>' : '';
         if (comboDisplay && combo && combo.name) {
-            var isCritExcluded = (combo.key === 'yahtzee');
-            comboDisplay.innerHTML = '<span class="mg-combo-badge">' + combo.name + ' ' + combo.bonus + 'P</span>' + (isCritExcluded ? '' : critHtml);
+            comboDisplay.innerHTML = '<span class="mg-combo-badge">' + combo.name + ' ' + combo.bonus + 'P</span>';
             comboDisplay.style.display = '';
             highlightComboDice(currentDice, combo.key);
         } else if (comboDisplay) {
             var sum = currentDice.reduce(function(a,b){return a+b;},0);
-            comboDisplay.innerHTML = '<span class="mg-no-combo">합산 ' + sum + 'P</span>' + critHtml;
+            comboDisplay.innerHTML = '<span class="mg-no-combo">합산 ' + sum + 'P</span>';
             comboDisplay.style.display = '';
         }
 
@@ -1049,12 +1043,6 @@ JS;
     display: inline-block; padding: 0.3rem 0.75rem;
     background: rgba(255,255,255,0.05); border-radius: 2rem;
     color: var(--mg-text-muted); font-size: 0.8rem;
-}
-.mg-crit-hint {
-    display: inline-block; padding: 0.2rem 0.5rem; margin-left: 0.25rem;
-    background: rgba(239,68,68,0.15); border-radius: 2rem;
-    color: #ef4444; font-size: 0.75rem; font-weight: 600;
-    animation: combo-pop 0.4s ease-out;
 }
 .mg-game-bottom {
     display: flex; flex-direction: column; align-items: center; gap: 0.75rem; margin-top: 1.5rem;

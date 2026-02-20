@@ -1,6 +1,6 @@
 <?php
 // Morgan Edition: 관리자 메인을 Morgan 관리자로 리다이렉트
-header('Location: ./morgan/config.php');
+header('Location: ./morgan/dashboard.php');
 exit;
 
 $sub_menu = '100000';

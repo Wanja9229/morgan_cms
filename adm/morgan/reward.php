@@ -249,7 +249,7 @@ require_once __DIR__.'/_head.php';
                     <th style="width:70px;">재료</th>
                     <th style="width:70px;">일일제한</th>
                     <th style="width:55px;">좋아요</th>
-                    <th style="width:50px;">🎲</th>
+                    <th style="width:50px;">주사위</th>
                     <th style="width:60px;">기존P</th>
                     <th style="width:65px;">관리</th>
                 </tr>
@@ -331,7 +331,7 @@ require_once __DIR__.'/_head.php';
                 <div class="mg-form-group" style="border-top:1px solid var(--mg-border);padding-top:0.75rem;margin-top:0.25rem;">
                     <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
                         <input type="checkbox" name="br_dice_use" id="f_br_dice_use" value="1" onchange="toggleDice()">
-                        <span class="mg-form-label" style="margin:0;">🎲 댓글 주사위 활성화</span>
+                        <span class="mg-form-label" style="margin:0;">댓글 주사위 활성화</span>
                     </label>
                     <small style="color:var(--mg-text-muted);">활성화 시 댓글 영역에 주사위 버튼이 표시됩니다.</small>
                     <div id="dice-settings" style="display:none;margin-top:0.75rem;">

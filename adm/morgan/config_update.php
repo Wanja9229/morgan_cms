@@ -148,14 +148,19 @@ $config_keys = array(
     // 디자인 설정
     'color_accent',
     'color_button',
+    'color_button_text',
+    'color_text',
     'color_border',
     'color_bg_primary',
     'color_bg_secondary',
-    'bg_opacity'
+    'bg_opacity',
+    // 폰트 설정
+    'site_font'
 );
 
 foreach ($config_keys as $key) {
-    $value = isset($_POST[$key]) ? trim($_POST[$key]) : '';
+    if (!isset($_POST[$key])) continue; // 이 폼에 없는 키는 건너뜀
+    $value = trim($_POST[$key]);
 
     // 기존 값이 있는지 확인
     $sql = "SELECT COUNT(*) as cnt FROM {$g5['mg_config_table']} WHERE cf_key = '$key'";
@@ -239,15 +244,6 @@ elseif (isset($_FILES['site_logo']) && $_FILES['site_logo']['error'] === UPLOAD_
 
 // --- 배경 이미지 처리 ---
 
-// 디버깅: 파일 업로드 정보 확인
-$debug_log = G5_DATA_PATH.'/morgan_upload_debug.txt';
-$debug_info = date('Y-m-d H:i:s') . "\n";
-$debug_info .= "FILES: " . print_r($_FILES, true) . "\n";
-$debug_info .= "upload_dir: {$upload_dir}\n";
-$debug_info .= "is_dir: " . (is_dir($upload_dir) ? 'yes' : 'no') . "\n";
-$debug_info .= "is_writable: " . (is_writable(G5_DATA_PATH) ? 'yes' : 'no') . "\n";
-file_put_contents($debug_log, $debug_info, FILE_APPEND);
-
 // 기존 배경 이미지 URL 가져오기
 $sql = "SELECT cf_value FROM {$g5['mg_config_table']} WHERE cf_key = 'bg_image'";
 $bg_row = sql_fetch($sql);
@@ -284,16 +280,12 @@ elseif (isset($_FILES['bg_image']) && $_FILES['bg_image']['error'] === UPLOAD_ER
         $new_filename = 'bg_' . date('Ymd_His') . '.jpg';
         $target_path = $upload_dir . '/' . $new_filename;
 
-        file_put_contents($debug_log, "Trying to process: {$file['tmp_name']} -> {$target_path}\n", FILE_APPEND);
-
         // 이미지 리사이즈 (최대 1920px, JPEG 85% 품질)
         $resized = mg_resize_background_image($file['tmp_name'], $target_path, 1920, 85);
 
         if ($resized) {
             @chmod($target_path, 0644);
             $new_url = $upload_url . '/' . $new_filename;
-            $new_size = filesize($target_path);
-            file_put_contents($debug_log, "Resize success! URL: {$new_url}, Size: " . round($new_size/1024) . "KB\n", FILE_APPEND);
 
             // DB 저장
             $sql = "SELECT COUNT(*) as cnt FROM {$g5['mg_config_table']} WHERE cf_key = 'bg_image'";
@@ -305,15 +297,11 @@ elseif (isset($_FILES['bg_image']) && $_FILES['bg_image']['error'] === UPLOAD_ER
             } else {
                 sql_query("INSERT INTO {$g5['mg_config_table']} (cf_key, cf_value) VALUES ('bg_image', '".sql_escape_string($new_url)."')");
             }
-            file_put_contents($debug_log, "DB saved!\n", FILE_APPEND);
-        } else {
-            file_put_contents($debug_log, "Resize failed!\n", FILE_APPEND);
         }
-    } else {
-        file_put_contents($debug_log, "File validation failed. ext={$ext}, size={$file['size']}\n", FILE_APPEND);
     }
-} else {
-    file_put_contents($debug_log, "No file uploaded or error. Error code: " . ($_FILES['bg_image']['error'] ?? 'no file') . "\n", FILE_APPEND);
 }
 
-goto_url('./config.php');
+// 원래 탭으로 리다이렉트
+$redirect = isset($_POST['_redirect']) ? $_POST['_redirect'] : 'config.php';
+if (!preg_match('/^(config|design)\.php/', $redirect)) $redirect = 'config.php';
+goto_url('./' . $redirect);

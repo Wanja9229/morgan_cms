@@ -65,7 +65,7 @@ if ($br['br_dice_once']) {
 // 주사위 굴리기
 $dice_max = (int)$br['br_dice_max'] ?: 100;
 $dice_value = rand(0, $dice_max);
-$dice_content = sql_real_escape_string('🎲 ' . $dice_value);
+$dice_content = sql_real_escape_string('[주사위] ' . $dice_value);
 
 // 댓글 번호 계산
 $row = sql_fetch("SELECT MAX(wr_comment) as max_comment FROM {$write_table}

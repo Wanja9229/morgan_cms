@@ -138,7 +138,7 @@ include_once(G5_THEME_PATH.'/head.php');
             '<div class="lore-popup-body">' +
                 '<div class="lore-popup-name">' + escHtml(area.ea_name) + '</div>' +
                 (area.ea_desc ? '<div class="lore-popup-desc">' + escHtml(area.ea_desc) + '</div>' : '') +
-                (area.ea_status === 'locked' ? '<div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:8px;">🔒 잠금된 지역</div>' : '') +
+                (area.ea_status === 'locked' ? '<div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:8px;">잠금된 지역</div>' : '') +
             '</div></div>';
 
         var mapRect = container.getBoundingClientRect();

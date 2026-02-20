@@ -42,7 +42,7 @@ if ($tab == 'give') {
     $member_total_page = ceil($member_total_count / $rows);
 
     // 회원 목록
-    $sql = "SELECT mb_id, mb_nick, mb_point, mb_datetime, mb_level
+    $sql = "SELECT mb_id, mb_nick, mb_point, mb_datetime
             FROM {$g5['member_table']}
             WHERE $where
             ORDER BY mb_datetime DESC
@@ -180,7 +180,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 <tr>
                     <th style="width:120px;">회원ID</th>
                     <th style="width:120px;">닉네임</th>
-                    <th style="width:80px;">레벨</th>
                     <th style="width:120px;text-align:right;">보유 포인트</th>
                     <th style="width:150px;">가입일</th>
                     <th style="width:200px;">포인트 지급</th>
@@ -191,7 +190,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 <tr id="row_<?php echo $mb['mb_id']; ?>">
                     <td><?php echo htmlspecialchars($mb['mb_id']); ?></td>
                     <td><?php echo htmlspecialchars($mb['mb_nick']); ?></td>
-                    <td style="text-align:center;"><?php echo $mb['mb_level']; ?></td>
                     <td style="text-align:right;">
                         <span id="point_<?php echo $mb['mb_id']; ?>" style="color:var(--mg-accent);font-weight:500;">
                             <?php echo number_format($mb['mb_point']); ?>

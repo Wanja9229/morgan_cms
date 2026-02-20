@@ -108,9 +108,9 @@ $relation_url = G5_BBS_URL . '/relation.php';
         <!-- 파견지 상세 -->
         <div style="padding:16px;">
             <div class="flex flex-wrap gap-3 text-sm mb-4" id="dm-stats">
-                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg" style="background:var(--mg-bg-primary);"><span class="text-mg-accent">⚡</span> <span id="dm-stamina">0</span></span>
-                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg" style="background:var(--mg-bg-primary);">⏱ <span id="dm-duration">0분</span></span>
-                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg" style="background:var(--mg-bg-primary);">👥 +<span id="dm-partner-pt">0</span>P</span>
+                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg" style="background:var(--mg-bg-primary);"><svg class="w-4 h-4" style="color:var(--mg-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> <span id="dm-stamina">0</span></span>
+                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg" style="background:var(--mg-bg-primary);"><svg class="w-4 h-4" style="color:var(--mg-text-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> <span id="dm-duration">0분</span></span>
+                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg" style="background:var(--mg-bg-primary);"><svg class="w-4 h-4" style="color:var(--mg-text-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg> +<span id="dm-partner-pt">0</span>P</span>
             </div>
             <div id="dm-drops" class="flex flex-wrap gap-2 mb-4"></div>
 
@@ -144,7 +144,7 @@ $relation_url = G5_BBS_URL . '/relation.php';
 <div id="reward-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" style="display:none;">
     <div class="bg-mg-bg-secondary rounded-xl max-w-sm w-full p-6">
         <div class="text-center mb-4">
-            <div class="text-2xl mb-2">🎉</div>
+            <div class="mb-2"><svg class="w-8 h-8 mx-auto" style="color:var(--mg-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg></div>
             <h3 class="text-lg font-bold text-mg-text-primary">파견 완료!</h3>
         </div>
         <div id="reward-items" class="space-y-2 mb-4"></div>
@@ -304,7 +304,7 @@ $relation_url = G5_BBS_URL . '/relation.php';
 
             card.innerHTML =
                 '<div class="flex items-center gap-3 mb-3">' +
-                    '<div class="text-2xl">' + (exp.ea_icon ? '' : '🗺️') + '</div>' +
+                    '<div class="text-2xl">' + (exp.ea_icon ? '' : '<svg class="w-6 h-6" style="color:var(--mg-text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>') + '</div>' +
                     '<div class="flex-1 min-w-0">' +
                         '<div class="font-semibold text-mg-text-primary truncate">' + escHtml(exp.ea_name || '파견지') + '</div>' +
                         '<div class="text-xs text-mg-text-muted">' + escHtml(exp.ch_name || '') + '</div>' +
@@ -349,9 +349,9 @@ $relation_url = G5_BBS_URL . '/relation.php';
             if (area.ea_image) {
                 imgHtml += '<img src="' + escHtml(area.ea_image) + '" alt="' + escHtml(area.ea_name) + '" loading="lazy">';
             }
-            imgHtml += '<div class="stamp-badge"><span style="color:var(--mg-accent);">⚡</span> ' + area.ea_stamina_cost + '</div>';
+            imgHtml += '<div class="stamp-badge"><svg style="display:inline-block;width:12px;height:12px;vertical-align:middle;color:var(--mg-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> ' + area.ea_stamina_cost + '</div>';
             if (locked) {
-                imgHtml += '<div class="lock-overlay">🔒</div>';
+                imgHtml += '<div class="lock-overlay"><svg style="display:inline-block;width:24px;height:24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>';
             }
             imgHtml += '</div>';
 
@@ -363,7 +363,7 @@ $relation_url = G5_BBS_URL . '/relation.php';
             if (area.drops && area.drops.length > 0) {
                 area.drops.forEach(function(d) {
                     var cls = d.ed_is_rare == 1 ? 'drop-tag rare' : 'drop-tag';
-                    dropsHtml += '<span class="' + cls + '">' + escHtml(d.mt_name) + ' ' + d.ed_chance + '%' + (d.ed_is_rare == 1 ? ' ★' : '') + '</span>';
+                    dropsHtml += '<span class="' + cls + '">' + escHtml(d.mt_name) + ' ' + d.ed_chance + '%' + (d.ed_is_rare == 1 ? ' RARE' : '') + '</span>';
                 });
             }
 
@@ -371,11 +371,11 @@ $relation_url = G5_BBS_URL . '/relation.php';
                 '<div class="exp-card-name">' + escHtml(area.ea_name) + '</div>' +
                 '<div class="exp-card-desc">' + escHtml(area.ea_desc || '') + '</div>' +
                 '<div class="exp-card-meta">' +
-                    '<span>⏱ ' + durText.trim() + '</span>' +
-                    '<span>👥 +' + area.ea_partner_point + 'P</span>' +
+                    '<span>' + durText.trim() + '</span>' +
+                    '<span>+' + area.ea_partner_point + 'P</span>' +
                 '</div>' +
                 (dropsHtml ? '<div class="exp-card-drops">' + dropsHtml + '</div>' : '') +
-                (locked ? '<div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:6px;">🔒 ' + escHtml(area.unlock_facility_name || '시설') + ' 건설 필요</div>' : '') +
+                (locked ? '<div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:6px;">' + escHtml(area.unlock_facility_name || '시설') + ' 건설 필요</div>' : '') +
                 '</div>';
 
             card.innerHTML = imgHtml + bodyHtml;
@@ -444,9 +444,9 @@ $relation_url = G5_BBS_URL . '/relation.php';
                 '<div class="map-popup-name">' + escHtml(area.ea_name) + '</div>' +
                 (area.ea_desc ? '<div class="map-popup-desc">' + escHtml(area.ea_desc) + '</div>' : '') +
                 '<div class="map-popup-meta">' +
-                    '<span>⚡ ' + area.ea_stamina_cost + '</span>' +
-                    '<span>⏱ ' + durText.trim() + '</span>' +
-                    '<span>👥 +' + area.ea_partner_point + 'P</span>' +
+                    '<span>' + area.ea_stamina_cost + '</span>' +
+                    '<span>' + durText.trim() + '</span>' +
+                    '<span>+' + area.ea_partner_point + 'P</span>' +
                 '</div>' +
                 '<button class="map-popup-btn" onclick="openDispatchModalById(' + area.ea_id + ')">파견 보내기</button>' +
             '</div></div>';
@@ -511,7 +511,7 @@ $relation_url = G5_BBS_URL . '/relation.php';
         if (area.drops && area.drops.length > 0) {
             area.drops.forEach(function(d) {
                 var cls = d.ed_is_rare == 1 ? 'drop-tag rare' : 'drop-tag';
-                dropsEl.innerHTML += '<span class="' + cls + '">' + escHtml(d.mt_name) + ' ' + d.ed_min + '~' + d.ed_max + '개 (' + d.ed_chance + '%)' + (d.ed_is_rare == 1 ? ' ★' : '') + '</span>';
+                dropsEl.innerHTML += '<span class="' + cls + '">' + escHtml(d.mt_name) + ' ' + d.ed_min + '~' + d.ed_max + '개 (' + d.ed_chance + '%)' + (d.ed_is_rare == 1 ? ' RARE' : '') + '</span>';
             });
         }
 
@@ -716,7 +716,7 @@ $relation_url = G5_BBS_URL . '/relation.php';
                 var nameClass = item.is_rare ? 'text-purple-400 font-semibold' : 'text-mg-text-primary';
                 container.innerHTML +=
                     '<div class="flex items-center justify-between p-3 rounded-lg border ' + cls + '">' +
-                        '<span class="' + nameClass + '">' + escHtml(item.mt_name) + (item.is_rare ? ' ★' : '') + '</span>' +
+                        '<span class="' + nameClass + '">' + escHtml(item.mt_name) + (item.is_rare ? ' RARE' : '') + '</span>' +
                         '<span class="font-bold text-mg-text-primary">x' + item.amount + '</span>' +
                     '</div>';
             });
@@ -796,7 +796,7 @@ $relation_url = G5_BBS_URL . '/relation.php';
                 if (h.el_rewards_parsed && h.el_rewards_parsed.items && h.el_rewards_parsed.items.length > 0) {
                     var parts = [];
                     h.el_rewards_parsed.items.forEach(function(item) {
-                        parts.push(item.mt_name + ' x' + item.amount + (item.is_rare ? '★' : ''));
+                        parts.push(item.mt_name + ' x' + item.amount + (item.is_rare ? 'RARE' : ''));
                     });
                     rewardsText = parts.join(', ');
                 } else if (h.el_status === 'claimed') {

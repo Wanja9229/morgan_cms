@@ -291,7 +291,7 @@ function rp_time_ago($datetime) {
                                         <select name="ch_id" class="bg-mg-bg-tertiary text-mg-text-primary text-xs rounded-lg px-2 py-1.5 border border-mg-bg-tertiary focus:border-mg-accent focus:outline-none h-[32px]" style="min-width:100px;">
                                             <?php foreach ($my_characters as $ch) { ?>
                                             <option value="<?php echo $ch['ch_id']; ?>" <?php echo $default_ch_id == $ch['ch_id'] ? 'selected' : ''; ?>>
-                                                <?php echo htmlspecialchars($ch['ch_name']); ?><?php if ($ch['ch_main']) echo ' ★'; ?>
+                                                <?php echo htmlspecialchars($ch['ch_name']); ?><?php if ($ch['ch_main']) echo ' [대표]'; ?>
                                             </option>
                                             <?php } ?>
                                         </select>
@@ -374,7 +374,7 @@ function rp_time_ago($datetime) {
                     <select name="ch_id" class="bg-mg-bg-tertiary text-mg-text-primary text-sm rounded-lg px-3 py-2 border border-mg-bg-tertiary focus:border-mg-accent focus:outline-none h-[38px]" style="min-width:120px;">
                         <?php foreach ($my_characters as $ch) { ?>
                         <option value="<?php echo $ch['ch_id']; ?>" <?php echo $default_ch_id == $ch['ch_id'] ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($ch['ch_name']); ?><?php if ($ch['ch_main']) echo ' ★'; ?>
+                            <?php echo htmlspecialchars($ch['ch_name']); ?><?php if ($ch['ch_main']) echo ' [대표]'; ?>
                         </option>
                         <?php } ?>
                     </select>
@@ -834,7 +834,7 @@ function rp_time_ago($datetime) {
 
         var opts = '';
         MY_CHARACTERS.forEach(function(ch) {
-            opts += '<option value="' + ch.ch_id + '">' + escapeHtml(ch.ch_name) + (ch.ch_main ? ' ★' : '') + '</option>';
+            opts += '<option value="' + ch.ch_id + '">' + escapeHtml(ch.ch_name) + (ch.ch_main ? ' [대표]' : '') + '</option>';
         });
         var charHtml = '<select name="ch_id" class="bg-mg-bg-tertiary text-mg-text-primary text-xs rounded-lg px-2 py-1.5 border border-mg-bg-tertiary focus:border-mg-accent focus:outline-none h-[32px]" style="min-width:100px;">' + opts + '</select>';
         var contextHtml = '<input type="hidden" name="context_ch_id" value="' + (contextChId || 0) + '">';

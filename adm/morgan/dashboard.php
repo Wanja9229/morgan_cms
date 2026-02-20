@@ -23,14 +23,22 @@ function mg_time_ago($datetime) {
 }
 
 // ─── 통계 데이터 ───
-$stat_members = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['member_table']}")['cnt'];
-$stat_pending = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_character_table']} WHERE ch_state = 'pending'")['cnt'];
-$stat_rp_open = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_rp_thread_table']} WHERE rt_status = 'open'")['cnt'];
-$stat_point_today = sql_fetch("SELECT COALESCE(SUM(po_point),0) as total FROM {$g5['point_table']} WHERE po_point > 0 AND DATE(po_datetime) = CURDATE()")['total'];
-$stat_reward_pending = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_reward_queue_table']} WHERE rq_status = 'pending'")['cnt'];
-$stat_like_today = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_like_log_table']} WHERE DATE(ll_datetime) = CURDATE()")['cnt'];
-$stat_prompt_active = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_prompt_table']} WHERE pm_status = 'active'")['cnt'];
-$stat_prompt_review = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_prompt_entry_table']} WHERE pe_status = 'submitted'")['cnt'];
+$_r = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['member_table']}");
+$stat_members = $_r ? $_r['cnt'] : 0;
+$_r = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_character_table']} WHERE ch_state = 'pending'");
+$stat_pending = $_r ? $_r['cnt'] : 0;
+$_r = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_rp_thread_table']} WHERE rt_status = 'open'");
+$stat_rp_open = $_r ? $_r['cnt'] : 0;
+$_r = sql_fetch("SELECT COALESCE(SUM(po_point),0) as total FROM {$g5['point_table']} WHERE po_point > 0 AND DATE(po_datetime) = CURDATE()");
+$stat_point_today = $_r ? $_r['total'] : 0;
+$_r = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_reward_queue_table']} WHERE rq_status = 'pending'");
+$stat_reward_pending = $_r ? $_r['cnt'] : 0;
+$_r = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_like_log_table']} WHERE DATE(ll_datetime) = CURDATE()");
+$stat_like_today = $_r ? $_r['cnt'] : 0;
+$_r = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_prompt_table']} WHERE pm_status = 'active'");
+$stat_prompt_active = $_r ? $_r['cnt'] : 0;
+$_r = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_prompt_entry_table']} WHERE pe_status = 'submitted'");
+$stat_prompt_review = $_r ? $_r['cnt'] : 0;
 
 // ─── 미션 검수 대기 ───
 $pending_prompt_entries = array();
@@ -110,8 +118,10 @@ while ($row = sql_fetch_array($result)) {
 }
 
 // ─── 업적 통계 ───
-$stat_achievement_total = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_achievement_table']} WHERE ac_use = 1")['cnt'];
-$stat_achievement_today = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_user_achievement_table']} WHERE ua_completed = 1 AND DATE(ua_datetime) = CURDATE()")['cnt'];
+$_r = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_achievement_table']} WHERE ac_use = 1");
+$stat_achievement_total = $_r ? $_r['cnt'] : 0;
+$_r = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_user_achievement_table']} WHERE ua_completed = 1 AND DATE(ua_datetime) = CURDATE()");
+$stat_achievement_today = $_r ? $_r['cnt'] : 0;
 
 // ─── 최근 업적 달성 ───
 $recent_achievements = array();
@@ -263,6 +273,57 @@ require_once __DIR__.'/_head.php';
     color: var(--mg-warning) !important;
     font-weight: 700;
 }
+/* Collapsible Widgets */
+.mg-widget-collapsible .mg-card-header {
+    cursor: pointer;
+    user-select: none;
+}
+.mg-widget-collapsible .mg-card-header h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+.mg-widget-collapsible .mg-card-header h3::before {
+    content: '';
+    display: inline-block;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid var(--mg-text-muted);
+    flex-shrink: 0;
+    transition: transform 0.2s;
+}
+.mg-widget-collapsible.collapsed .mg-card-header h3::before {
+    transform: rotate(-90deg);
+}
+.mg-widget-collapsible .mg-card-body {
+    transition: none;
+}
+.mg-widget-collapsible.collapsed .mg-card-body {
+    display: none;
+}
+.mg-widget-collapsible.collapsed .mg-card-header {
+    border-bottom: none;
+}
+/* Responsive: mobile dashboard */
+@media (max-width: 600px) {
+    .mg-stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.5rem;
+    }
+    .mg-stat-card { padding: 0.75rem; }
+    .mg-stat-value { font-size: 1.25rem; }
+    .mg-stat-label { font-size: 0.6875rem; }
+}
+@media (max-width: 480px) {
+    .mg-dashboard-grid { gap: 0.75rem; }
+    .mg-widget .mg-card-header { padding: 0.75rem 1rem; }
+    .mg-widget .mg-card-header h3 { font-size: 0.875rem; }
+    .mg-widget-list li { padding: 0.5rem 0.75rem; gap: 0.5rem; font-size: 0.75rem; }
+    .mg-widget-list .wl-nick { max-width: 60px; }
+    .mg-widget-list .wl-badge { font-size: 0.625rem; padding: 0.125rem 0.375rem; }
+}
 </style>
 
 <!-- 통계 카드 -->
@@ -340,7 +401,7 @@ require_once __DIR__.'/_head.php';
         </div>
 
         <!-- 최근 포인트 발급 -->
-        <div class="mg-card mg-widget">
+        <div class="mg-card mg-widget mg-widget-collapsible" data-widget-id="recent-points">
             <div class="mg-card-header">
                 <h3>최근 포인트 발급</h3>
                 <a href="./point_manage.php">전체보기 &rarr;</a>
@@ -364,7 +425,7 @@ require_once __DIR__.'/_head.php';
         </div>
 
         <!-- 최근 구매 내역 -->
-        <div class="mg-card mg-widget">
+        <div class="mg-card mg-widget mg-widget-collapsible" data-widget-id="recent-purchases">
             <div class="mg-card-header">
                 <h3>최근 구매 내역</h3>
                 <a href="./shop_log.php">전체보기 &rarr;</a>
@@ -391,11 +452,36 @@ require_once __DIR__.'/_head.php';
     <!-- 우측 컬럼 -->
     <div class="mg-widget-col" style="display:flex;flex-direction:column;gap:1.25rem;">
 
+        <!-- 정산 대기열 -->
+        <div class="mg-card mg-widget">
+            <div class="mg-card-header">
+                <h3>정산 대기열<?php if ($stat_reward_pending > 0) echo ' <span style="color:var(--mg-warning);font-size:0.8rem;">('.$stat_reward_pending.')</span>'; ?></h3>
+                <a href="./reward.php?tab=settlement">전체보기 &rarr;</a>
+            </div>
+            <div class="mg-card-body">
+                <?php if (empty($pending_rewards)) { ?>
+                <div class="mg-widget-empty">대기 중인 정산 요청이 없습니다.</div>
+                <?php } else { ?>
+                <ul class="mg-widget-list">
+                    <?php foreach ($pending_rewards as $rq) { ?>
+                    <li>
+                        <span class="wl-badge" style="background:rgba(234,179,8,0.15);color:var(--mg-warning);">대기</span>
+                        <span class="wl-nick"><?php echo htmlspecialchars($rq['mb_nick'] ?: $rq['mb_id']); ?></span>
+                        <span class="wl-main"><?php echo htmlspecialchars($rq['rwt_name'] ?: '(삭제됨)'); ?></span>
+                        <span class="wl-point">+<?php echo number_format($rq['rwt_point']); ?>P</span>
+                        <span class="wl-sub"><?php echo mg_time_ago($rq['rq_datetime']); ?></span>
+                    </li>
+                    <?php } ?>
+                </ul>
+                <?php } ?>
+            </div>
+        </div>
+
         <!-- 미션 검수 대기 -->
         <div class="mg-card mg-widget">
             <div class="mg-card-header">
                 <h3>미션 검수 대기</h3>
-                <a href="./prompt.php">전체보기 &rarr;</a>
+                <a href="./prompt.php?mode=list">전체보기 &rarr;</a>
             </div>
             <div class="mg-card-body">
                 <?php if (empty($pending_prompt_entries)) { ?>
@@ -404,7 +490,7 @@ require_once __DIR__.'/_head.php';
                 <ul class="mg-widget-list">
                     <?php foreach ($pending_prompt_entries as $pe) { ?>
                     <li>
-                        <span class="wl-badge" style="background:var(--mg-accent)/20;color:var(--mg-accent);"><?php echo htmlspecialchars(mb_strimwidth($pe['pm_title'], 0, 12, '..')); ?></span>
+                        <span class="wl-badge" style="background:rgba(245,159,10,0.15);color:var(--mg-accent);"><?php echo htmlspecialchars(mb_strimwidth($pe['pm_title'], 0, 12, '..')); ?></span>
                         <span class="wl-nick"><?php echo htmlspecialchars($pe['mb_nick'] ?: $pe['mb_id']); ?></span>
                         <span class="wl-sub"><?php echo mg_time_ago($pe['pe_datetime']); ?></span>
                         <a href="./prompt.php?mode=review&pm_id=<?php echo $pe['pm_id']; ?>" class="wl-sub" style="color:var(--mg-accent);">검수</a>
@@ -416,7 +502,7 @@ require_once __DIR__.'/_head.php';
         </div>
 
         <!-- 최신 게시글 -->
-        <div class="mg-card mg-widget">
+        <div class="mg-card mg-widget mg-widget-collapsible" data-widget-id="recent-posts">
             <div class="mg-card-header">
                 <h3>최신 게시글</h3>
                 <a href="./board_list.php">게시판 관리 &rarr;</a>
@@ -442,7 +528,7 @@ require_once __DIR__.'/_head.php';
         </div>
 
         <!-- 최신 역극 -->
-        <div class="mg-card mg-widget">
+        <div class="mg-card mg-widget mg-widget-collapsible" data-widget-id="recent-rps">
             <div class="mg-card-header">
                 <h3>최신 역극</h3>
                 <a href="./rp_list.php">전체보기 &rarr;</a>
@@ -472,33 +558,8 @@ require_once __DIR__.'/_head.php';
             </div>
         </div>
 
-        <!-- 정산 대기열 -->
-        <div class="mg-card mg-widget">
-            <div class="mg-card-header">
-                <h3>정산 대기열<?php if ($stat_reward_pending > 0) echo ' <span style="color:var(--mg-warning);font-size:0.8rem;">('.$stat_reward_pending.')</span>'; ?></h3>
-                <a href="./reward.php?tab=settlement">전체보기 &rarr;</a>
-            </div>
-            <div class="mg-card-body">
-                <?php if (empty($pending_rewards)) { ?>
-                <div class="mg-widget-empty">대기 중인 정산 요청이 없습니다.</div>
-                <?php } else { ?>
-                <ul class="mg-widget-list">
-                    <?php foreach ($pending_rewards as $rq) { ?>
-                    <li>
-                        <span class="wl-badge" style="background:rgba(234,179,8,0.15);color:var(--mg-warning);">대기</span>
-                        <span class="wl-nick"><?php echo htmlspecialchars($rq['mb_nick'] ?: $rq['mb_id']); ?></span>
-                        <span class="wl-main"><?php echo htmlspecialchars($rq['rwt_name'] ?: '(삭제됨)'); ?></span>
-                        <span class="wl-point">+<?php echo number_format($rq['rwt_point']); ?>P</span>
-                        <span class="wl-sub"><?php echo mg_time_ago($rq['rq_datetime']); ?></span>
-                    </li>
-                    <?php } ?>
-                </ul>
-                <?php } ?>
-            </div>
-        </div>
-
         <!-- 최근 역극 완결 -->
-        <div class="mg-card mg-widget">
+        <div class="mg-card mg-widget mg-widget-collapsible" data-widget-id="recent-completions">
             <div class="mg-card-header">
                 <h3>최근 역극 완결</h3>
                 <a href="./reward.php?tab=rp">전체보기 &rarr;</a>
@@ -533,7 +594,7 @@ require_once __DIR__.'/_head.php';
         </div>
 
         <!-- 최근 업적 달성 -->
-        <div class="mg-card mg-widget">
+        <div class="mg-card mg-widget mg-widget-collapsible" data-widget-id="recent-achievements">
             <div class="mg-card-header">
                 <h3>최근 업적 달성</h3>
                 <a href="./achievement.php">전체보기 &rarr;</a>
@@ -571,6 +632,32 @@ require_once __DIR__.'/_head.php';
         </div>
     </div>
 </div>
+
+<script>
+(function() {
+    var STORAGE_KEY = 'mg_dashboard_collapsed';
+    var states = {};
+    try { states = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch(e) {}
+
+    // Restore saved state
+    document.querySelectorAll('.mg-widget-collapsible').forEach(function(widget) {
+        var id = widget.dataset.widgetId;
+        if (id && states[id]) widget.classList.add('collapsed');
+    });
+
+    // Toggle on header click
+    document.querySelectorAll('.mg-widget-collapsible .mg-card-header').forEach(function(header) {
+        header.addEventListener('click', function(e) {
+            if (e.target.closest('a')) return;
+            var widget = header.closest('.mg-widget-collapsible');
+            var id = widget.dataset.widgetId;
+            widget.classList.toggle('collapsed');
+            states[id] = widget.classList.contains('collapsed');
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(states)); } catch(e) {}
+        });
+    });
+})();
+</script>
 
 <?php
 require_once __DIR__.'/_tail.php';

@@ -9,6 +9,9 @@
 
 if (!defined('_GNUBOARD_')) exit;
 
+// 이모티콘 비활성 시 렌더링 안 함
+if (function_exists('mg_config') && mg_config('emoticon_use', '1') != '1') return;
+
 if (!isset($picker_id)) $picker_id = 'default';
 if (!isset($picker_target)) $picker_target = 'wr_content';
 ?>

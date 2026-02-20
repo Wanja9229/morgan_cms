@@ -73,7 +73,13 @@ switch ($action) {
     case 'play':
     default:
         // 기존 호환: 즉시 실행
-        $result = $game->play($mb_id);
+        // 종이뽑기: 유저가 선택한 번호 전달
+        $number = isset($input['number']) ? (int)$input['number'] : 0;
+        if ($number > 0) {
+            $result = $game->play($mb_id, $number);
+        } else {
+            $result = $game->play($mb_id);
+        }
         $result['phase'] = 'finalize';
         break;
 }

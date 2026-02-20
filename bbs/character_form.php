@@ -47,16 +47,23 @@ if ($is_edit) {
 }
 
 // 세력/종족 목록
+$_use_side = mg_config('use_side', '1') == '1';
+$_use_class = mg_config('use_class', '1') == '1';
+
 $sides = array();
-$result = sql_query("SELECT * FROM {$g5['mg_side_table']} WHERE side_use = 1 ORDER BY side_order, side_id");
-while ($row = sql_fetch_array($result)) {
-    $sides[] = $row;
+if ($_use_side) {
+    $result = sql_query("SELECT * FROM {$g5['mg_side_table']} WHERE side_use = 1 ORDER BY side_order, side_id");
+    while ($row = sql_fetch_array($result)) {
+        $sides[] = $row;
+    }
 }
 
 $classes = array();
-$result = sql_query("SELECT * FROM {$g5['mg_class_table']} WHERE class_use = 1 ORDER BY class_order, class_id");
-while ($row = sql_fetch_array($result)) {
-    $classes[] = $row;
+if ($_use_class) {
+    $result = sql_query("SELECT * FROM {$g5['mg_class_table']} WHERE class_use = 1 ORDER BY class_order, class_id");
+    while ($row = sql_fetch_array($result)) {
+        $classes[] = $row;
+    }
 }
 
 // 프로필 필드 목록

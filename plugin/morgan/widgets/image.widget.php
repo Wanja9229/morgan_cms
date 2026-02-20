@@ -29,7 +29,7 @@ class MG_Image_Widget extends MG_Widget_Base {
         ob_start();
         ?>
         <div class="mg-size-guide" style="background:var(--mg-bg-tertiary);padding:0.75rem 1rem;border-radius:0.5rem;margin-bottom:1rem;">
-            <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-bottom:0.25rem;">📐 권장 이미지 사이즈</div>
+            <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-bottom:0.25rem;">권장 이미지 사이즈</div>
             <div id="image_size_guide" style="font-size:0.9rem;color:var(--mg-accent);font-weight:600;">
                 컬럼 너비 선택 시 가이드가 표시됩니다
             </div>

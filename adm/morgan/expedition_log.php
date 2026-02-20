@@ -143,7 +143,7 @@ require_once __DIR__.'/_head.php';
                         if ($rwd && !empty($rwd['items'])) {
                             $parts = array();
                             foreach ($rwd['items'] as $item) {
-                                $parts[] = $item['mt_name'] . ' x' . $item['amount'] . ($item['is_rare'] ? '★' : '');
+                                $parts[] = $item['mt_name'] . ' x' . $item['amount'] . ($item['is_rare'] ? ' (희귀)' : '');
                             }
                             $rewards_text = implode(', ', $parts);
                         } else {

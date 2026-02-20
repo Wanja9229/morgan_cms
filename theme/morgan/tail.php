@@ -28,7 +28,6 @@ if (isset($is_ajax_request) && $is_ajax_request) {
                 </div>
                 <div>
                     <p class="font-semibold text-mg-text-primary"><?php echo get_text($member['mb_nick']); ?></p>
-                    <p class="text-xs text-mg-text-muted">Lv.<?php echo $member['mb_level']; ?></p>
                 </div>
             </div>
 
@@ -65,11 +64,13 @@ if (isset($is_ajax_request) && $is_ajax_request) {
 
         <!-- 대표 캐릭터 -->
         <?php
+        $_show_main_char = function_exists('mg_config') ? mg_config('show_main_character', '1') : '1';
         $main_char = null;
-        if (function_exists('mg_get_main_character')) {
+        if ($_show_main_char == '1' && function_exists('mg_get_main_character')) {
             $main_char = mg_get_main_character($member['mb_id']);
         }
         ?>
+        <?php if ($_show_main_char == '1') { ?>
         <div class="card mb-4">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-sm font-semibold text-mg-text-primary flex items-center gap-2">
@@ -114,6 +115,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
             </div>
             <?php } ?>
         </div>
+        <?php } ?>
 
         <!-- 인벤토리 미니 -->
         <?php
@@ -243,7 +245,8 @@ if (isset($is_ajax_request) && $is_ajax_request) {
 <footer class="bg-mg-bg-secondary border-t border-mg-bg-tertiary py-4 ml-0 lg:ml-14">
     <div class="container mx-auto px-4">
         <div class="flex flex-col md:flex-row items-center justify-between gap-2 text-sm text-mg-text-muted">
-            <p>&copy; <?php echo date('Y'); ?> <?php echo $config['cf_title']; ?>. Powered by Morgan Edition.</p>
+            <?php $mg_footer_name = function_exists('mg_config') ? mg_config('site_name', $config['cf_title']) : $config['cf_title']; ?>
+            <p>&copy; <?php echo date('Y'); ?> <?php echo htmlspecialchars($mg_footer_name); ?>. Powered by Morgan Edition.</p>
             <nav class="flex gap-4">
                 <a href="<?php echo G5_BBS_URL; ?>/content.php?co_id=provision" class="hover:text-mg-text-primary transition-colors">이용약관</a>
                 <a href="<?php echo G5_BBS_URL; ?>/content.php?co_id=privacy" class="hover:text-mg-text-primary transition-colors">개인정보처리방침</a>

@@ -28,17 +28,11 @@ if ($mode == 'role_add') {
     $sr_description = trim($_POST['sr_description'] ?? '');
     $sr_color = trim($_POST['sr_color'] ?? '#f59f0a');
 
-    // 권한 체크박스 → JSON 변환
+    // 권한 체크박스 → JSON 변환 (단일 체크 = 전체 권한)
     $perms_input = isset($_POST['perms']) ? $_POST['perms'] : array();
     $permissions = array();
-    foreach ($perms_input as $pkey => $attrs) {
-        $auth_parts = array();
-        if (!empty($attrs['r'])) $auth_parts[] = 'r';
-        if (!empty($attrs['w'])) $auth_parts[] = 'w';
-        if (!empty($attrs['d'])) $auth_parts[] = 'd';
-        if (!empty($auth_parts)) {
-            $permissions[$pkey] = implode(',', $auth_parts);
-        }
+    foreach ($perms_input as $pkey => $val) {
+        if ($val) $permissions[$pkey] = 'r,w,d';
     }
 
     $perm_json = json_encode($permissions, JSON_UNESCAPED_UNICODE);
@@ -73,14 +67,8 @@ if ($mode == 'role_edit') {
 
     $perms_input = isset($_POST['perms']) ? $_POST['perms'] : array();
     $permissions = array();
-    foreach ($perms_input as $pkey => $attrs) {
-        $auth_parts = array();
-        if (!empty($attrs['r'])) $auth_parts[] = 'r';
-        if (!empty($attrs['w'])) $auth_parts[] = 'w';
-        if (!empty($attrs['d'])) $auth_parts[] = 'd';
-        if (!empty($auth_parts)) {
-            $permissions[$pkey] = implode(',', $auth_parts);
-        }
+    foreach ($perms_input as $pkey => $val) {
+        if ($val) $permissions[$pkey] = 'r,w,d';
     }
 
     $perm_json = json_encode($permissions, JSON_UNESCAPED_UNICODE);

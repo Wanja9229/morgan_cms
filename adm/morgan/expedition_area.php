@@ -122,7 +122,7 @@ require_once __DIR__.'/_head.php';
                         <?php if ($area['ea_icon']) {
                             echo mg_icon($area['ea_icon'], 'w-6 h-6');
                         } else {
-                            echo '<span style="font-size:1.5rem;">🗺️</span>';
+                            echo '<svg class="w-6 h-6" style="display:inline-block;color:var(--mg-text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>';
                         } ?>
                     </td>
                     <td>
@@ -142,7 +142,7 @@ require_once __DIR__.'/_head.php';
                         <span style="display:inline-flex;align-items:center;gap:2px;margin-right:6px;<?php echo $rare_style; ?>" title="<?php echo htmlspecialchars($drop['mt_name']); ?> (<?php echo $drop['ed_min']; ?>~<?php echo $drop['ed_max']; ?>개, <?php echo $drop['ed_chance']; ?>%)">
                             <?php echo mg_icon($drop['mt_icon'], 'w-4 h-4'); ?>
                             <?php echo $drop['ed_chance']; ?>%
-                            <?php if ($drop['ed_is_rare']) echo '★'; ?>
+                            <?php if ($drop['ed_is_rare']) echo '<span style="font-size:0.7rem;font-weight:bold;">RARE</span>'; ?>
                         </span>
                         <?php } ?>
                         <?php if (empty($area['drops'])) { ?>
@@ -151,7 +151,7 @@ require_once __DIR__.'/_head.php';
                     </td>
                     <td style="text-align:center;font-size:0.8rem;">
                         <?php if ($area['ea_map_x'] !== null && $area['ea_map_y'] !== null) { ?>
-                        <span style="color:var(--mg-accent);" title="X:<?php echo round($area['ea_map_x'],1); ?>% Y:<?php echo round($area['ea_map_y'],1); ?>%">📍</span>
+                        <span style="color:var(--mg-accent);" title="X:<?php echo round($area['ea_map_x'],1); ?>% Y:<?php echo round($area['ea_map_y'],1); ?>%"><svg style="display:inline-block;width:14px;height:14px;vertical-align:middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg></span>
                         <?php } else { ?>
                         <span style="color:var(--mg-text-muted);">-</span>
                         <?php } ?>
@@ -198,7 +198,7 @@ require_once __DIR__.'/_head.php';
                 <!-- 좌표 표시 -->
                 <div id="coord-display" style="display:none;margin-bottom:1rem;padding:8px 12px;border-radius:8px;background:var(--mg-bg-primary);border:1px solid var(--mg-bg-tertiary);">
                     <div style="display:flex;align-items:center;justify-content:space-between;">
-                        <span style="font-size:0.85rem;color:var(--mg-text-secondary);">📍 맵 좌표: <strong id="coord-text" style="color:var(--mg-accent);"></strong></span>
+                        <span style="font-size:0.85rem;color:var(--mg-text-secondary);"><svg style="display:inline-block;width:14px;height:14px;vertical-align:middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg> 맵 좌표: <strong id="coord-text" style="color:var(--mg-accent);"></strong></span>
                         <button type="button" style="font-size:0.75rem;color:var(--mg-text-muted);background:none;border:none;cursor:pointer;text-decoration:underline;" onclick="clearCoords()">좌표 초기화</button>
                     </div>
                 </div>

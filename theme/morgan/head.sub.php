@@ -48,11 +48,14 @@ if ($is_ajax_request) {
     return; // head.sub.php 나머지 건너뛰기
 }
 
-if (!isset($g5['title']) || $g5['title'] === $config['cf_title']) {
-    $g5['title'] = $config['cf_title'];
-    $g5_head_title = $config['cf_title'];
+// Morgan 사이트명 통합
+$mg_site_name = function_exists('mg_config') ? mg_config('site_name', $config['cf_title']) : $config['cf_title'];
+
+if (!isset($g5['title']) || $g5['title'] === $config['cf_title'] || $g5['title'] === $mg_site_name) {
+    $g5['title'] = $mg_site_name;
+    $g5_head_title = $mg_site_name;
 } else {
-    $g5_head_title = $config['cf_title'] . ' | ' . $g5['title'];
+    $g5_head_title = $mg_site_name . ' | ' . $g5['title'];
 }
 
 $g5['title'] = strip_tags($g5['title']);
@@ -78,6 +81,19 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="<?php echo G5_THEME_URL; ?>/img/favicon.ico">
+
+    <!-- Google Fonts (사이트 폰트) -->
+    <?php
+    $mg_site_font = function_exists('mg_config') ? mg_config('site_font', 'Noto Sans KR') : 'Noto Sans KR';
+    if ($mg_site_font === 'Pretendard Variable') {
+        // Pretendard는 별도 CDN
+        echo '<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">';
+    } else {
+        echo '<link rel="preconnect" href="https://fonts.googleapis.com">';
+        echo '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>';
+        echo '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=' . urlencode($mg_site_font) . ':wght@300;400;500;700&display=swap">';
+    }
+    ?>
 
     <!-- Morgan Edition CSS (Tailwind) -->
     <link rel="stylesheet" href="<?php echo G5_THEME_URL; ?>/css/style.css?ver=<?php echo G5_CSS_VER; ?>">
@@ -112,8 +128,11 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
             --mg-error: var(--color-mg-error);
             --mg-button: <?php echo isset($mg_theme_colors['button']) ? $mg_theme_colors['button'] : $mg_theme_colors['accent']; ?>;
             --mg-button-hover: <?php echo isset($mg_theme_colors['button-hover']) ? $mg_theme_colors['button-hover'] : $mg_theme_colors['accent-hover']; ?>;
+            --mg-button-text: <?php echo isset($mg_theme_colors['button-text']) ? $mg_theme_colors['button-text'] : '#ffffff'; ?>;
             --mg-content-width: <?php echo function_exists('mg_config') ? mg_config('content_max_width', '72rem') : '72rem'; ?>;
+            --mg-font-family: '<?php echo $mg_site_font; ?>', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
+        body { font-family: var(--mg-font-family) !important; }
         .mg-inner { max-width: var(--mg-content-width); margin-left: auto; margin-right: auto; }
         /* 반응형 유틸리티 보완 (Tailwind 빌드 누락분) */
         @media (min-width: 40rem) {
@@ -128,6 +147,7 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
         /* 버튼 색상 오버라이드 */
         .btn-primary, .mg-btn-primary {
             background-color: var(--mg-button) !important;
+            color: var(--mg-button-text) !important;
         }
         .btn-primary:hover, .mg-btn-primary:hover {
             background-color: var(--mg-button-hover) !important;
@@ -149,7 +169,7 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
-            opacity: <?php echo $mg_theme_bg['opacity'] / 100; ?>;
+            opacity: <?php echo (100 - $mg_theme_bg['opacity']) / 100; ?>;
             pointer-events: none;
             z-index: -1; /* isolate 내에서 콘텐츠 뒤로 배치 */
         }
@@ -159,6 +179,20 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
             }
         }
         <?php endif; ?>
+        /* 메인 페이지 그리드 캔버스 — 모바일 반응형 */
+        @media (max-width: 768px) {
+            .mg-grid-canvas {
+                display: flex !important;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .mg-grid-widget {
+                grid-column: unset !important;
+                grid-row: unset !important;
+                width: 100% !important;
+                min-height: 200px;
+            }
+        }
     </style>
 
     <!-- 그누보드 전역 JS 변수 -->
@@ -172,7 +206,7 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
     var g5_sca       = "<?php echo isset($sca)?$sca:''; ?>";
     var g5_editor    = "<?php echo ($config['cf_editor'] && isset($board['bo_use_dhtml_editor']) && $board['bo_use_dhtml_editor'])?$config['cf_editor']:''; ?>";
     var g5_cookie_domain = "<?php echo G5_COOKIE_DOMAIN ?>";
-    var g5_site_title = "<?php echo addslashes($config['cf_title']); ?>";
+    var g5_site_title = "<?php echo addslashes($mg_site_name); ?>";
     <?php if(defined('G5_IS_ADMIN')) { ?>
     var g5_admin_url = "<?php echo G5_ADMIN_URL; ?>";
     <?php } ?>

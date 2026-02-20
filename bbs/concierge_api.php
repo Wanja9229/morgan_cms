@@ -8,6 +8,11 @@ include_once(G5_PATH.'/plugin/morgan/morgan.php');
 
 header('Content-Type: application/json; charset=utf-8');
 
+if (mg_config('concierge_use', '1') != '1') {
+    echo json_encode(array('success' => false, 'message' => '의뢰 기능이 비활성화되어 있습니다.'));
+    exit;
+}
+
 if (!$is_member) {
     echo json_encode(array('success' => false, 'message' => '로그인이 필요합니다.'));
     exit;

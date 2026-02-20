@@ -6,6 +6,10 @@
 include_once('./_common.php');
 include_once(G5_PATH.'/plugin/morgan/morgan.php');
 
+if (mg_config('concierge_use', '1') != '1') {
+    alert_close('의뢰 기능이 비활성화되어 있습니다.');
+}
+
 if (!$is_member) {
     alert_close('로그인이 필요합니다.');
 }
@@ -117,7 +121,7 @@ include_once(G5_THEME_PATH.'/head.php');
 
         <?php if (empty($result['items'])) { ?>
         <div class="card text-center py-12">
-            <div class="text-4xl mb-3">📋</div>
+            <div class="mb-3"><svg class="w-12 h-12 mx-auto" style="color:var(--mg-text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></div>
             <p class="text-mg-text-muted">등록된 의뢰가 없습니다.</p>
             <a href="<?php echo G5_BBS_URL; ?>/concierge_write.php" class="inline-block mt-3 px-4 py-2 bg-mg-accent text-mg-bg-primary rounded-lg text-sm">첫 의뢰 등록하기</a>
         </div>

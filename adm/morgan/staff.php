@@ -51,6 +51,9 @@ if (isset($_GET['ajax_role_data'])) {
     exit;
 }
 
+// 토큰 생성 (AJAX 핸들러 이후에 호출해야 세션 토큰 덮어쓰기 방지)
+$token = get_admin_token();
+
 $tab = isset($_GET['tab']) ? $_GET['tab'] : 'roles';
 
 // 데이터 로드
@@ -83,16 +86,8 @@ $g5['title'] = '스태프 관리';
 include_once('./_head.php');
 ?>
 
-<div class="mg-admin-content">
-    <h2 class="mg-admin-title">
-        <svg class="w-6 h-6 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/>
-        </svg>
-        스태프 관리
-    </h2>
-
-    <!-- 탭 -->
-    <div class="mg-tabs mb-6">
+<!-- 탭 -->
+    <div class="mg-tabs" style="margin-bottom:1.5rem;">
         <a href="?tab=roles" class="mg-tab <?php echo $tab === 'roles' ? 'active' : ''; ?>">역할 관리</a>
         <a href="?tab=members" class="mg-tab <?php echo $tab === 'members' ? 'active' : ''; ?>">스태프 목록</a>
     </div>
@@ -108,11 +103,11 @@ include_once('./_head.php');
                 + 역할 추가
             </button>
         </div>
-        <div class="mg-card-body p-0">
+        <div class="mg-card-body p-0" style="overflow-x:auto;">
             <?php if (empty($roles)): ?>
             <div class="p-6 text-center text-mg-text-muted">등록된 역할이 없습니다.</div>
             <?php else: ?>
-            <table class="mg-table">
+            <table class="mg-table" style="min-width:560px;">
                 <thead>
                     <tr>
                         <th class="w-12">#</th>
@@ -192,32 +187,25 @@ include_once('./_head.php');
                     </div>
 
                     <!-- 권한 설정 -->
-                    <div class="border-t border-mg-bg-tertiary pt-4">
-                        <div class="flex items-center justify-between mb-3">
-                            <label class="mg-form-label mb-0">권한 설정</label>
-                            <label class="flex items-center gap-2 text-sm text-mg-text-secondary cursor-pointer">
-                                <input type="checkbox" id="permSelectAll" onchange="toggleAllPerms(this.checked)" class="mg-checkbox">
-                                전체 선택 (r/w/d)
+                    <div style="border-top:1px solid var(--mg-bg-tertiary); padding-top:1rem; margin-top:0.5rem;">
+                        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.75rem;">
+                            <label class="mg-form-label" style="margin-bottom:0;">권한 설정</label>
+                            <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.875rem; color:var(--mg-text-secondary); cursor:pointer;">
+                                <input type="checkbox" id="permSelectAll" onchange="toggleAllPerms(this.checked)">
+                                전체 선택
                             </label>
                         </div>
 
                         <?php foreach ($perm_groups as $group_name => $perms): ?>
-                        <div class="mb-3">
-                            <div class="text-xs font-semibold text-mg-text-muted uppercase tracking-wider mb-2"><?php echo $group_name; ?></div>
+                        <div style="margin-bottom:0.75rem;">
+                            <div style="font-size:0.75rem; font-weight:600; color:var(--mg-text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;"><?php echo $group_name; ?></div>
                             <?php foreach ($perms as $pkey => $plabel): ?>
-                            <div class="flex items-center justify-between py-1.5 px-2 rounded hover:bg-mg-bg-tertiary/50">
-                                <span class="text-sm text-mg-text-primary"><?php echo $plabel; ?></span>
-                                <div class="flex items-center gap-3">
-                                    <label class="flex items-center gap-1 text-xs text-mg-text-secondary cursor-pointer">
-                                        <input type="checkbox" name="perms[<?php echo $pkey; ?>][r]" value="1" class="mg-checkbox perm-cb perm-r" data-key="<?php echo $pkey; ?>"> 읽기
-                                    </label>
-                                    <label class="flex items-center gap-1 text-xs text-mg-text-secondary cursor-pointer">
-                                        <input type="checkbox" name="perms[<?php echo $pkey; ?>][w]" value="1" class="mg-checkbox perm-cb perm-w" data-key="<?php echo $pkey; ?>"> 쓰기
-                                    </label>
-                                    <label class="flex items-center gap-1 text-xs text-mg-text-secondary cursor-pointer">
-                                        <input type="checkbox" name="perms[<?php echo $pkey; ?>][d]" value="1" class="mg-checkbox perm-cb perm-d" data-key="<?php echo $pkey; ?>"> 삭제
-                                    </label>
-                                </div>
+                            <div style="display:flex; align-items:center; justify-content:space-between; padding:0.375rem 0.5rem; border-radius:0.375rem;">
+                                <span style="font-size:0.875rem; color:var(--mg-text-primary);"><?php echo $plabel; ?></span>
+                                <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+                                    <input type="checkbox" name="perms[<?php echo $pkey; ?>]" value="1" class="perm-cb" data-key="<?php echo $pkey; ?>">
+                                    <span style="font-size:0.75rem; color:var(--mg-text-secondary);">허용</span>
+                                </label>
                             </div>
                             <?php endforeach; ?>
                         </div>
@@ -246,11 +234,14 @@ include_once('./_head.php');
             </button>
             <?php endif; ?>
         </div>
-        <div class="mg-card-body p-0">
+        <div class="mg-card-body p-0" style="overflow-x:auto;">
             <?php if (empty($grouped_staff)): ?>
-            <div class="p-6 text-center text-mg-text-muted">등록된 스태프가 없습니다.</div>
+            <div class="p-6 text-center text-mg-text-muted">
+                등록된 스태프가 없습니다.
+                <?php if (empty($roles)): ?><br><span style="font-size:0.8rem;">먼저 '역할 관리' 탭에서 역할을 생성하세요.</span><?php endif; ?>
+            </div>
             <?php else: ?>
-            <table class="mg-table">
+            <table class="mg-table" style="min-width:600px;">
                 <thead>
                     <tr>
                         <th>회원</th>
@@ -267,22 +258,21 @@ include_once('./_head.php');
                                 <strong class="text-mg-text-primary"><?php echo htmlspecialchars($staff['mb_nick']); ?></strong>
                                 <span class="text-xs text-mg-text-muted ml-1">(<?php echo htmlspecialchars($staff['mb_id']); ?>)</span>
                             </div>
-                            <div class="text-xs text-mg-text-muted">Lv.<?php echo $staff['mb_level']; ?></div>
                         </td>
                         <td>
-                            <div class="flex flex-wrap gap-1.5">
+                            <div style="display:flex; flex-wrap:wrap; gap:0.375rem;">
                             <?php foreach ($staff['roles'] as $r): ?>
-                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium text-white" style="background:<?php echo htmlspecialchars($r['sr_color']); ?>">
+                                <span style="display:inline-flex; align-items:center; gap:0.25rem; padding:0.25rem 0.625rem; border-radius:9999px; font-size:0.75rem; font-weight:500; color:#fff; background:<?php echo htmlspecialchars($r['sr_color']); ?>;">
                                     <?php echo htmlspecialchars($r['sr_name']); ?>
-                                    <button type="button" onclick="removeRole('<?php echo htmlspecialchars($staff['mb_id']); ?>', <?php echo $r['sr_id']; ?>, '<?php echo htmlspecialchars($r['sr_name']); ?>')" class="ml-0.5 opacity-70 hover:opacity-100" title="역할 해제">&times;</button>
+                                    <button type="button" onclick="removeRole('<?php echo htmlspecialchars($staff['mb_id']); ?>', <?php echo $r['sr_id']; ?>, '<?php echo htmlspecialchars($r['sr_name']); ?>')" style="margin-left:0.125rem; opacity:0.7; background:none; border:none; color:inherit; cursor:pointer; font-size:0.875rem; line-height:1; padding:0;" title="역할 해제">&times;</button>
                                 </span>
                             <?php endforeach; ?>
                             </div>
                         </td>
                         <td class="text-sm text-mg-text-secondary"><?php echo substr($staff['first_created'], 0, 10); ?></td>
                         <td>
-                            <div class="flex gap-2">
-                                <button type="button" onclick="openAddRoleToMember('<?php echo htmlspecialchars($staff['mb_id']); ?>', '<?php echo htmlspecialchars($staff['mb_nick']); ?>')" class="mg-btn-sm mg-btn-outline">역할 추가</button>
+                            <div style="display:flex; gap:0.5rem;">
+                                <button type="button" onclick="openAddRoleToMember('<?php echo htmlspecialchars($staff['mb_id']); ?>', '<?php echo htmlspecialchars($staff['mb_nick']); ?>')" style="padding:0.25rem 0.75rem; font-size:0.75rem; border-radius:0.375rem; border:1px solid var(--mg-bg-tertiary); background:transparent; color:var(--mg-text-secondary); cursor:pointer; transition:all 0.15s; white-space:nowrap;" onmouseover="this.style.borderColor='var(--mg-accent)';this.style.color='var(--mg-accent)'" onmouseout="this.style.borderColor='var(--mg-bg-tertiary)';this.style.color='var(--mg-text-secondary)'" >역할 추가</button>
                                 <button type="button" onclick="removeMember('<?php echo htmlspecialchars($staff['mb_id']); ?>', '<?php echo htmlspecialchars($staff['mb_nick']); ?>')" class="mg-btn-sm mg-btn-danger">전체 해제</button>
                             </div>
                         </td>
@@ -312,13 +302,14 @@ include_once('./_head.php');
                         <label class="mg-form-label">회원 검색</label>
                         <div class="relative">
                             <input type="text" id="memberSearchInput" class="mg-form-input" placeholder="아이디 또는 닉네임 입력" autocomplete="off">
-                            <div id="memberSearchResults" class="absolute top-full left-0 right-0 mt-1 bg-mg-bg-secondary border border-mg-bg-tertiary rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto" style="display:none;"></div>
+                            <div id="memberSearchResults" style="display:none; position:absolute; top:100%; left:0; right:0; margin-top:0.25rem; background:var(--mg-bg-secondary); border:1px solid var(--mg-bg-tertiary); border-radius:0.5rem; box-shadow:0 4px 16px rgba(0,0,0,0.3); z-index:50; max-height:12rem; overflow-y:auto; padding:0.25rem 0;"></div>
                         </div>
                         <div id="memberSelected" class="mt-2" style="display:none;">
-                            <span class="inline-flex items-center gap-2 px-3 py-1.5 bg-mg-bg-tertiary rounded-lg text-sm">
-                                <span id="memberSelectedName"></span>
-                                <button type="button" onclick="clearMemberSelection()" class="text-mg-text-muted hover:text-red-400">&times;</button>
-                            </span>
+                            <div style="display:inline-flex; align-items:center; gap:0.625rem; padding:0.5rem 0.75rem; background:var(--mg-bg-tertiary); border:1px solid rgba(255,255,255,0.06); border-radius:0.5rem;">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;"><circle cx="8" cy="5.5" r="2.5" stroke="var(--mg-accent)" stroke-width="1.5"/><path d="M3 13.5c0-2.5 2.2-4 5-4s5 1.5 5 4" stroke="var(--mg-accent)" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                <span id="memberSelectedName" style="font-size:0.875rem; color:var(--mg-text-primary); font-weight:500;"></span>
+                                <button type="button" onclick="clearMemberSelection()" style="display:flex; align-items:center; justify-content:center; width:1.25rem; height:1.25rem; border-radius:50%; background:rgba(255,255,255,0.08); border:none; color:var(--mg-text-muted); font-size:0.875rem; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.background='rgba(248,113,113,0.2)';this.style.color='#f87171'" onmouseout="this.style.background='rgba(255,255,255,0.08)';this.style.color='var(--mg-text-muted)'">&times;</button>
+                            </div>
                         </div>
                     </div>
 
@@ -350,18 +341,14 @@ include_once('./_head.php');
     </form>
 
 <?php endif; ?>
-</div>
 
+<?php if ($tab === 'roles'): ?>
 <script>
-// ==========================================
-// 역할 모달
-// ==========================================
 function openRoleModal(srId) {
     var modal = document.getElementById('roleModal');
     var title = document.getElementById('roleModalTitle');
     var form = document.getElementById('roleForm');
 
-    // 체크박스 초기화
     form.querySelectorAll('.perm-cb').forEach(function(cb) { cb.checked = false; });
     document.getElementById('permSelectAll').checked = false;
 
@@ -370,7 +357,6 @@ function openRoleModal(srId) {
         document.getElementById('roleMode').value = 'role_edit';
         document.getElementById('roleSrId').value = srId;
 
-        // AJAX로 역할 데이터 로드
         fetch('?ajax_role_data=1&sr_id=' + srId)
             .then(function(r) { return r.json(); })
             .then(function(data) {
@@ -380,23 +366,11 @@ function openRoleModal(srId) {
                 document.getElementById('roleColor').value = data.sr_color || '#f59f0a';
                 document.getElementById('roleColorHex').textContent = data.sr_color || '#f59f0a';
 
-                // 권한 체크박스 설정
                 var perms = {};
                 try { perms = JSON.parse(data.sr_permissions); } catch(e) {}
                 Object.keys(perms).forEach(function(pkey) {
-                    var auth = perms[pkey] || '';
-                    if (auth.indexOf('r') !== -1) {
-                        var cb = form.querySelector('input[name="perms[' + pkey + '][r]"]');
-                        if (cb) cb.checked = true;
-                    }
-                    if (auth.indexOf('w') !== -1) {
-                        var cb = form.querySelector('input[name="perms[' + pkey + '][w]"]');
-                        if (cb) cb.checked = true;
-                    }
-                    if (auth.indexOf('d') !== -1) {
-                        var cb = form.querySelector('input[name="perms[' + pkey + '][d]"]');
-                        if (cb) cb.checked = true;
-                    }
+                    var cb = form.querySelector('input[name="perms[' + pkey + ']"]');
+                    if (cb) cb.checked = true;
                 });
             });
     } else {
@@ -422,14 +396,12 @@ function toggleAllPerms(checked) {
     });
 }
 
-// 색상 입력 실시간 반영
 document.getElementById('roleColor').addEventListener('input', function() {
     document.getElementById('roleColorHex').textContent = this.value;
 });
-
-// ==========================================
-// 스태프 모달
-// ==========================================
+</script>
+<?php elseif ($tab === 'members'): ?>
+<script>
 var searchTimer = null;
 
 function openMemberModal() {
@@ -466,7 +438,6 @@ function clearMemberSelection() {
     document.getElementById('memberSearchInput').value = '';
 }
 
-// AJAX 회원 검색
 document.getElementById('memberSearchInput').addEventListener('input', function() {
     var input = this;
     var keyword = input.value.trim();
@@ -483,16 +454,18 @@ document.getElementById('memberSearchInput').addEventListener('input', function(
             .then(function(data) {
                 var container = document.getElementById('memberSearchResults');
                 if (!data || data.length === 0) {
-                    container.innerHTML = '<div class="px-3 py-2 text-sm text-mg-text-muted">검색 결과 없음</div>';
+                    container.innerHTML = '<div style="padding:0.75rem; text-align:center; font-size:0.8125rem; color:var(--mg-text-muted);">검색 결과 없음</div>';
                     container.style.display = 'block';
                     return;
                 }
                 var html = '';
                 data.forEach(function(m) {
-                    html += '<div class="px-3 py-2 hover:bg-mg-bg-tertiary cursor-pointer text-sm" onclick="selectMember(\'' + m.mb_id.replace(/'/g, "\\'") + '\', \'' + m.mb_nick.replace(/'/g, "\\'") + '\')">';
-                    html += '<strong>' + escapeHtml(m.mb_nick) + '</strong>';
-                    html += ' <span class="text-mg-text-muted">(' + escapeHtml(m.mb_id) + ')</span>';
-                    html += ' <span class="text-xs text-mg-text-muted">Lv.' + m.mb_level + '</span>';
+                    html += '<div style="display:flex; align-items:center; gap:0.625rem; padding:0.5rem 0.75rem; cursor:pointer; transition:background 0.15s;" onmouseover="this.style.background=\'var(--mg-bg-tertiary)\'" onmouseout="this.style.background=\'transparent\'" onclick="selectMember(\'' + m.mb_id.replace(/'/g, "\\'") + '\', \'' + m.mb_nick.replace(/'/g, "\\'") + '\')">';
+                    html += '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;opacity:0.5;"><circle cx="8" cy="5.5" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M3 13.5c0-2.5 2.2-4 5-4s5 1.5 5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+                    html += '<div style="flex:1; min-width:0;">';
+                    html += '<span style="font-size:0.875rem; font-weight:500; color:var(--mg-text-primary);">' + escapeHtml(m.mb_nick) + '</span>';
+                    html += ' <span style="font-size:0.75rem; color:var(--mg-text-muted);">(' + escapeHtml(m.mb_id) + ')</span>';
+                    html += '</div>';
                     html += '</div>';
                 });
                 container.innerHTML = html;
@@ -501,7 +474,6 @@ document.getElementById('memberSearchInput').addEventListener('input', function(
     }, 300);
 });
 
-// 검색 외부 클릭 시 결과 닫기
 document.addEventListener('click', function(e) {
     var results = document.getElementById('memberSearchResults');
     var input = document.getElementById('memberSearchInput');
@@ -518,9 +490,6 @@ function selectMember(mbId, mbNick) {
     document.getElementById('memberSearchInput').value = '';
 }
 
-// ==========================================
-// 스태프 액션 (역할 해제, 전체 해제)
-// ==========================================
 function removeRole(mbId, srId, roleName) {
     if (!confirm(roleName + ' 역할을 해제하시겠습니까?')) return;
     document.getElementById('staffActionMode').value = 'member_remove';
@@ -543,7 +512,6 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
-// 폼 제출 전 검증
 document.getElementById('memberForm').addEventListener('submit', function(e) {
     if (!document.getElementById('memberMbId').value) {
         e.preventDefault();
@@ -557,6 +525,7 @@ document.getElementById('memberForm').addEventListener('submit', function(e) {
     }
 });
 </script>
+<?php endif; ?>
 
 <?php
 include_once('./_tail.php');

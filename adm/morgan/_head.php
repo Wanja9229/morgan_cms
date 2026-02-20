@@ -37,13 +37,18 @@ if (isset($menu)) {
             $_adm_bg_pri = function_exists('mg_config') ? mg_config('color_bg_primary', '#1e1f22') : '#1e1f22';
             $_adm_bg_sec = function_exists('mg_config') ? mg_config('color_bg_secondary', '#2b2d31') : '#2b2d31';
             $_adm_border = function_exists('mg_config') ? mg_config('color_border', '#313338') : '#313338';
+            $_adm_btn_text = function_exists('mg_config') ? mg_config('color_button_text', '#ffffff') : '#ffffff';
+            $_adm_text = function_exists('mg_config') ? mg_config('color_text', '#f2f3f5') : '#f2f3f5';
+            $_adm_text_sec = function_exists('mg_darken_color') ? mg_darken_color($_adm_text, 20) : '#b5bac1';
+            $_adm_text_muted = function_exists('mg_darken_color') ? mg_darken_color($_adm_text, 38) : '#949ba4';
             ?>
             --mg-bg-primary: <?php echo $_adm_bg_pri; ?>;
             --mg-bg-secondary: <?php echo $_adm_bg_sec; ?>;
             --mg-bg-tertiary: <?php echo $_adm_border; ?>;
-            --mg-text-primary: #f2f3f5;
-            --mg-text-secondary: #b5bac1;
-            --mg-text-muted: #949ba4;
+            --mg-button-text: <?php echo $_adm_btn_text; ?>;
+            --mg-text-primary: <?php echo $_adm_text; ?>;
+            --mg-text-secondary: <?php echo $_adm_text_sec; ?>;
+            --mg-text-muted: <?php echo $_adm_text_muted; ?>;
             --mg-accent: <?php echo $_adm_accent; ?>;
             --mg-accent-hover: <?php echo function_exists('mg_darken_color') ? mg_darken_color($_adm_accent, 15) : '#d97706'; ?>;
             --mg-success: #22c55e;
@@ -366,7 +371,7 @@ if (isset($menu)) {
 
         .mg-btn-primary {
             background: var(--mg-accent);
-            color: #000;
+            color: var(--mg-button-text, #fff);
         }
 
         .mg-btn-primary:hover {
@@ -727,22 +732,45 @@ if (isset($menu)) {
             </div>
 
             <nav class="mg-sidebar-nav">
-                <!-- Morgan Edition 메뉴 (그룹별, 여닫기) -->
+                <!-- Morgan Edition 메뉴 (그룹별, 여닫기, 권한 필터링) -->
                 <?php if (isset($admin_menu['menu800']) && !empty($admin_menu['menu800'])) {
                     $items = $admin_menu['menu800'];
+
+                    // 1-pass: 권한 필터링 — 표시 가능한 메뉴만 추출
+                    $visible_items = array();
+                    for ($i = 1; $i < count($items); $i++) {
+                        $item_id = $items[$i][0] ?? '';
+                        // super admin은 전체 표시, 일반 스태프는 권한 있는 메뉴만
+                        if ($is_admin != 'super') {
+                            if (!isset($auth[$item_id]) || strpos($auth[$item_id], 'r') === false) {
+                                continue;
+                            }
+                        }
+                        $visible_items[] = $items[$i];
+                    }
+
+                    // 2-pass: 그룹별 메뉴가 있는지 확인 후 렌더링
                     $section_open = false;
                     $items_open = false;
                     $section_idx = 0;
                     // 현재 활성 메뉴가 속한 그룹 찾기
                     $active_group = '';
                     $cur_grp = '';
-                    for ($i = 1; $i < count($items); $i++) {
-                        if (isset($items[$i][4]) && $items[$i][4]) $cur_grp = $items[$i][4];
-                        if (isset($sub_menu) && $items[$i][0] == $sub_menu) { $active_group = $cur_grp; break; }
+                    foreach ($visible_items as $vi) {
+                        if (isset($vi[4]) && $vi[4]) $cur_grp = $vi[4];
+                        if (isset($sub_menu) && $vi[0] == $sub_menu) { $active_group = $cur_grp; break; }
                     }
+
+                    // 그룹별 메뉴 존재 여부 맵 (빈 그룹 헤더 방지)
+                    $group_has_items = array();
+                    $tmp_grp = '';
+                    foreach ($visible_items as $vi) {
+                        if (isset($vi[4]) && $vi[4]) $tmp_grp = $vi[4];
+                        if ($tmp_grp) $group_has_items[$tmp_grp] = true;
+                    }
+
                     $cur_grp = '';
-                    for ($i = 1; $i < count($items); $i++) {
-                        $item = $items[$i];
+                    foreach ($visible_items as $item) {
                         $item_id = $item[0] ?? '';
                         $item_name = $item[1] ?? '';
                         $item_url = $item[2] ?? '';
@@ -769,7 +797,7 @@ if (isset($menu)) {
                         }
                 ?>
                     <a href="<?php echo $item_url; ?>" class="mg-nav-item <?php echo $is_active; ?>"><?php echo $item_name; ?></a>
-                <?php } // end for
+                <?php } // end foreach
                     if ($items_open) echo '</div>';
                     if ($section_open) echo '</div>';
                 } ?>

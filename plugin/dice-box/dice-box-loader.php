@@ -104,25 +104,126 @@ window.MorganDice = {
     },
 
     /**
-     * 특정 주사위만 리롤 (유지 주사위는 제자리)
+     * 특정 주사위만 리롤 (유지 주사위는 제자리, 마지막 0.3초에 목표 면으로 lerp)
      * @param {number[]} indices  리롤할 주사위 인덱스 배열 [0,2,4]
      * @param {number[]} values   강제 결과값 배열 [3,6,1]
      * @returns {Promise}
      */
     rerollForced(indices, values) {
         if (!this._ready || !this._box || !indices.length) return Promise.resolve([]);
-        // last_time 리셋: 안 하면 경과시간만큼 물리를 한 프레임에 fast-forward → 모션 안 보임
         this._box.last_time = 0;
-        return this._box.reroll(indices).then((results) => {
+
+        const box = this._box;
+        const LERP_MS = 500;
+        const VEL_THRESH = 350;
+        const ANG_THRESH = 8;
+        const SETTLE_FRAMES = 3; // 연속 저속 프레임 수 (바운스 정점 필터링)
+        const MIN_WAIT = 500;
+        const t0 = performance.now();
+        const lerpMap = new Map();
+        const lowVelCount = {};
+
+        // 목표 face의 quaternion 계산
+        const computeTargetQuat = (die, targetVal) => {
+            const Vec3 = die.position.constructor;
+            const Quat = die.quaternion.constructor;
+            const factory = box.DiceFactory.get(die.notation.type);
+            const vi = factory.values.indexOf(targetVal);
+            if (vi < 0) return null;
+
+            const targetMatIdx = vi + 2;
+            const groups = die.geometry.groups;
+            const norms = die.geometry.getAttribute('normal').array;
+            let localN = null;
+
+            for (let g = 0; g < groups.length; g++) {
+                if (groups[g].materialIndex === targetMatIdx) {
+                    const off = g * 9;
+                    localN = new Vec3(norms[off], norms[off+1], norms[off+2]).normalize();
+                    break;
+                }
+            }
+            if (!localN) return null;
+
+            // body quaternion → Three.js Quaternion으로 변환
+            const bq = new Quat(
+                die.body.quaternion.x, die.body.quaternion.y,
+                die.body.quaternion.z, die.body.quaternion.w
+            );
+            const worldN = localN.clone().applyQuaternion(bq);
+            const up = new Vec3(0, 0, 1);
+            const angle = worldN.angleTo(up);
+
+            if (angle < 0.02) return bq; // 이미 목표 면이 위
+
+            const axis = new Vec3().crossVectors(worldN, up);
+            if (axis.lengthSq() < 1e-6) axis.set(1, 0, 0);
+            axis.normalize();
+
+            const corr = new Quat().setFromAxisAngle(axis, angle);
+            return corr.multiply(bq);
+        };
+
+        // 매 프레임 모니터: 속도가 충분히 낮아지면 lerp 시작
+        const monitor = () => {
+            const elapsed = performance.now() - t0;
+            let active = false;
+
             indices.forEach((dieIdx, i) => {
-                const die = this._box.diceList[dieIdx];
-                if (die && values[i] !== undefined) {
-                    this._box.swapDiceFace(die, values[i]);
+                const die = box.diceList[dieIdx];
+                if (!die || !die.body) return;
+
+                if (!lerpMap.has(dieIdx)) {
+                    if (elapsed < MIN_WAIT) { active = true; return; }
+                    const v = die.body.velocity;
+                    const av = die.body.angularVelocity;
+                    const spd = Math.sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
+                    const aspd = Math.sqrt(av.x*av.x + av.y*av.y + av.z*av.z);
+
+                    if (spd < VEL_THRESH && aspd < ANG_THRESH) {
+                        lowVelCount[dieIdx] = (lowVelCount[dieIdx] || 0) + 1;
+                        if (lowVelCount[dieIdx] >= SETTLE_FRAMES) {
+                            const tq = computeTargetQuat(die, values[i]);
+                            if (tq) {
+                                const Quat = die.quaternion.constructor;
+                                const startQ = new Quat(
+                                    die.body.quaternion.x, die.body.quaternion.y,
+                                    die.body.quaternion.z, die.body.quaternion.w
+                                );
+                                die.body.velocity.set(0, 0, 0);
+                                die.body.angularVelocity.set(0, 0, 0);
+                                lerpMap.set(dieIdx, { startQ, targetQ: tq, t0: performance.now(), done: false });
+                            }
+                        }
+                    } else {
+                        lowVelCount[dieIdx] = 0;
+                    }
+                    active = true;
+                } else {
+                    const s = lerpMap.get(dieIdx);
+                    if (!s.done) {
+                        const t = Math.min((performance.now() - s.t0) / LERP_MS, 1);
+                        const e = t * t * (3 - 2 * t); // smoothstep
+
+                        const lq = s.startQ.clone().slerp(s.targetQ, e);
+                        die.quaternion.copy(lq);
+                        die.body.quaternion.x = lq.x;
+                        die.body.quaternion.y = lq.y;
+                        die.body.quaternion.z = lq.z;
+                        die.body.quaternion.w = lq.w;
+
+                        if (t >= 1) s.done = true;
+                        else active = true;
+                    }
                 }
             });
-            this._box.renderer.render(this._box.scene, this._box.camera);
-            return results;
-        });
+
+            box.renderer.render(box.scene, box.camera);
+            if (active) requestAnimationFrame(monitor);
+        };
+
+        requestAnimationFrame(monitor);
+        return box.reroll(indices);
     },
 
     /**

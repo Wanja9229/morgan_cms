@@ -145,7 +145,7 @@ include_once(G5_THEME_PATH.'/head.php');
 
                         <!-- 세력/종족 -->
                         <div class="flex items-center gap-3 mt-2 text-mg-text-secondary">
-                            <?php if ($char['side_name']) { ?>
+                            <?php if ($char['side_name'] && mg_config('use_side', '1') == '1') { ?>
                             <span class="flex items-center gap-1">
                                 <svg class="w-4 h-4 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/>
@@ -153,7 +153,7 @@ include_once(G5_THEME_PATH.'/head.php');
                                 <?php echo $char['side_name']; ?>
                             </span>
                             <?php } ?>
-                            <?php if ($char['class_name']) { ?>
+                            <?php if ($char['class_name'] && mg_config('use_class', '1') == '1') { ?>
                             <span class="flex items-center gap-1">
                                 <svg class="w-4 h-4 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
@@ -222,7 +222,7 @@ include_once(G5_THEME_PATH.'/head.php');
                 <?php if ($a_icon) { ?>
                 <img src="<?php echo htmlspecialchars($a_icon); ?>" alt="<?php echo htmlspecialchars($a_name); ?>" class="w-10 h-10 object-contain">
                 <?php } else { ?>
-                <span class="text-2xl">🏆</span>
+                <svg class="w-8 h-8" style="color:var(--mg-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3h14l-1.405 4.544A5.001 5.001 0 0112 13a5.001 5.001 0 01-5.595-5.456L5 3zm7 10v4m-4 4h8m-4-4v4"/></svg>
                 <?php } ?>
                 <span class="text-xs text-mg-text-secondary mt-1 text-center leading-tight max-w-[70px] truncate"><?php echo htmlspecialchars($a_name); ?></span>
                 <span class="text-[10px] mt-0.5" style="color:<?php echo $a_color; ?>;"><?php echo $ach_rarity_labels[$a_rarity] ?? ''; ?></span>

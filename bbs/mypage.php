@@ -65,8 +65,9 @@ if (function_exists('mg_get_achievement_display')) {
 }
 
 // 인장 데이터
+$_seal_enabled = mg_config('seal_enable', '1') == '1' || mg_config('seal_enable', '1') == 1;
 $seal = null;
-if (function_exists('mg_get_seal')) {
+if ($_seal_enabled && function_exists('mg_get_seal')) {
     $seal = mg_get_seal($mb['mb_id']);
 }
 
@@ -189,6 +190,7 @@ $ach_rarity_colors = array(
         </div>
 
         <!-- 인장 미리보기 -->
+        <?php if ($_seal_enabled) { ?>
         <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
             <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary flex items-center justify-between">
                 <h2 class="text-sm font-semibold text-mg-text-primary flex items-center gap-2">
@@ -213,6 +215,7 @@ $ach_rarity_colors = array(
                 <?php } ?>
             </div>
         </div>
+        <?php } ?>
 
     </div>
 
@@ -396,12 +399,14 @@ $ach_rarity_colors = array(
                 </svg>
                 <span class="text-sm text-mg-text-secondary">출석체크</span>
             </a>
+            <?php if ($_seal_enabled) { ?>
             <a href="<?php echo G5_BBS_URL; ?>/seal_edit.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
                 <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
                 <span class="text-sm text-mg-text-secondary">인장 편집</span>
             </a>
+            <?php } ?>
             <a href="<?php echo G5_BBS_URL; ?>/achievement.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
                 <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>

@@ -5,6 +5,11 @@ if (!$board['bo_table']) {
    alert('존재하지 않는 게시판입니다.', G5_URL);
 }
 
+// Morgan: 미션 게시판 비활성 체크
+if ($bo_table === 'mission' && function_exists('mg_config') && mg_config('prompt_enable', '1') != '1') {
+    alert('미션 기능이 비활성화되어 있습니다.', G5_URL);
+}
+
 // Morgan: 개척 시스템 해금 체크
 if (function_exists('mg_is_board_unlocked') && !mg_is_board_unlocked($bo_table)) {
     $unlock_info = mg_get_unlock_info('board', $bo_table);

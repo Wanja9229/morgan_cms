@@ -27,6 +27,10 @@ $mb_email = isset($_POST['mb_email']) ? trim(clean_xss_tags($_POST['mb_email']))
 $mb_password = isset($_POST['mb_password']) ? trim($_POST['mb_password']) : '';
 $mb_point = isset($_POST['mb_point']) ? (int)$_POST['mb_point'] : 0;
 $mb_level = isset($_POST['mb_level']) ? max(1, min(10, (int)$_POST['mb_level'])) : 1;
+// 본인 정보 수정 시 레벨 변경 방지
+if ($mb['mb_id'] === $member['mb_id']) {
+    $mb_level = (int)$mb['mb_level'];
+}
 $mb_memo = isset($_POST['mb_memo']) ? trim($_POST['mb_memo']) : '';
 $mb_intercept_date = isset($_POST['mb_intercept_date']) ? trim(clean_xss_tags($_POST['mb_intercept_date'])) : '';
 

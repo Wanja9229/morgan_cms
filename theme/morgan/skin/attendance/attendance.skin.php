@@ -49,13 +49,36 @@ include_once(G5_PLUGIN_PATH.'/dice-box/dice-box-loader.php');
                     <span class="mg-die mg-die--settled" data-value="<?php echo $val; ?>"><?php echo $val; ?></span>
                     <?php endforeach; ?>
                 </div>
+                <?php elseif (!empty($resultData['star'])): ?>
+                <?php
+                    $fstar = (int)$resultData['star'];
+                    $fcolors = [1=>'#6b7280', 2=>'#22c55e', 3=>'#3b82f6', 4=>'#a855f7', 5=>'#f59f0a'];
+                    $fc = $fcolors[$fstar] ?? '#6b7280';
+                ?>
+                <div style="text-align:center;margin-bottom:0.75rem;">
+                    <div style="font-size:1.5rem;color:<?php echo $fc; ?>;margin-bottom:0.5rem;"><?php echo str_repeat('★', $fstar) . str_repeat('☆', 5 - $fstar); ?></div>
+                    <div style="font-size:1rem;color:var(--mg-text-primary);"><?php echo htmlspecialchars($resultData['text'] ?? ''); ?></div>
+                </div>
+                <?php elseif (!empty($resultData['number'])): ?>
+                <?php
+                    $lrank = (int)($resultData['rank'] ?? 5);
+                    $lcolors = [1=>'#f59f0a', 2=>'#a855f7', 3=>'#3b82f6', 4=>'#22c55e', 5=>'#6b7280'];
+                    $lc = $lcolors[$lrank] ?? '#6b7280';
+                ?>
+                <div style="text-align:center;margin-bottom:0.75rem;">
+                    <div style="display:inline-flex;align-items:center;justify-content:center;width:3rem;height:3rem;border-radius:50%;background:<?php echo $lc; ?>;color:#fff;font-size:1.25rem;font-weight:700;margin-bottom:0.5rem;"><?php echo (int)$resultData['number']; ?></div>
+                    <div style="font-size:1rem;color:<?php echo $lc; ?>;font-weight:600;"><?php echo htmlspecialchars($resultData['rankName'] ?? ''); ?> 당첨!</div>
+                    <?php if (!empty($resultData['boardCompleted'])): ?>
+                    <div style="font-size:0.85rem;color:var(--mg-accent);margin-top:0.25rem;">판 완성!</div>
+                    <?php else: ?>
+                    <div style="font-size:0.85rem;color:var(--mg-text-muted);margin-top:0.25rem;"><?php echo (int)$resultData['pickedCount']; ?>/<?php echo (int)$resultData['boardSize']; ?> 진행</div>
+                    <?php endif; ?>
+                </div>
                 <?php endif; ?>
                 <p class="text-mg-text-muted">
                     <?php
                     echo '+' . number_format($todayAttendance['at_point']) . 'P 획득';
                     if (!empty($resultData['comboName'])) echo ' (' . htmlspecialchars($resultData['comboName']) . '!)';
-                    if (!empty($resultData['isCritical'])) echo ' (크리티컬!)';
-                    elseif (!empty($resultData['isDouble'])) echo ' (더블!)';
                     if (!empty($resultData['isBonus'])) echo ' (' . (int)mg_get_config('attendance_streak_bonus_days', 7) . '일 연속!)';
                     ?>
                 </p>
@@ -63,7 +86,6 @@ include_once(G5_PLUGIN_PATH.'/dice-box/dice-box-loader.php');
         <?php else: ?>
             <!-- 출석 전: 게임 UI -->
             <?php echo $game->renderUI(); ?>
-            <div id="game-result"></div>
         <?php endif; ?>
     </div>
 
@@ -146,8 +168,8 @@ include_once(G5_PLUGIN_PATH.'/dice-box/dice-box-loader.php');
 .bg-mg-success\/20 { background-color: rgba(34, 197, 94, 0.2); }
 </style>
 
-<!-- Dice-Box 3D (출석 전에만 로드) -->
-<?php if (!$hasAttended): ?>
+<!-- Dice-Box 3D (주사위 게임 + 출석 전에만 로드) -->
+<?php if (!$hasAttended && $game->getCode() === 'dice'): ?>
 <?php mg_dice_box_scripts(); ?>
 <?php endif; ?>
 

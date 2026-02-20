@@ -68,7 +68,12 @@ include_once __DIR__.'/_head.php';
                         </div>
                         <div class="mg-form-group" style="flex:1;">
                             <label class="mg-form-label">권한 레벨</label>
+                            <?php if ($mb['mb_id'] === $member['mb_id']) { ?>
+                            <input type="hidden" name="mb_level" value="<?php echo $mb['mb_level']; ?>">
+                            <div class="mg-form-input" style="background:var(--mg-bg-tertiary);cursor:default;"><?php echo $mb['mb_level']; ?></div>
+                            <?php } else { ?>
                             <input type="number" name="mb_level" class="mg-form-input" value="<?php echo $mb['mb_level']; ?>" min="1" max="10">
+                            <?php } ?>
                         </div>
                     </div>
                     <div class="mg-form-group">
@@ -138,7 +143,7 @@ include_once __DIR__.'/_head.php';
                     <div style="flex:1; min-width:0;">
                         <div style="font-size:0.875rem; font-weight:600;">
                             <?php echo htmlspecialchars($ch['ch_name']); ?>
-                            <?php if ($ch['ch_main']) echo '<span style="color:var(--mg-accent); font-size:0.75rem;"> ★ 대표</span>'; ?>
+                            <?php if ($ch['ch_main']) echo '<span style="color:var(--mg-accent); font-size:0.75rem; font-weight:600;"> [대표]</span>'; ?>
                         </div>
                         <div style="font-size:0.75rem; color:var(--mg-text-muted);">
                             <?php echo $state_badge; ?>

@@ -14,6 +14,13 @@ $form_title = $is_edit ? '글 수정' : '글쓰기';
 $active_prompts = mg_get_active_prompts($bo_table);
 $selected_pm_id = isset($_GET['pm_id']) ? (int)$_GET['pm_id'] : 0;
 
+// 회원 레벨 체크 — 미달 시 미션 선택 비활성화
+$prompt_level_ok = true;
+if ($is_member) {
+    $_lv = mg_check_member_level('prompt', $member['mb_level']);
+    $prompt_level_ok = $_lv['allowed'];
+}
+
 $edit_pm_id = 0;
 if ($is_edit && $wr_id) {
     $edit_entry = mg_get_entry_by_write($bo_table, $wr_id);
@@ -59,8 +66,8 @@ foreach ($active_prompts as $ap) {
             <?php if (count($active_prompts) > 0 || $edit_pm_id) { ?>
             <div class="mb-4">
                 <label class="block text-sm font-medium text-mg-text-secondary mb-2">미션 선택</label>
-                <select name="pm_id" id="pm_id_select" class="input" <?php echo $is_edit && $edit_pm_id ? 'disabled' : ''; ?>>
-                    <option value="0">자유 글쓰기 (미션 없음)</option>
+                <select name="pm_id" id="pm_id_select" class="input" <?php echo ($is_edit && $edit_pm_id) || !$prompt_level_ok ? 'disabled' : ''; ?>>
+                    <option value="0"><?php echo $prompt_level_ok ? '자유 글쓰기 (미션 없음)' : '접근 권한이 없습니다'; ?></option>
                     <?php foreach ($active_prompts as $ap) {
                         $ap_date = '';
                         if ($ap['pm_start_date'] && $ap['pm_end_date']) {
