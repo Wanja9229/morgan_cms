@@ -109,7 +109,7 @@ $update_url = G5_ADMIN_URL . '/morgan/lore_article_update.php';
 
             <div class="mg-form-group">
                 <label class="mg-form-label">썸네일 이미지</label>
-                <div style="display:flex;gap:1rem;align-items:flex-start;">
+                <div style="display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap;">
                     <div id="thumb-preview" style="width:120px;height:120px;border:1px dashed var(--mg-bg-tertiary);border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
                         <?php if ($is_edit && $article['la_thumbnail']) { ?>
                         <img src="<?php echo htmlspecialchars($article['la_thumbnail']); ?>" style="width:100%;height:100%;object-fit:cover;">
@@ -154,8 +154,8 @@ $update_url = G5_ADMIN_URL . '/morgan/lore_article_update.php';
                     </div>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr auto;gap:1rem;margin-bottom:1rem;">
-                    <div class="mg-form-group" style="margin-bottom:0;">
+                <div style="display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
+                    <div class="mg-form-group" style="margin-bottom:0;flex:1;min-width:180px;">
                         <label class="mg-form-label">섹션명</label>
                         <input type="text" name="sections[<?php echo $idx; ?>][name]" value="<?php echo htmlspecialchars($sec['ls_name']); ?>" class="mg-form-input section-name" placeholder="섹션 제목">
                     </div>
@@ -265,8 +265,8 @@ $update_url = G5_ADMIN_URL . '/morgan/lore_article_update.php';
             </div>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr auto;gap:1rem;margin-bottom:1rem;">
-            <div class="mg-form-group" style="margin-bottom:0;">
+        <div style="display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
+            <div class="mg-form-group" style="margin-bottom:0;flex:1;min-width:180px;">
                 <label class="mg-form-label">섹션명</label>
                 <input type="text" class="mg-form-input section-name" placeholder="섹션 제목">
             </div>
@@ -322,7 +322,7 @@ $update_url = G5_ADMIN_URL . '/morgan/lore_article_update.php';
                 <label class="mg-form-label">이미지</label>
                 <input type="hidden" class="section-image-url" value="">
                 <input type="hidden" class="section-existing-image" value="">
-                <div style="display:flex;gap:1rem;align-items:flex-start;">
+                <div style="display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap;">
                     <div class="section-image-preview" style="width:160px;height:100px;border:1px dashed var(--mg-bg-tertiary);border-radius:4px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
                         <span style="color:var(--mg-text-muted);font-size:0.7rem;">미리보기</span>
                     </div>

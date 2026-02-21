@@ -439,7 +439,7 @@ if ($tab == 'ordering') { ?>
         <div id="cat-sortable">
             <?php foreach ($categories as $cat) { ?>
             <div class="cat-sortable-item" data-cat-id="<?php echo $cat['lc_id']; ?>" style="display:flex;align-items:center;gap:0.5rem 1rem;padding:0.75rem 1rem;border-bottom:1px solid var(--mg-bg-tertiary);background:var(--mg-bg-secondary);flex-wrap:wrap;">
-                <span class="cat-drag-handle" style="cursor:grab;color:var(--mg-text-muted);font-size:1.1rem;user-select:none;" title="드래그하여 순서 변경">&#9776;</span>
+                <span class="cat-drag-handle" style="cursor:grab;color:var(--mg-text-muted);font-size:1.1rem;user-select:none;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;" title="드래그하여 순서 변경">&#9776;</span>
                 <strong style="flex:1;min-width:100px;"><?php echo htmlspecialchars($cat['lc_name']); ?></strong>
                 <span style="color:var(--mg-text-muted);font-size:0.8rem;">문서 <?php echo $cat['article_count']; ?>개</span>
                 <?php if ($cat['lc_use']) { ?>
@@ -474,44 +474,46 @@ if ($tab == 'ordering') { ?>
 </div>
 
 <script>
-// === 카테고리 드래그 정렬 ===
-(function() {
-    var container = document.getElementById('cat-sortable');
+/**
+ * 범용 정렬 초기화 (마우스 + 터치 지원)
+ * @param {HTMLElement} container - 정렬 컨테이너
+ * @param {string} handleSel - 드래그 핸들 CSS 선택자
+ * @param {string} itemSel - 정렬 아이템 CSS 선택자
+ * @param {Function} saveFn - 정렬 완료 후 호출할 저장 함수(container)
+ */
+function initSortable(container, handleSel, itemSel, saveFn) {
     if (!container) return;
 
     var dragItem = null;
     var placeholder = document.createElement('div');
     placeholder.style.cssText = 'border:2px dashed var(--mg-accent);border-radius:4px;margin:0;min-height:44px;opacity:0.5;';
 
-    container.querySelectorAll('.cat-drag-handle').forEach(function(handle) {
-        var item = handle.closest('.cat-sortable-item');
-
+    // --- 마우스 Drag & Drop ---
+    container.querySelectorAll(handleSel).forEach(function(handle) {
+        var item = handle.closest(itemSel);
         handle.addEventListener('mousedown', function() { item.draggable = true; });
-
         item.addEventListener('dragstart', function(e) {
             dragItem = item;
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/plain', '');
             setTimeout(function() { item.style.opacity = '0.4'; }, 0);
         });
-
         item.addEventListener('dragend', function() {
             item.draggable = false;
             item.style.opacity = '';
             dragItem = null;
-            if (placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
-            saveCategoryOrder();
+            if (placeholder.parentNode) placeholder.remove();
+            saveFn(container);
         });
     });
 
     container.addEventListener('dragover', function(e) {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
-        var target = e.target.closest('.cat-sortable-item');
+        var target = e.target.closest(itemSel);
         if (!target || target === dragItem) return;
         var rect = target.getBoundingClientRect();
-        var mid = rect.top + rect.height / 2;
-        if (e.clientY < mid) {
+        if (e.clientY < rect.top + rect.height / 2) {
             container.insertBefore(placeholder, target);
         } else {
             container.insertBefore(placeholder, target.nextSibling);
@@ -522,28 +524,120 @@ if ($tab == 'ordering') { ?>
         e.preventDefault();
         if (dragItem && placeholder.parentNode) {
             container.insertBefore(dragItem, placeholder);
-            placeholder.parentNode.removeChild(placeholder);
+            placeholder.remove();
         }
     });
 
-    function saveCategoryOrder() {
-        var items = container.querySelectorAll('.cat-sortable-item');
-        var formData = new FormData();
-        formData.append('mode', 'category_reorder');
-        items.forEach(function(item, i) {
-            formData.append('order[]', item.getAttribute('data-cat-id'));
-            var badge = item.querySelector('.cat-order-badge');
-            if (badge) badge.textContent = '순서: ' + i;
-        });
+    // --- 터치 정렬 ---
+    var touchItem = null;
+    var touchClone = null;
+    var touchStartY = 0;
+    var touchMoved = false;
 
-        fetch('?tab=ordering', { method: 'POST', body: formData })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                if (!data.success) alert('순서 저장 실패: ' + (data.message || ''));
-            })
-            .catch(function() { alert('순서 저장 중 오류가 발생했습니다.'); });
-    }
-})();
+    container.querySelectorAll(handleSel).forEach(function(handle) {
+        handle.addEventListener('touchstart', function(e) {
+            var item = handle.closest(itemSel);
+            if (!item) return;
+            touchItem = item;
+            touchMoved = false;
+            touchStartY = e.touches[0].clientY;
+
+            // 고스트 복제
+            touchClone = item.cloneNode(true);
+            touchClone.style.cssText = 'position:fixed;left:0;right:0;z-index:9999;opacity:0.85;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,0.4);';
+            var rect = item.getBoundingClientRect();
+            touchClone.style.top = rect.top + 'px';
+            touchClone.style.width = rect.width + 'px';
+            document.body.appendChild(touchClone);
+
+            item.style.opacity = '0.3';
+        }, {passive: true});
+    });
+
+    container.addEventListener('touchmove', function(e) {
+        if (!touchItem) return;
+        e.preventDefault();
+        touchMoved = true;
+
+        var touch = e.touches[0];
+        if (touchClone) touchClone.style.top = touch.clientY - 22 + 'px';
+
+        // placeholder 위치 결정
+        var elUnder = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (!elUnder) return;
+        var target = elUnder.closest(itemSel);
+        if (!target || target === touchItem || target === placeholder) return;
+        // 같은 컨테이너인지 확인
+        if (!container.contains(target)) return;
+
+        var rect = target.getBoundingClientRect();
+        if (touch.clientY < rect.top + rect.height / 2) {
+            container.insertBefore(placeholder, target);
+        } else {
+            container.insertBefore(placeholder, target.nextSibling);
+        }
+    }, {passive: false});
+
+    container.addEventListener('touchend', function() {
+        if (!touchItem) return;
+        if (touchMoved && placeholder.parentNode) {
+            container.insertBefore(touchItem, placeholder);
+            placeholder.remove();
+        }
+        touchItem.style.opacity = '';
+        if (touchClone) { touchClone.remove(); touchClone = null; }
+        if (touchMoved) saveFn(container);
+        touchItem = null;
+        touchMoved = false;
+    });
+
+    container.addEventListener('touchcancel', function() {
+        if (touchItem) touchItem.style.opacity = '';
+        if (touchClone) { touchClone.remove(); touchClone = null; }
+        if (placeholder.parentNode) placeholder.remove();
+        touchItem = null;
+        touchMoved = false;
+    });
+}
+
+// === 카테고리 순서 저장 ===
+function saveCategoryOrder(container) {
+    var items = container.querySelectorAll('.cat-sortable-item');
+    var formData = new FormData();
+    formData.append('mode', 'category_reorder');
+    items.forEach(function(item, i) {
+        formData.append('order[]', item.getAttribute('data-cat-id'));
+        var badge = item.querySelector('.cat-order-badge');
+        if (badge) badge.textContent = '순서: ' + i;
+    });
+    fetch('?tab=ordering', { method: 'POST', body: formData })
+        .then(function(r) { return r.json(); })
+        .then(function(data) { if (!data.success) alert('순서 저장 실패: ' + (data.message || '')); })
+        .catch(function() { alert('순서 저장 중 오류가 발생했습니다.'); });
+}
+
+// === 문서 순서 저장 ===
+function saveArticleOrder(container) {
+    var items = container.querySelectorAll('.art-sortable-item');
+    var formData = new FormData();
+    formData.append('mode', 'article_reorder');
+    items.forEach(function(item, i) {
+        formData.append('order[]', item.getAttribute('data-art-id'));
+        var badge = item.querySelector('.art-order-badge');
+        if (badge) badge.textContent = '순서: ' + i;
+    });
+    fetch('?tab=ordering', { method: 'POST', body: formData })
+        .then(function(r) { return r.json(); })
+        .then(function(data) { if (!data.success) alert('순서 저장 실패: ' + (data.message || '')); })
+        .catch(function() { alert('순서 저장 중 오류가 발생했습니다.'); });
+}
+
+// 카테고리 정렬 초기화
+initSortable(
+    document.getElementById('cat-sortable'),
+    '.cat-drag-handle', '.cat-sortable-item',
+    saveCategoryOrder
+);
 
 // === 카테고리별 문서 순서 ===
 function loadCategoryArticles(lcId) {
@@ -567,7 +661,7 @@ function loadCategoryArticles(lcId) {
                     ? '<img src="' + escHtml(art.la_thumbnail) + '" style="width:32px;height:32px;object-fit:cover;border-radius:4px;border:1px solid var(--mg-bg-tertiary);">'
                     : '<div style="width:32px;height:32px;background:var(--mg-bg-tertiary);border-radius:4px;"></div>';
                 html += '<div class="art-sortable-item" data-art-id="' + art.la_id + '" style="display:flex;align-items:center;gap:0.5rem 1rem;padding:0.75rem 1rem;border-bottom:1px solid var(--mg-bg-tertiary);background:var(--mg-bg-secondary);flex-wrap:wrap;">';
-                html += '<span class="art-drag-handle" style="cursor:grab;color:var(--mg-text-muted);font-size:1.1rem;user-select:none;" title="드래그하여 순서 변경">&#9776;</span>';
+                html += '<span class="art-drag-handle" style="cursor:grab;color:var(--mg-text-muted);font-size:1.1rem;user-select:none;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;" title="드래그하여 순서 변경">&#9776;</span>';
                 html += thumb;
                 html += '<strong style="flex:1;">' + escHtml(art.la_title) + '</strong>';
                 html += '<span class="mg-badge art-order-badge" style="font-size:0.7rem;">순서: ' + art.la_order + '</span>';
@@ -575,81 +669,16 @@ function loadCategoryArticles(lcId) {
             });
             html += '</div>';
             body.innerHTML = html;
-            initArticleSortable();
+            // 문서 정렬 초기화 (터치 + 마우스)
+            initSortable(
+                document.getElementById('art-sortable'),
+                '.art-drag-handle', '.art-sortable-item',
+                saveArticleOrder
+            );
         })
         .catch(function() {
             body.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--mg-text-muted);">로드 중 오류가 발생했습니다.</div>';
         });
-}
-
-function initArticleSortable() {
-    var container = document.getElementById('art-sortable');
-    if (!container) return;
-
-    var dragItem = null;
-    var placeholder = document.createElement('div');
-    placeholder.style.cssText = 'border:2px dashed var(--mg-accent);border-radius:4px;margin:0;min-height:44px;opacity:0.5;';
-
-    container.querySelectorAll('.art-drag-handle').forEach(function(handle) {
-        var item = handle.closest('.art-sortable-item');
-
-        handle.addEventListener('mousedown', function() { item.draggable = true; });
-
-        item.addEventListener('dragstart', function(e) {
-            dragItem = item;
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/plain', '');
-            setTimeout(function() { item.style.opacity = '0.4'; }, 0);
-        });
-
-        item.addEventListener('dragend', function() {
-            item.draggable = false;
-            item.style.opacity = '';
-            dragItem = null;
-            if (placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
-            saveArticleOrder();
-        });
-    });
-
-    container.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        var target = e.target.closest('.art-sortable-item');
-        if (!target || target === dragItem) return;
-        var rect = target.getBoundingClientRect();
-        var mid = rect.top + rect.height / 2;
-        if (e.clientY < mid) {
-            container.insertBefore(placeholder, target);
-        } else {
-            container.insertBefore(placeholder, target.nextSibling);
-        }
-    });
-
-    container.addEventListener('drop', function(e) {
-        e.preventDefault();
-        if (dragItem && placeholder.parentNode) {
-            container.insertBefore(dragItem, placeholder);
-            placeholder.parentNode.removeChild(placeholder);
-        }
-    });
-
-    function saveArticleOrder() {
-        var items = container.querySelectorAll('.art-sortable-item');
-        var formData = new FormData();
-        formData.append('mode', 'article_reorder');
-        items.forEach(function(item, i) {
-            formData.append('order[]', item.getAttribute('data-art-id'));
-            var badge = item.querySelector('.art-order-badge');
-            if (badge) badge.textContent = '순서: ' + i;
-        });
-
-        fetch('?tab=ordering', { method: 'POST', body: formData })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                if (!data.success) alert('순서 저장 실패: ' + (data.message || ''));
-            })
-            .catch(function() { alert('순서 저장 중 오류가 발생했습니다.'); });
-    }
 }
 
 function escHtml(str) {

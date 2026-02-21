@@ -92,7 +92,7 @@ function saveTimelineDesc() {
     <!-- 시대 헤더 -->
     <div class="mg-card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
         <div style="display:flex;align-items:center;gap:0.5rem 1rem;flex-wrap:wrap;min-width:0;">
-            <span class="era-drag-handle" title="드래그하여 순서 변경" style="cursor:grab;color:var(--mg-text-muted);font-size:1.2rem;padding:0 0.25rem;user-select:none;">&#9776;</span>
+            <span class="era-drag-handle" title="드래그하여 순서 변경" style="cursor:grab;color:var(--mg-text-muted);font-size:1.2rem;user-select:none;min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;">&#9776;</span>
             <span id="era-arrow-<?php echo $era['le_id']; ?>" style="transition:transform 0.2s;display:inline-block;cursor:pointer;" onclick="toggleEra(<?php echo $era['le_id']; ?>)">&#9660;</span>
             <div>
                 <strong style="font-size:1rem;"><?php echo htmlspecialchars($era['le_name']); ?></strong>
@@ -144,7 +144,7 @@ function saveTimelineDesc() {
                 <tr class="era-no-events"><td colspan="9" style="text-align:center;padding:1.5rem;color:var(--mg-text-muted);font-size:0.875rem;">이 시대에 등록된 이벤트가 없습니다.</td></tr>
                 <?php } else { foreach ($era['events'] as $ev) { ?>
                 <tr data-event-id="<?php echo $ev['lv_id']; ?>">
-                    <td style="text-align:center;"><span class="event-drag-handle" style="cursor:grab;color:var(--mg-text-muted);font-size:1.1rem;user-select:none;" title="드래그하여 순서 변경">&#9776;</span></td>
+                    <td style="text-align:center;"><span class="event-drag-handle" style="cursor:grab;color:var(--mg-text-muted);font-size:1.1rem;user-select:none;min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;" title="드래그하여 순서 변경">&#9776;</span></td>
                     <td style="text-align:center;color:var(--mg-text-muted);font-size:0.8rem;"><?php echo $ev['lv_id']; ?></td>
                     <td style="text-align:center;">
                         <span style="color:var(--mg-accent);font-weight:600;font-size:0.85rem;"><?php echo htmlspecialchars($ev['lv_year']); ?></span>
@@ -286,7 +286,7 @@ function saveTimelineDesc() {
                 </div>
                 <div class="mg-form-group">
                     <label class="mg-form-label">이미지 (선택)</label>
-                    <div style="display:flex;gap:1rem;align-items:flex-start;">
+                    <div style="display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap;">
                         <div id="event-image-preview" style="width:100px;height:100px;border:1px dashed var(--mg-bg-tertiary);border-radius:4px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
                             <span style="color:var(--mg-text-muted);font-size:0.7rem;">미리보기</span>
                         </div>
@@ -469,161 +469,227 @@ function escHtml(str) {
     return d.innerHTML;
 }
 
-// === 시대 드래그 정렬 ===
-(function() {
-    var container = document.getElementById('era-sortable');
+// === 범용 정렬 (마우스+터치) ===
+function initSortable(container, handleSel, itemSel, saveFn) {
     if (!container) return;
-
     var dragItem = null;
     var placeholder = document.createElement('div');
     placeholder.style.cssText = 'border:2px dashed var(--mg-accent);border-radius:8px;margin-bottom:1rem;min-height:48px;opacity:0.5;';
 
-    container.querySelectorAll('.era-drag-handle').forEach(function(handle) {
-        var card = handle.closest('.era-sortable-item');
-
-        handle.addEventListener('mousedown', function() {
-            card.draggable = true;
-        });
-
-        card.addEventListener('dragstart', function(e) {
-            dragItem = card;
+    // 마우스
+    container.querySelectorAll(handleSel).forEach(function(handle) {
+        var item = handle.closest(itemSel);
+        handle.addEventListener('mousedown', function() { item.draggable = true; });
+        item.addEventListener('dragstart', function(e) {
+            dragItem = item;
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/plain', '');
-            setTimeout(function() { card.style.opacity = '0.4'; }, 0);
+            setTimeout(function() { item.style.opacity = '0.4'; }, 0);
         });
-
-        card.addEventListener('dragend', function() {
-            card.draggable = false;
-            card.style.opacity = '';
+        item.addEventListener('dragend', function() {
+            item.draggable = false; item.style.opacity = '';
             dragItem = null;
-            if (placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
-            saveEraOrder();
+            if (placeholder.parentNode) placeholder.remove();
+            saveFn(container);
         });
     });
-
     container.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        var target = e.target.closest('.era-sortable-item');
+        e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+        var target = e.target.closest(itemSel);
         if (!target || target === dragItem) return;
-
         var rect = target.getBoundingClientRect();
-        var mid = rect.top + rect.height / 2;
-        if (e.clientY < mid) {
-            container.insertBefore(placeholder, target);
-        } else {
-            container.insertBefore(placeholder, target.nextSibling);
-        }
+        if (e.clientY < rect.top + rect.height / 2) container.insertBefore(placeholder, target);
+        else container.insertBefore(placeholder, target.nextSibling);
     });
-
     container.addEventListener('drop', function(e) {
         e.preventDefault();
-        if (dragItem && placeholder.parentNode) {
-            container.insertBefore(dragItem, placeholder);
-            placeholder.parentNode.removeChild(placeholder);
-        }
+        if (dragItem && placeholder.parentNode) { container.insertBefore(dragItem, placeholder); placeholder.remove(); }
     });
 
-    function saveEraOrder() {
-        var items = container.querySelectorAll('.era-sortable-item');
-        var order = [];
-        items.forEach(function(item, i) {
-            order.push(item.getAttribute('data-era-id'));
-            var badge = item.querySelector('.mg-badge');
-            if (badge && badge.textContent.indexOf('순서') !== -1) {
-                badge.textContent = '순서: ' + i;
-            }
-        });
+    // 터치
+    var touchItem = null, touchClone = null, touchMoved = false;
+    container.querySelectorAll(handleSel).forEach(function(handle) {
+        handle.addEventListener('touchstart', function(e) {
+            var item = handle.closest(itemSel);
+            if (!item) return;
+            touchItem = item; touchMoved = false;
+            touchClone = item.cloneNode(true);
+            touchClone.style.cssText = 'position:fixed;left:0;right:0;z-index:9999;opacity:0.85;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,0.4);';
+            var rect = item.getBoundingClientRect();
+            touchClone.style.top = rect.top + 'px'; touchClone.style.width = rect.width + 'px';
+            document.body.appendChild(touchClone);
+            item.style.opacity = '0.3';
+        }, {passive: true});
+    });
+    container.addEventListener('touchmove', function(e) {
+        if (!touchItem) return; e.preventDefault(); touchMoved = true;
+        var touch = e.touches[0];
+        if (touchClone) touchClone.style.top = touch.clientY - 24 + 'px';
+        var el = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (!el) return;
+        var target = el.closest(itemSel);
+        if (!target || target === touchItem || target === placeholder || !container.contains(target)) return;
+        var rect = target.getBoundingClientRect();
+        if (touch.clientY < rect.top + rect.height / 2) container.insertBefore(placeholder, target);
+        else container.insertBefore(placeholder, target.nextSibling);
+    }, {passive: false});
+    container.addEventListener('touchend', function() {
+        if (!touchItem) return;
+        if (touchMoved && placeholder.parentNode) { container.insertBefore(touchItem, placeholder); placeholder.remove(); }
+        touchItem.style.opacity = '';
+        if (touchClone) { touchClone.remove(); touchClone = null; }
+        if (touchMoved) saveFn(container);
+        touchItem = null; touchMoved = false;
+    });
+    container.addEventListener('touchcancel', function() {
+        if (touchItem) touchItem.style.opacity = '';
+        if (touchClone) { touchClone.remove(); touchClone = null; }
+        if (placeholder.parentNode) placeholder.remove();
+        touchItem = null; touchMoved = false;
+    });
+}
 
+// === 시대 정렬 ===
+initSortable(
+    document.getElementById('era-sortable'),
+    '.era-drag-handle', '.era-sortable-item',
+    function(container) {
+        var items = container.querySelectorAll('.era-sortable-item');
         var formData = new FormData();
         formData.append('mode', 'era_reorder');
-        order.forEach(function(id) { formData.append('order[]', id); });
-
+        items.forEach(function(item, i) {
+            formData.append('order[]', item.getAttribute('data-era-id'));
+            var badge = item.querySelector('.mg-badge');
+            if (badge && badge.textContent.indexOf('순서') !== -1) badge.textContent = '순서: ' + i;
+        });
         fetch('<?php echo $update_url; ?>', { method: 'POST', body: formData })
             .then(function(r) { return r.json(); })
-            .then(function(data) {
-                if (!data.success) alert('순서 저장 실패: ' + (data.message || ''));
-            })
+            .then(function(data) { if (!data.success) alert('순서 저장 실패: ' + (data.message || '')); })
             .catch(function() { alert('순서 저장 중 오류가 발생했습니다.'); });
     }
-})();
+);
 
-// === 이벤트 드래그 정렬 (시대 간 이동 지원) ===
+// === 이벤트 드래그 정렬 (시대 간 이동 + 터치 지원) ===
 (function() {
     var allTbodies = document.querySelectorAll('.event-sortable-tbody');
     if (!allTbodies.length) return;
 
-    var dragRow = null;
-    var sourceTbody = null;
+    var dragRow = null, sourceTbody = null;
     var placeholder = document.createElement('tr');
-    placeholder.innerHTML = '<td colspan="9" style="border:2px dashed var(--mg-accent);height:40px;opacity:0.5;"></td>';
+    placeholder.innerHTML = '<td colspan="9" style="border:2px dashed var(--mg-accent);height:44px;opacity:0.5;"></td>';
 
+    // --- 마우스 드래그 ---
     allTbodies.forEach(function(tbody) {
-        // 핸들 이벤트 등록
         tbody.querySelectorAll('.event-drag-handle').forEach(function(handle) {
             var row = handle.closest('tr');
             handle.addEventListener('mousedown', function() { row.draggable = true; });
-
             row.addEventListener('dragstart', function(e) {
-                dragRow = row;
-                sourceTbody = tbody;
+                dragRow = row; sourceTbody = tbody;
                 e.dataTransfer.effectAllowed = 'move';
                 e.dataTransfer.setData('text/plain', '');
                 setTimeout(function() { row.style.opacity = '0.4'; }, 0);
             });
-
             row.addEventListener('dragend', function() {
-                row.draggable = false;
-                row.style.opacity = '';
-                if (placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
-
+                row.draggable = false; row.style.opacity = '';
+                if (placeholder.parentNode) placeholder.remove();
                 var targetTbody = dragRow ? dragRow.closest('tbody') : null;
                 var isCrossEra = sourceTbody && targetTbody && sourceTbody !== targetTbody;
                 dragRow = null;
-
-                if (targetTbody) {
-                    saveEventOrder(targetTbody, isCrossEra);
-                    updateEraUI();
-                }
+                if (targetTbody) { saveEventOrder(targetTbody, isCrossEra); updateEraUI(); }
                 sourceTbody = null;
             });
         });
 
-        // 모든 tbody에서 dragover/drop 허용 (시대 간 이동)
         tbody.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
+            e.preventDefault(); e.dataTransfer.dropEffect = 'move';
             var target = e.target.closest('tr');
             if (target && target === dragRow) return;
-
-            // 빈 시대이거나, 이벤트 행이 없으면 끝에 추가
             if (!target || target.classList.contains('era-no-events')) {
-                if (placeholder.parentNode !== tbody) {
-                    tbody.appendChild(placeholder);
-                }
+                if (placeholder.parentNode !== tbody) tbody.appendChild(placeholder);
                 return;
             }
             if (!target.hasAttribute('data-event-id')) return;
-
             var rect = target.getBoundingClientRect();
-            var mid = rect.top + rect.height / 2;
-            if (e.clientY < mid) {
-                tbody.insertBefore(placeholder, target);
-            } else {
-                tbody.insertBefore(placeholder, target.nextSibling);
-            }
+            if (e.clientY < rect.top + rect.height / 2) tbody.insertBefore(placeholder, target);
+            else tbody.insertBefore(placeholder, target.nextSibling);
         });
 
         tbody.addEventListener('drop', function(e) {
             e.preventDefault();
             if (dragRow && placeholder.parentNode) {
-                // 빈 시대 메시지 제거
                 var emptyRow = tbody.querySelector('.era-no-events');
                 if (emptyRow) emptyRow.remove();
-
-                tbody.insertBefore(dragRow, placeholder);
-                placeholder.parentNode.removeChild(placeholder);
+                tbody.insertBefore(dragRow, placeholder); placeholder.remove();
             }
+        });
+    });
+
+    // --- 터치 드래그 (이벤트 행) ---
+    var touchRow = null, touchSourceTbody = null, touchClone = null, touchMoved = false;
+
+    allTbodies.forEach(function(tbody) {
+        tbody.querySelectorAll('.event-drag-handle').forEach(function(handle) {
+            handle.addEventListener('touchstart', function(e) {
+                var row = handle.closest('tr');
+                if (!row) return;
+                touchRow = row; touchSourceTbody = tbody; touchMoved = false;
+                touchClone = document.createElement('div');
+                touchClone.textContent = row.querySelector('strong') ? row.querySelector('strong').textContent : 'Event';
+                touchClone.style.cssText = 'position:fixed;z-index:9999;background:var(--mg-bg-secondary);border:1px solid var(--mg-accent);color:var(--mg-text-primary);padding:8px 16px;border-radius:8px;font-size:0.85rem;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,0.4);';
+                touchClone.style.top = e.touches[0].clientY - 20 + 'px';
+                touchClone.style.left = e.touches[0].clientX - 40 + 'px';
+                document.body.appendChild(touchClone);
+                row.style.opacity = '0.3';
+            }, {passive: true});
+        });
+
+        tbody.addEventListener('touchmove', function(e) {
+            if (!touchRow) return; e.preventDefault(); touchMoved = true;
+            var touch = e.touches[0];
+            if (touchClone) { touchClone.style.top = touch.clientY - 20 + 'px'; touchClone.style.left = touch.clientX - 40 + 'px'; }
+
+            var el = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (!el) return;
+
+            // 어느 tbody 위인지 찾기
+            var targetTbody = el.closest('.event-sortable-tbody');
+            if (!targetTbody) return;
+
+            var targetRow = el.closest('tr');
+            if (targetRow && targetRow === touchRow) return;
+
+            if (!targetRow || targetRow.classList.contains('era-no-events') || !targetRow.hasAttribute('data-event-id')) {
+                if (placeholder.parentNode !== targetTbody) targetTbody.appendChild(placeholder);
+                return;
+            }
+
+            var rect = targetRow.getBoundingClientRect();
+            if (touch.clientY < rect.top + rect.height / 2) targetTbody.insertBefore(placeholder, targetRow);
+            else targetTbody.insertBefore(placeholder, targetRow.nextSibling);
+        }, {passive: false});
+
+        tbody.addEventListener('touchend', function() {
+            if (!touchRow) return;
+            if (touchMoved && placeholder.parentNode) {
+                var targetTbody = placeholder.closest('tbody');
+                var emptyRow = targetTbody ? targetTbody.querySelector('.era-no-events') : null;
+                if (emptyRow) emptyRow.remove();
+                if (targetTbody) targetTbody.insertBefore(touchRow, placeholder);
+                placeholder.remove();
+
+                var isCrossEra = touchSourceTbody && targetTbody && touchSourceTbody !== targetTbody;
+                if (targetTbody) { saveEventOrder(targetTbody, isCrossEra); updateEraUI(); }
+            }
+            touchRow.style.opacity = '';
+            if (touchClone) { touchClone.remove(); touchClone = null; }
+            touchRow = null; touchSourceTbody = null; touchMoved = false;
+        });
+
+        tbody.addEventListener('touchcancel', function() {
+            if (touchRow) touchRow.style.opacity = '';
+            if (touchClone) { touchClone.remove(); touchClone = null; }
+            if (placeholder.parentNode) placeholder.remove();
+            touchRow = null; touchSourceTbody = null; touchMoved = false;
         });
     });
 
@@ -638,16 +704,11 @@ function escHtml(str) {
             var cells = row.querySelectorAll('td');
             if (cells.length >= 7) cells[6].textContent = i;
         });
-
         fetch('<?php echo $update_url; ?>', { method: 'POST', body: formData })
             .then(function(r) { return r.json(); })
             .then(function(data) {
-                if (!data.success) {
-                    alert('순서 저장 실패: ' + (data.message || ''));
-                } else if (isCrossEra) {
-                    // 시대 간 이동 시 페이지 새로고침 (모달 데이터 동기화)
-                    location.reload();
-                }
+                if (!data.success) alert('순서 저장 실패: ' + (data.message || ''));
+                else if (isCrossEra) location.reload();
             })
             .catch(function() { alert('순서 저장 중 오류가 발생했습니다.'); });
     }
@@ -658,12 +719,8 @@ function escHtml(str) {
             if (!eraItem) return;
             var eventRows = tbody.querySelectorAll('tr[data-event-id]');
             var count = eventRows.length;
-
-            // 이벤트 수 갱신
             var countSpan = eraItem.querySelector('.era-event-count');
             if (countSpan) countSpan.textContent = '이벤트 ' + count + '개';
-
-            // 빈 시대 메시지 토글
             var emptyRow = tbody.querySelector('.era-no-events');
             if (count === 0 && !emptyRow) {
                 emptyRow = document.createElement('tr');
