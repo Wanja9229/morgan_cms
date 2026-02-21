@@ -3,7 +3,7 @@
  * Morgan Edition - 위키 문서 저장 처리
  */
 
-$sub_menu = "801410";
+$sub_menu = "800160";
 require_once __DIR__.'/../_common.php';
 
 auth_check_menu($auth, $sub_menu, 'w');
@@ -14,7 +14,7 @@ include_once(G5_PATH.'/plugin/morgan/morgan.php');
 if ($is_admin != 'super') alert('최고관리자만 접근 가능합니다.');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    goto_url('./lore_article.php');
+    goto_url('./lore_wiki.php?tab=articles');
 }
 
 // === POST 데이터 수집 ===
@@ -29,7 +29,7 @@ $la_use = (int)$_POST['la_use'];
 
 // 유효성 검사
 if (!$la_title) {
-    alert('제목을 입력해주세요.', './lore_article_edit.php' . ($la_id ? '?la_id=' . $la_id : ''));
+    alert('제목을 입력해주세요.', './lore_article_edit.php' . ($la_id ? '?la_id='.$la_id : ''));
 }
 if (!$lc_id) {
     alert('카테고리를 선택해주세요.', './lore_article_edit.php' . ($la_id ? '?la_id=' . $la_id : ''));
@@ -40,7 +40,7 @@ if ($la_id > 0) {
     // 수정: 기존 문서 확인
     $exists = sql_fetch("SELECT la_id FROM {$g5['mg_lore_article_table']} WHERE la_id = {$la_id}");
     if (!$exists['la_id']) {
-        alert('문서를 찾을 수 없습니다.', './lore_article.php');
+        alert('문서를 찾을 수 없습니다.', './lore_wiki.php?tab=articles');
     }
 
     sql_query("UPDATE {$g5['mg_lore_article_table']} SET
@@ -101,4 +101,4 @@ if (is_array($sections)) {
     }
 }
 
-goto_url('./lore_article.php');
+goto_url('./lore_wiki.php?tab=articles');

@@ -456,6 +456,12 @@ function removeLogo() {
                 </div>
             </div>
 
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
+                <div class="mg-form-group" style="grid-column:1/-1;">
+                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">연대기/맵 페이지 설명은 각각의 관리 페이지(타임라인, 지도)에서 설정합니다.</small>
+                </div>
+            </div>
+
             <hr style="border:0;border-top:1px solid var(--mg-bg-tertiary);margin:1.5rem 0;">
 
             <h4 style="font-size:0.9rem;font-weight:600;margin-bottom:1rem;color:var(--mg-text-secondary);">미션 설정</h4>

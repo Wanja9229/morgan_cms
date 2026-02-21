@@ -33,19 +33,16 @@ if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
 // 타입 파라미터
 $type = isset($_POST['type']) ? trim($_POST['type']) : 'article';
 
-// 허용 타입
-$allowed_types = array('article_thumb', 'section', 'event');
-if (!in_array($type, $allowed_types)) {
-    $type = 'article';
-}
-
 // 타입을 디렉토리 이름으로 매핑
 $type_map = array(
     'article_thumb' => 'article',
     'section' => 'section',
     'event' => 'event',
 );
-$upload_type = isset($type_map[$type]) ? $type_map[$type] : 'article';
+if (!isset($type_map[$type])) {
+    $type = 'article_thumb';
+}
+$upload_type = $type_map[$type];
 
 // mg_upload_lore_image 함수 호출
 $result = mg_upload_lore_image($_FILES['file'], $upload_type, 0);

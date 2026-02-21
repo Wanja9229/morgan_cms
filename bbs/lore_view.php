@@ -57,6 +57,20 @@ include_once(G5_THEME_PATH.'/head.php');
 /* 위키 본문 타이포그래피 */
 .wiki-content { font-size: 0.9375rem; line-height: 1.8; color: var(--mg-text-secondary); }
 .wiki-content p { margin-bottom: 0.5em; }
+.wiki-content h3 { font-size: 1.125rem; font-weight: 600; color: var(--mg-text-primary); margin: 1em 0 0.5em; }
+.wiki-content h4 { font-size: 1rem; font-weight: 600; color: var(--mg-text-primary); margin: 0.75em 0 0.375em; }
+.wiki-content ul, .wiki-content ol { padding-left: 1.5em; margin-bottom: 0.75em; }
+.wiki-content li { margin-bottom: 0.25em; }
+.wiki-content a { color: var(--mg-accent); text-decoration: underline; }
+.wiki-content a:hover { opacity: 0.8; }
+.wiki-content blockquote { border-left: 3px solid var(--mg-accent); padding-left: 1em; margin: 0.75em 0; color: var(--mg-text-muted); font-style: italic; }
+.wiki-content img { max-width: 100%; border-radius: 8px; }
+.wiki-content strong { color: var(--mg-text-primary); }
+.wiki-content hr { border: none; border-top: 1px solid var(--mg-bg-tertiary); margin: 1.5em 0; }
+.wiki-content { overflow-x: auto; }
+.wiki-content table { width: 100%; border-collapse: collapse; margin: 0.75em 0; }
+.wiki-content th, .wiki-content td { border: 1px solid var(--mg-bg-tertiary); padding: 0.5em 0.75em; text-align: left; }
+.wiki-content th { background: var(--mg-bg-tertiary); color: var(--mg-text-primary); font-weight: 600; }
 /* 이미지 피겨 */
 .wiki-figure img { max-width: 100%; display: block; }
 /* TOC 활성 링크 */
@@ -115,7 +129,7 @@ include_once(G5_THEME_PATH.'/head.php');
             <div class="flex-1 min-w-0 px-5 py-6 md:px-6">
                 <!-- 인라인 목차 (섹션 3개 이상) -->
                 <?php if (count($sections) >= 3) { ?>
-                <div class="bg-mg-bg-tertiary/30 rounded-lg border border-mg-bg-tertiary px-4 py-3 mb-6 inline-block min-w-[220px] max-w-[340px]">
+                <div class="bg-mg-bg-tertiary/30 rounded-lg border border-mg-bg-tertiary px-4 py-3 mb-6 inline-block" style="min-width:220px;max-width:340px;">
                     <h3 class="text-xs font-semibold text-mg-text-primary mb-2 text-center uppercase tracking-wider">목차</h3>
                     <ol class="space-y-0.5">
                         <?php foreach ($sections as $idx => $sec) { ?>
@@ -137,13 +151,13 @@ include_once(G5_THEME_PATH.'/head.php');
 
                     <?php if (isset($sec['ls_type']) && $sec['ls_type'] === 'image') { ?>
                     <div class="wiki-figure bg-mg-bg-tertiary/30 border border-mg-bg-tertiary rounded-lg p-2 inline-block max-w-full">
-                        <img src="<?php echo MG_LORE_IMAGE_URL.'/'.htmlspecialchars($sec['ls_image']); ?>" alt="<?php echo htmlspecialchars($sec['ls_name']); ?>" class="rounded">
+                        <img src="<?php echo htmlspecialchars($sec['ls_image']); ?>" alt="<?php echo htmlspecialchars($sec['ls_name']); ?>" class="rounded">
                         <?php if (!empty($sec['ls_image_caption'])) { ?>
                         <p class="text-xs text-mg-text-muted text-center mt-2 italic"><?php echo htmlspecialchars($sec['ls_image_caption']); ?></p>
                         <?php } ?>
                     </div>
                     <?php } else { ?>
-                    <div class="wiki-content"><?php echo nl2br(htmlspecialchars($sec['ls_content'])); ?></div>
+                    <div class="wiki-content"><?php echo $sec['ls_content']; ?></div>
                     <?php } ?>
                 </div>
                 <?php } ?>

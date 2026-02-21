@@ -73,42 +73,31 @@ include_once(G5_THEME_PATH.'/head.php');
     padding: 0.5rem 0 1.5rem 0;
     margin-left: -2.5rem;
 }
-.lore-era-divider::before {
-    content: '';
-    position: absolute;
-    left: 0.8rem;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: var(--mg-bg-tertiary, #2a2a2a);
-}
-
-/* 시대 배지의 점 마커 */
-.lore-era-marker {
-    position: absolute;
-    left: 0.3rem;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: var(--mg-accent, #f59f0a);
-    border: 3px solid var(--mg-bg-primary, #0f0f0f);
-    z-index: 2;
-}
 
 /* 이벤트 카드 호버 */
 .lore-event-card {
     transition: border-color 0.2s ease, transform 0.2s ease;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 .lore-event-card:hover {
     border-color: rgba(245, 159, 10, 0.3);
+}
+
+/* 모바일 여백 축소 */
+@media (max-width: 640px) {
+    .lore-timeline { padding-left: 2rem; }
+    .lore-timeline::before { left: 0.55rem; }
+    .lore-era-divider { margin-left: -2rem; }
+    .lore-event { padding-left: 0.75rem; }
+    .lore-event::before { left: -1.7rem; }
+    .lore-event.major::before { left: -1.8rem; }
 }
 </style>
 
 <div class="mg-inner px-4 py-6">
     <!-- 페이지 헤더 -->
-    <div class="flex items-center justify-between mb-8">
+    <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-lg bg-mg-accent/20 flex items-center justify-center flex-shrink-0">
                 <svg class="w-6 h-6 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -117,14 +106,30 @@ include_once(G5_THEME_PATH.'/head.php');
             </div>
             <div>
                 <h1 class="text-2xl font-bold text-mg-text-primary">타임라인</h1>
-                <p class="text-sm text-mg-text-muted">이 세계의 역사를 시간순으로 살펴보세요</p>
+                <p class="text-sm text-mg-text-muted"><?php echo htmlspecialchars(mg_config('lore_timeline_desc', '이 세계의 역사를 시간순으로 살펴보세요')); ?></p>
             </div>
         </div>
-        <a href="<?php echo G5_BBS_URL; ?>/lore.php" class="inline-flex items-center gap-1.5 text-sm text-mg-text-muted hover:text-mg-text-primary transition-colors">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+    </div>
+
+    <!-- 서브 탭 (2뎁스) -->
+    <div class="flex flex-wrap gap-2 mb-6">
+        <a href="<?php echo G5_BBS_URL; ?>/lore.php" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors bg-mg-bg-secondary border border-mg-bg-tertiary text-mg-text-secondary hover:text-mg-accent hover:border-mg-accent/30">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
             </svg>
-            위키로 돌아가기
+            위키
+        </a>
+        <a href="<?php echo G5_BBS_URL; ?>/lore_timeline.php" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors bg-mg-accent/10 border border-mg-accent/30 text-mg-accent">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            연대기
+        </a>
+        <a href="<?php echo G5_BBS_URL; ?>/lore_map.php" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors bg-mg-bg-secondary border border-mg-bg-tertiary text-mg-text-secondary hover:text-mg-accent hover:border-mg-accent/30">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+            </svg>
+            세계관 맵
         </a>
     </div>
 
@@ -134,8 +139,7 @@ include_once(G5_THEME_PATH.'/head.php');
         <?php foreach ($timeline as $era) { ?>
         <!-- 시대 구분자 -->
         <div class="lore-era-divider">
-            <div class="lore-era-marker"></div>
-            <div class="ml-10 bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary px-5 py-3">
+            <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary px-5 py-3 era-badge-card">
                 <h2 class="text-lg font-bold text-mg-accent"><?php echo htmlspecialchars($era['le_name']); ?></h2>
                 <?php if (!empty($era['le_period'])) { ?>
                 <p class="text-sm text-mg-text-muted mt-0.5"><?php echo htmlspecialchars($era['le_period']); ?></p>
@@ -171,7 +175,7 @@ include_once(G5_THEME_PATH.'/head.php');
                 <!-- 이미지 -->
                 <?php if (!empty($event['lv_image'])) { ?>
                 <div class="mt-3 rounded-lg overflow-hidden">
-                    <img src="<?php echo MG_LORE_IMAGE_URL.'/'.htmlspecialchars($event['lv_image']); ?>" alt="<?php echo htmlspecialchars($event['lv_title']); ?>" class="w-full rounded-lg">
+                    <img src="<?php echo htmlspecialchars($event['lv_image']); ?>" alt="<?php echo htmlspecialchars($event['lv_title']); ?>" class="w-full rounded-lg">
                 </div>
                 <?php } ?>
 
@@ -192,10 +196,6 @@ include_once(G5_THEME_PATH.'/head.php');
         <?php } ?>
         <?php } ?>
 
-        <!-- 타임라인 끝 마커 -->
-        <div class="lore-event">
-            <div class="text-sm text-mg-text-muted italic pl-1">현재에 이르다...</div>
-        </div>
     </div>
     <?php } else { ?>
     <!-- 빈 상태 -->

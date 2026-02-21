@@ -3,7 +3,7 @@
  * Morgan Edition - 위키 문서 작성/수정
  */
 
-$sub_menu = "801410";
+$sub_menu = "800160";
 require_once __DIR__.'/../_common.php';
 
 auth_check_menu($auth, $sub_menu, 'r');
@@ -43,8 +43,14 @@ $upload_url = G5_ADMIN_URL . '/morgan/lore_image_upload.php';
 $update_url = G5_ADMIN_URL . '/morgan/lore_article_update.php';
 ?>
 
+<!-- Toast UI Editor CDN -->
+<link rel="stylesheet" href="https://uicdn.toast.com/editor/3.2.2/toastui-editor.min.css">
+<link rel="stylesheet" href="https://uicdn.toast.com/editor/3.2.2/theme/toastui-editor-dark.min.css">
+<link rel="stylesheet" href="<?php echo G5_EDITOR_URL; ?>/toastui/morgan-dark.css">
+<script src="https://uicdn.toast.com/editor/3.2.2/toastui-editor-all.min.js"></script>
+
 <div style="margin-bottom:1rem;">
-    <a href="./lore_article.php" class="mg-btn mg-btn-secondary mg-btn-sm">&larr; 문서 목록</a>
+    <a href="./lore_wiki.php?tab=articles" class="mg-btn mg-btn-secondary mg-btn-sm">&larr; 문서 목록</a>
     <span style="margin-left:0.5rem;font-size:1.125rem;font-weight:600;"><?php echo $is_edit ? '문서 수정' : '새 문서 작성'; ?></span>
 </div>
 
@@ -57,7 +63,7 @@ $update_url = G5_ADMIN_URL . '/morgan/lore_article_update.php';
     <div class="mg-card" style="margin-bottom:1.5rem;">
         <div class="mg-card-header">기본 정보</div>
         <div class="mg-card-body">
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:1rem;">
                 <div class="mg-form-group">
                     <label class="mg-form-label">카테고리 *</label>
                     <select name="lc_id" class="mg-form-input" required>
@@ -171,8 +177,31 @@ $update_url = G5_ADMIN_URL . '/morgan/lore_article_update.php';
                 <!-- 텍스트 영역 -->
                 <div class="section-text-area" style="<?php echo $sec['ls_type'] == 'image' ? 'display:none;' : ''; ?>">
                     <div class="mg-form-group" style="margin-bottom:0;">
-                        <label class="mg-form-label">내용</label>
-                        <textarea name="sections[<?php echo $idx; ?>][content]" class="mg-form-input section-content" rows="6" placeholder="섹션 내용을 입력하세요."><?php echo htmlspecialchars($sec['ls_content']); ?></textarea>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                            <label class="mg-form-label" style="margin-bottom:0;">내용</label>
+                            <div style="display:flex;border:1px solid var(--mg-bg-tertiary);border-radius:4px;overflow:hidden;">
+                                <button type="button" class="editor-mode-btn active" data-mode="wysiwyg" onclick="switchEditorMode(this,'wysiwyg')" style="padding:0.25rem 0.75rem;font-size:0.75rem;border:none;cursor:pointer;background:var(--mg-accent);color:#fff;">WYSIWYG</button>
+                                <button type="button" class="editor-mode-btn" data-mode="html" onclick="switchEditorMode(this,'html')" style="padding:0.25rem 0.75rem;font-size:0.75rem;border:none;cursor:pointer;background:var(--mg-bg-tertiary);color:var(--mg-text-secondary);">HTML</button>
+                            </div>
+                        </div>
+                        <div class="section-html-mode" style="display:none;">
+                            <div class="html-toolbar" style="display:flex;gap:0.25rem;flex-wrap:wrap;margin-bottom:0.5rem;">
+                                <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="insertHtmlTag(this,'strong')" title="굵게" style="min-width:32px;font-weight:700;">B</button>
+                                <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="insertHtmlTag(this,'em')" title="기울임" style="min-width:32px;font-style:italic;">I</button>
+                                <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="insertHtmlTag(this,'h3')" title="제목3" style="min-width:32px;">H3</button>
+                                <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="insertHtmlTag(this,'h4')" title="제목4" style="min-width:32px;">H4</button>
+                                <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="insertHtmlTag(this,'a')" title="링크" style="min-width:32px;">Link</button>
+                                <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="insertHtmlTag(this,'ul')" title="목록" style="min-width:32px;">UL</button>
+                                <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="insertHtmlTag(this,'ol')" title="순서목록" style="min-width:32px;">OL</button>
+                                <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="insertHtmlTag(this,'blockquote')" title="인용" style="min-width:32px;">Quote</button>
+                                <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="insertHtmlTag(this,'hr')" title="구분선" style="min-width:32px;">HR</button>
+                                <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="insertHtmlTag(this,'table')" title="표" style="min-width:32px;">Table</button>
+                            </div>
+                            <textarea name="sections[<?php echo $idx; ?>][content]" class="mg-form-input section-content" rows="8" placeholder="HTML 태그를 사용할 수 있습니다."><?php echo htmlspecialchars($sec['ls_content']); ?></textarea>
+                        </div>
+                        <div class="section-wysiwyg-mode">
+                            <div class="section-editor-container"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -209,14 +238,16 @@ $update_url = G5_ADMIN_URL . '/morgan/lore_article_update.php';
     </div>
 
     <!-- 하단 버튼 -->
-    <div style="display:flex;gap:0.5rem;justify-content:space-between;">
+    <div style="display:flex;gap:0.5rem;justify-content:space-between;flex-wrap:wrap;">
         <div style="display:flex;gap:0.5rem;">
             <button type="submit" class="mg-btn mg-btn-primary"><?php echo $is_edit ? '문서 수정' : '문서 등록'; ?></button>
-            <a href="./lore_article.php" class="mg-btn mg-btn-secondary">취소</a>
+            <a href="./lore_wiki.php?tab=articles" class="mg-btn mg-btn-secondary">취소</a>
         </div>
         <?php if ($is_edit) { ?>
-        <div style="font-size:0.8rem;color:var(--mg-text-muted);display:flex;align-items:center;">
-            작성일: <?php echo $article['la_created']; ?> | 수정일: <?php echo $article['la_updated']; ?> | 조회: <?php echo number_format($article['la_hit']); ?>
+        <div style="font-size:0.75rem;color:var(--mg-text-muted);display:flex;align-items:center;flex-wrap:wrap;gap:0.25rem;">
+            <span>작성일: <?php echo $article['la_created']; ?></span>
+            <span>| 수정일: <?php echo $article['la_updated']; ?></span>
+            <span>| 조회: <?php echo number_format($article['la_hit']); ?></span>
         </div>
         <?php } ?>
     </div>
@@ -257,8 +288,31 @@ $update_url = G5_ADMIN_URL . '/morgan/lore_article_update.php';
         <!-- 텍스트 영역 -->
         <div class="section-text-area">
             <div class="mg-form-group" style="margin-bottom:0;">
-                <label class="mg-form-label">내용</label>
-                <textarea class="mg-form-input section-content" rows="6" placeholder="섹션 내용을 입력하세요."></textarea>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                    <label class="mg-form-label" style="margin-bottom:0;">내용</label>
+                    <div style="display:flex;border:1px solid var(--mg-bg-tertiary);border-radius:4px;overflow:hidden;">
+                        <button type="button" class="editor-mode-btn" data-mode="html" onclick="switchEditorMode(this,'html')" style="padding:0.25rem 0.75rem;font-size:0.75rem;border:none;cursor:pointer;background:var(--mg-bg-tertiary);color:var(--mg-text-secondary);">HTML</button>
+                        <button type="button" class="editor-mode-btn active" data-mode="wysiwyg" onclick="switchEditorMode(this,'wysiwyg')" style="padding:0.25rem 0.75rem;font-size:0.75rem;border:none;cursor:pointer;background:var(--mg-accent);color:#fff;">WYSIWYG</button>
+                    </div>
+                </div>
+                <div class="section-html-mode" style="display:none;">
+                    <div class="html-toolbar" style="display:flex;gap:0.25rem;flex-wrap:wrap;margin-bottom:0.5rem;">
+                        <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="insertHtmlTag(this,'strong')" title="굵게" style="min-width:32px;font-weight:700;">B</button>
+                        <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="insertHtmlTag(this,'em')" title="기울임" style="min-width:32px;font-style:italic;">I</button>
+                        <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="insertHtmlTag(this,'h3')" title="제목3" style="min-width:32px;">H3</button>
+                        <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="insertHtmlTag(this,'h4')" title="제목4" style="min-width:32px;">H4</button>
+                        <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="insertHtmlTag(this,'a')" title="링크" style="min-width:32px;">Link</button>
+                        <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="insertHtmlTag(this,'ul')" title="목록" style="min-width:32px;">UL</button>
+                        <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="insertHtmlTag(this,'ol')" title="순서목록" style="min-width:32px;">OL</button>
+                        <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="insertHtmlTag(this,'blockquote')" title="인용" style="min-width:32px;">Quote</button>
+                        <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="insertHtmlTag(this,'hr')" title="구분선" style="min-width:32px;">HR</button>
+                        <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="insertHtmlTag(this,'table')" title="표" style="min-width:32px;">Table</button>
+                    </div>
+                    <textarea class="mg-form-input section-content" rows="8" placeholder="HTML 태그를 사용할 수 있습니다."></textarea>
+                </div>
+                <div class="section-wysiwyg-mode">
+                    <div class="section-editor-container"></div>
+                </div>
             </div>
         </div>
 
@@ -393,6 +447,9 @@ function addSection() {
     container.appendChild(block);
     _sectionIdx++;
     updateSectionNumbers();
+
+    // WYSIWYG 에디터 자동 초기화
+    initSectionEditor(block);
 }
 
 // === 섹션 삭제 ===
@@ -461,8 +518,154 @@ function updateSectionNumbers() {
     _sectionIdx = blocks.length;
 }
 
+// === 섹션 에디터 초기화 ===
+function initSectionEditor(block) {
+    var container = block.querySelector('.section-editor-container');
+    var textarea = block.querySelector('.section-content');
+    if (!container || container._toastEditor) return;
+
+    container._toastEditor = new toastui.Editor({
+        el: container,
+        height: '350px',
+        initialEditType: 'wysiwyg',
+        previewStyle: 'vertical',
+        theme: 'dark',
+        usageStatistics: false,
+        hideModeSwitch: false,
+        toolbarItems: [
+            ['heading', 'bold', 'italic', 'strike'],
+            ['hr', 'quote'],
+            ['ul', 'ol'],
+            ['table', 'image', 'link'],
+            ['code', 'codeblock']
+        ],
+        hooks: {
+            addImageBlobHook: function(blob, callback) {
+                var fd = new FormData();
+                fd.append('file', blob);
+                fd.append('type', 'section');
+                fetch(_uploadUrl, { method: 'POST', body: fd })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data.success && data.url) callback(data.url, blob.name || 'image');
+                        else alert(data.message || '이미지 업로드 실패');
+                    })
+                    .catch(function() { alert('이미지 업로드 오류'); });
+            }
+        }
+    });
+    if (textarea.value) {
+        container._toastEditor.setHTML(textarea.value);
+    }
+}
+
+// === 에디터 모드 전환 (HTML ↔ WYSIWYG) ===
+function switchEditorMode(btn, mode) {
+    var block = btn.closest('.section-block');
+    if (!block) return;
+
+    var htmlMode = block.querySelector('.section-html-mode');
+    var wysiwygMode = block.querySelector('.section-wysiwyg-mode');
+    var textarea = block.querySelector('.section-content');
+    var container = block.querySelector('.section-editor-container');
+
+    // 버튼 상태 업데이트
+    btn.parentNode.querySelectorAll('.editor-mode-btn').forEach(function(b) {
+        if (b.getAttribute('data-mode') === mode) {
+            b.style.background = 'var(--mg-accent)';
+            b.style.color = '#fff';
+            b.classList.add('active');
+        } else {
+            b.style.background = 'var(--mg-bg-tertiary)';
+            b.style.color = 'var(--mg-text-secondary)';
+            b.classList.remove('active');
+        }
+    });
+
+    if (mode === 'wysiwyg') {
+        htmlMode.style.display = 'none';
+        wysiwygMode.style.display = '';
+        initSectionEditor(block);
+        container._toastEditor.setHTML(textarea.value || '');
+    } else {
+        if (container._toastEditor) {
+            textarea.value = container._toastEditor.getHTML();
+        }
+        wysiwygMode.style.display = 'none';
+        htmlMode.style.display = '';
+    }
+}
+
+// === 페이지 로드 시 기존 섹션 에디터 초기화 ===
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('#sections-container .section-block').forEach(function(block) {
+        initSectionEditor(block);
+    });
+});
+
+// === HTML 툴바 태그 삽입 ===
+function insertHtmlTag(btn, tag) {
+    var block = btn.closest('.section-block');
+    var textarea = block.querySelector('.section-content');
+    if (!textarea) return;
+
+    var start = textarea.selectionStart;
+    var end = textarea.selectionEnd;
+    var selected = textarea.value.substring(start, end);
+    var replacement = '';
+
+    switch(tag) {
+        case 'strong': case 'em': case 'h3': case 'h4': case 'blockquote':
+            replacement = '<' + tag + '>' + (selected || '') + '</' + tag + '>';
+            break;
+        case 'a':
+            var url = prompt('URL을 입력하세요:', 'https://');
+            if (!url) return;
+            replacement = '<a href="' + url + '">' + (selected || url) + '</a>';
+            break;
+        case 'ul': case 'ol':
+            if (selected) {
+                var lines = selected.split('\n');
+                replacement = '<' + tag + '>\n' + lines.map(function(l) { return '  <li>' + l.trim() + '</li>'; }).join('\n') + '\n</' + tag + '>';
+            } else {
+                replacement = '<' + tag + '>\n  <li></li>\n</' + tag + '>';
+            }
+            break;
+        case 'hr':
+            replacement = '<hr>';
+            break;
+        case 'table':
+            replacement = '<table>\n  <thead>\n    <tr>\n      <th>제목1</th>\n      <th>제목2</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td></td>\n      <td></td>\n    </tr>\n  </tbody>\n</table>';
+            break;
+        default:
+            replacement = '<' + tag + '>' + (selected || '') + '</' + tag + '>';
+    }
+
+    textarea.value = textarea.value.substring(0, start) + replacement + textarea.value.substring(end);
+    textarea.focus();
+    var newPos = start + replacement.length;
+    textarea.setSelectionRange(newPos, newPos);
+}
+
+// === WYSIWYG → textarea 동기화 ===
+function syncAllEditors() {
+    document.querySelectorAll('.section-editor-container').forEach(function(container) {
+        if (container._toastEditor) {
+            var block = container.closest('.section-block');
+            var textarea = block.querySelector('.section-content');
+            var wysiwygDiv = container.closest('.section-wysiwyg-mode');
+            if (textarea && wysiwygDiv && wysiwygDiv.style.display !== 'none') {
+                textarea.value = container._toastEditor.getHTML();
+            }
+        }
+    });
+}
+
 // === 폼 제출 전 검증 ===
 document.getElementById('article-form').addEventListener('submit', function(e) {
+    // WYSIWYG 에디터 동기화
+    syncAllEditors();
+
     var title = this.querySelector('input[name="la_title"]').value.trim();
     var category = this.querySelector('select[name="lc_id"]').value;
     if (!title) {

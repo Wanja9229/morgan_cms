@@ -79,6 +79,8 @@ $g5['mg_reward_queue_table'] = 'mg_reward_queue';
 // 관계 시스템
 $g5['mg_relation_table'] = 'mg_relation';
 $g5['mg_relation_icon_table'] = 'mg_relation_icon';
+// 세계관 맵 지역
+$g5['mg_map_region_table'] = 'mg_map_region';
 // 탐색 파견 시스템
 $g5['mg_expedition_area_table'] = 'mg_expedition_area';
 $g5['mg_expedition_drop_table'] = 'mg_expedition_drop';
@@ -173,6 +175,8 @@ $mg['reward_queue_table'] = $g5['mg_reward_queue_table'];
 // 관계 시스템
 $mg['relation_table'] = $g5['mg_relation_table'];
 $mg['relation_icon_table'] = $g5['mg_relation_icon_table'];
+// 세계관 맵 지역
+$mg['map_region_table'] = $g5['mg_map_region_table'];
 // 탐색 파견 시스템
 $mg['expedition_area_table'] = $g5['mg_expedition_area_table'];
 $mg['expedition_drop_table'] = $g5['mg_expedition_drop_table'];
@@ -957,8 +961,8 @@ function mg_render_main() {
     foreach ($widgets as $widget) {
         $x = (int)($widget['widget_x'] ?? 0);
         $y = (int)($widget['widget_y'] ?? 0);
-        $w = (int)($widget['widget_w'] ?: ($widget['widget_cols'] ?? $grid_columns));
-        $h = (int)($widget['widget_h'] ?: 2);
+        $w = (int)(($widget['widget_w'] ?? 0) ?: ($widget['widget_cols'] ?? $grid_columns));
+        $h = (int)(($widget['widget_h'] ?? 0) ?: 2);
 
         // CSS Grid은 1-based
         $col_start = $x + 1;
@@ -6068,6 +6072,29 @@ function mg_get_lore_timeline()
     }
 
     return array_values($eras);
+}
+
+/**
+ * 맵 지역 목록 조회
+ * @param bool $active_only true: 사용중+좌표있는 지역만 (프론트용)
+ * @return array
+ */
+function mg_get_map_regions($active_only = false)
+{
+    global $g5;
+
+    $where = '';
+    if ($active_only) {
+        $where = ' WHERE mr_use = 1 AND mr_map_x IS NOT NULL AND mr_map_y IS NOT NULL';
+    }
+
+    $sql = "SELECT * FROM {$g5['mg_map_region_table']}{$where} ORDER BY mr_order, mr_id";
+    $result = sql_query($sql);
+    $regions = array();
+    while ($row = sql_fetch_array($result)) {
+        $regions[] = $row;
+    }
+    return $regions;
 }
 
 /**

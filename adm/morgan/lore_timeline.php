@@ -3,13 +3,20 @@
  * Morgan Edition - 타임라인 관리 (시대 + 이벤트)
  */
 
-$sub_menu = "801420";
+$sub_menu = "800175";
 require_once __DIR__.'/../_common.php';
 
 auth_check_menu($auth, $sub_menu, 'r');
 
 // Morgan 플러그인 로드
 include_once(G5_PATH.'/plugin/morgan/morgan.php');
+
+// === 위키 문서 목록 (이벤트 연결용) ===
+$lore_articles = array();
+$art_result = sql_query("SELECT la_id, la_title FROM {$g5['mg_lore_article_table']} WHERE la_use = 1 ORDER BY la_title");
+while ($row = sql_fetch_array($art_result)) {
+    $lore_articles[] = $row;
+}
 
 // === 시대 목록 + 각 시대의 이벤트 ===
 $eras = array();
@@ -37,13 +44,40 @@ $update_url = G5_ADMIN_URL . '/morgan/lore_timeline_update.php';
 $upload_url = G5_ADMIN_URL . '/morgan/lore_image_upload.php';
 ?>
 
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;">
     <div>
         <span style="font-size:1.125rem;font-weight:600;">타임라인 관리</span>
         <span style="font-size:0.875rem;color:var(--mg-text-muted);margin-left:0.5rem;">시대(Era)와 시대별 이벤트를 관리합니다.</span>
     </div>
     <button type="button" class="mg-btn mg-btn-primary" onclick="openEraModal()">+ 시대 추가</button>
 </div>
+
+<!-- 페이지 설명 설정 -->
+<div class="mg-card" style="margin-bottom:1.5rem;">
+    <div class="mg-card-body" style="padding:0.75rem 1rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+        <label style="font-size:0.8rem;color:var(--mg-text-muted);white-space:nowrap;">프론트 페이지 설명:</label>
+        <input type="text" id="timeline-desc-input" value="<?php echo htmlspecialchars(mg_config('lore_timeline_desc', '이 세계의 역사를 시간순으로 살펴보세요')); ?>" style="flex:1;min-width:200px;background:var(--mg-bg-primary);border:1px solid var(--mg-bg-tertiary);color:var(--mg-text-primary);padding:4px 8px;border-radius:6px;font-size:0.85rem;" maxlength="100">
+        <button type="button" class="mg-btn mg-btn-sm mg-btn-primary" onclick="saveTimelineDesc()">저장</button>
+        <span id="timeline-desc-msg" style="font-size:0.75rem;color:var(--mg-accent);display:none;">저장됨</span>
+    </div>
+</div>
+<script>
+function saveTimelineDesc() {
+    var val = document.getElementById('timeline-desc-input').value;
+    var fd = new FormData();
+    fd.append('mode', 'update_desc');
+    fd.append('lore_timeline_desc', val);
+    fetch('<?php echo $update_url; ?>', { method: 'POST', body: fd })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                var msg = document.getElementById('timeline-desc-msg');
+                msg.style.display = 'inline';
+                setTimeout(function() { msg.style.display = 'none'; }, 2000);
+            }
+        });
+}
+</script>
 
 <?php if (empty($eras)) { ?>
 <div class="mg-card">
@@ -56,8 +90,8 @@ $upload_url = G5_ADMIN_URL . '/morgan/lore_image_upload.php';
 <?php foreach ($eras as $era) { ?>
 <div class="mg-card era-sortable-item" data-era-id="<?php echo $era['le_id']; ?>" style="margin-bottom:1rem;">
     <!-- 시대 헤더 -->
-    <div class="mg-card-header" style="display:flex;justify-content:space-between;align-items:center;">
-        <div style="display:flex;align-items:center;gap:1rem;">
+    <div class="mg-card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+        <div style="display:flex;align-items:center;gap:0.5rem 1rem;flex-wrap:wrap;min-width:0;">
             <span class="era-drag-handle" title="드래그하여 순서 변경" style="cursor:grab;color:var(--mg-text-muted);font-size:1.2rem;padding:0 0.25rem;user-select:none;">&#9776;</span>
             <span id="era-arrow-<?php echo $era['le_id']; ?>" style="transition:transform 0.2s;display:inline-block;cursor:pointer;" onclick="toggleEra(<?php echo $era['le_id']; ?>)">&#9660;</span>
             <div>
@@ -72,9 +106,9 @@ $upload_url = G5_ADMIN_URL . '/morgan/lore_image_upload.php';
             <?php } else { ?>
             <span class="mg-badge mg-badge-error" style="font-size:0.7rem;">미사용</span>
             <?php } ?>
-            <span style="color:var(--mg-text-muted);font-size:0.8rem;">이벤트 <?php echo count($era['events']); ?>개</span>
+            <span class="era-event-count" style="color:var(--mg-text-muted);font-size:0.8rem;">이벤트 <?php echo count($era['events']); ?>개</span>
         </div>
-        <div style="display:flex;gap:0.5rem;" onclick="event.stopPropagation();">
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;" onclick="event.stopPropagation();">
             <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="openEraModal(<?php echo $era['le_id']; ?>)">수정</button>
             <?php if (empty($era['events'])) { ?>
             <form method="post" action="<?php echo $update_url; ?>" style="display:inline;">
@@ -90,15 +124,11 @@ $upload_url = G5_ADMIN_URL . '/morgan/lore_image_upload.php';
     </div>
 
     <!-- 이벤트 목록 (펼침/접힘) -->
-    <div id="era-body-<?php echo $era['le_id']; ?>" class="mg-card-body" style="padding:0;">
-        <?php if (empty($era['events'])) { ?>
-        <div style="padding:1.5rem;text-align:center;color:var(--mg-text-muted);font-size:0.875rem;">
-            이 시대에 등록된 이벤트가 없습니다.
-        </div>
-        <?php } else { ?>
+    <div id="era-body-<?php echo $era['le_id']; ?>" class="mg-card-body" style="padding:0;overflow-x:auto;">
         <table class="mg-table">
             <thead>
                 <tr>
+                    <th style="width:36px;"></th>
                     <th style="width:50px;text-align:center;">ID</th>
                     <th style="width:100px;text-align:center;">연도</th>
                     <th>제목</th>
@@ -109,9 +139,12 @@ $upload_url = G5_ADMIN_URL . '/morgan/lore_image_upload.php';
                     <th style="width:140px;text-align:center;">관리</th>
                 </tr>
             </thead>
-            <tbody>
-                <?php foreach ($era['events'] as $ev) { ?>
-                <tr>
+            <tbody class="event-sortable-tbody" data-era-id="<?php echo $era['le_id']; ?>">
+                <?php if (empty($era['events'])) { ?>
+                <tr class="era-no-events"><td colspan="9" style="text-align:center;padding:1.5rem;color:var(--mg-text-muted);font-size:0.875rem;">이 시대에 등록된 이벤트가 없습니다.</td></tr>
+                <?php } else { foreach ($era['events'] as $ev) { ?>
+                <tr data-event-id="<?php echo $ev['lv_id']; ?>">
+                    <td style="text-align:center;"><span class="event-drag-handle" style="cursor:grab;color:var(--mg-text-muted);font-size:1.1rem;user-select:none;" title="드래그하여 순서 변경">&#9776;</span></td>
                     <td style="text-align:center;color:var(--mg-text-muted);font-size:0.8rem;"><?php echo $ev['lv_id']; ?></td>
                     <td style="text-align:center;">
                         <span style="color:var(--mg-accent);font-weight:600;font-size:0.85rem;"><?php echo htmlspecialchars($ev['lv_year']); ?></span>
@@ -119,7 +152,7 @@ $upload_url = G5_ADMIN_URL . '/morgan/lore_image_upload.php';
                     <td>
                         <strong style="font-size:0.875rem;"><?php echo htmlspecialchars($ev['lv_title']); ?></strong>
                         <?php if ($ev['lv_content']) { ?>
-                        <br><small style="color:var(--mg-text-muted);"><?php echo htmlspecialchars(mb_substr($ev['lv_content'], 0, 50)); ?></small>
+                        <br><small style="color:var(--mg-text-muted);"><?php echo htmlspecialchars(mb_substr($ev['lv_content'], 0, 50)); ?><?php echo mb_strlen($ev['lv_content']) > 50 ? '...' : ''; ?></small>
                         <?php } ?>
                     </td>
                     <td style="text-align:center;">
@@ -153,10 +186,9 @@ $upload_url = G5_ADMIN_URL . '/morgan/lore_image_upload.php';
                         </form>
                     </td>
                 </tr>
-                <?php } ?>
+                <?php } } ?>
             </tbody>
         </table>
-        <?php } ?>
     </div>
 </div>
 <?php } ?>
@@ -184,7 +216,11 @@ $upload_url = G5_ADMIN_URL . '/morgan/lore_image_upload.php';
                     <label class="mg-form-label">기간 표기</label>
                     <input type="text" name="le_period" id="era-period" class="mg-form-input" placeholder="예: 0년 ~ 300년">
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                <div class="mg-form-group">
+                    <label class="mg-form-label">시대 설명</label>
+                    <textarea name="le_desc" id="era-desc" class="mg-form-input" rows="2" placeholder="시대에 대한 간략한 설명 (선택)"></textarea>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;">
                     <div class="mg-form-group">
                         <label class="mg-form-label">정렬 순서</label>
                         <input type="number" name="le_order" id="era-order" class="mg-form-input" value="0" min="0">
@@ -220,7 +256,7 @@ $upload_url = G5_ADMIN_URL . '/morgan/lore_image_upload.php';
             <input type="hidden" name="le_id" id="event-le-id" value="0">
             <input type="hidden" name="lv_image_url" id="event-image-url" value="">
             <div class="mg-modal-body">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;">
                     <div class="mg-form-group">
                         <label class="mg-form-label">연도 표기</label>
                         <input type="text" name="lv_year" id="event-year" class="mg-form-input" placeholder="예: 128년, 5세기 초">
@@ -239,6 +275,16 @@ $upload_url = G5_ADMIN_URL . '/morgan/lore_image_upload.php';
                     <textarea name="lv_content" id="event-content" class="mg-form-input" rows="4" placeholder="이벤트 설명"></textarea>
                 </div>
                 <div class="mg-form-group">
+                    <label class="mg-form-label">연결 문서</label>
+                    <select name="la_id" id="event-la-id" class="mg-form-input">
+                        <option value="0">없음</option>
+                        <?php foreach ($lore_articles as $art) { ?>
+                        <option value="<?php echo $art['la_id']; ?>"><?php echo htmlspecialchars($art['la_title']); ?></option>
+                        <?php } ?>
+                    </select>
+                    <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;">이벤트와 관련된 위키 문서를 연결합니다.</div>
+                </div>
+                <div class="mg-form-group">
                     <label class="mg-form-label">이미지 (선택)</label>
                     <div style="display:flex;gap:1rem;align-items:flex-start;">
                         <div id="event-image-preview" style="width:100px;height:100px;border:1px dashed var(--mg-bg-tertiary);border-radius:4px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
@@ -251,7 +297,7 @@ $upload_url = G5_ADMIN_URL . '/morgan/lore_image_upload.php';
                         </div>
                     </div>
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;">
                     <div class="mg-form-group" style="display:flex;align-items:flex-end;">
                         <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.875rem;color:var(--mg-text-secondary);">
                             <input type="checkbox" name="lv_is_major" id="event-is-major" value="1">
@@ -303,6 +349,7 @@ function openEraModal(leId) {
         document.getElementById('era-le-id').value = era.le_id;
         document.getElementById('era-name').value = era.le_name || '';
         document.getElementById('era-period').value = era.le_period || '';
+        document.getElementById('era-desc').value = era.le_desc || '';
         document.getElementById('era-order').value = era.le_order || 0;
         document.getElementById('era-use').checked = era.le_use == 1;
     } else {
@@ -312,6 +359,7 @@ function openEraModal(leId) {
         document.getElementById('era-le-id').value = '0';
         document.getElementById('era-name').value = '';
         document.getElementById('era-period').value = '';
+        document.getElementById('era-desc').value = '';
         document.getElementById('era-order').value = '0';
         document.getElementById('era-use').checked = true;
     }
@@ -350,6 +398,7 @@ function openEventModal(leId, lvId) {
         document.getElementById('event-title').value = ev.lv_title || '';
         document.getElementById('event-content').value = ev.lv_content || '';
         document.getElementById('event-order').value = ev.lv_order || 0;
+        document.getElementById('event-la-id').value = ev.la_id || 0;
         document.getElementById('event-is-major').checked = ev.lv_is_major == 1;
         document.getElementById('event-use').checked = ev.lv_use == 1;
         document.getElementById('event-image-url').value = ev.lv_image || '';
@@ -376,6 +425,7 @@ function openEventModal(leId, lvId) {
         document.getElementById('event-title').value = '';
         document.getElementById('event-content').value = '';
         document.getElementById('event-order').value = '0';
+        document.getElementById('event-la-id').value = '0';
         document.getElementById('event-is-major').checked = false;
         document.getElementById('event-use').checked = true;
         document.getElementById('event-image-url').value = '';
@@ -495,6 +545,135 @@ function escHtml(str) {
                 if (!data.success) alert('순서 저장 실패: ' + (data.message || ''));
             })
             .catch(function() { alert('순서 저장 중 오류가 발생했습니다.'); });
+    }
+})();
+
+// === 이벤트 드래그 정렬 (시대 간 이동 지원) ===
+(function() {
+    var allTbodies = document.querySelectorAll('.event-sortable-tbody');
+    if (!allTbodies.length) return;
+
+    var dragRow = null;
+    var sourceTbody = null;
+    var placeholder = document.createElement('tr');
+    placeholder.innerHTML = '<td colspan="9" style="border:2px dashed var(--mg-accent);height:40px;opacity:0.5;"></td>';
+
+    allTbodies.forEach(function(tbody) {
+        // 핸들 이벤트 등록
+        tbody.querySelectorAll('.event-drag-handle').forEach(function(handle) {
+            var row = handle.closest('tr');
+            handle.addEventListener('mousedown', function() { row.draggable = true; });
+
+            row.addEventListener('dragstart', function(e) {
+                dragRow = row;
+                sourceTbody = tbody;
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', '');
+                setTimeout(function() { row.style.opacity = '0.4'; }, 0);
+            });
+
+            row.addEventListener('dragend', function() {
+                row.draggable = false;
+                row.style.opacity = '';
+                if (placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+
+                var targetTbody = dragRow ? dragRow.closest('tbody') : null;
+                var isCrossEra = sourceTbody && targetTbody && sourceTbody !== targetTbody;
+                dragRow = null;
+
+                if (targetTbody) {
+                    saveEventOrder(targetTbody, isCrossEra);
+                    updateEraUI();
+                }
+                sourceTbody = null;
+            });
+        });
+
+        // 모든 tbody에서 dragover/drop 허용 (시대 간 이동)
+        tbody.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            var target = e.target.closest('tr');
+            if (target && target === dragRow) return;
+
+            // 빈 시대이거나, 이벤트 행이 없으면 끝에 추가
+            if (!target || target.classList.contains('era-no-events')) {
+                if (placeholder.parentNode !== tbody) {
+                    tbody.appendChild(placeholder);
+                }
+                return;
+            }
+            if (!target.hasAttribute('data-event-id')) return;
+
+            var rect = target.getBoundingClientRect();
+            var mid = rect.top + rect.height / 2;
+            if (e.clientY < mid) {
+                tbody.insertBefore(placeholder, target);
+            } else {
+                tbody.insertBefore(placeholder, target.nextSibling);
+            }
+        });
+
+        tbody.addEventListener('drop', function(e) {
+            e.preventDefault();
+            if (dragRow && placeholder.parentNode) {
+                // 빈 시대 메시지 제거
+                var emptyRow = tbody.querySelector('.era-no-events');
+                if (emptyRow) emptyRow.remove();
+
+                tbody.insertBefore(dragRow, placeholder);
+                placeholder.parentNode.removeChild(placeholder);
+            }
+        });
+    });
+
+    function saveEventOrder(tbody, isCrossEra) {
+        var eraId = tbody.getAttribute('data-era-id');
+        var rows = tbody.querySelectorAll('tr[data-event-id]');
+        var formData = new FormData();
+        formData.append('mode', 'event_reorder');
+        formData.append('le_id', eraId);
+        rows.forEach(function(row, i) {
+            formData.append('order[]', row.getAttribute('data-event-id'));
+            var cells = row.querySelectorAll('td');
+            if (cells.length >= 7) cells[6].textContent = i;
+        });
+
+        fetch('<?php echo $update_url; ?>', { method: 'POST', body: formData })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.success) {
+                    alert('순서 저장 실패: ' + (data.message || ''));
+                } else if (isCrossEra) {
+                    // 시대 간 이동 시 페이지 새로고침 (모달 데이터 동기화)
+                    location.reload();
+                }
+            })
+            .catch(function() { alert('순서 저장 중 오류가 발생했습니다.'); });
+    }
+
+    function updateEraUI() {
+        allTbodies.forEach(function(tbody) {
+            var eraItem = tbody.closest('.era-sortable-item');
+            if (!eraItem) return;
+            var eventRows = tbody.querySelectorAll('tr[data-event-id]');
+            var count = eventRows.length;
+
+            // 이벤트 수 갱신
+            var countSpan = eraItem.querySelector('.era-event-count');
+            if (countSpan) countSpan.textContent = '이벤트 ' + count + '개';
+
+            // 빈 시대 메시지 토글
+            var emptyRow = tbody.querySelector('.era-no-events');
+            if (count === 0 && !emptyRow) {
+                emptyRow = document.createElement('tr');
+                emptyRow.className = 'era-no-events';
+                emptyRow.innerHTML = '<td colspan="9" style="text-align:center;padding:1.5rem;color:var(--mg-text-muted);font-size:0.875rem;">이 시대에 등록된 이벤트가 없습니다.</td>';
+                tbody.appendChild(emptyRow);
+            } else if (count > 0 && emptyRow) {
+                emptyRow.remove();
+            }
+        });
     }
 })();
 </script>

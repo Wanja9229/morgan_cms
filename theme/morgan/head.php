@@ -69,7 +69,7 @@ $_is_inventory_page = ($_current_script === 'inventory.php');
 $_is_concierge_page = in_array($_current_script, array('concierge.php', 'concierge_view.php', 'concierge_write.php'));
 $_is_pioneer_page = ($_current_script === 'pioneer.php');
 $_is_mypage = in_array($_current_script, array('mypage.php', 'seal_edit.php'));
-$_is_lore_page = in_array($_current_script, array('lore.php', 'lore_view.php', 'lore_timeline.php'));
+$_is_lore_page = in_array($_current_script, array('lore.php', 'lore_view.php', 'lore_timeline.php', 'lore_map.php'));
 $_current_la_id = ($_current_script === 'lore_view.php' && isset($_GET['la_id'])) ? (int)$_GET['la_id'] : 0;
 
 // 역극/미션 사용 여부
@@ -480,10 +480,16 @@ if (isset($is_ajax_request) && $is_ajax_request) {
             <h3 class="text-xs font-semibold text-mg-text-muted uppercase tracking-wider">세계관</h3>
         </div>
         <nav class="flex-1 overflow-y-auto px-2 pb-3">
-            <!-- #전체 -->
+            <!-- 전체 / 연대기 / 지도 -->
             <div class="space-y-0.5">
                 <?php
                 $lore_all_active = ($_current_script === 'lore.php')
+                    ? 'bg-mg-accent/15 text-mg-text-primary font-medium'
+                    : 'text-mg-text-secondary hover:bg-mg-bg-tertiary/50 hover:text-mg-text-primary';
+                $tl_active = ($_current_script === 'lore_timeline.php')
+                    ? 'bg-mg-accent/15 text-mg-text-primary font-medium'
+                    : 'text-mg-text-secondary hover:bg-mg-bg-tertiary/50 hover:text-mg-text-primary';
+                $map_active = ($_current_script === 'lore_map.php')
                     ? 'bg-mg-accent/15 text-mg-text-primary font-medium'
                     : 'text-mg-text-secondary hover:bg-mg-bg-tertiary/50 hover:text-mg-text-primary';
                 ?>
@@ -492,6 +498,22 @@ if (isset($is_ajax_request) && $is_ajax_request) {
                     <span class="lp-icon <?php echo ($_current_script === 'lore.php') ? 'text-mg-accent' : 'text-mg-text-muted'; ?> text-xs font-bold">#</span>
                     <span class="truncate">전체</span>
                     <span class="lp-dot ml-auto w-1 h-1 rounded-full bg-mg-accent <?php echo ($_current_script !== 'lore.php') ? 'hidden' : ''; ?>"></span>
+                </a>
+                <a href="<?php echo G5_BBS_URL; ?>/lore_timeline.php" data-lore-page="lore_timeline.php"
+                   class="lp-item flex items-center gap-2 px-2 py-1.5 rounded text-sm transition-colors <?php echo $tl_active; ?>">
+                    <svg class="lp-icon w-3.5 h-3.5 flex-shrink-0 <?php echo ($_current_script === 'lore_timeline.php') ? 'text-mg-accent' : 'text-mg-text-muted'; ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span class="truncate">연대기</span>
+                    <span class="lp-dot ml-auto w-1 h-1 rounded-full bg-mg-accent <?php echo ($_current_script !== 'lore_timeline.php') ? 'hidden' : ''; ?>"></span>
+                </a>
+                <a href="<?php echo G5_BBS_URL; ?>/lore_map.php" data-lore-page="lore_map.php"
+                   class="lp-item flex items-center gap-2 px-2 py-1.5 rounded text-sm transition-colors <?php echo $map_active; ?>">
+                    <svg class="lp-icon w-3.5 h-3.5 flex-shrink-0 <?php echo ($_current_script === 'lore_map.php') ? 'text-mg-accent' : 'text-mg-text-muted'; ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                    </svg>
+                    <span class="truncate">지도</span>
+                    <span class="lp-dot ml-auto w-1 h-1 rounded-full bg-mg-accent <?php echo ($_current_script !== 'lore_map.php') ? 'hidden' : ''; ?>"></span>
                 </a>
             </div>
 
@@ -519,25 +541,6 @@ if (isset($is_ajax_request) && $is_ajax_request) {
                 <?php } ?>
             </div>
             <?php } ?>
-
-            <!-- 타임라인 -->
-            <div class="my-2 mx-1 border-t border-mg-bg-tertiary"></div>
-            <div class="space-y-0.5">
-                <h4 class="text-[10px] font-semibold text-mg-text-muted uppercase tracking-wider px-2 py-1">타임라인</h4>
-                <?php
-                $tl_active = ($_current_script === 'lore_timeline.php')
-                    ? 'bg-mg-accent/15 text-mg-text-primary font-medium'
-                    : 'text-mg-text-secondary hover:bg-mg-bg-tertiary/50 hover:text-mg-text-primary';
-                ?>
-                <a href="<?php echo G5_BBS_URL; ?>/lore_timeline.php" data-lore-page="lore_timeline.php"
-                   class="lp-item flex items-center gap-2 px-2 py-1.5 rounded text-sm transition-colors <?php echo $tl_active; ?>">
-                    <svg class="lp-icon w-3.5 h-3.5 flex-shrink-0 <?php echo ($_current_script === 'lore_timeline.php') ? 'text-mg-accent' : 'text-mg-text-muted'; ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <span class="truncate">연대기</span>
-                    <span class="lp-dot ml-auto w-1 h-1 rounded-full bg-mg-accent <?php echo ($_current_script !== 'lore_timeline.php') ? 'hidden' : ''; ?>"></span>
-                </a>
-            </div>
         </nav>
     </div>
 
@@ -559,7 +562,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
             var script = path.substring(path.lastIndexOf('/') + 1);
             var params = new URLSearchParams(window.location.search);
             var laId = parseInt(params.get('la_id') || '0');
-            var onLorePage = ['lore.php', 'lore_view.php', 'lore_timeline.php'].indexOf(script) !== -1;
+            var onLorePage = ['lore.php', 'lore_view.php', 'lore_timeline.php', 'lore_map.php'].indexOf(script) !== -1;
 
             isLorePage = onLorePage;
 

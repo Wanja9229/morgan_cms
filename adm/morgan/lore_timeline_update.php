@@ -3,7 +3,7 @@
  * Morgan Edition - 타임라인 저장 처리 (시대 + 이벤트)
  */
 
-$sub_menu = "801420";
+$sub_menu = "800175";
 require_once __DIR__.'/../_common.php';
 
 auth_check_menu($auth, $sub_menu, 'w');
@@ -25,6 +25,7 @@ $mode = isset($_POST['mode']) ? $_POST['mode'] : '';
 if ($mode == 'era_add') {
     $le_name = sql_real_escape_string(trim($_POST['le_name']));
     $le_period = sql_real_escape_string(trim($_POST['le_period']));
+    $le_desc = sql_real_escape_string(trim($_POST['le_desc'] ?? ''));
     $le_order = (int)$_POST['le_order'];
     $le_use = isset($_POST['le_use']) ? 1 : 0;
 
@@ -32,7 +33,7 @@ if ($mode == 'era_add') {
         alert('시대명을 입력해주세요.', './lore_timeline.php');
     }
 
-    sql_query("INSERT INTO {$g5['mg_lore_era_table']} (le_name, le_period, le_order, le_use) VALUES ('{$le_name}', '{$le_period}', {$le_order}, {$le_use})");
+    sql_query("INSERT INTO {$g5['mg_lore_era_table']} (le_name, le_period, le_desc, le_order, le_use) VALUES ('{$le_name}', '{$le_period}', '{$le_desc}', {$le_order}, {$le_use})");
     goto_url('./lore_timeline.php');
 }
 
@@ -43,6 +44,7 @@ if ($mode == 'era_edit') {
     $le_id = (int)$_POST['le_id'];
     $le_name = sql_real_escape_string(trim($_POST['le_name']));
     $le_period = sql_real_escape_string(trim($_POST['le_period']));
+    $le_desc = sql_real_escape_string(trim($_POST['le_desc'] ?? ''));
     $le_order = (int)$_POST['le_order'];
     $le_use = isset($_POST['le_use']) ? 1 : 0;
 
@@ -53,7 +55,7 @@ if ($mode == 'era_edit') {
         alert('시대명을 입력해주세요.', './lore_timeline.php');
     }
 
-    sql_query("UPDATE {$g5['mg_lore_era_table']} SET le_name = '{$le_name}', le_period = '{$le_period}', le_order = {$le_order}, le_use = {$le_use} WHERE le_id = {$le_id}");
+    sql_query("UPDATE {$g5['mg_lore_era_table']} SET le_name = '{$le_name}', le_period = '{$le_period}', le_desc = '{$le_desc}', le_order = {$le_order}, le_use = {$le_use} WHERE le_id = {$le_id}");
     goto_url('./lore_timeline.php');
 }
 
@@ -81,6 +83,7 @@ if ($mode == 'era_delete') {
 // ==========================================
 if ($mode == 'event_add') {
     $le_id = (int)$_POST['le_id'];
+    $la_id = (int)($_POST['la_id'] ?? 0);
     $lv_year = sql_real_escape_string(trim($_POST['lv_year']));
     $lv_title = sql_real_escape_string(trim($_POST['lv_title']));
     $lv_content = sql_real_escape_string(trim($_POST['lv_content']));
@@ -106,9 +109,9 @@ if ($mode == 'event_add') {
     $lv_image_esc = sql_real_escape_string($lv_image);
 
     sql_query("INSERT INTO {$g5['mg_lore_event_table']}
-        (le_id, lv_year, lv_title, lv_content, lv_image, lv_is_major, lv_order, lv_use)
+        (le_id, la_id, lv_year, lv_title, lv_content, lv_image, lv_is_major, lv_order, lv_use)
         VALUES
-        ({$le_id}, '{$lv_year}', '{$lv_title}', '{$lv_content}', '{$lv_image_esc}', {$lv_is_major}, {$lv_order}, {$lv_use})");
+        ({$le_id}, {$la_id}, '{$lv_year}', '{$lv_title}', '{$lv_content}', '{$lv_image_esc}', {$lv_is_major}, {$lv_order}, {$lv_use})");
 
     goto_url('./lore_timeline.php');
 }
@@ -119,6 +122,7 @@ if ($mode == 'event_add') {
 if ($mode == 'event_edit') {
     $lv_id = (int)$_POST['lv_id'];
     $le_id = (int)$_POST['le_id'];
+    $la_id = (int)($_POST['la_id'] ?? 0);
     $lv_year = sql_real_escape_string(trim($_POST['lv_year']));
     $lv_title = sql_real_escape_string(trim($_POST['lv_title']));
     $lv_content = sql_real_escape_string(trim($_POST['lv_content']));
@@ -169,6 +173,7 @@ if ($mode == 'event_edit') {
 
     sql_query("UPDATE {$g5['mg_lore_event_table']} SET
         le_id = {$le_id},
+        la_id = {$la_id},
         lv_year = '{$lv_year}',
         lv_title = '{$lv_title}',
         lv_content = '{$lv_content}',
@@ -202,6 +207,30 @@ if ($mode == 'event_delete') {
 }
 
 // ==========================================
+// 이벤트 순서 변경 (AJAX)
+// ==========================================
+if ($mode == 'event_reorder') {
+    header('Content-Type: application/json; charset=utf-8');
+    $le_id = (int)($_POST['le_id'] ?? 0);
+    $order = isset($_POST['order']) ? $_POST['order'] : array();
+    if (!is_array($order) || empty($order)) {
+        echo json_encode(array('success' => false, 'message' => '순서 데이터가 없습니다.'));
+        exit;
+    }
+    foreach ($order as $i => $lv_id) {
+        $lv_id = (int)$lv_id;
+        if ($lv_id > 0) {
+            $sql = "UPDATE {$g5['mg_lore_event_table']} SET lv_order = {$i}";
+            if ($le_id > 0) $sql .= ", le_id = {$le_id}";
+            $sql .= " WHERE lv_id = {$lv_id}";
+            sql_query($sql);
+        }
+    }
+    echo json_encode(array('success' => true));
+    exit;
+}
+
+// ==========================================
 // 시대 순서 변경 (AJAX)
 // ==========================================
 if ($mode == 'era_reorder') {
@@ -217,6 +246,17 @@ if ($mode == 'era_reorder') {
             sql_query("UPDATE {$g5['mg_lore_era_table']} SET le_order = {$i} WHERE le_id = {$le_id}");
         }
     }
+    echo json_encode(array('success' => true));
+    exit;
+}
+
+// ==========================================
+// 페이지 설명 저장 (AJAX)
+// ==========================================
+if ($mode == 'update_desc') {
+    header('Content-Type: application/json; charset=utf-8');
+    $desc = isset($_POST['lore_timeline_desc']) ? trim($_POST['lore_timeline_desc']) : '';
+    mg_set_config('lore_timeline_desc', $desc);
     echo json_encode(array('success' => true));
     exit;
 }

@@ -41,25 +41,33 @@ include_once(G5_THEME_PATH.'/head.php');
         </div>
     </div>
 
+    <!-- 서브 탭 -->
+    <div class="flex flex-wrap gap-2 mb-4">
+        <a href="<?php echo G5_BBS_URL; ?>/lore.php" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors bg-mg-accent/10 border border-mg-accent/30 text-mg-accent">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+            </svg>
+            위키
+        </a>
+        <a href="<?php echo G5_BBS_URL; ?>/lore_timeline.php" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors bg-mg-bg-secondary border border-mg-bg-tertiary text-mg-text-secondary hover:text-mg-accent hover:border-mg-accent/30">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            연대기
+        </a>
+        <a href="<?php echo G5_BBS_URL; ?>/lore_map.php" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors bg-mg-bg-secondary border border-mg-bg-tertiary text-mg-text-secondary hover:text-mg-accent hover:border-mg-accent/30">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+            </svg>
+            세계관 맵
+        </a>
+    </div>
+
     <!-- 카테고리 탭 -->
     <div class="flex flex-wrap gap-2 mb-6">
         <a href="<?php echo G5_BBS_URL; ?>/lore.php?category=0" class="px-4 py-2 rounded-full text-sm font-medium transition-colors <?php echo $category == 0 ? 'bg-mg-accent text-white' : 'bg-mg-bg-tertiary text-mg-text-secondary hover:text-mg-text-primary'; ?>">전체</a>
         <?php foreach ($categories as $cat) { ?>
         <a href="<?php echo G5_BBS_URL; ?>/lore.php?category=<?php echo $cat['lc_id']; ?>" class="px-4 py-2 rounded-full text-sm font-medium transition-colors <?php echo $category == (int)$cat['lc_id'] ? 'bg-mg-accent text-white' : 'bg-mg-bg-tertiary text-mg-text-secondary hover:text-mg-text-primary'; ?>"><?php echo htmlspecialchars($cat['lc_name']); ?></a>
-        <?php } ?>
-        <a href="<?php echo G5_BBS_URL; ?>/lore_timeline.php" class="px-4 py-2 rounded-full text-sm font-medium transition-colors bg-mg-bg-tertiary text-mg-text-secondary hover:text-mg-text-primary flex items-center gap-1.5">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            타임라인
-        </a>
-        <?php if (mg_config('expedition_map_image', '')) { ?>
-        <a href="<?php echo G5_BBS_URL; ?>/lore_map.php" class="px-4 py-2 rounded-full text-sm font-medium transition-colors bg-mg-bg-tertiary text-mg-text-secondary hover:text-mg-text-primary flex items-center gap-1.5">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-            </svg>
-            세계관 맵
-        </a>
         <?php } ?>
     </div>
 
@@ -71,7 +79,7 @@ include_once(G5_THEME_PATH.'/head.php');
             <!-- 썸네일 -->
             <div class="aspect-video bg-mg-bg-tertiary relative overflow-hidden">
                 <?php if (!empty($article['la_thumbnail'])) { ?>
-                <img src="<?php echo MG_LORE_IMAGE_URL.'/'.htmlspecialchars($article['la_thumbnail']); ?>" alt="<?php echo htmlspecialchars($article['la_title']); ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                <img src="<?php echo htmlspecialchars($article['la_thumbnail']); ?>" alt="<?php echo htmlspecialchars($article['la_title']); ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                 <?php } else { ?>
                 <div class="w-full h-full flex items-center justify-center text-mg-text-muted">
                     <svg class="w-12 h-12 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -115,7 +123,7 @@ include_once(G5_THEME_PATH.'/head.php');
         if ($page > 1) {
             $prev_url = G5_BBS_URL.'/lore.php?category='.$category.'&page='.($page - 1);
         ?>
-        <a href="<?php echo $prev_url; ?>" class="w-9 h-9 flex items-center justify-center rounded-lg bg-mg-bg-tertiary text-mg-text-secondary hover:text-mg-text-primary transition-colors">
+        <a href="<?php echo $prev_url; ?>" class="w-10 h-10 flex items-center justify-center rounded-lg bg-mg-bg-tertiary text-mg-text-secondary hover:text-mg-text-primary transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
@@ -133,23 +141,23 @@ include_once(G5_THEME_PATH.'/head.php');
 
         if ($start_page > 1) {
         ?>
-        <a href="<?php echo G5_BBS_URL; ?>/lore.php?category=<?php echo $category; ?>&page=1" class="w-9 h-9 flex items-center justify-center rounded-lg bg-mg-bg-tertiary text-mg-text-secondary hover:text-mg-text-primary transition-colors text-sm">1</a>
+        <a href="<?php echo G5_BBS_URL; ?>/lore.php?category=<?php echo $category; ?>&page=1" class="w-10 h-10 flex items-center justify-center rounded-lg bg-mg-bg-tertiary text-mg-text-secondary hover:text-mg-text-primary transition-colors text-sm">1</a>
         <?php if ($start_page > 2) { ?>
-        <span class="w-9 h-9 flex items-center justify-center text-mg-text-muted text-sm">...</span>
+        <span class="w-10 h-10 flex items-center justify-center text-mg-text-muted text-sm">...</span>
         <?php } ?>
         <?php } ?>
 
         <?php for ($i = $start_page; $i <= $end_page; $i++) {
             $page_url = G5_BBS_URL.'/lore.php?category='.$category.'&page='.$i;
         ?>
-        <a href="<?php echo $page_url; ?>" class="w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-colors <?php echo $i == $page ? 'bg-mg-accent text-white' : 'bg-mg-bg-tertiary text-mg-text-secondary hover:text-mg-text-primary'; ?>"><?php echo $i; ?></a>
+        <a href="<?php echo $page_url; ?>" class="w-10 h-10 flex items-center justify-center rounded-lg text-sm font-medium transition-colors <?php echo $i == $page ? 'bg-mg-accent text-white' : 'bg-mg-bg-tertiary text-mg-text-secondary hover:text-mg-text-primary'; ?>"><?php echo $i; ?></a>
         <?php } ?>
 
         <?php if ($end_page < $total_pages) { ?>
         <?php if ($end_page < $total_pages - 1) { ?>
-        <span class="w-9 h-9 flex items-center justify-center text-mg-text-muted text-sm">...</span>
+        <span class="w-10 h-10 flex items-center justify-center text-mg-text-muted text-sm">...</span>
         <?php } ?>
-        <a href="<?php echo G5_BBS_URL; ?>/lore.php?category=<?php echo $category; ?>&page=<?php echo $total_pages; ?>" class="w-9 h-9 flex items-center justify-center rounded-lg bg-mg-bg-tertiary text-mg-text-secondary hover:text-mg-text-primary transition-colors text-sm"><?php echo $total_pages; ?></a>
+        <a href="<?php echo G5_BBS_URL; ?>/lore.php?category=<?php echo $category; ?>&page=<?php echo $total_pages; ?>" class="w-10 h-10 flex items-center justify-center rounded-lg bg-mg-bg-tertiary text-mg-text-secondary hover:text-mg-text-primary transition-colors text-sm"><?php echo $total_pages; ?></a>
         <?php } ?>
 
         <?php
@@ -157,7 +165,7 @@ include_once(G5_THEME_PATH.'/head.php');
         if ($page < $total_pages) {
             $next_url = G5_BBS_URL.'/lore.php?category='.$category.'&page='.($page + 1);
         ?>
-        <a href="<?php echo $next_url; ?>" class="w-9 h-9 flex items-center justify-center rounded-lg bg-mg-bg-tertiary text-mg-text-secondary hover:text-mg-text-primary transition-colors">
+        <a href="<?php echo $next_url; ?>" class="w-10 h-10 flex items-center justify-center rounded-lg bg-mg-bg-tertiary text-mg-text-secondary hover:text-mg-text-primary transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
             </svg>

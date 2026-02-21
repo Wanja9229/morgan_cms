@@ -16,8 +16,7 @@ $menu["menu800"] = array(
     array('800060', '스태프 관리', $mg_admin_url . '/staff.php', 'mg_staff'),
     array('800150', '디자인 관리', $mg_admin_url . '/design.php', 'mg_main_builder'),
     // 세계관
-    array('800160', '위키 카테고리', $mg_admin_url . '/lore_category.php', 'mg_lore', '세계관'),
-    array('800170', '위키 문서', $mg_admin_url . '/lore_article.php', 'mg_lore'),
+    array('800160', '위키 관리', $mg_admin_url . '/lore_wiki.php', 'mg_lore', '세계관'),
     array('800175', '타임라인', $mg_admin_url . '/lore_timeline.php', 'mg_lore'),
     array('800178', '지도', $mg_admin_url . '/lore_map.php', 'mg_lore'),
     // 회원 / 캐릭터
