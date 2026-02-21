@@ -171,15 +171,7 @@ $ch_number = str_pad($char['ch_id'], 0, STR_PAD_LEFT);
             <div style="margin-bottom:0.75rem;padding:0 0.5rem;">
                 <div style="font-size:0.75rem;color:#7c3aed;text-transform:uppercase;letter-spacing:0.1em;" class="tt-cinzel"><?php echo htmlspecialchars($field['pf_name']); ?></div>
                 <div style="font-size:1rem;color:#e2d9f3;margin-top:0.125rem;line-height:1.6;font-style:italic;">
-                    <?php
-                    if ($field['pf_type'] == 'url') {
-                        echo '<a href="'.htmlspecialchars($field['pv_value']).'" target="_blank">'.htmlspecialchars($field['pv_value']).'</a>';
-                    } elseif ($field['pf_type'] == 'textarea') {
-                        echo nl2br(htmlspecialchars($field['pv_value']));
-                    } else {
-                        echo htmlspecialchars($field['pv_value']);
-                    }
-                    ?>
+                    <?php echo mg_render_profile_value($field); ?>
                 </div>
             </div>
             <?php } ?>

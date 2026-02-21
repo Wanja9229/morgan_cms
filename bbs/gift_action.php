@@ -28,25 +28,25 @@ if (!$gf_id) {
 // 수락 처리
 if ($action == 'accept') {
     $result = mg_accept_gift($gf_id, $member['mb_id']);
-    if ($result === true) {
+    if ($result['success']) {
         echo json_encode([
             'success' => true,
             'message' => '선물을 수락했습니다. 인벤토리를 확인해주세요.'
         ]);
     } else {
-        echo json_encode(['success' => false, 'message' => $result]);
+        echo json_encode(['success' => false, 'message' => $result['message']]);
     }
 }
 // 거절 처리
 else if ($action == 'reject') {
     $result = mg_reject_gift($gf_id, $member['mb_id']);
-    if ($result === true) {
+    if ($result['success']) {
         echo json_encode([
             'success' => true,
             'message' => '선물을 거절했습니다.'
         ]);
     } else {
-        echo json_encode(['success' => false, 'message' => $result]);
+        echo json_encode(['success' => false, 'message' => $result['message']]);
     }
 }
 else {

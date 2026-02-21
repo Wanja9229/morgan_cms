@@ -23,7 +23,7 @@ $menu["menu800"] = array(
     array('800190', '회원 관리', $mg_admin_url . '/member_list.php', 'mg_member', '회원 / 캐릭터'),
     array('800200', '캐릭터 관리', $mg_admin_url . '/character_list.php', 'mg_character'),
     array('800300', '프로필 필드 관리', $mg_admin_url . '/profile_field.php', 'mg_profile'),
-    array('800400', '진영/클래스 관리', $mg_admin_url . '/side_class.php', 'mg_side_class'),
+    array('800400', '소속/유형 관리', $mg_admin_url . '/side_class.php', 'mg_side_class'),
     array('801700', '관계 관리', $mg_admin_url . '/relation.php', 'mg_relation'),
     array('801300', '인장 관리', $mg_admin_url . '/seal.php', 'mg_seal'),
     // 활동

@@ -143,7 +143,7 @@ require_once __DIR__.'/_head.php';
                 <tr>
                     <td style="text-align:center;"><?php echo $num--; ?></td>
                     <td>
-                        <a href="<?php echo G5_URL; ?>/plugin/morgan/rp/view.php?rt_id=<?php echo $row['rt_id']; ?>" target="_blank" style="color:var(--mg-text-primary);">
+                        <a href="<?php echo G5_BBS_URL; ?>/rp_view.php?rt_id=<?php echo $row['rt_id']; ?>" target="_blank" style="color:var(--mg-text-primary);">
                             <?php echo htmlspecialchars($row['rt_title']); ?>
                         </a>
                     </td>

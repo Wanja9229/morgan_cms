@@ -177,15 +177,7 @@ foreach ($grouped_fields as $fields) { $field_count += count($fields); }
         <div class="sns-field-card sns-field-row">
             <div class="sns-field-label"><?php echo htmlspecialchars($field['pf_name']); ?></div>
             <div class="sns-field-value">
-                <?php
-                if ($field['pf_type'] == 'url') {
-                    echo '<a href="'.htmlspecialchars($field['pv_value']).'" target="_blank">'.htmlspecialchars($field['pv_value']).'</a>';
-                } elseif ($field['pf_type'] == 'textarea') {
-                    echo nl2br(htmlspecialchars($field['pv_value']));
-                } else {
-                    echo htmlspecialchars($field['pv_value']);
-                }
-                ?>
+                <?php echo mg_render_profile_value($field); ?>
             </div>
         </div>
         <?php } ?>

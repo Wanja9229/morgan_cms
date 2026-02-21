@@ -117,6 +117,13 @@ $ch_date = date('Y-m-d', strtotime($char['ch_datetime']));
                             <?php
                             if ($field['pf_type'] == 'url') {
                                 echo '<a href="'.htmlspecialchars($field['pv_value']).'" target="_blank">LINK</a>';
+                            } elseif ($field['pf_type'] == 'image') {
+                                echo '<span style="color:#94a3b8;">[IMG]</span>';
+                            } elseif ($field['pf_type'] == 'multiselect') {
+                                $vals = json_decode($field['pv_value'], true);
+                                $txt = is_array($vals) ? implode(', ', $vals) : $field['pv_value'];
+                                echo htmlspecialchars(mb_substr($txt, 0, 30));
+                                if (mb_strlen($txt) > 30) echo '...';
                             } else {
                                 echo htmlspecialchars(mb_substr($field['pv_value'], 0, 30));
                                 if (mb_strlen($field['pv_value']) > 30) echo '...';
@@ -148,13 +155,13 @@ $ch_date = date('Y-m-d', strtotime($char['ch_datetime']));
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin-top:1rem;">
                     <?php if ($ch_side && mg_config('use_side', '1') == '1') { ?>
                     <div style="background:#0a0f1a;padding:0.5rem;border:1px solid #2d3a54;border-radius:0.25rem;">
-                        <label style="display:block;font-size:0.625rem;color:#64748b;font-weight:bold;text-transform:uppercase;">세력</label>
+                        <label style="display:block;font-size:0.625rem;color:#64748b;font-weight:bold;text-transform:uppercase;"><?php echo htmlspecialchars(mg_config('side_title', '소속')); ?></label>
                         <span style="font-size:0.875rem;"><?php echo $ch_side; ?></span>
                     </div>
                     <?php } ?>
                     <?php if ($ch_class && mg_config('use_class', '1') == '1') { ?>
                     <div style="background:#0a0f1a;padding:0.5rem;border:1px solid #2d3a54;border-radius:0.25rem;">
-                        <label style="display:block;font-size:0.625rem;color:#64748b;font-weight:bold;text-transform:uppercase;">직업</label>
+                        <label style="display:block;font-size:0.625rem;color:#64748b;font-weight:bold;text-transform:uppercase;"><?php echo htmlspecialchars(mg_config('class_title', '유형')); ?></label>
                         <span style="font-size:0.875rem;"><?php echo $ch_class; ?></span>
                     </div>
                     <?php } ?>
@@ -189,15 +196,7 @@ $ch_date = date('Y-m-d', strtotime($char['ch_datetime']));
                     <div class="nib-field-row" style="margin-bottom:0.75rem;">
                         <span class="nib-accent" style="font-weight:bold;">[<?php echo htmlspecialchars($field['pf_name']); ?>]</span>
                         <span style="margin-left:0.5rem;">
-                            <?php
-                            if ($field['pf_type'] == 'url') {
-                                echo '<a href="'.htmlspecialchars($field['pv_value']).'" target="_blank">'.htmlspecialchars($field['pv_value']).'</a>';
-                            } elseif ($field['pf_type'] == 'textarea') {
-                                echo nl2br(htmlspecialchars($field['pv_value']));
-                            } else {
-                                echo htmlspecialchars($field['pv_value']);
-                            }
-                            ?>
+                            <?php echo mg_render_profile_value($field); ?>
                         </span>
                     </div>
                     <?php } ?>

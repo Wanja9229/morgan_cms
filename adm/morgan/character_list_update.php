@@ -82,6 +82,52 @@ if (isset($_POST['btn_approve_selected'])) {
     alert($approved_count.'개 캐릭터가 승인되었습니다.', $redirect_url);
 }
 
+// 개별/선택 반려
+if (isset($_POST['btn_reject'])) {
+    $reject_ch_id = isset($_POST['reject_ch_id']) ? (int)$_POST['reject_ch_id'] : 0;
+    $reject_reason = isset($_POST['reject_reason']) ? trim(clean_xss_tags($_POST['reject_reason'])) : '';
+    $chk = isset($_POST['chk']) ? $_POST['chk'] : array();
+
+    // 개별 반려
+    if ($reject_ch_id) {
+        $chk = array($reject_ch_id);
+    }
+
+    if (empty($chk)) {
+        alert('반려할 캐릭터를 선택해주세요.');
+    }
+
+    $rejected_count = 0;
+    foreach ($chk as $ch_id) {
+        $ch_id = (int)$ch_id;
+        if (!$ch_id) continue;
+
+        $char = sql_fetch("SELECT mb_id, ch_name, ch_state FROM {$g5['mg_character_table']} WHERE ch_id = {$ch_id}");
+        if ($char['ch_state'] != 'pending') continue;
+
+        // editing 상태로 되돌림
+        sql_query("UPDATE {$g5['mg_character_table']} SET ch_state = 'editing', ch_update = NOW() WHERE ch_id = {$ch_id}");
+
+        // 로그 기록
+        $reason_esc = sql_real_escape_string($reject_reason);
+        sql_query("INSERT INTO {$g5['mg_character_log_table']} (ch_id, log_action, log_memo, admin_id)
+                   VALUES ({$ch_id}, 'reject', '{$reason_esc}', '{$member['mb_id']}')");
+
+        // 알림 발송
+        if (function_exists('mg_notify')) {
+            $noti_content = "'{$char['ch_name']}' 캐릭터가 반려되었습니다.";
+            if ($reject_reason) {
+                $noti_content .= "\n사유: ".$reject_reason;
+            }
+            mg_notify($char['mb_id'], 'character_rejected', '캐릭터 반려', $noti_content, G5_BBS_URL.'/character_form.php?ch_id='.$ch_id);
+        }
+
+        $rejected_count++;
+    }
+
+    alert($rejected_count.'개 캐릭터가 반려되었습니다.', $redirect_url);
+}
+
 // 선택 삭제
 if (isset($_POST['btn_delete'])) {
     $chk = isset($_POST['chk']) ? $_POST['chk'] : array();

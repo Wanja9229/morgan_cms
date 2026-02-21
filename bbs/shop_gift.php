@@ -70,11 +70,11 @@ if (!$_can_buy['can_buy']) {
 // 선물 처리
 $result = mg_send_gift($member['mb_id'], $mb_id_to, $si_id, $message);
 
-if ($result === true) {
+if ($result['success']) {
     echo json_encode([
         'success' => true,
         'message' => $recipient['mb_nick'] . '님에게 선물을 보냈습니다.'
     ]);
 } else {
-    echo json_encode(['success' => false, 'message' => $result]);
+    echo json_encode(['success' => false, 'message' => $result['message']]);
 }

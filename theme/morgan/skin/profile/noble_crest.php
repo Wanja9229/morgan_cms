@@ -304,13 +304,13 @@ $ch_date = date('Y.m.d', strtotime($char['ch_datetime']));
                             </tr>
                             <?php if ($ch_class && mg_config('use_class', '1') == '1') { ?>
                             <tr>
-                                <td class="nb-table-label nb-title"><?php echo htmlspecialchars(mg_config('class_title', '종족')); ?></td>
+                                <td class="nb-table-label nb-title"><?php echo htmlspecialchars(mg_config('class_title', '유형')); ?></td>
                                 <td class="nb-table-value"><?php echo $ch_class; ?></td>
                             </tr>
                             <?php } ?>
                             <?php if ($ch_side && mg_config('use_side', '1') == '1') { ?>
                             <tr>
-                                <td class="nb-table-label nb-title"><?php echo htmlspecialchars(mg_config('side_title', '세력')); ?></td>
+                                <td class="nb-table-label nb-title"><?php echo htmlspecialchars(mg_config('side_title', '소속')); ?></td>
                                 <td class="nb-table-value"><?php echo $ch_side; ?></td>
                             </tr>
                             <?php } ?>
@@ -353,15 +353,7 @@ $ch_date = date('Y.m.d', strtotime($char['ch_datetime']));
                     <tr>
                         <td class="nb-table-label nb-title"><?php echo htmlspecialchars($field['pf_name']); ?></td>
                         <td class="nb-table-value">
-                            <?php
-                            if ($field['pf_type'] == 'url') {
-                                echo '<a href="'.htmlspecialchars($field['pv_value']).'" target="_blank">'.htmlspecialchars($field['pv_value']).'</a>';
-                            } elseif ($field['pf_type'] == 'textarea') {
-                                echo nl2br(htmlspecialchars($field['pv_value']));
-                            } else {
-                                echo htmlspecialchars($field['pv_value']);
-                            }
-                            ?>
+                            <?php echo mg_render_profile_value($field); ?>
                         </td>
                     </tr>
                     <?php } ?>
@@ -424,5 +416,11 @@ $ch_date = date('Y.m.d', strtotime($char['ch_datetime']));
     .skin-noble .nb-shield { width: 80px; height: 96px; }
     .skin-noble .nb-shield-bg span { font-size: 2rem !important; }
     .skin-noble .nb-portrait-inner { width: 130px; height: 130px; }
+    .skin-noble .nb-table,
+    .skin-noble .nb-table tbody,
+    .skin-noble .nb-table tr,
+    .skin-noble .nb-table td { display: block; width: 100%; }
+    .skin-noble .nb-table-label { width: auto; border-bottom: none; padding: 0.375rem 0.5rem 0.125rem; font-size: 0.75rem; opacity: 0.7; }
+    .skin-noble .nb-table-value { padding: 0.125rem 0.5rem 0.5rem; border-bottom: 1px solid rgba(212,167,69,0.08); }
 }
 </style>

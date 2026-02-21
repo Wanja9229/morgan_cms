@@ -145,6 +145,29 @@ include_once(G5_THEME_PATH.'/head.php');
         <h1 class="text-2xl font-bold text-mg-text-primary"><?php echo $is_edit ? '캐릭터 수정' : '새 캐릭터 만들기'; ?></h1>
     </div>
 
+    <?php
+    // 반려 알림 표시
+    if ($is_edit && $char['ch_state'] == 'editing') {
+        $reject_log = sql_fetch("SELECT log_memo, log_datetime FROM {$g5['mg_character_log_table']}
+            WHERE ch_id = {$ch_id} AND log_action = 'reject' ORDER BY log_id DESC LIMIT 1");
+        if ($reject_log['log_datetime'] ?? '') {
+    ?>
+    <div class="rounded-lg p-4 mb-4" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);">
+        <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+            </svg>
+            <div>
+                <p class="font-medium text-red-400">캐릭터가 반려되었습니다</p>
+                <?php if ($reject_log['log_memo']) { ?>
+                <p class="text-sm text-mg-text-secondary mt-1"><?php echo nl2br(htmlspecialchars($reject_log['log_memo'])); ?></p>
+                <?php } ?>
+                <p class="text-xs text-mg-text-muted mt-2">수정 후 다시 제출해주세요. (<?php echo substr($reject_log['log_datetime'], 0, 16); ?>)</p>
+            </div>
+        </div>
+    </div>
+    <?php } } ?>
+
     <?php if ($is_edit) { ?>
     <!-- 탭 메뉴 -->
     <div class="flex gap-2 mb-6 border-b border-mg-bg-tertiary">
@@ -188,7 +211,7 @@ include_once(G5_THEME_PATH.'/head.php');
                         <?php if (count($sides) > 0) { ?>
                         <div>
                             <label for="side_id" class="block text-sm font-medium text-mg-text-secondary mb-1.5">
-                                <?php echo mg_config('side_title', '세력'); ?>
+                                <?php echo mg_config('side_title', '소속'); ?>
                             </label>
                             <select name="side_id" id="side_id" class="w-full bg-mg-bg-primary border border-mg-bg-tertiary rounded-lg px-4 py-2.5 text-mg-text-primary focus:outline-none focus:border-mg-accent transition-colors">
                                 <option value="">선택안함</option>
@@ -202,12 +225,12 @@ include_once(G5_THEME_PATH.'/head.php');
                         <?php if (count($classes) > 0) { ?>
                         <div>
                             <label for="class_id" class="block text-sm font-medium text-mg-text-secondary mb-1.5">
-                                <?php echo mg_config('class_title', '종족'); ?>
+                                <?php echo mg_config('class_title', '유형'); ?>
                             </label>
                             <select name="class_id" id="class_id" class="w-full bg-mg-bg-primary border border-mg-bg-tertiary rounded-lg px-4 py-2.5 text-mg-text-primary focus:outline-none focus:border-mg-accent transition-colors">
                                 <option value="">선택안함</option>
                                 <?php foreach ($classes as $class) { ?>
-                                <option value="<?php echo $class['class_id']; ?>" <?php echo ($char['class_id'] ?? '') == $class['class_id'] ? 'selected' : ''; ?>><?php echo $class['class_name']; ?></option>
+                                <option value="<?php echo $class['class_id']; ?>" data-side-id="<?php echo (int)($class['side_id'] ?? 0); ?>" <?php echo ($char['class_id'] ?? '') == $class['class_id'] ? 'selected' : ''; ?>><?php echo $class['class_name']; ?></option>
                                 <?php } ?>
                             </select>
                         </div>
@@ -466,12 +489,43 @@ include_once(G5_THEME_PATH.'/head.php');
                             <?php } ?>
                         </select>
 
+                        <?php } elseif ($field['pf_type'] == 'multiselect') {
+                            $ms_options = json_decode($field['pf_options'], true) ?: array();
+                            $ms_selected = $field['value'] ? json_decode($field['value'], true) : array();
+                            if (!is_array($ms_selected)) $ms_selected = array();
+                        ?>
+                        <div class="space-y-1.5">
+                            <?php foreach ($ms_options as $opt) { ?>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" name="profile[<?php echo $field['pf_id']; ?>][]" value="<?php echo htmlspecialchars($opt); ?>"
+                                       <?php echo in_array($opt, $ms_selected) ? 'checked' : ''; ?>
+                                       class="w-4 h-4 rounded border-mg-bg-tertiary bg-mg-bg-primary text-mg-accent focus:ring-mg-accent focus:ring-offset-0">
+                                <span class="text-sm text-mg-text-primary"><?php echo htmlspecialchars($opt); ?></span>
+                            </label>
+                            <?php } ?>
+                        </div>
+
                         <?php } elseif ($field['pf_type'] == 'url') { ?>
                         <input type="url" name="profile[<?php echo $field['pf_id']; ?>]" id="pf_<?php echo $field['pf_id']; ?>"
                                value="<?php echo htmlspecialchars($field['value']); ?>"
                                placeholder="<?php echo $field['pf_placeholder'] ?: 'https://'; ?>"
                                <?php echo $field['pf_required'] ? 'required' : ''; ?>
                                class="w-full bg-mg-bg-primary border border-mg-bg-tertiary rounded-lg px-4 py-2.5 text-mg-text-primary placeholder-mg-text-muted focus:outline-none focus:border-mg-accent transition-colors">
+
+                        <?php } elseif ($field['pf_type'] == 'image') { ?>
+                        <?php if ($field['value']) { ?>
+                        <div class="mb-2 rounded-lg overflow-hidden border border-mg-bg-tertiary" style="max-width:16rem;max-height:12rem;">
+                            <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.htmlspecialchars($field['value']); ?>" class="w-full h-full object-contain" alt="">
+                        </div>
+                        <input type="hidden" name="profile[<?php echo $field['pf_id']; ?>]" value="<?php echo htmlspecialchars($field['value']); ?>">
+                        <label class="flex items-center gap-2 mb-2 cursor-pointer">
+                            <input type="checkbox" name="del_profile_image[<?php echo $field['pf_id']; ?>]" value="1"
+                                   class="w-4 h-4 rounded border-mg-bg-tertiary bg-mg-bg-primary text-red-500 focus:ring-red-500 focus:ring-offset-0">
+                            <span class="text-sm text-red-400">이미지 삭제</span>
+                        </label>
+                        <?php } ?>
+                        <input type="file" name="profile_image[<?php echo $field['pf_id']; ?>]" id="pf_<?php echo $field['pf_id']; ?>" accept="image/*"
+                               class="block w-full text-sm text-mg-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-mg-bg-tertiary file:text-mg-text-primary hover:file:bg-mg-bg-primary file:cursor-pointer cursor-pointer">
 
                         <?php } ?>
 
@@ -879,6 +933,38 @@ window.cfDeleteRelation = function(crId, myChId) {
     });
 });
 <?php } ?>
+
+// 진영 선택 시 클래스 필터링
+(function() {
+    var sideSelect = document.getElementById('side_id');
+    var classSelect = document.getElementById('class_id');
+    if (!sideSelect || !classSelect) return;
+
+    function filterClasses() {
+        var selectedSide = parseInt(sideSelect.value) || 0;
+        var currentClass = classSelect.value;
+        var hasSelected = false;
+
+        var options = classSelect.querySelectorAll('option[data-side-id]');
+        options.forEach(function(opt) {
+            var optSide = parseInt(opt.getAttribute('data-side-id')) || 0;
+            // 공용(0) 또는 선택한 진영과 일치하면 표시
+            var show = (optSide === 0 || selectedSide === 0 || optSide === selectedSide);
+            opt.style.display = show ? '' : 'none';
+            opt.disabled = !show;
+            if (opt.value === currentClass && show) hasSelected = true;
+        });
+
+        // 현재 선택이 숨겨진 경우 초기화
+        if (!hasSelected && currentClass) {
+            classSelect.value = '';
+        }
+    }
+
+    sideSelect.addEventListener('change', filterClasses);
+    // 페이지 로드 시 초기 필터링
+    filterClasses();
+})();
 </script>
 
 <?php

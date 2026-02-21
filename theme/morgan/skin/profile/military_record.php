@@ -177,15 +177,7 @@ $serial = strtoupper(substr(md5($char['ch_id'] . $char['ch_name']), 0, 8));
                 <div class="mil-row">
                     <div class="mil-label"><?php echo htmlspecialchars($field['pf_name']); ?></div>
                     <div class="mil-val">
-                        <?php
-                        if ($field['pf_type'] == 'url') {
-                            echo '<a href="'.htmlspecialchars($field['pv_value']).'" target="_blank">'.htmlspecialchars($field['pv_value']).'</a>';
-                        } elseif ($field['pf_type'] == 'textarea') {
-                            echo nl2br(htmlspecialchars($field['pv_value']));
-                        } else {
-                            echo htmlspecialchars($field['pv_value']);
-                        }
-                        ?>
+                        <?php echo mg_render_profile_value($field); ?>
                     </div>
                 </div>
                 <?php } ?>

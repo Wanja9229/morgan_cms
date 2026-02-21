@@ -143,7 +143,7 @@ include_once(G5_THEME_PATH.'/head.php');
             <div class="flex flex-wrap gap-2 items-center">
                 <?php if (count($sides) > 0) { ?>
                 <select name="side_id" onchange="this.form.submit()" class="bg-mg-bg-primary border border-mg-bg-tertiary rounded-lg px-3 py-1.5 text-sm text-mg-text-primary focus:outline-none focus:border-mg-accent">
-                    <option value="">모든 <?php echo mg_config('side_title', '세력'); ?></option>
+                    <option value="">모든 <?php echo mg_config('side_title', '소속'); ?></option>
                     <?php foreach ($sides as $side) { ?>
                     <option value="<?php echo $side['side_id']; ?>" <?php echo $side_id == $side['side_id'] ? 'selected' : ''; ?>><?php echo $side['side_name']; ?></option>
                     <?php } ?>
@@ -152,7 +152,7 @@ include_once(G5_THEME_PATH.'/head.php');
 
                 <?php if (count($classes) > 0) { ?>
                 <select name="class_id" onchange="this.form.submit()" class="bg-mg-bg-primary border border-mg-bg-tertiary rounded-lg px-3 py-1.5 text-sm text-mg-text-primary focus:outline-none focus:border-mg-accent">
-                    <option value="">모든 <?php echo mg_config('class_title', '종족'); ?></option>
+                    <option value="">모든 <?php echo mg_config('class_title', '유형'); ?></option>
                     <?php foreach ($classes as $class) { ?>
                     <option value="<?php echo $class['class_id']; ?>" <?php echo $class_id == $class['class_id'] ? 'selected' : ''; ?>><?php echo $class['class_name']; ?></option>
                     <?php } ?>

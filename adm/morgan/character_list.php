@@ -39,6 +39,23 @@ $row = sql_fetch($sql);
 $total_count = (int)$row['cnt'];
 $total_page = ceil($total_count / $rows);
 
+// 반려된 캐릭터 ID 목록 (editing 상태 + 최근 로그가 reject)
+$rejected_chars = array();
+$rej_result = sql_query("SELECT cl.ch_id, cl.log_memo
+    FROM {$g5['mg_character_log_table']} cl
+    INNER JOIN (
+        SELECT ch_id, MAX(log_id) as max_id
+        FROM {$g5['mg_character_log_table']}
+        GROUP BY ch_id
+    ) latest ON cl.log_id = latest.max_id
+    INNER JOIN {$g5['mg_character_table']} c ON cl.ch_id = c.ch_id AND c.ch_state = 'editing'
+    WHERE cl.log_action = 'reject'");
+if ($rej_result !== false) {
+    while ($rej = sql_fetch_array($rej_result)) {
+        $rejected_chars[$rej['ch_id']] = $rej['log_memo'] ?? '';
+    }
+}
+
 // 상태별 통계
 $stats = array('editing' => 0, 'pending' => 0, 'approved' => 0);
 $stat_result = sql_query("SELECT ch_state, COUNT(*) as cnt FROM {$g5['mg_character_table']} WHERE ch_state != 'deleted' GROUP BY ch_state");
@@ -129,8 +146,8 @@ require_once __DIR__.'/_head.php';
                         <th style="width:80px;">이미지</th>
                         <th>캐릭터명</th>
                         <th style="width:100px;">회원</th>
-                        <th style="width:90px;">진영</th>
-                        <th style="width:90px;">클래스</th>
+                        <th style="width:90px;">소속</th>
+                        <th style="width:90px;">유형</th>
                         <th style="width:80px;">상태</th>
                         <th style="width:120px;">등록일</th>
                         <th style="width:120px;">관리</th>
@@ -145,19 +162,25 @@ require_once __DIR__.'/_head.php';
 
                         $state_label = '';
                         $state_class = '';
-                        switch ($row['ch_state']) {
-                            case 'pending':
-                                $state_label = '대기';
-                                $state_class = 'mg-badge-warning';
-                                break;
-                            case 'approved':
-                                $state_label = '승인';
-                                $state_class = 'mg-badge-success';
-                                break;
-                            case 'editing':
-                                $state_label = '작성중';
-                                $state_class = '';
-                                break;
+                        $is_rejected = isset($rejected_chars[$row['ch_id']]);
+                        if ($is_rejected) {
+                            $state_label = '반려';
+                            $state_class = 'mg-badge-danger';
+                        } else {
+                            switch ($row['ch_state']) {
+                                case 'pending':
+                                    $state_label = '대기';
+                                    $state_class = 'mg-badge-warning';
+                                    break;
+                                case 'approved':
+                                    $state_label = '승인';
+                                    $state_class = 'mg-badge-success';
+                                    break;
+                                case 'editing':
+                                    $state_label = '작성중';
+                                    $state_class = '';
+                                    break;
+                            }
                         }
 
                         // 썸네일 URL (th_ 접두사 버전 우선)
@@ -191,10 +214,11 @@ require_once __DIR__.'/_head.php';
                         <td><span class="mg-badge <?php echo $state_class; ?>"><?php echo $state_label; ?></span></td>
                         <td style="color:var(--mg-text-muted);"><?php echo substr($row['ch_datetime'], 0, 10); ?></td>
                         <td>
-                            <div style="display:flex;gap:0.5rem;">
+                            <div style="display:flex;gap:0.25rem;flex-wrap:wrap;">
                                 <a href="./character_form.php?ch_id=<?php echo $row['ch_id']; ?>" class="mg-btn mg-btn-secondary mg-btn-sm">수정</a>
                                 <?php if ($row['ch_state'] == 'pending') { ?>
                                 <button type="submit" name="btn_approve" value="<?php echo $row['ch_id']; ?>" class="mg-btn mg-btn-success mg-btn-sm">승인</button>
+                                <button type="button" class="mg-btn mg-btn-danger mg-btn-sm" onclick="openRejectModal(<?php echo $row['ch_id']; ?>, '<?php echo htmlspecialchars(addslashes($row['ch_name'])); ?>')">반려</button>
                                 <?php } ?>
                             </div>
                         </td>
@@ -211,8 +235,9 @@ require_once __DIR__.'/_head.php';
             </table>
 
             <?php if ($total_count > 0) { ?>
-            <div style="padding:1rem;border-top:1px solid var(--mg-bg-tertiary);display:flex;gap:0.5rem;">
+            <div style="padding:1rem;border-top:1px solid var(--mg-bg-tertiary);display:flex;gap:0.5rem;flex-wrap:wrap;">
                 <button type="submit" name="btn_approve_selected" class="mg-btn mg-btn-success mg-btn-sm">선택 승인</button>
+                <button type="button" class="mg-btn mg-btn-warning mg-btn-sm" onclick="openRejectSelectedModal()">선택 반려</button>
                 <button type="submit" name="btn_delete" class="mg-btn mg-btn-danger mg-btn-sm" onclick="return confirm('선택한 캐릭터를 삭제하시겠습니까?');">선택 삭제</button>
             </div>
             <?php } ?>
@@ -249,6 +274,31 @@ require_once __DIR__.'/_head.php';
 </div>
 <?php } ?>
 
+<!-- 반려 사유 모달 -->
+<div class="mg-modal" id="rejectModal" style="display:none;">
+    <div class="mg-modal-content" style="max-width:480px;">
+        <div class="mg-modal-header">
+            <span class="mg-modal-title" id="rejectModalTitle">캐릭터 반려</span>
+            <button type="button" class="mg-modal-close" onclick="closeRejectModal()">&times;</button>
+        </div>
+        <form name="freject" id="freject" method="post" action="./character_list_update.php">
+            <input type="hidden" name="page" value="<?php echo $page; ?>">
+            <input type="hidden" name="state" value="<?php echo $state; ?>">
+            <input type="hidden" name="reject_ch_id" id="reject_ch_id" value="">
+            <div class="mg-modal-body">
+                <div class="mg-form-group">
+                    <label class="mg-form-label">반려 사유</label>
+                    <textarea name="reject_reason" id="reject_reason" class="mg-form-input" rows="4" placeholder="반려 사유를 입력하세요. 유저에게 알림으로 전달됩니다."></textarea>
+                </div>
+            </div>
+            <div class="mg-modal-footer">
+                <button type="button" class="mg-btn mg-btn-secondary" onclick="closeRejectModal()">취소</button>
+                <button type="submit" name="btn_reject" class="mg-btn mg-btn-danger">반려</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
 function checkAll(el) {
     var chks = document.querySelectorAll('input[name="chk[]"]');
@@ -256,6 +306,40 @@ function checkAll(el) {
         chk.checked = el.checked;
     });
 }
+
+function openRejectModal(chId, chName) {
+    document.getElementById('reject_ch_id').value = chId;
+    document.getElementById('rejectModalTitle').textContent = '캐릭터 반려: ' + chName;
+    document.getElementById('reject_reason').value = '';
+    document.getElementById('rejectModal').style.display = 'flex';
+}
+
+function openRejectSelectedModal() {
+    var chks = document.querySelectorAll('input[name="chk[]"]:checked');
+    if (chks.length === 0) { alert('반려할 캐릭터를 선택해주세요.'); return; }
+    // 선택 반려: ch_id 비워두면 선택된 체크박스 기반 처리
+    document.getElementById('reject_ch_id').value = '';
+    document.getElementById('rejectModalTitle').textContent = '선택 반려 (' + chks.length + '개)';
+    document.getElementById('reject_reason').value = '';
+    // 선택된 ID 복사
+    var form = document.getElementById('freject');
+    form.querySelectorAll('.reject-chk-copy').forEach(function(el) { el.remove(); });
+    chks.forEach(function(chk) {
+        var input = document.createElement('input');
+        input.type = 'hidden'; input.name = 'chk[]'; input.value = chk.value;
+        input.className = 'reject-chk-copy';
+        form.appendChild(input);
+    });
+    document.getElementById('rejectModal').style.display = 'flex';
+}
+
+function closeRejectModal() {
+    document.getElementById('rejectModal').style.display = 'none';
+}
+
+document.getElementById('rejectModal').addEventListener('click', function(e) {
+    if (e.target === this) closeRejectModal();
+});
 </script>
 
 <?php

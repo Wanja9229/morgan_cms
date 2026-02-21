@@ -251,9 +251,12 @@ if ($ch_main) {
 }
 
 // 상태 결정
-$ch_state = 'editing';
 if ($btn_submit) {
     $ch_state = 'pending';
+} elseif ($is_edit && $char['ch_state'] == 'approved') {
+    $ch_state = 'approved'; // 승인된 캐릭터는 수정해도 승인 유지
+} else {
+    $ch_state = 'editing';
 }
 
 if ($is_edit) {
@@ -301,6 +304,60 @@ if ($is_edit) {
     // 로그
     $log_action = $btn_submit ? 'submit' : 'edit';
     sql_query("INSERT INTO {$g5['mg_character_log_table']} (ch_id, log_action) VALUES ({$ch_id}, '{$log_action}')");
+}
+
+// 프로필 이미지 필드 처리
+$del_profile_image = isset($_POST['del_profile_image']) ? $_POST['del_profile_image'] : array();
+if (isset($_FILES['profile_image']) && is_array($_FILES['profile_image']['name'])) {
+    foreach ($_FILES['profile_image']['name'] as $pf_id => $name) {
+        $pf_id = (int)$pf_id;
+        if (!$pf_id) continue;
+
+        // 삭제 요청 처리
+        if (isset($del_profile_image[$pf_id])) {
+            $old_val = sql_fetch("SELECT pv_value FROM {$g5['mg_profile_value_table']} WHERE ch_id = {$ch_id} AND pf_id = {$pf_id}");
+            if ($old_val['pv_value']) {
+                $old_path = MG_CHAR_IMAGE_PATH.'/'.$old_val['pv_value'];
+                if (file_exists($old_path)) @unlink($old_path);
+            }
+            // profile[] 에도 빈값 세팅
+            $profile[$pf_id] = '';
+        }
+
+        // 새 이미지 업로드
+        if ($_FILES['profile_image']['error'][$pf_id] == UPLOAD_ERR_OK) {
+            // 기존 이미지 삭제
+            $old_val = sql_fetch("SELECT pv_value FROM {$g5['mg_profile_value_table']} WHERE ch_id = {$ch_id} AND pf_id = {$pf_id}");
+            if ($old_val['pv_value']) {
+                $old_path = MG_CHAR_IMAGE_PATH.'/'.$old_val['pv_value'];
+                if (file_exists($old_path)) @unlink($old_path);
+            }
+
+            $file_arr = array(
+                'name' => $_FILES['profile_image']['name'][$pf_id],
+                'type' => $_FILES['profile_image']['type'][$pf_id],
+                'tmp_name' => $_FILES['profile_image']['tmp_name'][$pf_id],
+                'error' => $_FILES['profile_image']['error'][$pf_id],
+                'size' => $_FILES['profile_image']['size'][$pf_id],
+            );
+            $upload = mg_upload_character_image($file_arr, $member['mb_id'], 'profile');
+            if ($upload['success']) {
+                $profile[$pf_id] = $upload['filename'];
+            }
+        }
+    }
+} else {
+    // 파일 업로드 없이 삭제만 요청한 경우
+    foreach ($del_profile_image as $pf_id => $v) {
+        $pf_id = (int)$pf_id;
+        if (!$pf_id) continue;
+        $old_val = sql_fetch("SELECT pv_value FROM {$g5['mg_profile_value_table']} WHERE ch_id = {$ch_id} AND pf_id = {$pf_id}");
+        if ($old_val['pv_value']) {
+            $old_path = MG_CHAR_IMAGE_PATH.'/'.$old_val['pv_value'];
+            if (file_exists($old_path)) @unlink($old_path);
+        }
+        $profile[$pf_id] = '';
+    }
 }
 
 // 프로필 값 저장

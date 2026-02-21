@@ -169,15 +169,7 @@ if (!defined('_GNUBOARD_')) exit;
                     <div>
                         <dt class="text-sm font-medium text-mg-text-muted mb-1"><?php echo $field['pf_name']; ?></dt>
                         <dd class="text-mg-text-primary">
-                            <?php
-                            if ($field['pf_type'] == 'url') {
-                                echo '<a href="'.htmlspecialchars($field['pv_value']).'" target="_blank" class="text-mg-accent hover:underline">'.htmlspecialchars($field['pv_value']).'</a>';
-                            } elseif ($field['pf_type'] == 'textarea') {
-                                echo nl2br(htmlspecialchars($field['pv_value']));
-                            } else {
-                                echo htmlspecialchars($field['pv_value']);
-                            }
-                            ?>
+                            <?php echo mg_render_profile_value($field); ?>
                         </dd>
                     </div>
                     <?php } ?>

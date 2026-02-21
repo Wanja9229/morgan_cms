@@ -126,10 +126,10 @@ $ch_owner = htmlspecialchars($char['mb_nick']);
             <?php if ($ch_side || $ch_class) { ?>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
                 <?php if ($ch_side && mg_config('use_side', '1') == '1') { ?>
-                <p><strong>세력:</strong> <?php echo $ch_side; ?></p>
+                <p><strong><?php echo htmlspecialchars(mg_config('side_title', '소속')); ?>:</strong> <?php echo $ch_side; ?></p>
                 <?php } ?>
                 <?php if ($ch_class && mg_config('use_class', '1') == '1') { ?>
-                <p><strong>직업:</strong> <?php echo $ch_class; ?></p>
+                <p><strong><?php echo htmlspecialchars(mg_config('class_title', '유형')); ?>:</strong> <?php echo $ch_class; ?></p>
                 <?php } ?>
             </div>
             <?php } ?>
@@ -142,15 +142,7 @@ $ch_owner = htmlspecialchars($char['mb_nick']);
                     <?php foreach ($fields as $field) { ?>
                     <li style="margin-bottom:0.25rem;">
                         <strong><?php echo htmlspecialchars($field['pf_name']); ?></strong> —
-                        <?php
-                        if ($field['pf_type'] == 'url') {
-                            echo '<a href="'.htmlspecialchars($field['pv_value']).'" target="_blank">'.htmlspecialchars($field['pv_value']).'</a>';
-                        } elseif ($field['pf_type'] == 'textarea') {
-                            echo nl2br(htmlspecialchars($field['pv_value']));
-                        } else {
-                            echo htmlspecialchars($field['pv_value']);
-                        }
-                        ?>
+                        <?php echo mg_render_profile_value($field); ?>
                     </li>
                     <?php } ?>
                 </ul>

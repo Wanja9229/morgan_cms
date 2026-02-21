@@ -30,6 +30,32 @@ while ($row = sql_fetch_array($result)) {
     $characters[] = $row;
 }
 
+// 반려 이력 조회 (editing 상태인 캐릭터의 최근 로그가 reject인 경우)
+$rejected_info = array();
+$editing_ids = array();
+foreach ($characters as $char) {
+    if ($char['ch_state'] == 'editing') {
+        $editing_ids[] = (int)$char['ch_id'];
+    }
+}
+if (!empty($editing_ids)) {
+    $ids_str = implode(',', $editing_ids);
+    $rej_result = sql_query("SELECT cl.ch_id, cl.log_memo
+        FROM {$g5['mg_character_log_table']} cl
+        INNER JOIN (
+            SELECT ch_id, MAX(log_id) as max_id
+            FROM {$g5['mg_character_log_table']}
+            WHERE ch_id IN ({$ids_str})
+            GROUP BY ch_id
+        ) latest ON cl.log_id = latest.max_id
+        WHERE cl.log_action = 'reject'");
+    if ($rej_result !== false) {
+        while ($rej = sql_fetch_array($rej_result)) {
+            $rejected_info[$rej['ch_id']] = $rej['log_memo'] ?? '';
+        }
+    }
+}
+
 // 최대 캐릭터 수 (설정에서 가져오기)
 $max_characters = (int)mg_config('max_characters', 10);
 $current_count = count($characters);
@@ -80,12 +106,17 @@ include_once(G5_THEME_PATH.'/head.php');
                     <span class="bg-mg-accent text-white text-xs px-2 py-0.5 rounded-full">대표</span>
                     <?php } ?>
                     <?php
-                    $state_labels = array(
-                        'editing' => array('수정중', 'bg-gray-500'),
-                        'pending' => array('승인대기', 'bg-yellow-500'),
-                        'approved' => array('승인됨', 'bg-green-500'),
-                    );
-                    $state = $state_labels[$char['ch_state']] ?? array('', '');
+                    $is_rejected = isset($rejected_info[$char['ch_id']]);
+                    if ($is_rejected) {
+                        $state = array('반려됨', 'bg-red-500');
+                    } else {
+                        $state_labels = array(
+                            'editing' => array('수정중', 'bg-gray-500'),
+                            'pending' => array('승인대기', 'bg-yellow-500'),
+                            'approved' => array('승인됨', 'bg-green-500'),
+                        );
+                        $state = $state_labels[$char['ch_state']] ?? array('', '');
+                    }
                     ?>
                     <span class="<?php echo $state[1]; ?> text-white text-xs px-2 py-0.5 rounded-full"><?php echo $state[0]; ?></span>
                 </div>
@@ -120,9 +151,15 @@ include_once(G5_THEME_PATH.'/head.php');
                     <span><?php echo $char['class_name']; ?></span>
                     <?php } ?>
                 </div>
+                <?php if ($is_rejected && $rejected_info[$char['ch_id']]) { ?>
+                <p class="text-xs mt-2 px-2 py-1 rounded" style="background:rgba(239,68,68,0.1);color:#f87171;">
+                    반려 사유: <?php echo htmlspecialchars(mb_strimwidth($rejected_info[$char['ch_id']], 0, 50, '...')); ?>
+                </p>
+                <?php } else { ?>
                 <p class="text-xs text-mg-text-muted mt-2">
                     <?php echo date('Y.m.d', strtotime($char['ch_datetime'])); ?> 등록
                 </p>
+                <?php } ?>
             </div>
         </div>
         <?php } ?>

@@ -193,6 +193,13 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
                 min-height: 200px;
             }
         }
+
+        /* 프로필 필드 값 렌더링 */
+        .mg-pf-link { color: var(--mg-accent); text-decoration: none; }
+        .mg-pf-link:hover { text-decoration: underline; }
+        .mg-pf-tags { display: inline-flex; flex-wrap: wrap; gap: 0.25rem; }
+        .mg-pf-tag { background: var(--mg-bg-tertiary); color: var(--mg-text-secondary); padding: 0.125rem 0.625rem; border-radius: 9999px; font-size: 0.8125rem; }
+        .mg-pf-image { max-width: 100%; max-height: 20rem; border-radius: 0.5rem; object-fit: contain; }
     </style>
 
     <!-- 그누보드 전역 JS 변수 -->

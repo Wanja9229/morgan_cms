@@ -369,7 +369,8 @@ function mg_upload_character_image($file, $mb_id, $type = 'thumb') {
     }
 
     // 파일명 생성
-    $prefix = ($type == 'thumb') ? 'head_' : (($type == 'header') ? 'banner_' : 'body_');
+    $type_prefixes = array('thumb' => 'head_', 'header' => 'banner_', 'image' => 'body_', 'bg' => 'bg_', 'profile' => 'pf_');
+    $prefix = isset($type_prefixes[$type]) ? $type_prefixes[$type] : 'file_';
     $basename = $prefix . uniqid() . '.' . $ext;
     $filename = $mb_id . '/' . $basename;
     $full_path = MG_CHAR_IMAGE_PATH . '/' . $filename;
@@ -394,6 +395,35 @@ function mg_upload_character_image($file, $mb_id, $type = 'thumb') {
     }
 
     return $result;
+}
+
+/**
+ * 프로필 필드 값 렌더링 (프로필 뷰 스킨용)
+ * 모든 프로필 스킨에서 공통으로 사용
+ */
+function mg_render_profile_value($field) {
+    $val = $field['pv_value'] ?? '';
+    if ($val === '') return '';
+
+    switch ($field['pf_type']) {
+        case 'url':
+            return '<a href="'.htmlspecialchars($val).'" target="_blank" rel="noopener" class="mg-pf-link">'.htmlspecialchars($val).'</a>';
+        case 'textarea':
+            return nl2br(htmlspecialchars($val));
+        case 'multiselect':
+            $vals = json_decode($val, true);
+            if (is_array($vals) && !empty($vals)) {
+                $tags = array_map(function($v) {
+                    return '<span class="mg-pf-tag">'.htmlspecialchars($v).'</span>';
+                }, $vals);
+                return '<span class="mg-pf-tags">'.implode('', $tags).'</span>';
+            }
+            return htmlspecialchars($val);
+        case 'image':
+            return '<img src="'.MG_CHAR_IMAGE_URL.'/'.htmlspecialchars($val).'" alt="" class="mg-pf-image" loading="lazy">';
+        default: // text, select
+            return htmlspecialchars($val);
+    }
 }
 
 // 상점 아이템 타입 그룹 (카테고리 대체)

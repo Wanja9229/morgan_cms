@@ -70,7 +70,7 @@ abstract class MG_Game_Base implements MG_Game_Interface {
 
         // 포인트 지급
         $content = '출석체크 (' . $this->getName() . ')';
-        insert_point($mb_id, $point, $content);
+        insert_point($mb_id, $point, $content, 'attendance', $mb_id . '_' . $today, '출석');
     }
 
     /**

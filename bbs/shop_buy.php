@@ -53,7 +53,7 @@ if (!$_can_buy['can_buy']) {
 // 구매 처리
 $result = mg_buy_item($member['mb_id'], $si_id);
 
-if ($result === true) {
+if ($result['success']) {
     // 회원 정보 다시 조회
     $member = get_member($member['mb_id']);
 
@@ -68,5 +68,5 @@ if ($result === true) {
         'new_point' => number_format($member['mb_point'])
     ]);
 } else {
-    echo json_encode(['success' => false, 'message' => $result]);
+    echo json_encode(['success' => false, 'message' => $result['message']]);
 }

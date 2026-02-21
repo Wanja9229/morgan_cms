@@ -5,6 +5,8 @@
 
 if (!defined('_GNUBOARD_')) exit;
 
+$comment_id = 'c_' . $bo_table;
+
 // Morgan 플러그인 로드
 include_once(G5_PATH.'/plugin/morgan/morgan.php');
 
@@ -127,6 +129,9 @@ if (!empty($list)) {
                 <?php echo mg_render_emoticons($row['content']); ?>
                 <?php } ?>
             </div>
+            <?php if ($row['is_edit'] && !$is_dice) { ?>
+            <textarea id="cmt_raw_<?php echo $row['wr_id']; ?>" style="display:none;"><?php echo htmlspecialchars($row['content1'] ?? ''); ?></textarea>
+            <?php } ?>
 
             <!-- 수정/답글 폼 영역 -->
             <?php if (!$is_dice) { ?>
@@ -247,8 +252,46 @@ function comment_reply(cmt_id) {
 }
 
 function comment_edit(cmt_id) {
-    // TODO: AJAX로 댓글 수정 폼 로드
-    alert('수정 기능은 개발 중입니다.');
+    var el = document.getElementById('cmt_form_' + cmt_id);
+    if (el.innerHTML) {
+        // 토글: 이미 열려있으면 닫기
+        el.innerHTML = '';
+        document.getElementById('cmt_txt_' + cmt_id).style.display = '';
+        return;
+    }
+
+    // 원본 텍스트 가져오기
+    var rawEl = document.getElementById('cmt_raw_' + cmt_id);
+    var rawContent = rawEl ? rawEl.value : '';
+
+    // 댓글 내용 숨기기
+    document.getElementById('cmt_txt_' + cmt_id).style.display = 'none';
+
+    var f = document.fcomment;
+    var html = '<div class="mt-3 p-3 bg-mg-bg-primary rounded">';
+    html += '<form name="fcommentedit_' + cmt_id + '" action="' + f.action + '" method="post" onsubmit="return fcomment_submit(this);">';
+    html += '<input type="hidden" name="w" value="cu">';
+    html += '<input type="hidden" name="bo_table" value="<?php echo $bo_table; ?>">';
+    html += '<input type="hidden" name="wr_id" value="<?php echo $wr_id; ?>">';
+    html += '<input type="hidden" name="comment_id" value="' + cmt_id + '">';
+    html += '<input type="hidden" name="token" value="<?php echo $comment_token; ?>">';
+    html += '<div class="flex gap-2">';
+    html += '<textarea name="wr_content" rows="3" class="input flex-1 text-sm resize-none" required></textarea>';
+    html += '<div class="flex flex-col gap-1 self-end">';
+    html += '<button type="submit" class="btn btn-primary text-sm">수정</button>';
+    html += '<button type="button" onclick="comment_edit_cancel(' + cmt_id + ')" class="btn btn-secondary text-sm">취소</button>';
+    html += '</div>';
+    html += '</div></form></div>';
+
+    el.innerHTML = html;
+    var ta = el.querySelector('textarea[name="wr_content"]');
+    ta.value = rawContent;
+    ta.focus();
+}
+
+function comment_edit_cancel(cmt_id) {
+    document.getElementById('cmt_form_' + cmt_id).innerHTML = '';
+    document.getElementById('cmt_txt_' + cmt_id).style.display = '';
 }
 
 <?php if ($is_member && $mg_dice_enabled) { ?>

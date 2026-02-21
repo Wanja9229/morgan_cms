@@ -100,7 +100,7 @@ require_once __DIR__.'/_head.php';
 
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
                     <div class="mg-form-group">
-                        <label class="mg-form-label" for="side_id">진영</label>
+                        <label class="mg-form-label" for="side_id">소속</label>
                         <select name="side_id" id="side_id" class="mg-form-select">
                             <option value="">선택안함</option>
                             <?php foreach ($sides as $side) { ?>
@@ -110,11 +110,11 @@ require_once __DIR__.'/_head.php';
                     </div>
 
                     <div class="mg-form-group">
-                        <label class="mg-form-label" for="class_id">클래스</label>
+                        <label class="mg-form-label" for="class_id">유형</label>
                         <select name="class_id" id="class_id" class="mg-form-select">
                             <option value="">선택안함</option>
                             <?php foreach ($classes as $class) { ?>
-                            <option value="<?php echo $class['class_id']; ?>" <?php echo $char['class_id'] == $class['class_id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($class['class_name']); ?></option>
+                            <option value="<?php echo $class['class_id']; ?>" data-side-id="<?php echo (int)($class['side_id'] ?? 0); ?>" <?php echo $char['class_id'] == $class['class_id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($class['class_name']); ?></option>
                             <?php } ?>
                         </select>
                     </div>
@@ -239,6 +239,18 @@ require_once __DIR__.'/_head.php';
                         </select>
                         <?php } else if ($field['pf_type'] == 'url') { ?>
                         <input type="url" name="profile[<?php echo $field['pf_id']; ?>]" id="pf_<?php echo $field['pf_id']; ?>" value="<?php echo htmlspecialchars($field['value']); ?>" class="mg-form-input" placeholder="https://">
+                        <?php } else if ($field['pf_type'] == 'image') { ?>
+                        <?php if ($field['value']) { ?>
+                        <div style="margin-bottom:0.5rem;max-width:16rem;max-height:12rem;border:1px solid var(--mg-bg-tertiary);border-radius:0.5rem;overflow:hidden;">
+                            <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.htmlspecialchars($field['value']); ?>" style="width:100%;height:100%;object-fit:contain;" alt="">
+                        </div>
+                        <input type="hidden" name="profile[<?php echo $field['pf_id']; ?>]" value="<?php echo htmlspecialchars($field['value']); ?>">
+                        <label style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;cursor:pointer;">
+                            <input type="checkbox" name="del_profile_image[<?php echo $field['pf_id']; ?>]" value="1">
+                            <span style="color:var(--mg-error);font-size:0.875rem;">이미지 삭제</span>
+                        </label>
+                        <?php } ?>
+                        <input type="file" name="profile_image[<?php echo $field['pf_id']; ?>]" id="pf_<?php echo $field['pf_id']; ?>" accept="image/*" class="mg-form-input" style="padding:0.5rem;">
                         <?php } ?>
                         <?php if ($field['pf_help']) { ?>
                         <small style="color:var(--mg-text-muted);"><?php echo htmlspecialchars($field['pf_help']); ?></small>
@@ -252,13 +264,43 @@ require_once __DIR__.'/_head.php';
     </div>
     <?php } ?>
 
-    <div style="margin-top:1.5rem;display:flex;gap:0.5rem;">
+    <div style="margin-top:1.5rem;display:flex;gap:0.5rem;flex-wrap:wrap;">
         <a href="./character_list.php" class="mg-btn mg-btn-secondary">목록</a>
         <button type="submit" name="btn_save" class="mg-btn mg-btn-primary">저장</button>
         <?php if ($char['ch_state'] == 'pending') { ?>
         <button type="submit" name="btn_approve" class="mg-btn mg-btn-success">승인</button>
+        <button type="button" class="mg-btn mg-btn-danger" onclick="document.getElementById('rejectSection').style.display = document.getElementById('rejectSection').style.display === 'none' ? '' : 'none';">반려</button>
         <?php } ?>
     </div>
+
+    <?php if ($char['ch_state'] == 'pending') { ?>
+    <!-- 반려 사유 입력 -->
+    <div id="rejectSection" class="mg-card" style="margin-top:1rem;display:none;border-color:var(--mg-error);">
+        <div class="mg-card-header" style="color:var(--mg-error);">캐릭터 반려</div>
+        <div class="mg-card-body">
+            <div class="mg-form-group">
+                <label class="mg-form-label">반려 사유</label>
+                <textarea name="reject_reason" class="mg-form-input" rows="3" placeholder="반려 사유를 입력하세요. 유저에게 알림으로 전달됩니다."></textarea>
+            </div>
+            <button type="submit" name="btn_reject" class="mg-btn mg-btn-danger">반려 확인</button>
+        </div>
+    </div>
+    <?php } ?>
+
+    <?php
+    // 반려 이력 표시
+    $reject_log = sql_fetch("SELECT log_memo, log_datetime, admin_id FROM {$g5['mg_character_log_table']}
+        WHERE ch_id = {$ch_id} AND log_action = 'reject' ORDER BY log_id DESC LIMIT 1");
+    if ($reject_log['log_datetime'] ?? '') {
+    ?>
+    <div class="mg-alert mg-alert-danger" style="margin-top:1rem;">
+        <strong>최근 반려 이력:</strong>
+        <?php echo $reject_log['admin_id']; ?> (<?php echo substr($reject_log['log_datetime'], 0, 16); ?>)
+        <?php if ($reject_log['log_memo']) { ?>
+        <br>사유: <?php echo htmlspecialchars($reject_log['log_memo']); ?>
+        <?php } ?>
+    </div>
+    <?php } ?>
 </form>
 
 <style>
@@ -268,6 +310,37 @@ require_once __DIR__.'/_head.php';
     }
 }
 </style>
+
+<script>
+// 진영 선택 시 클래스 필터링
+(function() {
+    var sideSelect = document.getElementById('side_id');
+    var classSelect = document.getElementById('class_id');
+    if (!sideSelect || !classSelect) return;
+
+    function filterClasses() {
+        var selectedSide = parseInt(sideSelect.value) || 0;
+        var currentClass = classSelect.value;
+        var hasSelected = false;
+
+        var options = classSelect.querySelectorAll('option[data-side-id]');
+        options.forEach(function(opt) {
+            var optSide = parseInt(opt.getAttribute('data-side-id')) || 0;
+            var show = (optSide === 0 || selectedSide === 0 || optSide === selectedSide);
+            opt.style.display = show ? '' : 'none';
+            opt.disabled = !show;
+            if (opt.value === currentClass && show) hasSelected = true;
+        });
+
+        if (!hasSelected && currentClass) {
+            classSelect.value = '';
+        }
+    }
+
+    sideSelect.addEventListener('change', filterClasses);
+    filterClasses();
+})();
+</script>
 
 <?php
 require_once __DIR__.'/_tail.php';

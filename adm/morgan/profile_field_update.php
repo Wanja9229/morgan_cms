@@ -13,6 +13,67 @@ include_once(G5_PATH.'/plugin/morgan/morgan.php');
 
 $redirect_url = G5_ADMIN_URL.'/morgan/profile_field.php';
 
+// === AJAX 정렬 요청 처리 ===
+$mode = isset($_POST['mode']) ? $_POST['mode'] : '';
+
+if ($mode === 'section_reorder') {
+    // 섹션 순서 변경: 전체 필드를 섹션순서 × 필드순서로 재계산
+    $sections = isset($_POST['sections']) ? $_POST['sections'] : array();
+    if (!empty($sections)) {
+        $base_order = 0;
+        foreach ($sections as $category) {
+            $category = trim($category);
+            if (!$category) continue;
+            // 해당 섹션의 필드들을 현재 순서대로 조회
+            $result = sql_query("SELECT pf_id FROM {$g5['mg_profile_field_table']}
+                WHERE pf_category = '".sql_real_escape_string($category)."'
+                ORDER BY pf_order, pf_id");
+            while ($row = sql_fetch_array($result)) {
+                sql_query("UPDATE {$g5['mg_profile_field_table']} SET pf_order = {$base_order} WHERE pf_id = {$row['pf_id']}");
+                $base_order++;
+            }
+        }
+    }
+    header('Content-Type: application/json');
+    echo json_encode(array('success' => true));
+    exit;
+}
+
+if ($mode === 'field_reorder') {
+    // 필드 순서 변경: 해당 섹션 내 필드 순서 업데이트
+    $order = isset($_POST['order']) ? $_POST['order'] : array();
+    if (!empty($order)) {
+        foreach ($order as $i => $pf_id) {
+            $pf_id = (int)$pf_id;
+            if (!$pf_id) continue;
+            sql_query("UPDATE {$g5['mg_profile_field_table']} SET pf_order = {$i} WHERE pf_id = {$pf_id}");
+        }
+    }
+    header('Content-Type: application/json');
+    echo json_encode(array('success' => true));
+    exit;
+}
+
+if ($mode === 'field_reorder_cross') {
+    // 카테고리 간 필드 이동 + 순서 변경
+    $fields = isset($_POST['fields']) ? $_POST['fields'] : array();
+    $field_categories = isset($_POST['field_categories']) ? $_POST['field_categories'] : array();
+    if (!empty($fields)) {
+        foreach ($fields as $i => $pf_id) {
+            $pf_id = (int)$pf_id;
+            if (!$pf_id) continue;
+            $category = isset($field_categories[$i]) ? trim($field_categories[$i]) : '';
+            if (!$category) continue;
+            sql_query("UPDATE {$g5['mg_profile_field_table']}
+                SET pf_order = {$i}, pf_category = '".sql_real_escape_string($category)."'
+                WHERE pf_id = {$pf_id}");
+        }
+    }
+    header('Content-Type: application/json');
+    echo json_encode(array('success' => true));
+    exit;
+}
+
 /**
  * 콤마 구분 텍스트를 JSON 배열로 변환
  */
@@ -140,10 +201,9 @@ if (isset($_POST['btn_edit_field'])) {
     alert('필드가 수정되었습니다.', $redirect_url);
 }
 
-// 일괄 저장
+// 일괄 저장 (순서는 드래그로 관리, 여기서는 이름/타입/옵션/필수/사용만)
 if (isset($_POST['btn_save'])) {
     $pf_ids = isset($_POST['pf_id']) ? $_POST['pf_id'] : array();
-    $pf_orders = isset($_POST['pf_order']) ? $_POST['pf_order'] : array();
     $pf_names = isset($_POST['pf_name']) ? $_POST['pf_name'] : array();
     $pf_types = isset($_POST['pf_type']) ? $_POST['pf_type'] : array();
     $pf_options_arr = isset($_POST['pf_options']) ? $_POST['pf_options'] : array();
@@ -154,7 +214,6 @@ if (isset($_POST['btn_save'])) {
         $pf_id = (int)$pf_id;
         if (!$pf_id) continue;
 
-        $order = (int)($pf_orders[$i] ?? 0);
         $name = trim(clean_xss_tags($pf_names[$i] ?? ''));
         $type = $pf_types[$i] ?? 'text';
         $options_text = trim($pf_options_arr[$i] ?? '');
@@ -170,7 +229,6 @@ if (isset($_POST['btn_save'])) {
         $options = options_to_json($options_text);
 
         sql_query("UPDATE {$g5['mg_profile_field_table']} SET
-                   pf_order = {$order},
                    pf_name = '".sql_real_escape_string($name)."',
                    pf_type = '{$type}',
                    pf_options = '".sql_real_escape_string($options)."',

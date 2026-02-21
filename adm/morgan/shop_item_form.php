@@ -27,9 +27,19 @@ $item_types = array(
     'etc' => array('name' => '기타', 'desc' => '기타 아이템', 'group' => 'etc')
 );
 
+// 카테고리 목록
+$categories = array();
+$cat_result = sql_query("SELECT sc_id, sc_name FROM {$g5['mg_shop_category_table']} WHERE sc_use = 1 ORDER BY sc_order, sc_id");
+if ($cat_result) {
+    while ($cat_row = sql_fetch_array($cat_result)) {
+        $categories[] = $cat_row;
+    }
+}
+
 // 기본 상품 정보
 $item = array(
     'si_id' => 0,
+    'sc_id' => 0,
     'si_name' => '',
     'si_desc' => '',
     'si_image' => '',
@@ -82,6 +92,7 @@ $si_consumable = isset($item['si_consumable']) ? $item['si_consumable'] : 0;
 $si_display = isset($item['si_display']) ? $item['si_display'] : 1;
 $si_use = isset($item['si_use']) ? $item['si_use'] : 1;
 $si_order = isset($item['si_order']) ? $item['si_order'] : 0;
+$sc_id = isset($item['sc_id']) ? (int)$item['sc_id'] : 0;
 
 // 타입 설명
 $type_desc = isset($item_types[$si_type]) ? $item_types[$si_type]['desc'] : '';
@@ -124,6 +135,18 @@ require_once __DIR__.'/_head.php';
                             <?php echo $type_desc; ?>
                         </div>
                         <?php } ?>
+                    </div>
+
+                    <div class="mg-form-group">
+                        <label class="mg-form-label" for="sc_id">카테고리</label>
+                        <select name="sc_id" id="sc_id" class="mg-form-select">
+                            <option value="0">미분류</option>
+                            <?php foreach ($categories as $cat) { ?>
+                            <option value="<?php echo $cat['sc_id']; ?>" <?php echo $sc_id == $cat['sc_id'] ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($cat['sc_name']); ?>
+                            </option>
+                            <?php } ?>
+                        </select>
                     </div>
 
                     <div class="mg-form-group">

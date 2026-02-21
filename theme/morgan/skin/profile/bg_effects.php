@@ -164,56 +164,76 @@ $vanta_name = strtoupper($profile_bg_id);
 
 <div id="vanta-bg"></div>
 
-<?php if ($is_p5): ?>
-<!-- p5.js 기반 이펙트 (topology, trunk) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
-<?php else: ?>
-<!-- three.js 기반 이펙트 -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-<?php endif; ?>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.24/vanta.<?php echo $profile_bg_id; ?>.min.js"></script>
 <script>
 (function() {
-    if (typeof VANTA === 'undefined' || typeof VANTA.<?php echo $vanta_name; ?> === 'undefined') return;
-
     var el = document.getElementById('vanta-bg');
     if (!el) return;
 
     // 모바일 성능 최적화: 768px 미만 비활성화
     if (window.innerWidth < 768) return;
 
-    var opts = Object.assign({
-        el: el,
-        mouseControls: true,
-        touchControls: true,
-        gyroControls: false,
-        minHeight: 200,
-        minWidth: 200,
-        scale: 1,
-        scaleMobile: 2
-    }, <?php echo $js_config; ?>);
+    var EFFECT_NAME = '<?php echo $vanta_name; ?>';
+    var IS_P5 = <?php echo $is_p5 ? 'true' : 'false'; ?>;
+    var depUrl = IS_P5
+        ? 'https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js'
+        : 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js';
+    var vantaUrl = 'https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.24/vanta.<?php echo $profile_bg_id; ?>.min.js';
 
-<?php if ($is_p5): ?>
-    // p5.js 기반: p5 인스턴스 전달
-    opts.p5 = p5;
-<?php endif; ?>
+    function loadScript(src, cb) {
+        // 이미 로딩된 스크립트는 스킵
+        if (document.querySelector('script[src="' + src + '"]')) { cb(); return; }
+        var s = document.createElement('script');
+        s.src = src;
+        s.onload = cb;
+        s.onerror = function() { console.warn('Vanta dep load fail:', src); };
+        document.head.appendChild(s);
+    }
 
-    var effect = VANTA.<?php echo $vanta_name; ?>(opts);
+    function initEffect() {
+        if (typeof VANTA === 'undefined' || typeof VANTA[EFFECT_NAME] === 'undefined') return;
 
-    // SPA 정리: #vanta-bg 제거 시 자동 destroy
-    var observer = new MutationObserver(function(mutations) {
-        if (!document.getElementById('vanta-bg')) {
+        var opts = Object.assign({
+            el: el,
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200,
+            minWidth: 200,
+            scale: 1,
+            scaleMobile: 2
+        }, <?php echo $js_config; ?>);
+
+        if (IS_P5 && typeof p5 !== 'undefined') { opts.p5 = p5; }
+
+        var effect = VANTA[EFFECT_NAME](opts);
+
+        // SPA 정리: #vanta-bg 제거 시 자동 destroy
+        var observer = new MutationObserver(function() {
+            if (!document.getElementById('vanta-bg')) {
+                if (effect) { effect.destroy(); effect = null; }
+                observer.disconnect();
+            }
+        });
+        observer.observe(document.getElementById('main-content') || document.body, {
+            childList: true, subtree: true
+        });
+
+        window.addEventListener('beforeunload', function() {
             if (effect) { effect.destroy(); effect = null; }
-            observer.disconnect();
-        }
-    });
-    observer.observe(document.getElementById('main-content') || document.body, {
-        childList: true, subtree: true
-    });
+        });
+    }
 
-    // 페이지 이탈 시 정리
-    window.addEventListener('beforeunload', function() {
-        if (effect) { effect.destroy(); effect = null; }
+    // 이미 로딩 완료 상태면 바로 실행
+    if (typeof VANTA !== 'undefined' && typeof VANTA[EFFECT_NAME] !== 'undefined') {
+        initEffect();
+        return;
+    }
+
+    // CDN 순서대로 로딩 → 이펙트 초기화
+    loadScript(depUrl, function() {
+        loadScript(vantaUrl, function() {
+            initEffect();
+        });
     });
 })();
 </script>

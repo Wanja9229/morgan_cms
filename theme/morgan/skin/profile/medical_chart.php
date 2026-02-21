@@ -141,13 +141,13 @@ $ch_initial = mb_substr($char['ch_name'], 0, 1);
                             <div style="border:1px solid #e2e8f0;border-radius:0.375rem;overflow:hidden;">
                                 <?php if ($ch_side && mg_config('use_side', '1') == '1') { ?>
                                 <div class="med-row">
-                                    <div class="med-label">세력</div>
+                                    <div class="med-label"><?php echo htmlspecialchars(mg_config('side_title', '소속')); ?></div>
                                     <div class="med-value"><?php echo $ch_side; ?></div>
                                 </div>
                                 <?php } ?>
                                 <?php if ($ch_class && mg_config('use_class', '1') == '1') { ?>
                                 <div class="med-row">
-                                    <div class="med-label">직업</div>
+                                    <div class="med-label"><?php echo htmlspecialchars(mg_config('class_title', '유형')); ?></div>
                                     <div class="med-value"><?php echo $ch_class; ?></div>
                                 </div>
                                 <?php } ?>
@@ -195,15 +195,7 @@ $ch_initial = mb_substr($char['ch_name'], 0, 1);
                         <div class="med-row" <?php echo $i === count($fields) - 1 ? 'style="border-bottom:none;"' : ''; ?>>
                             <div class="med-label"><?php echo htmlspecialchars($field['pf_name']); ?></div>
                             <div class="med-value">
-                                <?php
-                                if ($field['pf_type'] == 'url') {
-                                    echo '<a href="'.htmlspecialchars($field['pv_value']).'" target="_blank">'.htmlspecialchars($field['pv_value']).'</a>';
-                                } elseif ($field['pf_type'] == 'textarea') {
-                                    echo nl2br(htmlspecialchars($field['pv_value']));
-                                } else {
-                                    echo htmlspecialchars($field['pv_value']);
-                                }
-                                ?>
+                                <?php echo mg_render_profile_value($field); ?>
                             </div>
                         </div>
                         <?php } ?>

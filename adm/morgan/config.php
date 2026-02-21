@@ -298,11 +298,11 @@ function removeLogo() {
                     <?php echo _cfg_radio('show_main_character', $mg_configs, '1'); ?>
                 </div>
                 <div class="mg-form-group">
-                    <label class="mg-form-label">진영 시스템</label>
+                    <label class="mg-form-label">소속 시스템</label>
                     <?php echo _cfg_radio('use_side', $mg_configs, '1'); ?>
                 </div>
                 <div class="mg-form-group">
-                    <label class="mg-form-label">클래스 시스템</label>
+                    <label class="mg-form-label">유형 시스템</label>
                     <?php echo _cfg_radio('use_class', $mg_configs, '1'); ?>
                 </div>
             </div>

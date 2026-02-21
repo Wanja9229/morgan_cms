@@ -16,6 +16,7 @@ $si_id = isset($_POST['si_id']) ? (int)$_POST['si_id'] : 0;
 
 // 상품 등록/수정
 if ($mode == 'add' || $mode == 'edit') {
+    $sc_id = isset($_POST['sc_id']) ? (int)$_POST['sc_id'] : 0;
     $si_name = sql_real_escape_string(trim($_POST['si_name']));
     $si_desc = sql_real_escape_string(trim($_POST['si_desc']));
     $si_price = (int)$_POST['si_price'];
@@ -196,6 +197,7 @@ if ($mode == 'add' || $mode == 'edit') {
 
     if ($mode == 'add') {
         sql_query("INSERT INTO {$g5['mg_shop_item_table']} SET
+            sc_id = {$sc_id},
             si_name = '{$si_name}',
             si_desc = '{$si_desc}',
             si_image = '{$si_image_escaped}',
@@ -215,6 +217,7 @@ if ($mode == 'add' || $mode == 'edit') {
         goto_url('./shop_item_list.php');
     } else {
         sql_query("UPDATE {$g5['mg_shop_item_table']} SET
+            sc_id = {$sc_id},
             si_name = '{$si_name}',
             si_desc = '{$si_desc}',
             si_image = '{$si_image_escaped}',

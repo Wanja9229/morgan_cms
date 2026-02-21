@@ -34,6 +34,33 @@ $profile = isset($_POST['profile']) ? $_POST['profile'] : array();
 
 $btn_save = isset($_POST['btn_save']);
 $btn_approve = isset($_POST['btn_approve']);
+$btn_reject = isset($_POST['btn_reject']);
+
+// 반려 버튼 클릭 시
+if ($btn_reject) {
+    if ($char['ch_state'] == 'pending') {
+        $reject_reason = isset($_POST['reject_reason']) ? trim(clean_xss_tags($_POST['reject_reason'])) : '';
+
+        // editing 상태로 되돌림
+        sql_query("UPDATE {$g5['mg_character_table']} SET ch_state = 'editing', ch_update = NOW() WHERE ch_id = {$ch_id}");
+
+        // 로그 기록
+        $reason_esc = sql_real_escape_string($reject_reason);
+        sql_query("INSERT INTO {$g5['mg_character_log_table']} (ch_id, log_action, log_memo, admin_id)
+                   VALUES ({$ch_id}, 'reject', '{$reason_esc}', '{$member['mb_id']}')");
+
+        // 알림 발송
+        if (function_exists('mg_notify')) {
+            $noti_content = "'{$char['ch_name']}' 캐릭터가 반려되었습니다.";
+            if ($reject_reason) {
+                $noti_content .= "\n사유: ".$reject_reason;
+            }
+            mg_notify($char['mb_id'], 'character_rejected', '캐릭터 반려', $noti_content, G5_BBS_URL.'/character_form.php?ch_id='.$ch_id);
+        }
+
+        alert('캐릭터가 반려되었습니다.', G5_ADMIN_URL.'/morgan/character_form.php?ch_id='.$ch_id);
+    }
+}
 
 // 승인 버튼 클릭 시
 if ($btn_approve) {
@@ -148,6 +175,55 @@ if ($ch_state == 'approved' && $char['ch_state'] != 'approved') {
     // 알림 발송
     if (function_exists('mg_notify')) {
         mg_notify($char['mb_id'], 'character_approved', '캐릭터가 승인되었습니다', '등록하신 캐릭터가 승인되어 활동이 가능합니다.', G5_BBS_URL.'/character.php');
+    }
+}
+
+// 프로필 이미지 필드 처리
+$del_profile_image = isset($_POST['del_profile_image']) ? $_POST['del_profile_image'] : array();
+if (isset($_FILES['profile_image']) && is_array($_FILES['profile_image']['name'])) {
+    foreach ($_FILES['profile_image']['name'] as $pf_id => $name) {
+        $pf_id = (int)$pf_id;
+        if (!$pf_id) continue;
+
+        if (isset($del_profile_image[$pf_id])) {
+            $old_val = sql_fetch("SELECT pv_value FROM {$g5['mg_profile_value_table']} WHERE ch_id = {$ch_id} AND pf_id = {$pf_id}");
+            if ($old_val['pv_value']) {
+                $old_path = MG_CHAR_IMAGE_PATH.'/'.$old_val['pv_value'];
+                if (file_exists($old_path)) @unlink($old_path);
+            }
+            $profile[$pf_id] = '';
+        }
+
+        if ($_FILES['profile_image']['error'][$pf_id] == UPLOAD_ERR_OK) {
+            $old_val = sql_fetch("SELECT pv_value FROM {$g5['mg_profile_value_table']} WHERE ch_id = {$ch_id} AND pf_id = {$pf_id}");
+            if ($old_val['pv_value']) {
+                $old_path = MG_CHAR_IMAGE_PATH.'/'.$old_val['pv_value'];
+                if (file_exists($old_path)) @unlink($old_path);
+            }
+
+            $file_arr = array(
+                'name' => $_FILES['profile_image']['name'][$pf_id],
+                'type' => $_FILES['profile_image']['type'][$pf_id],
+                'tmp_name' => $_FILES['profile_image']['tmp_name'][$pf_id],
+                'error' => $_FILES['profile_image']['error'][$pf_id],
+                'size' => $_FILES['profile_image']['size'][$pf_id],
+            );
+            $upload = mg_upload_character_image($file_arr, $char['mb_id'], 'profile');
+            if ($upload['success']) {
+                $profile[$pf_id] = $upload['filename'];
+            }
+        }
+    }
+} else {
+    foreach ($del_profile_image as $pf_id => $v) {
+        $pf_id = (int)$pf_id;
+        if (!$pf_id) continue;
+        $old_val = sql_fetch("SELECT pv_value FROM {$g5['mg_profile_value_table']} WHERE ch_id = {$ch_id} AND pf_id = {$pf_id}");
+        if ($old_val['pv_value']) {
+            $old_path = MG_CHAR_IMAGE_PATH.'/'.$old_val['pv_value'];
+            if (file_exists($old_path)) @unlink($old_path);
+        }
+        $profile[$pf_id] = '';
     }
 }
 
