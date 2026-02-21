@@ -110,8 +110,8 @@ include_once __DIR__.'/_head.php';
     <div class="mg-card-header" style="display:flex; justify-content:space-between; align-items:center;">
         <span>회원 목록 (<?php echo number_format($total_count); ?>명)</span>
     </div>
-    <div class="mg-card-body" style="padding:0;">
-        <table class="mg-table">
+    <div class="mg-card-body" style="padding:0;overflow-x:auto;">
+        <table class="mg-table" style="min-width:700px;">
             <thead>
                 <tr>
                     <th>아이디</th>

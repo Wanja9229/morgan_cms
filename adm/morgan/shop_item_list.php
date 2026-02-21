@@ -107,7 +107,7 @@ require_once __DIR__.'/_head.php';
             <input type="hidden" name="sfl" value="<?php echo $sfl; ?>">
             <input type="hidden" name="stx" value="<?php echo htmlspecialchars($stx); ?>">
 
-            <table class="mg-table">
+            <table class="mg-table" style="min-width:900px;">
                 <thead>
                     <tr>
                         <th style="width:40px;"><input type="checkbox" onclick="checkAll(this);"></th>

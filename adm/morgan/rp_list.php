@@ -113,7 +113,7 @@ require_once __DIR__.'/_head.php';
 <!-- 목록 -->
 <div class="mg-card">
     <div class="mg-card-body" style="padding:0;overflow-x:auto;">
-        <table class="mg-table">
+        <table class="mg-table" style="min-width:900px;">
             <thead>
                 <tr>
                     <th style="width:60px;">번호</th>

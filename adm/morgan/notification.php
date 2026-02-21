@@ -93,7 +93,7 @@ require_once __DIR__.'/_head.php';
             <input type="hidden" name="token" value="">
             <input type="hidden" name="page" value="<?php echo $page; ?>">
 
-            <table class="mg-table">
+            <table class="mg-table" style="min-width:750px;">
                 <thead>
                     <tr>
                         <th style="width:40px;"><input type="checkbox" onclick="checkAll(this);"></th>

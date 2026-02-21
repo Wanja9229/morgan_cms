@@ -121,7 +121,7 @@ require_once __DIR__.'/_head.php';
             <input type="hidden" name="page" value="<?php echo $page; ?>">
             <input type="hidden" name="state" value="<?php echo $state; ?>">
 
-            <table class="mg-table" style="width:100%;">
+            <table class="mg-table" style="width:100%;min-width:900px;">
                 <thead>
                     <tr>
                         <th style="width:50px;"><input type="checkbox" onclick="checkAll(this);"></th>

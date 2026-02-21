@@ -95,10 +95,12 @@ require_once __DIR__.'/_head.php';
     border: 1px solid var(--mg-bg-tertiary);
     border-top: none;
     border-radius: 0 0 0.5rem 0.5rem;
+    overflow-x: auto;
 }
 .pf-field-row {
     display: grid;
     grid-template-columns: 40px 50px 140px 110px 1fr 60px 60px 70px;
+    min-width: 700px;
     gap: 0.5rem;
     align-items: center;
     padding: 0.75rem 1rem;

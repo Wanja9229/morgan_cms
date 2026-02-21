@@ -1109,7 +1109,7 @@ function revokeReward(rcId, point, mbId) {
 
 <!-- 반려 사유 모달 -->
 <div id="reject-modal" class="mg-modal" style="display:none;">
-    <div class="mg-modal-content" style="max-width:400px;">
+    <div class="mg-modal-content" style="max-width:400px;max-height:90vh;overflow-y:auto;">
         <div class="mg-modal-header">
             <h3>보상 반려</h3>
             <button type="button" class="mg-modal-close" onclick="document.getElementById('reject-modal').style.display='none'">&times;</button>

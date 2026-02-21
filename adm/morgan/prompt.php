@@ -837,7 +837,7 @@ function deletePrompt(pmId, title) {
 
 <!-- 반려 사유 모달 -->
 <div id="reject-modal" class="mg-modal" style="display:none;">
-    <div class="mg-modal-content" style="max-width:450px;">
+    <div class="mg-modal-content" style="max-width:450px;max-height:90vh;overflow-y:auto;">
         <div class="mg-modal-header">
             <h3>반려 사유 입력</h3>
             <button type="button" class="mg-modal-close" onclick="closeRejectModal()">&times;</button>
@@ -943,6 +943,14 @@ function submitReject() {
 </script>
 
 <?php } ?>
+
+<style>
+@media (max-width: 768px) {
+    div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
 
 <?php
 require_once __DIR__.'/_tail.php';

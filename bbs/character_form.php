@@ -184,7 +184,7 @@ include_once(G5_THEME_PATH.'/head.php');
                     </div>
 
                     <!-- 세력/종족 -->
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <?php if (count($sides) > 0) { ?>
                         <div>
                             <label for="side_id" class="block text-sm font-medium text-mg-text-secondary mb-1.5">

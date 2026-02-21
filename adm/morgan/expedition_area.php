@@ -183,7 +183,7 @@ require_once __DIR__.'/_head.php';
 
 <!-- 파견지 모달 -->
 <div id="area-modal" class="mg-modal" style="display:none;">
-    <div class="mg-modal-content" style="max-width:700px;">
+    <div class="mg-modal-content" style="max-width:700px;max-height:90vh;overflow-y:auto;">
         <div class="mg-modal-header">
             <h3 id="modal-title">파견지 추가</h3>
             <button type="button" class="mg-modal-close" onclick="closeModal()">&times;</button>

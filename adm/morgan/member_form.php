@@ -38,7 +38,7 @@ include_once __DIR__.'/_head.php';
 <div style="display:flex; gap:1.5rem; flex-wrap:wrap;">
 
     <!-- 기본 정보 -->
-    <div style="flex:1; min-width:400px;">
+    <div style="flex:1; min-width:0;">
         <form method="post" action="<?php echo G5_ADMIN_URL; ?>/morgan/member_form_update.php">
             <input type="hidden" name="mb_id" value="<?php echo htmlspecialchars($mb['mb_id']); ?>">
 
@@ -119,7 +119,7 @@ include_once __DIR__.'/_head.php';
     </div>
 
     <!-- 캐릭터 목록 -->
-    <div style="width:350px; flex-shrink:0;">
+    <div style="flex:1; min-width:280px; max-width:350px;">
         <div class="mg-card">
             <div class="mg-card-header">보유 캐릭터 (<?php echo count($characters); ?>)</div>
             <div class="mg-card-body" style="padding:0;">

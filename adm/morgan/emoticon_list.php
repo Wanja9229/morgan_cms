@@ -120,7 +120,7 @@ require_once __DIR__.'/_head.php';
         <form name="femoticonlist" id="femoticonlist" method="post" action="./emoticon_form_update.php">
             <input type="hidden" name="action" value="bulk_delete">
 
-            <table class="mg-table">
+            <table class="mg-table" style="min-width:800px;">
                 <thead>
                     <tr>
                         <th style="width:40px;"><input type="checkbox" onclick="checkAll(this);"></th>

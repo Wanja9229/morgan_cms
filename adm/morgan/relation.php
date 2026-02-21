@@ -123,7 +123,8 @@ include_once('./_head.php');
         </form>
 
         <!-- 테이블 -->
-        <table class="mg-table">
+        <div style="overflow-x:auto;">
+        <table class="mg-table" style="min-width:800px;">
             <thead>
                 <tr>
                     <th style="width:50px">ID</th>
@@ -169,6 +170,7 @@ include_once('./_head.php');
                 <?php } ?>
             </tbody>
         </table>
+        </div>
 
         <!-- 페이지네이션 -->
         <?php if ($total_pages > 1) { ?>

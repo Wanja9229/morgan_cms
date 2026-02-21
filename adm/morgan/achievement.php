@@ -1046,6 +1046,14 @@ function escAttr(str) {
 
 <?php } ?>
 
+<style>
+@media (max-width: 768px) {
+    div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
+
 <?php
 require_once __DIR__.'/_tail.php';
 ?>

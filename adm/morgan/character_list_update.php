@@ -95,12 +95,19 @@ if (isset($_POST['btn_delete'])) {
         if (!$ch_id) continue;
 
         // 캐릭터 이미지 삭제
-        $char = sql_fetch("SELECT ch_thumb FROM {$g5['mg_character_table']} WHERE ch_id = {$ch_id}");
+        $char = sql_fetch("SELECT ch_thumb, ch_image FROM {$g5['mg_character_table']} WHERE ch_id = {$ch_id}");
         if ($char['ch_thumb'] && defined('MG_CHAR_IMAGE_PATH')) {
             $image_path = MG_CHAR_IMAGE_PATH.'/'.$char['ch_thumb'];
-            if (file_exists($image_path)) {
-                @unlink($image_path);
-            }
+            if (file_exists($image_path)) @unlink($image_path);
+            // 썸네일(th_) 파일도 삭제
+            $dir = dirname($char['ch_thumb']);
+            $base = basename($char['ch_thumb']);
+            $th_path = MG_CHAR_IMAGE_PATH.'/'.$dir.'/th_'.$base;
+            if (file_exists($th_path)) @unlink($th_path);
+        }
+        if (!empty($char['ch_image']) && defined('MG_CHAR_IMAGE_PATH')) {
+            $image_path = MG_CHAR_IMAGE_PATH.'/'.$char['ch_image'];
+            if (file_exists($image_path)) @unlink($image_path);
         }
 
         // 프로필 값 삭제

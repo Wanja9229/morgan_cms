@@ -120,8 +120,8 @@ include_once('./_head.php');
 
 <!-- 인장 목록 -->
 <div class="mg-card">
-    <div class="mg-card-body" style="padding:0;">
-        <table class="mg-table">
+    <div class="mg-card-body" style="padding:0;overflow-x:auto;">
+        <table class="mg-table" style="min-width:700px;">
             <thead>
                 <tr>
                     <th style="width:60px;">ID</th>
@@ -188,7 +188,7 @@ include_once('./_head.php');
 
 <!-- 인장 미리보기 모달 -->
 <div id="seal-modal" class="mg-modal" style="display:none;">
-    <div class="mg-modal-content" style="max-width:600px;">
+    <div class="mg-modal-content" style="max-width:600px;max-height:90vh;overflow-y:auto;">
         <div class="mg-modal-header">
             <h3 id="seal-modal-title">인장 미리보기</h3>
             <button type="button" onclick="closeSealModal()" class="mg-modal-close">&times;</button>
