@@ -64,7 +64,7 @@ include_once __DIR__.'/_head.php';
                     <div style="display:flex; gap:1rem;">
                         <div class="mg-form-group" style="flex:1;">
                             <label class="mg-form-label">포인트</label>
-                            <input type="number" name="mb_point" class="mg-form-input" value="<?php echo $mb['mb_point']; ?>">
+                            <div class="mg-form-input" style="background:var(--mg-bg-tertiary);cursor:default;"><?php echo number_format($mb['mb_point']); ?>P</div>
                         </div>
                         <div class="mg-form-group" style="flex:1;">
                             <label class="mg-form-label">권한 레벨</label>
@@ -86,14 +86,20 @@ include_once __DIR__.'/_head.php';
             <div class="mg-card">
                 <div class="mg-card-header">상태 관리</div>
                 <div class="mg-card-body">
-                    <div style="display:flex; gap:1rem;">
-                        <div class="mg-form-group" style="flex:1;">
+                    <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+                        <div class="mg-form-group" style="flex:1; min-width:200px;">
                             <label class="mg-form-label">차단일 (비워두면 해제)</label>
-                            <input type="text" name="mb_intercept_date" class="mg-form-input" value="<?php echo $mb['mb_intercept_date']; ?>" placeholder="YYYYMMDD 또는 비움">
+                            <div style="display:flex; gap:0.25rem;">
+                                <input type="text" name="mb_intercept_date" id="mb_intercept_date" class="mg-form-input" value="<?php echo $mb['mb_intercept_date']; ?>" placeholder="YYYYMMDD 또는 비움" style="flex:1;">
+                                <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="document.getElementById('mb_intercept_date').value='<?php echo date('Ymd'); ?>';" style="white-space:nowrap;">오늘로 설정</button>
+                            </div>
                         </div>
-                        <div class="mg-form-group" style="flex:1;">
-                            <label class="mg-form-label">탈퇴일</label>
-                            <input type="text" class="mg-form-input" value="<?php echo $mb['mb_leave_date'] ?: '-'; ?>" disabled>
+                        <div class="mg-form-group" style="flex:1; min-width:200px;">
+                            <label class="mg-form-label">탈퇴일 (비워두면 해제)</label>
+                            <div style="display:flex; gap:0.25rem;">
+                                <input type="text" name="mb_leave_date" id="mb_leave_date" class="mg-form-input" value="<?php echo $mb['mb_leave_date']; ?>" placeholder="YYYYMMDD 또는 비움" style="flex:1;">
+                                <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="document.getElementById('mb_leave_date').value='<?php echo date('Ymd'); ?>';" style="white-space:nowrap;">오늘로 설정</button>
+                            </div>
                         </div>
                     </div>
                     <div class="mg-form-group">

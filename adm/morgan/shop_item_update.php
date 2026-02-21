@@ -34,6 +34,11 @@ if ($mode == 'add' || $mode == 'edit') {
         alert('필수 항목을 입력해주세요.');
     }
 
+    // 프로필 스킨은 신규 등록 불가 (개발자가 직접 DB에 등록)
+    if ($mode == 'add' && $si_type == 'profile_skin') {
+        alert('프로필 스킨은 관리자 페이지에서 신규 등록할 수 없습니다.');
+    }
+
     // 효과 데이터 처리
     $effect = isset($_POST['effect']) ? $_POST['effect'] : array();
     $effect_data = array();
@@ -63,6 +68,13 @@ if ($mode == 'add' || $mode == 'edit') {
             if (!empty($effect['material_id'])) {
                 $effect_data['material_id'] = (int)$effect['material_id'];
                 $effect_data['material_amount'] = max(1, (int)($effect['material_amount'] ?? 1));
+            }
+            break;
+        case 'profile_skin':
+            $valid_skins = mg_get_profile_skin_list();
+            $skin_id = $effect['skin_id'] ?? '';
+            if (isset($valid_skins[$skin_id])) {
+                $effect_data['skin_id'] = $skin_id;
             }
             break;
         case 'badge':

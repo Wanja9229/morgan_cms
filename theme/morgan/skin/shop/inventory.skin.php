@@ -12,9 +12,14 @@ $item_type_names = array(
     'nick_color' => '닉네임 색상',
     'nick_effect' => '닉네임 효과',
     'profile_border' => '프로필 테두리',
+    'profile_skin' => '프로필 스킨',
     'equip' => '장비',
     'emoticon_set' => '이모티콘',
+    'emoticon_reg' => '이모티콘 등록권',
     'furniture' => '가구',
+    'material' => '재료',
+    'seal_bg' => '인장 배경',
+    'seal_frame' => '인장 프레임',
     'etc' => '기타'
 );
 ?>
@@ -206,7 +211,7 @@ $item_type_names = array(
                 if (!$active_item) continue;
             ?>
             <div class="flex items-center gap-2 bg-mg-bg-primary rounded-lg px-3 py-1.5">
-                <span class="text-xs text-mg-accent"><?php echo $item_type_names[$active_item['si_type']]; ?></span>
+                <span class="text-xs text-mg-accent"><?php echo $item_type_names[$active_item['si_type']] ?? $active_item['si_type']; ?></span>
                 <span class="text-sm text-mg-text-primary"><?php echo htmlspecialchars($active_item['si_name']); ?></span>
             </div>
             <?php } ?>
@@ -218,9 +223,9 @@ $item_type_names = array(
     <?php if (count($inventory) > 0) { ?>
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         <?php foreach ($inventory as $inv) {
-            $item = $inv['item'];
+            $item = $inv;
             $is_active = in_array($item['si_id'], $active_si_ids);
-            $is_usable = in_array($item['si_type'], ['title', 'badge', 'nick_color', 'nick_effect', 'profile_border']);
+            $is_usable = in_array($item['si_type'], ['title', 'badge', 'nick_color', 'nick_effect', 'profile_border', 'profile_skin']);
         ?>
         <div class="card p-0 overflow-hidden <?php echo $is_active ? 'ring-2 ring-mg-accent' : ''; ?>">
             <!-- 이미지 -->

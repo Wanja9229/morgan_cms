@@ -437,9 +437,14 @@ $mg['shop_type_labels'] = array(
     'nick_color' => '닉네임 색상',
     'nick_effect' => '닉네임 효과',
     'profile_border' => '프로필 테두리',
+    'profile_skin' => '프로필 스킨',
     'equip' => '장비',
+    'emoticon_set' => '이모티콘',
+    'emoticon_reg' => '이모티콘 등록권',
     'material' => '재료',
     'furniture' => '가구',
+    'seal_bg' => '인장 배경',
+    'seal_frame' => '인장 프레임',
     'etc' => '기타'
 );
 
@@ -1494,7 +1499,7 @@ function mg_use_item($mb_id, $si_id, $ch_id = null) {
     }
 
     // 같은 타입의 다른 아이템 해제 (칭호, 닉네임색상 등은 하나만)
-    $exclusive_types = array('title', 'nick_color', 'nick_effect', 'seal_bg', 'seal_frame');
+    $exclusive_types = array('title', 'nick_color', 'nick_effect', 'seal_bg', 'seal_frame', 'profile_skin');
     if (in_array($item['si_type'], $exclusive_types)) {
         sql_query("DELETE FROM {$mg['item_active_table']}
                    WHERE mb_id = '{$mb_id}' AND ia_type = '{$item['si_type']}'");
@@ -1568,6 +1573,28 @@ function mg_get_active_items($mb_id, $type = null) {
     }
 
     return $items;
+}
+
+/**
+ * 프로필 스킨 목록 (등록된 스킨 레지스트리)
+ */
+function mg_get_profile_skin_list() {
+    return array(
+        'spy_dossier'       => '요원 인사기록',
+        'fantasy_parchment' => '길드 모험가 프로필',
+        'nib_database'      => 'NIB 수사 데이터베이스',
+        'wanted_poster'     => 'WANTED 수배전단',
+    );
+}
+
+/**
+ * 회원의 활성 프로필 스킨 ID 반환 (없으면 null)
+ */
+function mg_get_profile_skin_id($mb_id) {
+    $items = mg_get_active_items($mb_id, 'profile_skin');
+    if (empty($items)) return null;
+    $effect = $items[0]['si_effect'];
+    return $effect['skin_id'] ?? null;
 }
 
 /**

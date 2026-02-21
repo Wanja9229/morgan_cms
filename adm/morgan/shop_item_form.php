@@ -108,6 +108,11 @@ require_once __DIR__.'/_head.php';
 
                     <div class="mg-form-group">
                         <label class="mg-form-label" for="si_type">아이템 타입 <span style="color:var(--mg-error);">*</span></label>
+                        <?php if ($is_edit && $si_type == 'profile_skin') { ?>
+                        <input type="hidden" name="si_type" value="profile_skin">
+                        <div class="mg-form-input" style="background:var(--mg-bg-primary);cursor:not-allowed;opacity:0.7;">프로필 스킨</div>
+                        <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;">프로필 스킨 타입은 변경할 수 없습니다. 새 스킨은 개발자가 코드 패치로 추가합니다.</div>
+                        <?php } else { ?>
                         <select name="si_type" id="si_type" class="mg-form-select" required onchange="toggleEffectFields();">
                             <?php foreach ($item_types as $type_key => $type_info) { ?>
                             <option value="<?php echo $type_key; ?>" <?php echo $si_type == $type_key ? 'selected' : ''; ?>>
@@ -118,6 +123,7 @@ require_once __DIR__.'/_head.php';
                         <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;" id="type_desc">
                             <?php echo $type_desc; ?>
                         </div>
+                        <?php } ?>
                     </div>
 
                     <div class="mg-form-group">
@@ -223,6 +229,22 @@ require_once __DIR__.'/_head.php';
                         <div class="mg-form-group">
                             <label class="mg-form-label" for="effect_badge_color">뱃지 배경색</label>
                             <input type="color" name="effect[badge_color]" id="effect_badge_color" value="<?php echo isset($effect['badge_color']) ? $effect['badge_color'] : '#fbbf24'; ?>" style="width:100px;height:38px;">
+                        </div>
+                    </div>
+
+                    <!-- 프로필 스킨 -->
+                    <div class="effect-field" data-type="profile_skin" style="<?php echo $si_type != 'profile_skin' ? 'display:none;' : ''; ?>">
+                        <?php
+                        $profile_skins = mg_get_profile_skin_list();
+                        $eff_skin_id = isset($effect['skin_id']) ? $effect['skin_id'] : '';
+                        ?>
+                        <div class="mg-form-group">
+                            <label class="mg-form-label">스킨</label>
+                            <input type="hidden" name="effect[skin_id]" value="<?php echo htmlspecialchars($eff_skin_id); ?>">
+                            <div class="mg-form-input" style="background:var(--mg-bg-primary);cursor:not-allowed;opacity:0.7;">
+                                <?php echo htmlspecialchars(isset($profile_skins[$eff_skin_id]) ? $profile_skins[$eff_skin_id] : $eff_skin_id); ?>
+                            </div>
+                            <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;">스킨 종류는 개발자가 코드 패치로 관리합니다.</div>
                         </div>
                     </div>
 

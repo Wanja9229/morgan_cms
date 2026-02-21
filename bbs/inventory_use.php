@@ -43,24 +43,10 @@ if ($my_count <= 0) {
 // 사용/해제 처리
 if ($action == 'use') {
     $result = mg_use_item($member['mb_id'], $si_id, $ch_id);
-    if ($result === true) {
-        echo json_encode([
-            'success' => true,
-            'message' => '아이템이 적용되었습니다.'
-        ]);
-    } else {
-        echo json_encode(['success' => false, 'message' => $result]);
-    }
+    echo json_encode($result);
 } else if ($action == 'unuse') {
     $result = mg_unuse_item($member['mb_id'], $si_id);
-    if ($result === true) {
-        echo json_encode([
-            'success' => true,
-            'message' => '아이템이 해제되었습니다.'
-        ]);
-    } else {
-        echo json_encode(['success' => false, 'message' => $result]);
-    }
+    echo json_encode($result);
 } else {
     echo json_encode(['success' => false, 'message' => '잘못된 요청입니다.']);
 }

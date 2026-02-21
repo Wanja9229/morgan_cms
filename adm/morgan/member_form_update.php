@@ -25,7 +25,6 @@ $mb_nick = isset($_POST['mb_nick']) ? trim(clean_xss_tags($_POST['mb_nick'])) : 
 $mb_name = isset($_POST['mb_name']) ? trim(clean_xss_tags($_POST['mb_name'])) : '';
 $mb_email = isset($_POST['mb_email']) ? trim(clean_xss_tags($_POST['mb_email'])) : '';
 $mb_password = isset($_POST['mb_password']) ? trim($_POST['mb_password']) : '';
-$mb_point = isset($_POST['mb_point']) ? (int)$_POST['mb_point'] : 0;
 $mb_level = isset($_POST['mb_level']) ? max(1, min(10, (int)$_POST['mb_level'])) : 1;
 // 본인 정보 수정 시 레벨 변경 방지
 if ($mb['mb_id'] === $member['mb_id']) {
@@ -33,6 +32,7 @@ if ($mb['mb_id'] === $member['mb_id']) {
 }
 $mb_memo = isset($_POST['mb_memo']) ? trim($_POST['mb_memo']) : '';
 $mb_intercept_date = isset($_POST['mb_intercept_date']) ? trim(clean_xss_tags($_POST['mb_intercept_date'])) : '';
+$mb_leave_date = isset($_POST['mb_leave_date']) ? trim(clean_xss_tags($_POST['mb_leave_date'])) : '';
 
 if (!$mb_nick) { alert('닉네임을 입력해주세요.'); }
 if (!$mb_email) { alert('이메일을 입력해주세요.'); }
@@ -47,10 +47,10 @@ if ($mb_nick != $mb['mb_nick']) {
 $sql_set = "mb_nick = '".sql_real_escape_string($mb_nick)."',
             mb_name = '".sql_real_escape_string($mb_name)."',
             mb_email = '".sql_real_escape_string($mb_email)."',
-            mb_point = {$mb_point},
             mb_level = {$mb_level},
             mb_memo = '".sql_real_escape_string($mb_memo)."',
-            mb_intercept_date = '".sql_real_escape_string($mb_intercept_date)."'";
+            mb_intercept_date = '".sql_real_escape_string($mb_intercept_date)."',
+            mb_leave_date = '".sql_real_escape_string($mb_leave_date)."'";
 
 // 비밀번호 변경
 if ($mb_password) {

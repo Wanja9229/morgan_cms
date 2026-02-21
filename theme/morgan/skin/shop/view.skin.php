@@ -12,9 +12,14 @@ $item_type_names = array(
     'nick_color' => '닉네임 색상',
     'nick_effect' => '닉네임 효과',
     'profile_border' => '프로필 테두리',
+    'profile_skin' => '프로필 스킨',
     'equip' => '장비',
     'emoticon_set' => '이모티콘',
+    'emoticon_reg' => '이모티콘 등록권',
     'furniture' => '가구',
+    'material' => '재료',
+    'seal_bg' => '인장 배경',
+    'seal_frame' => '인장 프레임',
     'etc' => '기타'
 );
 
@@ -77,7 +82,7 @@ if ($item['si_stock'] > 0) {
                     <?php if ($category) { ?>
                     <span class="text-xs px-2 py-1 bg-mg-bg-tertiary text-mg-text-muted rounded"><?php echo htmlspecialchars($category['sc_name']); ?></span>
                     <?php } ?>
-                    <span class="text-xs px-2 py-1 bg-mg-accent/20 text-mg-accent rounded"><?php echo $item_type_names[$item['si_type']]; ?></span>
+                    <span class="text-xs px-2 py-1 bg-mg-accent/20 text-mg-accent rounded"><?php echo $item_type_names[$item['si_type']] ?? $item['si_type']; ?></span>
                 </div>
 
                 <!-- 상품명 -->
