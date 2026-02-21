@@ -248,6 +248,26 @@ require_once __DIR__.'/_head.php';
                         </div>
                     </div>
 
+                    <!-- 프로필 배경 -->
+                    <div class="effect-field" data-type="profile_bg" style="<?php echo $si_type != 'profile_bg' ? 'display:none;' : ''; ?>">
+                        <?php
+                        $profile_bgs = mg_get_profile_bg_list();
+                        $eff_bg_id = isset($effect['bg_id']) ? $effect['bg_id'] : '';
+                        ?>
+                        <div class="mg-form-group">
+                            <label class="mg-form-label">배경 효과</label>
+                            <select name="effect[bg_id]" class="mg-form-select">
+                                <option value="">선택</option>
+                                <?php foreach ($profile_bgs as $bg_key => $bg_name) { ?>
+                                <option value="<?php echo $bg_key; ?>" <?php echo $eff_bg_id == $bg_key ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($bg_name); ?>
+                                </option>
+                                <?php } ?>
+                            </select>
+                            <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;">배경 효과 종류는 개발자가 코드 패치로 관리합니다.</div>
+                        </div>
+                    </div>
+
                     <!-- 재료 타입 -->
                     <div class="effect-field" data-type="material" style="<?php echo $si_type != 'material' ? 'display:none;' : ''; ?>">
                         <?php

@@ -27,6 +27,30 @@ $ch_date = date('Y-m-d', strtotime($char['ch_datetime']));
 }
 .skin-nib a { color: #00d2ff; text-decoration: none; }
 .skin-nib a:hover { text-decoration: underline; }
+
+/* 호버 효과 */
+.skin-nib .nib-rel-item { transition: all 0.25s ease; border-left: 3px solid transparent; padding-left: 0.5rem; }
+.skin-nib .nib-rel-item:hover { background: rgba(0,210,255,0.05); border-left-color: #00d2ff; }
+
+.skin-nib .nib-field-row { transition: all 0.25s ease; border-left: 2px solid transparent; padding-left: 0.25rem; }
+.skin-nib .nib-field-row:hover { background: rgba(0,210,255,0.05); border-left-color: #00d2ff; }
+
+.skin-nib .nib-chip { transition: all 0.25s ease; }
+.skin-nib .nib-chip:hover { transform: scale(1.05); box-shadow: 0 0 10px rgba(0,210,255,0.3); border-color: #00d2ff; }
+
+/* 초상화 호버 */
+.skin-nib .nib-photo img { transition: all 0.4s ease; }
+.skin-nib .nib-photo:hover img { filter: brightness(1.2); }
+.skin-nib .nib-photo { transition: box-shadow 0.4s ease; }
+.skin-nib .nib-photo:hover { box-shadow: 0 0 20px rgba(0,210,255,0.3); }
+
+/* 그리드 배경 미세 이동 */
+@keyframes nib-grid-drift { 0% { background-position: 0 0; } 100% { background-position: 20px 20px; } }
+.skin-nib .nib-grid-bg { animation: nib-grid-drift 8s linear infinite; }
+
+/* 헤더 배너 */
+.skin-nib [style*="border-bottom:2px solid #00d2ff"] img { transition: transform 0.6s ease; }
+.skin-nib [style*="border-bottom:2px solid #00d2ff"]:hover img { transform: scale(1.03); }
 </style>
 
 <div class="mg-inner skin-nib nib-grid-bg">
@@ -47,11 +71,18 @@ $ch_date = date('Y-m-d', strtotime($char['ch_datetime']));
         </div>
     </header>
 
+    <?php if ($char_header) { ?>
+    <div style="position:relative;max-height:12rem;overflow:hidden;border-bottom:2px solid #00d2ff;max-width:72rem;margin:0 auto;">
+        <img src="<?php echo $char_header; ?>" alt="" style="width:100%;height:100%;object-fit:cover;filter:brightness(60%) saturate(120%);">
+        <div style="position:absolute;bottom:0;left:0;right:0;height:3rem;background:linear-gradient(transparent,#0a0f1a);"></div>
+    </div>
+    <?php } ?>
+
     <main style="max-width:72rem;margin:0 auto;display:grid;grid-template-columns:1fr;gap:1.5rem;" class="nib-main-grid">
         <!-- 좌측: 사진 + 바이오 -->
         <div style="display:flex;flex-direction:column;gap:1.5rem;">
             <!-- 사진 -->
-            <div style="background:#151c2c;border:1px solid #2d3a54;padding:0.5rem;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);">
+            <div class="nib-photo" style="background:#151c2c;border:1px solid #2d3a54;padding:0.5rem;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);">
                 <div style="aspect-ratio:1;background:#1e293b;position:relative;overflow:hidden;display:flex;align-items:flex-end;justify-content:center;">
                     <?php if ($char_image) { ?>
                     <img src="<?php echo $char_image; ?>" alt="<?php echo $ch_name; ?>" style="width:100%;height:100%;object-fit:cover;filter:grayscale(100%) contrast(125%) brightness(90%);position:relative;z-index:10;">
@@ -80,7 +111,7 @@ $ch_date = date('Y-m-d', strtotime($char['ch_datetime']));
                 <h3 style="border-bottom:1px solid #2d3a54;padding-bottom:0.5rem;margin-bottom:0.75rem;font-size:0.75rem;font-weight:bold;text-transform:uppercase;letter-spacing:0.2em;" class="nib-accent"><?php echo htmlspecialchars($first_category); ?></h3>
                 <div style="display:flex;flex-direction:column;gap:0.5rem;">
                     <?php foreach ($first_fields as $field) { ?>
-                    <div style="display:flex;justify-content:space-between;">
+                    <div class="nib-field-row" style="display:flex;justify-content:space-between;">
                         <span style="text-transform:uppercase;"><?php echo htmlspecialchars($field['pf_name']); ?>:</span>
                         <span style="color:#f1f5f9;">
                             <?php
@@ -155,7 +186,7 @@ $ch_date = date('Y-m-d', strtotime($char['ch_datetime']));
                 </div>
                 <div style="padding:1rem;font-size:0.875rem;overflow-y:auto;line-height:1.6;color:#94a3b8;" class="nib-data">
                     <?php foreach ($fields as $field) { ?>
-                    <div style="margin-bottom:0.75rem;">
+                    <div class="nib-field-row" style="margin-bottom:0.75rem;">
                         <span class="nib-accent" style="font-weight:bold;">[<?php echo htmlspecialchars($field['pf_name']); ?>]</span>
                         <span style="margin-left:0.5rem;">
                             <?php
@@ -181,7 +212,7 @@ $ch_date = date('Y-m-d', strtotime($char['ch_datetime']));
                 <?php foreach ($achievement_showcase as $acd) {
                     $a_name = htmlspecialchars($acd['tier_name'] ?: $acd['ac_name']);
                 ?>
-                <span style="background:rgba(0,210,255,0.1);border:1px solid #00d2ff;color:#00d2ff;padding:0.25rem 0.75rem;font-size:0.75rem;border-radius:9999px;" class="nib-data">#<?php echo $a_name; ?></span>
+                <span style="background:rgba(0,210,255,0.1);border:1px solid #00d2ff;color:#00d2ff;padding:0.25rem 0.75rem;font-size:0.75rem;border-radius:9999px;" class="nib-data nib-chip">#<?php echo $a_name; ?></span>
                 <?php } ?>
             </div>
             <?php } ?>
@@ -209,7 +240,7 @@ $ch_date = date('Y-m-d', strtotime($char['ch_datetime']));
                 $my_label = htmlspecialchars($is_a ? ($rel['cr_label_a'] ?: $rel['cr_label_b']) : ($rel['cr_label_b'] ?: $rel['cr_label_a']));
                 $rel_color = $rel['cr_color'] ?: '#95a5a6';
             ?>
-            <div style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0;border-bottom:1px solid #2d3a54;font-size:0.875rem;" class="nib-data">
+            <div style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0;border-bottom:1px solid #2d3a54;font-size:0.875rem;" class="nib-data nib-rel-item">
                 <?php if ($other_thumb) { ?>
                 <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.$other_thumb; ?>" style="width:32px;height:32px;border-radius:50%;object-fit:cover;filter:grayscale(100%);">
                 <?php } else { ?>

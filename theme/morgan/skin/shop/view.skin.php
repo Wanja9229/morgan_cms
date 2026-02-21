@@ -13,6 +13,7 @@ $item_type_names = array(
     'nick_effect' => '닉네임 효과',
     'profile_border' => '프로필 테두리',
     'profile_skin' => '프로필 스킨',
+    'profile_bg' => '프로필 배경',
     'equip' => '장비',
     'emoticon_set' => '이모티콘',
     'emoticon_reg' => '이모티콘 등록권',

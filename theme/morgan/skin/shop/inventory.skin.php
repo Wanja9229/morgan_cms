@@ -13,6 +13,7 @@ $item_type_names = array(
     'nick_effect' => '닉네임 효과',
     'profile_border' => '프로필 테두리',
     'profile_skin' => '프로필 스킨',
+    'profile_bg' => '프로필 배경',
     'equip' => '장비',
     'emoticon_set' => '이모티콘',
     'emoticon_reg' => '이모티콘 등록권',
@@ -225,7 +226,7 @@ $item_type_names = array(
         <?php foreach ($inventory as $inv) {
             $item = $inv;
             $is_active = in_array($item['si_id'], $active_si_ids);
-            $is_usable = in_array($item['si_type'], ['title', 'badge', 'nick_color', 'nick_effect', 'profile_border', 'profile_skin']);
+            $is_usable = in_array($item['si_type'], ['title', 'badge', 'nick_color', 'nick_effect', 'profile_border', 'profile_skin', 'profile_bg']);
         ?>
         <div class="card p-0 overflow-hidden <?php echo $is_active ? 'ring-2 ring-mg-accent' : ''; ?>">
             <!-- 이미지 -->

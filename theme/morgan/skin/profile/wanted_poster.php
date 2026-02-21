@@ -28,6 +28,28 @@ $ch_owner = htmlspecialchars($char['mb_nick']);
 .skin-wanted img.wt-photo {
     filter: grayscale(100%) contrast(150%) brightness(75%);
 }
+
+/* 호버 효과 */
+.skin-wanted img.wt-photo { transition: filter 0.5s ease; }
+.skin-wanted img.wt-photo:hover { filter: grayscale(30%) contrast(120%) brightness(90%); }
+
+.skin-wanted .wt-rel-item { transition: all 0.25s ease; border-left: 3px solid transparent; padding-left: 0.5rem; }
+.skin-wanted .wt-rel-item:hover { background: rgba(139,0,0,0.08); border-left-color: #8b0000; }
+
+.skin-wanted .wt-field-row { transition: all 0.25s ease; }
+.skin-wanted .wt-field-row:hover { background: rgba(58,42,26,0.06); }
+
+/* WANTED 텍스트 hover shake */
+@keyframes wt-shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-2px); } 75% { transform: translateX(2px); } }
+.skin-wanted .wt-western:hover { animation: wt-shake 0.3s ease 2; }
+
+/* 컨테이너 hover */
+.skin-wanted .wt-rough { transition: box-shadow 0.4s ease; }
+.skin-wanted .wt-rough:hover { box-shadow: 0 0 0 4px #e2cfb6, 0 0 0 8px #3a2a1a, 8px 8px 25px rgba(0,0,0,0.6); }
+
+/* 버튼 호버 */
+.skin-wanted button { transition: all 0.25s ease; }
+.skin-wanted button:hover { background: #6d0000 !important; transform: translateY(-1px); }
 </style>
 
 <div class="mg-inner skin-wanted">
@@ -48,6 +70,12 @@ $ch_owner = htmlspecialchars($char['mb_nick']);
                 DEAD OR ALIVE
             </p>
         </header>
+
+        <?php if ($char_header) { ?>
+        <div style="margin:1rem 0;max-height:10rem;overflow:hidden;border:3px solid #3a2a1a;">
+            <img src="<?php echo $char_header; ?>" alt="" style="width:100%;height:100%;object-fit:cover;filter:sepia(40%) contrast(120%) brightness(90%);">
+        </div>
+        <?php } ?>
 
         <!-- 사진 -->
         <div style="position:relative;margin-bottom:2rem;">
@@ -108,7 +136,7 @@ $ch_owner = htmlspecialchars($char['mb_nick']);
 
             <?php if (count($grouped_fields) > 0) { ?>
             <?php foreach ($grouped_fields as $category => $fields) { ?>
-            <div style="background:rgba(0,0,0,0.05);padding:1rem;border-radius:0.25rem;margin-bottom:1rem;">
+            <div class="wt-field-row" style="background:rgba(0,0,0,0.05);padding:1rem;border-radius:0.25rem;margin-bottom:1rem;">
                 <p style="font-weight:bold;text-decoration:underline;margin-bottom:0.5rem;"><?php echo htmlspecialchars($category); ?>:</p>
                 <ul style="list-style:disc;list-style-position:inside;">
                     <?php foreach ($fields as $field) { ?>
@@ -165,7 +193,7 @@ $ch_owner = htmlspecialchars($char['mb_nick']);
                 $my_label = htmlspecialchars($is_a ? ($rel['cr_label_a'] ?: $rel['cr_label_b']) : ($rel['cr_label_b'] ?: $rel['cr_label_a']));
                 $rel_color = $rel['cr_color'] ?: '#95a5a6';
             ?>
-            <div style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0;border-bottom:1px solid rgba(58,42,26,0.15);font-size:0.875rem;">
+            <div class="wt-rel-item" style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0;border-bottom:1px solid rgba(58,42,26,0.15);font-size:0.875rem;">
                 <?php if ($other_thumb) { ?>
                 <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.$other_thumb; ?>" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #3a2a1a;filter:grayscale(100%);">
                 <?php } else { ?>

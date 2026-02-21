@@ -289,8 +289,143 @@ include_once(G5_THEME_PATH.'/head.php');
                             </div>
                         </div>
                     </div>
+
+                    <!-- 헤더/배너 이미지 -->
+                    <div>
+                        <h3 class="text-sm font-medium text-mg-text-secondary mb-3">헤더/배너 이미지 <span class="text-mg-text-muted font-normal">(선택)</span></h3>
+                        <div class="flex items-start gap-4">
+                            <div class="w-full h-32 bg-mg-bg-tertiary rounded-lg overflow-hidden flex-shrink-0" style="max-width:20rem;">
+                                <?php if ($is_edit && ($char['ch_header'] ?? '')) { ?>
+                                <img id="header-preview" src="<?php echo MG_CHAR_IMAGE_URL.'/'.$char['ch_header']; ?>" alt="" class="w-full h-full object-cover">
+                                <?php } else { ?>
+                                <div id="header-preview" class="w-full h-full flex items-center justify-center text-mg-text-muted">
+                                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                </div>
+                                <?php } ?>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <input type="file" name="ch_header" id="ch_header" accept="image/*"
+                                   class="block w-full text-sm text-mg-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-mg-accent file:text-white hover:file:bg-mg-accent-hover file:cursor-pointer cursor-pointer">
+                            <p class="text-xs text-mg-text-muted mt-2">프로필 상단에 표시되는 가로형 배너 이미지 (권장: 1200x400)</p>
+                            <?php if ($is_edit && ($char['ch_header'] ?? '')) { ?>
+                            <label class="flex items-center gap-2 mt-2 cursor-pointer">
+                                <input type="checkbox" name="del_header" value="1" class="w-4 h-4 rounded border-mg-bg-tertiary bg-mg-bg-primary text-red-500 focus:ring-red-500 focus:ring-offset-0">
+                                <span class="text-sm text-red-400">삭제</span>
+                            </label>
+                            <?php } ?>
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            <!-- 프로필 스킨/배경 선택 -->
+            <?php
+            // 보유한 스킨/배경 아이템 조회
+            $owned_skins = array();
+            $owned_bgs = array();
+            if ($member['mb_id']) {
+                $inv_sql = "SELECT i.si_id, i.si_name, i.si_type, i.si_effect
+                            FROM {$g5['mg_inventory_table']} iv
+                            JOIN {$g5['mg_shop_item_table']} i ON iv.si_id = i.si_id
+                            WHERE iv.mb_id = '{$member['mb_id']}' AND iv.iv_count > 0
+                            AND i.si_type IN ('profile_skin', 'profile_bg')
+                            ORDER BY i.si_order, i.si_id";
+                $inv_result = sql_query($inv_sql);
+                while ($inv_row = sql_fetch_array($inv_result)) {
+                    $eff = json_decode($inv_row['si_effect'], true);
+                    if ($inv_row['si_type'] === 'profile_skin' && !empty($eff['skin_id'])) {
+                        $owned_skins[$eff['skin_id']] = $inv_row['si_name'];
+                    } elseif ($inv_row['si_type'] === 'profile_bg' && !empty($eff['bg_id'])) {
+                        $owned_bgs[$eff['bg_id']] = $inv_row['si_name'];
+                    }
+                }
+            }
+            $cur_skin = $is_edit ? ($char['ch_profile_skin'] ?? '') : '';
+            $cur_bg = $is_edit ? ($char['ch_profile_bg'] ?? '') : '';
+            $cur_bg_color = $is_edit ? ($char['ch_profile_bg_color'] ?? '#f59f0a') : '#f59f0a';
+            $cur_bg_image = $is_edit ? ($char['ch_profile_bg_image'] ?? '') : '';
+            $has_bg_custom = mg_has_bg_custom_perm($member['mb_id']);
+
+            // 인벤토리 활성 아이템 (회원 전체 기본값)
+            $active_skin_id = mg_get_profile_skin_id($member['mb_id']);
+            $active_bg_id = mg_get_profile_bg_id($member['mb_id']);
+
+            // 기본 옵션 라벨 (인벤토리 기본값 표시)
+            $all_skin_names = mg_get_profile_skin_list();
+            $all_bg_names = mg_get_profile_bg_list();
+            $skin_default_label = $active_skin_id ? '인벤토리 기본값 (' . ($all_skin_names[$active_skin_id] ?? $active_skin_id) . ')' : '기본 스킨';
+            $bg_default_label = $active_bg_id ? '인벤토리 기본값 (' . ($all_bg_names[$active_bg_id] ?? $active_bg_id) . ')' : '없음';
+            ?>
+            <?php if (!empty($owned_skins) || !empty($owned_bgs) || $has_bg_custom) { ?>
+            <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
+                <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary">
+                    <h2 class="font-medium text-mg-text-primary">프로필 꾸미기</h2>
+                </div>
+                <div class="p-4 space-y-4">
+                    <?php if (!empty($owned_skins)) { ?>
+                    <div>
+                        <label for="ch_profile_skin" class="block text-sm font-medium text-mg-text-secondary mb-1.5">프로필 스킨</label>
+                        <select name="ch_profile_skin" id="ch_profile_skin" class="w-full bg-mg-bg-tertiary border border-mg-bg-tertiary text-mg-text-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-mg-accent focus:border-transparent">
+                            <option value=""><?php echo htmlspecialchars($skin_default_label); ?></option>
+                            <?php foreach ($owned_skins as $sk_id => $sk_name) { ?>
+                            <option value="<?php echo htmlspecialchars($sk_id); ?>" <?php echo $cur_skin === $sk_id ? 'selected' : ''; ?>><?php echo htmlspecialchars($sk_name); ?></option>
+                            <?php } ?>
+                        </select>
+                        <p class="text-xs text-mg-text-muted mt-1">인벤토리에서 장착한 스킨이 전체 캐릭터에 기본 적용됩니다. 이 캐릭터만 다르게 하려면 선택하세요.</p>
+                    </div>
+                    <?php } ?>
+                    <?php if (!empty($owned_bgs)) { ?>
+                    <div>
+                        <label for="ch_profile_bg" class="block text-sm font-medium text-mg-text-secondary mb-1.5">배경 효과</label>
+                        <select name="ch_profile_bg" id="ch_profile_bg" class="w-full bg-mg-bg-tertiary border border-mg-bg-tertiary text-mg-text-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-mg-accent focus:border-transparent">
+                            <option value=""><?php echo htmlspecialchars($bg_default_label); ?></option>
+                            <?php foreach ($owned_bgs as $bg_id => $bg_name) { ?>
+                            <option value="<?php echo htmlspecialchars($bg_id); ?>" <?php echo $cur_bg === $bg_id ? 'selected' : ''; ?>><?php echo htmlspecialchars($bg_name); ?></option>
+                            <?php } ?>
+                        </select>
+                        <p class="text-xs text-mg-text-muted mt-1">인벤토리에서 장착한 배경이 전체 캐릭터에 기본 적용됩니다. 이 캐릭터만 다르게 하려면 선택하세요.</p>
+                    </div>
+                    <!-- 배경 효과 메인 색상 -->
+                    <div id="bg-color-wrap" style="<?php echo ($cur_bg || $active_bg_id) ? '' : 'display:none;'; ?>">
+                        <label for="ch_profile_bg_color" class="block text-sm font-medium text-mg-text-secondary mb-1.5">배경 메인 색상</label>
+                        <div class="flex items-center gap-3">
+                            <input type="color" name="ch_profile_bg_color" id="ch_profile_bg_color"
+                                   value="<?php echo htmlspecialchars($cur_bg_color); ?>"
+                                   class="w-10 h-10 rounded border border-mg-bg-tertiary cursor-pointer" style="padding:2px;">
+                            <span id="bg-color-hex" class="text-xs text-mg-text-muted"><?php echo htmlspecialchars($cur_bg_color); ?></span>
+                        </div>
+                        <p class="text-xs text-mg-text-muted mt-1">배경 효과의 메인 색상을 자유롭게 선택할 수 있습니다.</p>
+                    </div>
+                    <?php } ?>
+                    <?php if ($has_bg_custom) { ?>
+                    <!-- 커스텀 배경 이미지 -->
+                    <div>
+                        <label class="block text-sm font-medium text-mg-text-secondary mb-1.5">배경 이미지</label>
+                        <?php if ($cur_bg_image) { ?>
+                        <div class="mb-2 rounded-lg overflow-hidden border border-mg-bg-tertiary" style="max-width:20rem;height:8rem;">
+                            <img id="bg-image-preview" src="<?php echo MG_CHAR_IMAGE_URL.'/'.htmlspecialchars($cur_bg_image); ?>" class="w-full h-full object-cover" alt="">
+                        </div>
+                        <?php } else { ?>
+                        <div id="bg-image-preview" class="mb-2 rounded-lg overflow-hidden border border-mg-bg-tertiary flex items-center justify-center text-mg-text-muted" style="max-width:20rem;height:8rem;display:none;">
+                        </div>
+                        <?php } ?>
+                        <input type="file" name="ch_profile_bg_image" id="ch_profile_bg_image" accept="image/*"
+                               class="block w-full text-sm text-mg-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-mg-accent file:text-white hover:file:bg-mg-accent-hover file:cursor-pointer cursor-pointer">
+                        <p class="text-xs text-mg-text-muted mt-1">프로필 배경에 표시될 이미지 (권장: 1920x1080). Vanta 이펙트와 함께 사용 가능합니다.</p>
+                        <?php if ($cur_bg_image) { ?>
+                        <label class="flex items-center gap-2 mt-2 cursor-pointer">
+                            <input type="checkbox" name="del_bg_image" value="1" class="w-4 h-4 rounded border-mg-bg-tertiary bg-mg-bg-primary text-red-500 focus:ring-red-500 focus:ring-offset-0">
+                            <span class="text-sm text-red-400">삭제</span>
+                        </label>
+                        <?php } ?>
+                    </div>
+                    <?php } ?>
+                </div>
+            </div>
+            <?php } ?>
 
             <!-- 프로필 정보 (동적 필드) -->
             <?php foreach ($grouped_fields as $category => $fields) { ?>
@@ -605,6 +740,25 @@ function setupImagePreview(inputId, previewId) {
 // 두상/전신 이미지 미리보기
 setupImagePreview('ch_thumb', 'thumb-preview');
 setupImagePreview('ch_image', 'body-preview');
+setupImagePreview('ch_header', 'header-preview');
+setupImagePreview('ch_profile_bg_image', 'bg-image-preview');
+
+// 배경 효과 선택 시 색상 피커 표시/숨김
+var bgSelect = document.getElementById('ch_profile_bg');
+var bgColorWrap = document.getElementById('bg-color-wrap');
+var bgColorInput = document.getElementById('ch_profile_bg_color');
+var bgColorHex = document.getElementById('bg-color-hex');
+var hasActiveBg = <?php echo ($active_bg_id ? 'true' : 'false'); ?>;
+if (bgSelect && bgColorWrap) {
+    bgSelect.addEventListener('change', function() {
+        bgColorWrap.style.display = (this.value || hasActiveBg) ? '' : 'none';
+    });
+}
+if (bgColorInput && bgColorHex) {
+    bgColorInput.addEventListener('input', function() {
+        bgColorHex.textContent = this.value;
+    });
+}
 
 // 캐릭터 삭제
 function deleteCharacter() {

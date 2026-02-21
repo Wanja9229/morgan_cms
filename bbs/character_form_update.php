@@ -69,6 +69,14 @@ if ($btn_delete && $is_edit) {
         }
     }
 
+    // 헤더 이미지 삭제
+    if ($char['ch_header'] ?? '') {
+        $hdr_path = MG_CHAR_IMAGE_PATH.'/'.$char['ch_header'];
+        if (file_exists($hdr_path)) {
+            @unlink($hdr_path);
+        }
+    }
+
     // 소프트 삭제
     sql_query("UPDATE {$g5['mg_character_table']} SET ch_state = 'deleted', ch_update = NOW() WHERE ch_id = {$ch_id}");
 
@@ -148,6 +156,95 @@ if (isset($_FILES['ch_image']) && $_FILES['ch_image']['error'] == UPLOAD_ERR_OK)
     }
 }
 
+// 헤더/배너 이미지 처리
+$ch_header = $is_edit ? ($char['ch_header'] ?? '') : '';
+
+// 헤더 이미지 삭제 요청
+if (isset($_POST['del_header']) && $is_edit && $ch_header) {
+    $hdr_path = MG_CHAR_IMAGE_PATH.'/'.$ch_header;
+    if (file_exists($hdr_path)) {
+        @unlink($hdr_path);
+    }
+    $ch_header = '';
+}
+
+// 새 헤더 이미지 업로드
+if (isset($_FILES['ch_header']) && $_FILES['ch_header']['error'] == UPLOAD_ERR_OK) {
+    if ($ch_header) {
+        $old_path = MG_CHAR_IMAGE_PATH.'/'.$ch_header;
+        if (file_exists($old_path)) {
+            @unlink($old_path);
+        }
+    }
+
+    $upload = mg_upload_character_image($_FILES['ch_header'], $member['mb_id'], 'header');
+    if ($upload['success']) {
+        $ch_header = $upload['filename'];
+    }
+}
+
+// 배경 이미지 처리 (커스텀 권한 보유 시만)
+$ch_profile_bg_image = $is_edit ? ($char['ch_profile_bg_image'] ?? '') : '';
+
+if (mg_has_bg_custom_perm($member['mb_id'])) {
+    // 삭제 요청
+    if (isset($_POST['del_bg_image']) && $is_edit && $ch_profile_bg_image) {
+        $bg_path = MG_CHAR_IMAGE_PATH.'/'.$ch_profile_bg_image;
+        if (file_exists($bg_path)) {
+            @unlink($bg_path);
+        }
+        $ch_profile_bg_image = '';
+    }
+
+    // 새 배경 이미지 업로드
+    if (isset($_FILES['ch_profile_bg_image']) && $_FILES['ch_profile_bg_image']['error'] == UPLOAD_ERR_OK) {
+        if ($ch_profile_bg_image) {
+            $old_path = MG_CHAR_IMAGE_PATH.'/'.$ch_profile_bg_image;
+            if (file_exists($old_path)) {
+                @unlink($old_path);
+            }
+        }
+
+        $upload = mg_upload_character_image($_FILES['ch_profile_bg_image'], $member['mb_id'], 'bg');
+        if ($upload['success']) {
+            $ch_profile_bg_image = $upload['filename'];
+        }
+    }
+}
+
+// 프로필 스킨/배경 선택 처리 (보유 여부 검증)
+$ch_profile_skin = isset($_POST['ch_profile_skin']) ? trim($_POST['ch_profile_skin']) : ($is_edit ? ($char['ch_profile_skin'] ?? '') : '');
+$ch_profile_bg = isset($_POST['ch_profile_bg']) ? trim($_POST['ch_profile_bg']) : ($is_edit ? ($char['ch_profile_bg'] ?? '') : '');
+$ch_profile_bg_color = isset($_POST['ch_profile_bg_color']) ? trim($_POST['ch_profile_bg_color']) : ($is_edit ? ($char['ch_profile_bg_color'] ?? '#f59f0a') : '#f59f0a');
+if (!preg_match('/^#[0-9a-fA-F]{6}$/', $ch_profile_bg_color)) $ch_profile_bg_color = '#f59f0a';
+
+if ($ch_profile_skin) {
+    $valid_skins = mg_get_profile_skin_list();
+    if (!isset($valid_skins[$ch_profile_skin])) {
+        $ch_profile_skin = '';
+    } else {
+        // 보유 여부 확인
+        $own_check = sql_fetch("SELECT iv.iv_id FROM {$g5['mg_inventory_table']} iv
+            JOIN {$g5['mg_shop_item_table']} si ON iv.si_id = si.si_id
+            WHERE iv.mb_id = '{$member['mb_id']}' AND iv.iv_count > 0
+            AND si.si_type = 'profile_skin' AND si.si_effect LIKE '%\"{$ch_profile_skin}\"%'");
+        if (!$own_check['iv_id']) $ch_profile_skin = '';
+    }
+}
+if ($ch_profile_bg) {
+    $valid_bgs = mg_get_profile_bg_list();
+    if (!isset($valid_bgs[$ch_profile_bg])) {
+        $ch_profile_bg = '';
+    } else {
+        // 보유 여부 확인
+        $own_check = sql_fetch("SELECT iv.iv_id FROM {$g5['mg_inventory_table']} iv
+            JOIN {$g5['mg_shop_item_table']} si ON iv.si_id = si.si_id
+            WHERE iv.mb_id = '{$member['mb_id']}' AND iv.iv_count > 0
+            AND si.si_type = 'profile_bg' AND si.si_effect LIKE '%\"{$ch_profile_bg}\"%'");
+        if (!$own_check['iv_id']) $ch_profile_bg = '';
+    }
+}
+
 // 대표 캐릭터 처리 (하나만 허용)
 if ($ch_main) {
     sql_query("UPDATE {$g5['mg_character_table']} SET ch_main = 0 WHERE mb_id = '{$member['mb_id']}'");
@@ -168,6 +265,11 @@ if ($is_edit) {
             ch_main = {$ch_main},
             ch_thumb = '".sql_real_escape_string($ch_thumb)."',
             ch_image = '".sql_real_escape_string($ch_image)."',
+            ch_header = '".sql_real_escape_string($ch_header)."',
+            ch_profile_skin = '".sql_real_escape_string($ch_profile_skin)."',
+            ch_profile_bg = '".sql_real_escape_string($ch_profile_bg)."',
+            ch_profile_bg_color = '".sql_real_escape_string($ch_profile_bg_color)."',
+            ch_profile_bg_image = '".sql_real_escape_string($ch_profile_bg_image)."',
             ch_state = '{$ch_state}',
             ch_update = NOW()
             WHERE ch_id = {$ch_id}";
@@ -186,6 +288,11 @@ if ($is_edit) {
             ch_main = {$ch_main},
             ch_thumb = '".sql_real_escape_string($ch_thumb)."',
             ch_image = '".sql_real_escape_string($ch_image)."',
+            ch_header = '".sql_real_escape_string($ch_header)."',
+            ch_profile_skin = '".sql_real_escape_string($ch_profile_skin)."',
+            ch_profile_bg = '".sql_real_escape_string($ch_profile_bg)."',
+            ch_profile_bg_color = '".sql_real_escape_string($ch_profile_bg_color)."',
+            ch_profile_bg_image = '".sql_real_escape_string($ch_profile_bg_image)."',
             ch_state = '{$ch_state}',
             ch_datetime = NOW()";
     sql_query($sql);

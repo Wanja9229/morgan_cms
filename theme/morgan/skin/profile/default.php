@@ -20,6 +20,11 @@ if (!defined('_GNUBOARD_')) exit;
 
     <!-- 프로필 헤더 -->
     <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden mb-6">
+        <?php if ($char_header) { ?>
+        <div style="max-height:13rem;overflow:hidden;">
+            <img src="<?php echo $char_header; ?>" alt="" style="width:100%;height:100%;object-fit:cover;">
+        </div>
+        <?php } ?>
         <div class="md:flex">
             <!-- 이미지 -->
             <div class="md:w-64 lg:w-80 flex-shrink-0">
@@ -227,3 +232,71 @@ if (!defined('_GNUBOARD_')) exit;
     <!-- 소유자 인장 -->
     <?php if (function_exists('mg_render_seal')) { echo mg_render_seal($char['mb_id'], 'full'); } ?>
 </div>
+
+<style>
+/* default 스킨 호버 효과 */
+
+/* 프로필 카드 */
+.mg-inner > .bg-mg-bg-secondary {
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.mg-inner > .bg-mg-bg-secondary:hover {
+    border-color: var(--mg-accent);
+    box-shadow: 0 4px 20px rgba(245, 159, 10, 0.08);
+}
+
+/* 헤더 배너 */
+.mg-inner > .bg-mg-bg-secondary > div:first-child img {
+    transition: transform 0.6s ease;
+}
+.mg-inner > .bg-mg-bg-secondary > div:first-child:hover img {
+    transform: scale(1.03);
+}
+
+/* 초상화 */
+.mg-inner .aspect-square img {
+    transition: transform 0.4s ease, filter 0.4s ease;
+}
+.mg-inner .aspect-square:hover img {
+    transform: scale(1.05);
+    filter: brightness(1.1);
+}
+
+/* 관계 항목 */
+.mg-inner .divide-y > div {
+    transition: background-color 0.25s ease, padding-left 0.25s ease;
+}
+.mg-inner .divide-y > div:hover {
+    background-color: rgba(245, 159, 10, 0.04);
+    padding-left: 1.25rem;
+}
+
+/* 프로필 필드 카드 */
+.mg-inner .space-y-4 > div > .bg-mg-bg-secondary {
+    transition: border-color 0.3s ease;
+}
+.mg-inner .space-y-4 > div > .bg-mg-bg-secondary:hover {
+    border-color: var(--mg-text-muted);
+}
+
+/* 업적 배지 */
+.mg-inner .flex.gap-3 > div[style*="border"] {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.mg-inner .flex.gap-3 > div[style*="border"]:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 12px rgba(245, 159, 10, 0.2);
+}
+
+/* 액션 버튼 강화 */
+.mg-inner .bg-mg-accent {
+    transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.mg-inner .bg-mg-accent:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(245, 159, 10, 0.3);
+}
+.mg-inner .bg-mg-bg-tertiary {
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+</style>

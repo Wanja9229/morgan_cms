@@ -26,6 +26,33 @@ $ch_owner = htmlspecialchars($char['mb_nick']);
 .skin-spy .spy-img-wrapper:hover img { filter: grayscale(0%); }
 .skin-spy .spy-bar { height: 12px; border-radius: 2px; overflow: hidden; background: #334155; }
 .skin-spy .spy-bar-fill { height: 100%; background: #3b82f6; }
+
+/* 호버 효과 */
+.skin-spy .spy-img-wrapper { overflow: hidden; }
+.skin-spy .spy-img-wrapper img { transition: filter 0.5s, transform 0.5s; }
+.skin-spy .spy-img-wrapper:hover img { filter: grayscale(0%); transform: scale(1.05); }
+
+/* 관계 항목 호버 */
+.skin-spy .spy-rel-item { transition: all 0.25s ease; border-left: 3px solid transparent; padding-left: 0.5rem; }
+.skin-spy .spy-rel-item:hover { background: rgba(51,65,85,0.3); border-left-color: #3b82f6; }
+
+/* 프로필 필드 행 호버 */
+.skin-spy .spy-field-row { transition: all 0.25s ease; border-left: 2px solid transparent; }
+.skin-spy .spy-field-row:hover { background: rgba(51,65,85,0.2); border-left-color: #3b82f6; }
+
+/* 버튼 호버 */
+.skin-spy button, .skin-spy a[style*="border"] { transition: all 0.25s ease; }
+.skin-spy button:hover, .skin-spy a[style*="border"]:hover {
+    transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+}
+
+/* 업적 칩 호버 */
+.skin-spy .spy-badge { transition: all 0.25s ease; }
+.skin-spy .spy-badge:hover { transform: scale(1.05); box-shadow: 0 0 10px rgba(59,130,246,0.3); }
+
+/* 헤더 배너 호버 */
+.skin-spy [style*="max-height:12rem"] img { transition: transform 0.6s ease; }
+.skin-spy [style*="max-height:12rem"]:hover img { transform: scale(1.03); }
 </style>
 
 <div class="mg-inner skin-spy">
@@ -44,6 +71,13 @@ $ch_owner = htmlspecialchars($char['mb_nick']);
             <span>/// CLASSIFIED DOCUMENT ///</span>
             <span style="display:none;" class="sm-show">EYES ONLY</span>
         </div>
+
+        <?php if ($char_header) { ?>
+        <div style="position:relative;max-height:12rem;overflow:hidden;">
+            <img src="<?php echo $char_header; ?>" alt="" style="width:100%;height:100%;object-fit:cover;filter:grayscale(60%);">
+            <div class="spy-scanline" style="position:absolute;inset:0;"></div>
+        </div>
+        <?php } ?>
 
         <div style="display:grid;grid-template-columns:1fr;gap:1.5rem;padding:1.5rem;position:relative;z-index:10;" class="spy-grid">
             <!-- 좌측: 사진 + ID -->
@@ -117,7 +151,7 @@ $ch_owner = htmlspecialchars($char['mb_nick']);
                     </h3>
                     <div style="background:rgba(30,41,59,0.3);border-left:2px solid #334155;padding:1rem;border-radius:0 0.25rem 0.25rem 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;font-size:0.875rem;" class="spy-mono">
                         <?php foreach ($fields as $field) { ?>
-                        <div>
+                        <div class="spy-field-row">
                             <span style="color:#64748b;display:block;margin-bottom:0.25rem;font-size:0.75rem;text-transform:uppercase;"><?php echo htmlspecialchars($field['pf_name']); ?>:</span>
                             <span style="color:#cbd5e1;">
                                 <?php
@@ -149,7 +183,7 @@ $ch_owner = htmlspecialchars($char['mb_nick']);
                             $a_name = htmlspecialchars($acd['tier_name'] ?: $acd['ac_name']);
                             $a_icon = $acd['tier_icon'] ?: ($acd['ac_icon'] ?: '');
                         ?>
-                        <div style="background:rgba(30,41,59,0.5);border:1px solid #334155;padding:0.5rem 0.75rem;border-radius:2px;display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;" class="spy-mono" title="<?php echo $a_name; ?>">
+                        <div style="background:rgba(30,41,59,0.5);border:1px solid #334155;padding:0.5rem 0.75rem;border-radius:2px;display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;" class="spy-mono spy-badge" title="<?php echo $a_name; ?>">
                             <?php if ($a_icon) { ?>
                             <img src="<?php echo htmlspecialchars($a_icon); ?>" style="width:20px;height:20px;object-fit:contain;">
                             <?php } ?>
@@ -186,7 +220,7 @@ $ch_owner = htmlspecialchars($char['mb_nick']);
                     $my_label = htmlspecialchars($is_a ? ($rel['cr_label_a'] ?: $rel['cr_label_b']) : ($rel['cr_label_b'] ?: $rel['cr_label_a']));
                     $rel_color = $rel['cr_color'] ?: '#95a5a6';
                 ?>
-                <div style="display:flex;align-items:center;gap:0.75rem;padding:0.625rem 0;border-bottom:1px solid #1e293b;font-size:0.875rem;" class="spy-mono">
+                <div style="display:flex;align-items:center;gap:0.75rem;padding:0.625rem 0;border-bottom:1px solid #1e293b;font-size:0.875rem;" class="spy-mono spy-rel-item">
                     <?php if ($other_thumb) { ?>
                     <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.$other_thumb; ?>" style="width:32px;height:32px;border-radius:50%;object-fit:cover;filter:grayscale(50%);">
                     <?php } else { ?>

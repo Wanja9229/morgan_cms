@@ -77,6 +77,13 @@ if ($mode == 'add' || $mode == 'edit') {
                 $effect_data['skin_id'] = $skin_id;
             }
             break;
+        case 'profile_bg':
+            $valid_bgs = mg_get_profile_bg_list();
+            $bg_id = $effect['bg_id'] ?? '';
+            if (isset($valid_bgs[$bg_id])) {
+                $effect_data['bg_id'] = $bg_id;
+            }
+            break;
         case 'badge':
             $badge_icon = '';
             $badge_icon_type = isset($_POST['badge_icon_type']) ? $_POST['badge_icon_type'] : 'text';
