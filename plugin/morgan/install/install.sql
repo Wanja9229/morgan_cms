@@ -509,12 +509,22 @@ INSERT INTO `mg_shop_category` (`sc_name`, `sc_desc`, `sc_icon`, `sc_order`) VAL
 ('기타', '기타 아이템', 'gift', 5)
 ON DUPLICATE KEY UPDATE `sc_name` = VALUES(`sc_name`);
 
--- 4.5 기본 상점 아이템
-INSERT INTO `mg_shop_item` (`sc_id`, `si_name`, `si_desc`, `si_image`, `si_price`, `si_type`, `si_effect`, `si_stock`, `si_stock_sold`, `si_limit_per_user`, `si_sale_start`, `si_sale_end`, `si_consumable`, `si_display`, `si_use`, `si_order`, `si_datetime`) VALUES
-(1, '황금 닉네임', '닉네임이 황금색으로 빛납니다', NULL, 500, 'nick_color', '{"nick_color":"#fbbf24"}', -1, 0, 0, NULL, NULL, 0, 1, 1, 0, NOW()),
-(1, '무지개 효과', '닉네임에 무지개 효과가 적용됩니다', NULL, 1000, 'nick_effect', '{"nick_effect":"rainbow"}', 10, 0, 0, NULL, NULL, 0, 1, 1, 0, NOW()),
-(3, '파란 테두리', '프로필에 파란 테두리가 적용됩니다', NULL, 300, 'profile_border', '{"border_color":"#3b82f6","border_style":"solid"}', -1, 0, 0, NULL, NULL, 0, 1, 1, 0, NOW()),
-(1, '별 뱃지', '반짝이는 별 뱃지입니다', NULL, 200, 'badge', '{"badge_icon":"star","badge_color":"#fbbf24"}', -1, 0, 0, NULL, NULL, 0, 1, 1, 0, NOW());
+-- 4.5 기본 상점 아이템 (중복 방지)
+INSERT INTO `mg_shop_item` (`sc_id`, `si_name`, `si_desc`, `si_price`, `si_type`, `si_effect`, `si_stock`, `si_consumable`, `si_display`, `si_use`)
+SELECT 1, '황금 닉네임', '닉네임이 황금색으로 빛납니다', 500, 'nick_color', '{"nick_color":"#fbbf24"}', -1, 0, 1, 1
+FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_name = '황금 닉네임' AND si_type = 'nick_color');
+
+INSERT INTO `mg_shop_item` (`sc_id`, `si_name`, `si_desc`, `si_price`, `si_type`, `si_effect`, `si_stock`, `si_consumable`, `si_display`, `si_use`)
+SELECT 1, '무지개 효과', '닉네임에 무지개 효과가 적용됩니다', 1000, 'nick_effect', '{"nick_effect":"rainbow"}', 10, 0, 1, 1
+FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_name = '무지개 효과' AND si_type = 'nick_effect');
+
+INSERT INTO `mg_shop_item` (`sc_id`, `si_name`, `si_desc`, `si_price`, `si_type`, `si_effect`, `si_stock`, `si_consumable`, `si_display`, `si_use`)
+SELECT 3, '파란 테두리', '프로필에 파란 테두리가 적용됩니다', 300, 'profile_border', '{"border_color":"#3b82f6","border_style":"solid"}', -1, 0, 1, 1
+FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_name = '파란 테두리' AND si_type = 'profile_border');
+
+INSERT INTO `mg_shop_item` (`sc_id`, `si_name`, `si_desc`, `si_price`, `si_type`, `si_effect`, `si_stock`, `si_consumable`, `si_display`, `si_use`)
+SELECT 1, '별 뱃지', '반짝이는 별 뱃지입니다', 200, 'badge', '{"badge_icon":"star","badge_color":"#fbbf24"}', -1, 0, 1, 1
+FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_name = '별 뱃지' AND si_type = 'badge');
 
 -- ======================================
 -- 6. 기본 게시판 (GnuBoard5)
