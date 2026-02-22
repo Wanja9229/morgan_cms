@@ -21,6 +21,7 @@ $item_type_names = array(
     'material' => '재료',
     'seal_bg' => '인장 배경',
     'seal_frame' => '인장 프레임',
+    'char_slot' => '캐릭터 슬롯',
     'etc' => '기타'
 );
 

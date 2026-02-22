@@ -56,8 +56,8 @@ if (!empty($editing_ids)) {
     }
 }
 
-// 최대 캐릭터 수 (설정에서 가져오기)
-$max_characters = (int)mg_config('max_characters', 10);
+// 최대 캐릭터 수 (기본값 + 슬롯 아이템 보너스)
+$max_characters = mg_get_max_characters($member['mb_id']);
 $current_count = count($characters);
 $can_create = $current_count < $max_characters;
 

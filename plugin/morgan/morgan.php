@@ -476,6 +476,7 @@ $mg['shop_type_labels'] = array(
     'furniture' => '가구',
     'seal_bg' => '인장 배경',
     'seal_frame' => '인장 프레임',
+    'char_slot' => '캐릭터 슬롯',
     'etc' => '기타'
 );
 
@@ -1152,6 +1153,26 @@ function mg_get_shop_categories($use_only = true) {
 }
 
 /**
+ * 회원의 최대 캐릭터 수 계산 (기본값 + 슬롯 아이템 보너스)
+ *
+ * @param string $mb_id 회원 ID
+ * @return int 최대 캐릭터 수
+ */
+function mg_get_max_characters($mb_id) {
+    global $mg;
+
+    $base = (int)mg_config('max_characters', 1);
+    $mb_id_esc = sql_real_escape_string($mb_id);
+
+    // char_slot 타입 active 기록 수 = 추가 슬롯 수
+    $row = sql_fetch("SELECT COUNT(*) as cnt FROM {$mg['item_active_table']}
+                      WHERE mb_id = '{$mb_id_esc}' AND ia_type = 'char_slot'");
+    $bonus = (int)($row['cnt'] ?? 0);
+
+    return $base + $bonus;
+}
+
+/**
  * 상점 상품 목록 가져오기 (페이지네이션)
  *
  * @param int $sc_id 카테고리 ID (0=전체)
@@ -1524,6 +1545,24 @@ function mg_use_item($mb_id, $si_id, $ch_id = null) {
         return array('success' => false, 'message' => '존재하지 않는 상품입니다.');
     }
 
+    // 캐릭터 슬롯 아이템: 즉시 소모 + 영구 효과
+    if ($item['si_type'] === 'char_slot') {
+        $slots = isset($item['si_effect']['slots']) ? (int)$item['si_effect']['slots'] : 1;
+
+        // active에 기록 (해제 불가, 영구)
+        sql_query("INSERT INTO {$mg['item_active_table']} (mb_id, si_id, ia_type, ch_id)
+                   VALUES ('{$mb_id}', {$si_id}, 'char_slot', NULL)");
+
+        // 인벤토리에서 차감
+        sql_query("UPDATE {$mg['inventory_table']}
+                   SET iv_count = iv_count - 1
+                   WHERE mb_id = '{$mb_id}' AND si_id = {$si_id}");
+        sql_query("DELETE FROM {$mg['inventory_table']}
+                   WHERE mb_id = '{$mb_id}' AND si_id = {$si_id} AND iv_count <= 0");
+
+        return array('success' => true, 'message' => '캐릭터 슬롯이 ' . $slots . '개 추가되었습니다.');
+    }
+
     // 이미 사용중인지 확인
     if (mg_is_item_active($mb_id, $si_id)) {
         return array('success' => false, 'message' => '이미 사용 중인 아이템입니다.');
@@ -1566,6 +1605,12 @@ function mg_unuse_item($mb_id, $si_id) {
 
     $mb_id = sql_real_escape_string($mb_id);
     $si_id = (int)$si_id;
+
+    // 캐릭터 슬롯은 해제 불가 (영구 효과)
+    $item = mg_get_shop_item($si_id);
+    if ($item && $item['si_type'] === 'char_slot') {
+        return array('success' => false, 'message' => '캐릭터 슬롯은 해제할 수 없습니다.');
+    }
 
     sql_query("DELETE FROM {$mg['item_active_table']}
                WHERE mb_id = '{$mb_id}' AND si_id = {$si_id}");

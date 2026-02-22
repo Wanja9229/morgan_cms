@@ -201,7 +201,7 @@ CREATE TABLE IF NOT EXISTS `mg_shop_item` (
     `si_desc` text COMMENT '설명',
     `si_image` varchar(500) DEFAULT NULL COMMENT '이미지',
     `si_price` int NOT NULL COMMENT '가격',
-    `si_type` enum('title','badge','nick_color','nick_effect','profile_border','equip','emoticon_set','furniture','etc') NOT NULL DEFAULT 'etc' COMMENT '타입',
+    `si_type` enum('title','badge','nick_color','nick_effect','profile_border','equip','emoticon_set','emoticon_reg','furniture','material','seal_bg','seal_frame','profile_skin','profile_bg','char_slot','etc') NOT NULL DEFAULT 'etc' COMMENT '타입',
     `si_effect` text COMMENT '효과 데이터 (JSON)',
     `si_stock` int NOT NULL DEFAULT -1 COMMENT '재고 (-1=무제한)',
     `si_stock_sold` int NOT NULL DEFAULT 0 COMMENT '판매 수량',

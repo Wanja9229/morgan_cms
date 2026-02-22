@@ -39,10 +39,10 @@ if ($is_edit) {
     $sql = "SELECT COUNT(*) as cnt FROM {$g5['mg_character_table']}
             WHERE mb_id = '{$member['mb_id']}' AND ch_state != 'deleted'";
     $row = sql_fetch($sql);
-    $max_characters = (int)mg_config('max_characters', 10);
+    $max_characters = mg_get_max_characters($member['mb_id']);
 
     if ($row['cnt'] >= $max_characters) {
-        alert('최대 캐릭터 수('.$max_characters.'개)에 도달하여 더 이상 생성할 수 없습니다.');
+        alert('최대 캐릭터 수('.$max_characters.'개)에 도달하여 더 이상 생성할 수 없습니다. 상점에서 추가 슬롯을 구매할 수 있습니다.');
     }
 }
 

@@ -24,6 +24,7 @@ $item_types = array(
     'equip' => array('name' => '장비', 'desc' => '캐릭터 장착 아이템', 'group' => 'equip'),
     'material' => array('name' => '재료', 'desc' => '개척 시스템 재료 아이템', 'group' => 'material'),
     'furniture' => array('name' => '가구', 'desc' => '마이룸 가구', 'group' => 'etc'),
+    'char_slot' => array('name' => '캐릭터 슬롯', 'desc' => '사용 시 캐릭터를 1개 더 생성할 수 있습니다 (영구, 해제 불가)', 'group' => 'etc'),
     'etc' => array('name' => '기타', 'desc' => '기타 아이템', 'group' => 'etc')
 );
 
