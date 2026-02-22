@@ -212,7 +212,7 @@ $ch_date = date('Y.m.d', strtotime($char['ch_datetime']));
 .skin-noble button:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(114,47,55,0.4); }
 </style>
 
-<div class="mg-inner skin-noble">
+<div class="mg-inner skin-noble" style="max-width:800px;">
     <!-- 뒤로가기 -->
     <a href="javascript:history.back();" style="display:inline-flex;align-items:center;gap:4px;font-size:0.875rem;color:#d4a745;margin-bottom:1rem;text-decoration:none;">
         <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>

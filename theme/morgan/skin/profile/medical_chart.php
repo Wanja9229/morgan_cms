@@ -71,7 +71,7 @@ $ch_initial = mb_substr($char['ch_name'], 0, 1);
 .skin-med [style*="REFERENCE IMAGE"] { transition: opacity 0.3s ease; }
 </style>
 
-<div class="mg-inner skin-med">
+<div class="mg-inner skin-med" style="max-width:800px;">
     <!-- 뒤로가기 -->
     <a href="javascript:history.back();" style="display:inline-flex;align-items:center;gap:4px;font-size:0.875rem;color:#64748b;margin-bottom:1rem;text-decoration:none;">
         <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
@@ -79,7 +79,7 @@ $ch_initial = mb_substr($char['ch_name'], 0, 1);
     </a>
 
     <!-- 클립보드 -->
-    <div style="max-width:48rem;margin:0 auto;">
+    <div style="margin:0 auto;">
         <div class="med-clip"></div>
         <div class="med-clip-inner"></div>
 

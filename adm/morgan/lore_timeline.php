@@ -86,6 +86,11 @@ function saveTimelineDesc() {
     </div>
 </div>
 <?php } else { ?>
+<div id="tl-mobile-notice" style="display:none;padding:1rem;margin-bottom:1rem;background:var(--mg-bg-tertiary);border-radius:0.5rem;border-left:3px solid var(--mg-accent);">
+    <strong style="font-size:0.85rem;color:var(--mg-text-primary);">PC 환경 권장</strong>
+    <p style="font-size:0.8rem;color:var(--mg-text-muted);margin-top:0.25rem;">시대/이벤트 드래그 정렬은 PC에서 최적화되어 있습니다. 모바일에서는 가로 스크롤 후 드래그하세요.</p>
+</div>
+<script>if(window.innerWidth<768)document.getElementById('tl-mobile-notice').style.display='block';</script>
 <div id="era-sortable">
 <?php foreach ($eras as $era) { ?>
 <div class="mg-card era-sortable-item" data-era-id="<?php echo $era['le_id']; ?>" style="margin-bottom:1rem;">

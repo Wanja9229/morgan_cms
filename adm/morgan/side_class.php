@@ -112,22 +112,7 @@ require_once __DIR__.'/_head.php';
                             <td></td>
                             <td><input type="text" name="new_item_name" value="" class="mg-form-input" placeholder="새 소속명"></td>
                             <td>
-                                <div style="display:flex;gap:0.5rem;margin-bottom:0.25rem;">
-                                    <label style="font-size:0.75rem;display:flex;align-items:center;gap:0.2rem;cursor:pointer;">
-                                        <input type="radio" name="new_side_icon_type" value="text" checked onchange="toggleIconInput('side');">
-                                        <span>텍스트</span>
-                                    </label>
-                                    <label style="font-size:0.75rem;display:flex;align-items:center;gap:0.2rem;cursor:pointer;">
-                                        <input type="radio" name="new_side_icon_type" value="file" onchange="toggleIconInput('side');">
-                                        <span>파일</span>
-                                    </label>
-                                </div>
-                                <div id="new_side_icon_text">
-                                    <input type="text" name="new_item_icon" value="" class="mg-form-input" placeholder="아이콘명">
-                                </div>
-                                <div id="new_side_icon_file" style="display:none;">
-                                    <input type="file" name="new_item_icon_file" accept="image/*" class="mg-form-input" style="padding:0.25rem;font-size:0.75rem;">
-                                </div>
+                                <?php mg_icon_input('new_side_icon', '', array('text_name' => 'new_item_icon', 'file_name' => 'new_item_icon_file', 'show_preview' => false, 'show_delete' => false, 'compact' => true)); ?>
                             </td>
                             <td style="text-align:center;"><input type="checkbox" name="new_item_use" value="1" checked></td>
                             <td style="text-align:center;color:var(--mg-accent);font-size:0.75rem;">NEW</td>
@@ -236,22 +221,7 @@ require_once __DIR__.'/_head.php';
                                 </select>
                             </td>
                             <td>
-                                <div style="display:flex;gap:0.5rem;margin-bottom:0.25rem;">
-                                    <label style="font-size:0.75rem;display:flex;align-items:center;gap:0.2rem;cursor:pointer;">
-                                        <input type="radio" name="new_class_icon_type" value="text" checked onchange="toggleIconInput('class');">
-                                        <span>텍스트</span>
-                                    </label>
-                                    <label style="font-size:0.75rem;display:flex;align-items:center;gap:0.2rem;cursor:pointer;">
-                                        <input type="radio" name="new_class_icon_type" value="file" onchange="toggleIconInput('class');">
-                                        <span>파일</span>
-                                    </label>
-                                </div>
-                                <div id="new_class_icon_text">
-                                    <input type="text" name="new_item_icon" value="" class="mg-form-input" placeholder="아이콘명">
-                                </div>
-                                <div id="new_class_icon_file" style="display:none;">
-                                    <input type="file" name="new_item_icon_file" accept="image/*" class="mg-form-input" style="padding:0.25rem;font-size:0.75rem;">
-                                </div>
+                                <?php mg_icon_input('new_class_icon', '', array('text_name' => 'new_item_icon', 'file_name' => 'new_item_icon_file', 'show_preview' => false, 'show_delete' => false, 'compact' => true)); ?>
                             </td>
                             <td style="text-align:center;"><input type="checkbox" name="new_item_use" value="1" checked></td>
                             <td style="text-align:center;color:var(--mg-accent);font-size:0.75rem;">NEW</td>
@@ -303,13 +273,6 @@ function checkAll(el, formId) {
     var form = document.getElementById(formId);
     var chks = form.querySelectorAll('input[name="chk[]"]');
     chks.forEach(function(chk) { chk.checked = el.checked; });
-}
-
-// === 아이콘 입력 토글 ===
-function toggleIconInput(prefix) {
-    var type = document.querySelector('input[name="new_' + prefix + '_icon_type"]:checked').value;
-    document.getElementById('new_' + prefix + '_icon_text').style.display = type === 'text' ? '' : 'none';
-    document.getElementById('new_' + prefix + '_icon_file').style.display = type === 'file' ? '' : 'none';
 }
 
 // === 드래그 정렬 (소속/유형 각각 독립) ===

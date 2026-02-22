@@ -272,13 +272,23 @@ $item_type_names = array(
                         해제
                     </button>
                     <?php } else { ?>
-                    <button type="button" onclick="useItem(<?php echo $item['si_id']; ?>)" class="w-full bg-mg-accent text-white text-sm font-medium py-2 rounded-lg hover:bg-mg-accent-hover transition-colors">
-                        사용
-                    </button>
+                    <div style="display:flex;gap:0.25rem;">
+                        <button type="button" onclick="useItem(<?php echo $item['si_id']; ?>)" style="flex:1;" class="bg-mg-accent text-white text-sm font-medium py-2 rounded-lg hover:bg-mg-accent-hover transition-colors">
+                            사용
+                        </button>
+                        <button type="button" onclick="openGiftModal(<?php echo $item['si_id']; ?>, '<?php echo htmlspecialchars(addslashes($item['si_name']), ENT_QUOTES); ?>')" style="flex-shrink:0;width:2.5rem;" class="bg-mg-bg-tertiary text-mg-text-secondary text-sm py-2 rounded-lg hover:bg-mg-accent hover:text-white transition-colors" title="선물하기">
+                            <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
+                        </button>
+                    </div>
                     <?php } ?>
                 <?php } else { ?>
-                <div class="text-xs text-mg-text-muted text-center py-2">
-                    사용 불가
+                <div style="display:flex;gap:0.25rem;align-items:center;">
+                    <span class="text-xs text-mg-text-muted" style="flex:1;text-align:center;">사용 불가</span>
+                    <?php if (!$is_active) { ?>
+                    <button type="button" onclick="openGiftModal(<?php echo $item['si_id']; ?>, '<?php echo htmlspecialchars(addslashes($item['si_name']), ENT_QUOTES); ?>')" style="flex-shrink:0;width:2.5rem;" class="bg-mg-bg-tertiary text-mg-text-secondary text-sm py-2 rounded-lg hover:bg-mg-accent hover:text-white transition-colors" title="선물하기">
+                        <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
+                    </button>
+                    <?php } ?>
                 </div>
                 <?php } ?>
             </div>
@@ -313,6 +323,37 @@ $item_type_names = array(
             </svg>
             선물함
         </a>
+    </div>
+</div>
+
+<!-- 선물 모달 -->
+<div id="gift-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;">
+    <div style="background:var(--mg-bg-secondary);border-radius:0.75rem;padding:1.5rem;width:90%;max-width:400px;max-height:90vh;overflow-y:auto;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+            <h3 style="font-size:1.1rem;font-weight:600;color:var(--mg-text-primary);display:flex;align-items:center;gap:0.5rem;">
+                <svg class="w-5 h-5" style="color:var(--mg-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
+                아이템 선물
+            </h3>
+            <button type="button" onclick="closeGiftModal()" style="color:var(--mg-text-muted);font-size:1.5rem;line-height:1;background:none;border:none;cursor:pointer;">&times;</button>
+        </div>
+
+        <div id="gift-item-name" style="padding:0.75rem;background:var(--mg-bg-primary);border-radius:0.5rem;margin-bottom:1rem;font-size:0.9rem;color:var(--mg-text-primary);font-weight:500;"></div>
+
+        <div style="margin-bottom:1rem;">
+            <label style="display:block;font-size:0.85rem;color:var(--mg-text-secondary);margin-bottom:0.25rem;">받는 사람 (회원 ID)</label>
+            <input type="text" id="gift-mb-id-to" placeholder="회원 아이디 입력" style="width:100%;padding:0.5rem 0.75rem;background:var(--mg-bg-tertiary);border:1px solid transparent;border-radius:0.5rem;color:var(--mg-text-primary);font-size:0.9rem;outline:none;" onfocus="this.style.borderColor='var(--mg-accent)'" onblur="this.style.borderColor='transparent'">
+            <p id="gift-recipient-info" style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;"></p>
+        </div>
+
+        <div style="margin-bottom:1rem;">
+            <label style="display:block;font-size:0.85rem;color:var(--mg-text-secondary);margin-bottom:0.25rem;">메시지 (선택)</label>
+            <textarea id="gift-message" rows="2" maxlength="200" placeholder="선물과 함께 보낼 메시지" style="width:100%;padding:0.5rem 0.75rem;background:var(--mg-bg-tertiary);border:1px solid transparent;border-radius:0.5rem;color:var(--mg-text-primary);font-size:0.9rem;resize:vertical;outline:none;" onfocus="this.style.borderColor='var(--mg-accent)'" onblur="this.style.borderColor='transparent'"></textarea>
+        </div>
+
+        <div style="display:flex;gap:0.5rem;">
+            <button type="button" onclick="closeGiftModal()" style="flex:1;padding:0.6rem;background:var(--mg-bg-tertiary);color:var(--mg-text-secondary);border:none;border-radius:0.5rem;cursor:pointer;font-size:0.9rem;">취소</button>
+            <button type="button" id="gift-submit-btn" onclick="submitGift()" style="flex:1;padding:0.6rem;background:var(--mg-accent);color:white;border:none;border-radius:0.5rem;cursor:pointer;font-size:0.9rem;font-weight:500;">선물 보내기</button>
+        </div>
     </div>
 </div>
 
@@ -382,6 +423,90 @@ function unuseItem(si_id) {
     })
     .catch(error => {
         alert('오류가 발생했습니다.');
+        console.error(error);
+    });
+}
+
+// 선물 모달
+var _giftSiId = 0;
+var _giftCheckTimer = null;
+
+function openGiftModal(si_id, itemName) {
+    _giftSiId = si_id;
+    document.getElementById('gift-item-name').textContent = itemName;
+    document.getElementById('gift-mb-id-to').value = '';
+    document.getElementById('gift-message').value = '';
+    document.getElementById('gift-recipient-info').textContent = '';
+    document.getElementById('gift-modal').style.display = 'flex';
+}
+
+function closeGiftModal() {
+    document.getElementById('gift-modal').style.display = 'none';
+    _giftSiId = 0;
+}
+
+// 모달 외부 클릭 닫기
+document.getElementById('gift-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeGiftModal();
+});
+
+// 받는 사람 ID 입력 시 닉네임 확인
+document.getElementById('gift-mb-id-to').addEventListener('input', function() {
+    clearTimeout(_giftCheckTimer);
+    var val = this.value.trim();
+    var info = document.getElementById('gift-recipient-info');
+    if (!val) { info.textContent = ''; return; }
+    _giftCheckTimer = setTimeout(function() {
+        fetch('<?php echo G5_BBS_URL; ?>/ajax_member_check.php?mb_id=' + encodeURIComponent(val))
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.exists) {
+                info.textContent = d.mb_nick + ' 님에게 선물합니다.';
+                info.style.color = 'var(--mg-success, #22c55e)';
+            } else {
+                info.textContent = '존재하지 않는 회원입니다.';
+                info.style.color = 'var(--mg-error, #ef4444)';
+            }
+        })
+        .catch(function() { info.textContent = ''; });
+    }, 400);
+});
+
+function submitGift() {
+    var mbIdTo = document.getElementById('gift-mb-id-to').value.trim();
+    var message = document.getElementById('gift-message').value.trim();
+
+    if (!mbIdTo) {
+        alert('받는 사람의 회원 아이디를 입력해주세요.');
+        return;
+    }
+    if (!_giftSiId) return;
+
+    var btn = document.getElementById('gift-submit-btn');
+    btn.disabled = true;
+    btn.textContent = '처리 중...';
+
+    fetch('<?php echo G5_BBS_URL; ?>/inventory_gift.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'si_id=' + _giftSiId + '&mb_id_to=' + encodeURIComponent(mbIdTo) + '&message=' + encodeURIComponent(message)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            alert(data.message);
+            closeGiftModal();
+            location.reload();
+        } else {
+            alert(data.message);
+            btn.disabled = false;
+            btn.textContent = '선물 보내기';
+        }
+    })
+    .catch(function(error) {
+        alert('오류가 발생했습니다.');
+        btn.disabled = false;
+        btn.textContent = '선물 보내기';
         console.error(error);
     });
 }

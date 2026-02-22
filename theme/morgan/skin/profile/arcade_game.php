@@ -72,14 +72,14 @@ mt_srand();
 .skin-arcade .arc-blink { transition: color 0.3s ease; }
 </style>
 
-<div class="mg-inner skin-arcade">
+<div class="mg-inner skin-arcade" style="max-width:800px;">
     <!-- 뒤로가기 -->
     <a href="javascript:history.back();" style="display:inline-flex;align-items:center;gap:4px;font-size:0.625rem;color:#666;margin-bottom:1rem;">
         <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
         <span>&lt; BACK</span>
     </a>
 
-    <div class="arc-frame" style="max-width:40rem;margin:0 auto;">
+    <div class="arc-frame" style="margin:0 auto;">
         <!-- 헤더 -->
         <div class="arc-header">
             <div style="font-size:0.5rem;color:#666;margin-bottom:0.5rem;">- INSERT COIN -</div>

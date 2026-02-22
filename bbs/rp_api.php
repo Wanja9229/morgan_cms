@@ -274,7 +274,7 @@ switch ($action) {
                 $char_to_owner = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_rp_reply_table']}
                     WHERE rt_id = {$rt_id} AND ch_id = {$mem_ch_id}
                     AND (rr_context_ch_id = {$owner_ch_id} OR rr_context_ch_id = 0)");
-                $status['mutual_count'] = min((int)$owner_to_char['cnt'], (int)$char_to_owner['cnt']);
+                $status['mutual_count'] = min((int)($owner_to_char['cnt'] ?? 0), (int)($char_to_owner['cnt'] ?? 0));
             }
 
             $completions[] = $status;

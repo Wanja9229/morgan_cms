@@ -95,7 +95,7 @@ $profile_bg_id = ($char['ch_profile_bg'] ?? '') ?: mg_get_profile_bg_id($char['m
 $profile_bg_color = ($char['ch_profile_bg_color'] ?? '') ?: '#f59f0a';
 $skin_template = G5_THEME_PATH.'/skin/profile/default.php';
 
-if ($profile_skin_id) {
+if ($profile_skin_id && $profile_skin_id !== 'default') {
     $valid_skins = mg_get_profile_skin_list();
     if (isset($valid_skins[$profile_skin_id])) {
         $candidate = G5_THEME_PATH.'/skin/profile/'.$profile_skin_id.'.php';
@@ -104,11 +104,27 @@ if ($profile_skin_id) {
         }
     }
 }
+// 'default'가 명시적으로 설정된 경우 기본 스킨 사용 (이미 $skin_template = default.php)
 
 include_once(G5_THEME_PATH.'/head.php');
 
 // 헤더/배너 이미지 URL
 $char_header = ($char['ch_header'] ?? '') ? MG_CHAR_IMAGE_URL.'/'.$char['ch_header'] : '';
+
+// 프로필 배경색 → 프로필 스킨 메인 컬러 오버라이드
+if (!empty($profile_bg_color) && $profile_bg_color !== '#f59f0a') {
+    $r = hexdec(substr($profile_bg_color, 1, 2));
+    $g = hexdec(substr($profile_bg_color, 3, 2));
+    $b = hexdec(substr($profile_bg_color, 5, 2));
+    $hover_color = sprintf('#%02x%02x%02x', max(0, (int)($r * 0.82)), max(0, (int)($g * 0.82)), max(0, (int)($b * 0.82)));
+    echo '<style>
+.mg-inner { --mg-accent: ' . $profile_bg_color . '; --mg-accent-hover: ' . $hover_color . '; }
+.mg-inner .text-mg-accent { color: ' . $profile_bg_color . ' !important; }
+.mg-inner .bg-mg-accent { background-color: ' . $profile_bg_color . ' !important; }
+.mg-inner .bg-mg-accent:hover, .mg-inner .hover\:bg-mg-accent-hover:hover { background-color: ' . $hover_color . ' !important; }
+.mg-inner .border-mg-accent { border-color: ' . $profile_bg_color . ' !important; }
+</style>';
+}
 
 // 프로필 템플릿 렌더링
 include($skin_template);

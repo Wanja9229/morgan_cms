@@ -4,17 +4,11 @@ if (!defined('_GNUBOARD_')) exit;
 
 <div class="mg-inner">
     <!-- 헤더 -->
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center justify-between mb-6 flex-wrap gap-2">
         <div>
             <h2 class="text-xl font-bold text-mg-text-primary">알림</h2>
-            <?php if ($unread_count > 0) { ?>
-            <p class="text-sm text-mg-text-muted mt-0.5">읽지 않은 알림 <span class="text-mg-accent font-medium"><?php echo $unread_count; ?></span>개</p>
-            <?php } ?>
         </div>
         <div class="flex items-center gap-2">
-            <?php if ($unread_count > 0) { ?>
-            <button type="button" onclick="notiPageAction('read_all')" class="btn btn-secondary text-sm">전체 읽음</button>
-            <?php } ?>
             <button type="button" onclick="notiPageAction('delete_read')" class="btn btn-secondary text-sm">읽은 알림 삭제</button>
         </div>
     </div>

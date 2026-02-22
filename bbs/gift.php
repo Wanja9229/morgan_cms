@@ -39,7 +39,7 @@ $tab = isset($_GET['tab']) ? $_GET['tab'] : 'pending';
 
 // 대기 중인 선물 (받은)
 $pending_gifts = array();
-$sql = "SELECT g.*, i.si_name, i.si_image, i.si_type, i.si_price, m.mb_nick as from_nick
+$sql = "SELECT g.*, i.si_name, i.si_image, i.si_type, i.si_price, m.mb_nick as from_nick, g.gf_type
         FROM {$g5['mg_gift_table']} g
         LEFT JOIN {$g5['mg_shop_item_table']} i ON g.si_id = i.si_id
         LEFT JOIN {$g5['member_table']} m ON g.mb_id_from = m.mb_id
@@ -53,7 +53,7 @@ while ($row = sql_fetch_array($result)) {
 // 보낸 선물 내역
 $sent_gifts = array();
 if ($tab == 'sent') {
-    $sql = "SELECT g.*, i.si_name, i.si_image, i.si_type, i.si_price, m.mb_nick as to_nick
+    $sql = "SELECT g.*, i.si_name, i.si_image, i.si_type, i.si_price, m.mb_nick as to_nick, g.gf_type
             FROM {$g5['mg_gift_table']} g
             LEFT JOIN {$g5['mg_shop_item_table']} i ON g.si_id = i.si_id
             LEFT JOIN {$g5['member_table']} m ON g.mb_id_to = m.mb_id
@@ -69,7 +69,7 @@ if ($tab == 'sent') {
 // 받은 선물 내역 (수락한 것)
 $received_gifts = array();
 if ($tab == 'received') {
-    $sql = "SELECT g.*, i.si_name, i.si_image, i.si_type, i.si_price, m.mb_nick as from_nick
+    $sql = "SELECT g.*, i.si_name, i.si_image, i.si_type, i.si_price, m.mb_nick as from_nick, g.gf_type
             FROM {$g5['mg_gift_table']} g
             LEFT JOIN {$g5['mg_shop_item_table']} i ON g.si_id = i.si_id
             LEFT JOIN {$g5['member_table']} m ON g.mb_id_from = m.mb_id

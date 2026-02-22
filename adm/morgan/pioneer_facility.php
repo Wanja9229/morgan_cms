@@ -189,31 +189,7 @@ require_once __DIR__.'/_head.php';
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
                     <div class="mg-form-group">
                         <label class="mg-form-label">아이콘</label>
-                        <div id="current-icon-preview" style="display:none;margin-bottom:8px;">
-                            <img id="icon-preview-img" src="" style="width:32px;height:32px;object-fit:contain;background:var(--mg-bg-tertiary);border-radius:4px;padding:4px;">
-                            <label style="margin-left:8px;color:var(--mg-error);font-size:0.75rem;cursor:pointer;">
-                                <input type="checkbox" name="del_icon" value="1" onchange="toggleIconDelete(this)"> 삭제
-                            </label>
-                        </div>
-                        <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem;">
-                            <label style="font-size:0.75rem;display:flex;align-items:center;gap:0.25rem;cursor:pointer;">
-                                <input type="radio" name="icon_type" value="text" checked onchange="toggleIconInput()">
-                                <span>Heroicons</span>
-                            </label>
-                            <label style="font-size:0.75rem;display:flex;align-items:center;gap:0.25rem;cursor:pointer;">
-                                <input type="radio" name="icon_type" value="file" onchange="toggleIconInput()">
-                                <span>이미지 업로드</span>
-                            </label>
-                        </div>
-                        <div id="icon-text-input">
-                            <input type="text" name="fc_icon" id="fc_icon" class="mg-form-input" placeholder="heart, gift, shopping-cart 등">
-                        </div>
-                        <div id="icon-file-input" style="display:none;">
-                            <input type="file" name="fc_icon_file" accept="image/*" class="mg-form-input" style="padding:0.25rem;">
-                        </div>
-                        <p style="font-size:0.7rem;color:var(--mg-text-muted);margin-top:4px;">
-                            <a href="https://heroicons.com/" target="_blank" style="color:var(--mg-accent);">Heroicons</a> 아이콘명 또는 이미지 파일 (권장: 24x24px)
-                        </p>
+                        <?php mg_icon_input('fc_icon', '', array('delete_name' => 'del_icon', 'placeholder' => 'heart, gift, shopping-cart 등')); ?>
                     </div>
                     <div class="mg-form-group">
                         <label class="mg-form-label">정렬 순서</label>
@@ -350,9 +326,7 @@ function openFacilityModal() {
     document.getElementById('fc_unlock_target').value = '';
     document.getElementById('fc_unlock_target_board').value = '';
     document.getElementById('fc_unlock_target_text').value = '';
-    document.getElementById('current-icon-preview').style.display = 'none';
-    document.querySelector('input[name="icon_type"][value="text"]').checked = true;
-    toggleIconInput();
+    mgIconReset('fc_icon');
     toggleUnlockTarget();
     document.getElementById('facility-modal').style.display = 'flex';
 }
@@ -372,17 +346,7 @@ function editFacility(fc_id) {
     document.getElementById('fc_unlock_target').value = fc.fc_unlock_target || '';
 
     // 아이콘 설정
-    var iconVal = fc.fc_icon || '';
-    var isImage = iconVal && (iconVal.indexOf('/') !== -1 || iconVal.indexOf('http') === 0);
-    if (isImage) {
-        document.getElementById('fc_icon').value = '';
-        showIconPreview(iconVal);
-    } else {
-        document.getElementById('fc_icon').value = iconVal;
-        document.getElementById('current-icon-preview').style.display = 'none';
-    }
-    document.querySelector('input[name="icon_type"][value="text"]').checked = true;
-    toggleIconInput();
+    mgIconSet('fc_icon', fc.fc_icon || '');
 
     // 해금 대상 필드 설정
     if (fc.fc_unlock_type === 'board') {
@@ -410,35 +374,6 @@ document.getElementById('fc_unlock_target_text').addEventListener('input', syncU
 
 function closeModal() {
     document.getElementById('facility-modal').style.display = 'none';
-}
-
-function toggleIconInput() {
-    var type = document.querySelector('input[name="icon_type"]:checked').value;
-    document.getElementById('icon-text-input').style.display = type === 'text' ? '' : 'none';
-    document.getElementById('icon-file-input').style.display = type === 'file' ? '' : 'none';
-}
-
-function toggleIconDelete(checkbox) {
-    var preview = document.getElementById('current-icon-preview');
-    if (checkbox.checked) {
-        preview.style.opacity = '0.5';
-    } else {
-        preview.style.opacity = '1';
-    }
-}
-
-function showIconPreview(iconValue) {
-    var preview = document.getElementById('current-icon-preview');
-    var img = document.getElementById('icon-preview-img');
-
-    if (iconValue && (iconValue.indexOf('/') !== -1 || iconValue.indexOf('http') === 0)) {
-        // 이미지 경로인 경우
-        img.src = iconValue;
-        preview.style.display = 'flex';
-        preview.style.alignItems = 'center';
-    } else {
-        preview.style.display = 'none';
-    }
 }
 
 function startBuilding(fc_id) {

@@ -127,7 +127,7 @@ include_once(G5_THEME_PATH.'/head.php');
             ?>
             <div class="flex flex-col items-center p-2 rounded-lg" style="border:2px solid <?php echo $r_color; ?>;min-width:70px;">
                 <?php if ($icon) { ?>
-                <img src="<?php echo htmlspecialchars($icon); ?>" class="w-10 h-10 object-contain">
+                <?php echo mg_icon($icon, 'w-10 h-10'); ?>
                 <?php } else { ?>
                 <svg class="w-8 h-8" style="color:var(--mg-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3h14l-1.405 4.544A5.001 5.001 0 0112 13a5.001 5.001 0 01-5.595-5.456L5 3zm7 10v4m-4 4h8m-4-4v4"/></svg>
                 <?php } ?>
@@ -241,7 +241,7 @@ include_once(G5_THEME_PATH.'/head.php');
             <!-- 아이콘 -->
             <div class="flex-shrink-0 w-14 h-14 rounded-lg flex items-center justify-center" style="border:2px solid <?php echo $r_color; ?>;background:rgba(0,0,0,0.2);">
                 <?php if ($icon && ($completed || $progress > 0)) { ?>
-                <img src="<?php echo htmlspecialchars($icon); ?>" class="w-10 h-10 object-contain">
+                <?php echo mg_icon($icon, 'w-10 h-10'); ?>
                 <?php } elseif ($completed || $progress > 0) { ?>
                 <svg class="w-8 h-8" style="color:var(--mg-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3h14l-1.405 4.544A5.001 5.001 0 0112 13a5.001 5.001 0 01-5.595-5.456L5 3zm7 10v4m-4 4h8m-4-4v4"/></svg>
                 <?php } else { ?>

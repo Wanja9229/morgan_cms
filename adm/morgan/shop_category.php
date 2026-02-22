@@ -103,22 +103,7 @@ require_once __DIR__.'/_head.php';
                         <td><input type="text" name="new_sc_name" value="" class="mg-form-input" placeholder="새 카테고리명"></td>
                         <td><input type="text" name="new_sc_desc" value="" class="mg-form-input" placeholder="설명"></td>
                         <td>
-                            <div style="display:flex;gap:0.5rem;margin-bottom:0.25rem;">
-                                <label style="font-size:0.75rem;display:flex;align-items:center;gap:0.25rem;cursor:pointer;">
-                                    <input type="radio" name="new_icon_type" value="text" checked onchange="toggleNewIconInput();">
-                                    <span>텍스트</span>
-                                </label>
-                                <label style="font-size:0.75rem;display:flex;align-items:center;gap:0.25rem;cursor:pointer;">
-                                    <input type="radio" name="new_icon_type" value="file" onchange="toggleNewIconInput();">
-                                    <span>파일</span>
-                                </label>
-                            </div>
-                            <div id="new_icon_text">
-                                <input type="text" name="new_sc_icon" value="" class="mg-form-input" placeholder="아이콘명">
-                            </div>
-                            <div id="new_icon_file" style="display:none;">
-                                <input type="file" name="new_sc_icon_file" accept="image/*" class="mg-form-input" style="padding:0.25rem;font-size:0.75rem;">
-                            </div>
+                            <?php mg_icon_input('new_sc_icon', '', array('text_name' => 'new_sc_icon', 'file_name' => 'new_sc_icon_file', 'show_preview' => false, 'show_delete' => false, 'compact' => true)); ?>
                         </td>
                         <td style="text-align:center;"><input type="checkbox" name="new_sc_use" value="1" checked></td>
                         <td></td>
@@ -138,20 +123,10 @@ require_once __DIR__.'/_head.php';
     </div>
 </div>
 
-<div class="mg-alert mg-alert-info" style="margin-top:1rem;">
-    <strong>아이콘 사용법:</strong> Heroicons 아이콘명(예: sparkles, gift, shield, star)을 입력하거나, 이미지 파일을 업로드합니다. (권장: 24x24px, PNG/SVG)
-</div>
-
 <script>
 function checkAll(el) {
     var chks = document.querySelectorAll('input[name="chk[]"]');
     chks.forEach(function(chk) { chk.checked = el.checked; });
-}
-
-function toggleNewIconInput() {
-    var type = document.querySelector('input[name="new_icon_type"]:checked').value;
-    document.getElementById('new_icon_text').style.display = type === 'text' ? '' : 'none';
-    document.getElementById('new_icon_file').style.display = type === 'file' ? '' : 'none';
 }
 </script>
 

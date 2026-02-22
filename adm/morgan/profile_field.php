@@ -162,6 +162,12 @@ require_once __DIR__.'/_head.php';
 
 <form name="ffieldlist" id="ffieldlist" method="post" action="./profile_field_update.php">
 
+<div id="pf-mobile-notice" style="display:none;padding:1rem;margin-bottom:1rem;background:var(--mg-bg-tertiary);border-radius:0.5rem;border-left:3px solid var(--mg-accent);">
+    <strong style="font-size:0.85rem;color:var(--mg-text-primary);">PC 환경 권장</strong>
+    <p style="font-size:0.8rem;color:var(--mg-text-muted);margin-top:0.25rem;">섹션/필드 드래그 정렬은 PC에서 최적화되어 있습니다. 모바일에서는 가로 스크롤 후 드래그하세요.</p>
+</div>
+<script>if(window.innerWidth<768)document.getElementById('pf-mobile-notice').style.display='block';</script>
+
 <div id="section-sortable">
 <?php foreach ($fields_by_category as $category => $fields): ?>
 <div class="pf-section" data-category="<?php echo htmlspecialchars($category); ?>">

@@ -75,6 +75,11 @@ require_once __DIR__.'/_head.php';
         <span style="font-size:0.8rem;color:var(--mg-text-muted);">맵 위를 클릭하여 마커를 배치하세요 · 기존 마커 클릭 시 수정</span>
     </div>
     <div class="mg-card-body" style="padding:0;">
+        <div id="map-mobile-notice" style="display:none;padding:0.75rem 1rem;background:var(--mg-bg-tertiary);border-left:3px solid var(--mg-accent);">
+            <strong style="font-size:0.85rem;color:var(--mg-text-primary);">PC 환경 권장</strong>
+            <p style="font-size:0.8rem;color:var(--mg-text-muted);margin-top:0.25rem;">맵 마커 배치/편집은 PC에서 최적화되어 있습니다. 모바일에서는 정확한 위치 지정이 어려울 수 있습니다.</p>
+        </div>
+        <script>if(window.innerWidth<768)document.getElementById('map-mobile-notice').style.display='block';</script>
         <div id="map-editor" style="position:relative;overflow:auto;max-height:600px;cursor:crosshair;">
             <img src="<?php echo htmlspecialchars($map_image); ?>" id="map-editor-img" style="display:block;width:100%;min-width:600px;" alt="세계관 맵" draggable="false">
             <div id="map-editor-markers"></div>

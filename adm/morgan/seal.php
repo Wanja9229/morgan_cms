@@ -100,11 +100,6 @@ $_update_url = G5_ADMIN_URL . '/morgan/seal.php';
 include_once('./_head.php');
 ?>
 
-<div class="mg-page-header">
-    <h2 class="mg-page-title">인장 관리</h2>
-    <p class="mg-page-desc">회원 인장(시그니처 카드) 목록 조회 및 관리</p>
-</div>
-
 <!-- 검색 -->
 <div class="mg-card mb-4">
     <div class="mg-card-body">

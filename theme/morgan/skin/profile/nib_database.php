@@ -53,7 +53,7 @@ $ch_date = date('Y-m-d', strtotime($char['ch_datetime']));
 .skin-nib [style*="border-bottom:2px solid #00d2ff"]:hover img { transform: scale(1.03); }
 </style>
 
-<div class="mg-inner skin-nib nib-grid-bg">
+<div class="mg-inner skin-nib nib-grid-bg" style="max-width:800px;">
     <!-- NIB 헤더 -->
     <header style="max-width:72rem;margin:0 auto 1.5rem;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;border-bottom:2px solid rgba(0,210,255,0.5);padding-bottom:1rem;gap:1rem;">
         <div style="display:flex;align-items:center;gap:1rem;">
@@ -266,9 +266,7 @@ $ch_date = date('Y-m-d', strtotime($char['ch_datetime']));
     </footer>
 
     <!-- 소유자 인장 -->
-    <div style="max-width:72rem;margin:1rem auto 0;">
-        <?php if (function_exists('mg_render_seal')) { echo mg_render_seal($char['mb_id'], 'full'); } ?>
-    </div>
+    <?php if (function_exists('mg_render_seal')) { echo mg_render_seal($char['mb_id'], 'full'); } ?>
 </div>
 
 <style>

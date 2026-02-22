@@ -260,6 +260,7 @@ CREATE TABLE IF NOT EXISTS `mg_gift` (
     `mb_id_from` varchar(20) NOT NULL COMMENT '보내는 사람',
     `mb_id_to` varchar(20) NOT NULL COMMENT '받는 사람',
     `si_id` int NOT NULL COMMENT '상품 ID',
+    `gf_type` varchar(20) NOT NULL DEFAULT 'shop' COMMENT '선물 유형 (shop/inventory)',
     `gf_message` varchar(200) DEFAULT NULL COMMENT '메시지',
     `gf_status` enum('pending','accepted','rejected') NOT NULL DEFAULT 'pending' COMMENT '상태',
     `gf_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '선물 일시',
@@ -1593,6 +1594,7 @@ CREATE TABLE IF NOT EXISTS `mg_seal` (
     `seal_link` varchar(500) DEFAULT NULL COMMENT '링크 URL',
     `seal_link_text` varchar(100) DEFAULT NULL COMMENT '링크 텍스트',
     `seal_text_color` varchar(7) DEFAULT NULL COMMENT '텍스트 색상',
+    `seal_layout` text DEFAULT NULL COMMENT '그리드 레이아웃 JSON',
     `seal_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '최종 수정일',
     PRIMARY KEY (`seal_id`),
     UNIQUE KEY `idx_mb_id` (`mb_id`)

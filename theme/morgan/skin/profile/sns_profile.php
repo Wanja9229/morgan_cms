@@ -72,14 +72,14 @@ foreach ($grouped_fields as $fields) { $field_count += count($fields); }
 .skin-sns .sns-cover:hover img { transform: scale(1.03); }
 </style>
 
-<div class="mg-inner skin-sns">
+<div class="mg-inner skin-sns" style="max-width:800px;">
     <!-- 뒤로가기 -->
     <a href="javascript:history.back();" style="display:inline-flex;align-items:center;gap:4px;font-size:0.875rem;color:#536471;margin-bottom:1rem;">
         <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
         <span>뒤로</span>
     </a>
 
-    <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:1rem;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.12);">
+    <div style="margin:0 auto;background:#ffffff;border-radius:1rem;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.12);">
         <!-- 커버 배너 -->
         <div class="sns-cover" <?php if ($char_header) { ?>style="background:none;"<?php } ?>>
             <?php if ($char_header) { ?>

@@ -456,6 +456,11 @@ function resetColors() {
         </div>
     </div>
     <div class="mg-card-body">
+        <div id="builder-mobile-notice" style="display:none;padding:1rem;margin-bottom:1rem;background:var(--mg-bg-tertiary);border-radius:0.5rem;border-left:3px solid var(--mg-accent);">
+            <strong style="font-size:0.85rem;color:var(--mg-text-primary);">PC 환경 권장</strong>
+            <p style="font-size:0.8rem;color:var(--mg-text-muted);margin-top:0.25rem;">위젯 드래그 배치는 PC에서 최적화되어 있습니다. 모바일에서는 일부 기능이 제한될 수 있습니다.</p>
+        </div>
+        <script>if(window.innerWidth<1024)document.getElementById('builder-mobile-notice').style.display='block';</script>
         <!-- 그리드 설정 -->
         <div style="display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;align-items:stretch;">
             <div style="background:var(--mg-bg-tertiary);padding:0.75rem 1rem;border-radius:0.5rem;width:100%;">

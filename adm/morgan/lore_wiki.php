@@ -436,6 +436,11 @@ if ($tab == 'ordering') { ?>
         <?php if (empty($categories)) { ?>
         <div style="padding:2rem;text-align:center;color:var(--mg-text-muted);">등록된 카테고리가 없습니다.</div>
         <?php } else { ?>
+        <div id="wiki-mobile-notice" style="display:none;padding:0.75rem 1rem;background:var(--mg-bg-tertiary);border-left:3px solid var(--mg-accent);">
+            <strong style="font-size:0.85rem;color:var(--mg-text-primary);">PC 환경 권장</strong>
+            <p style="font-size:0.8rem;color:var(--mg-text-muted);margin-top:0.25rem;">카테고리/문서 드래그 정렬은 PC에서 최적화되어 있습니다.</p>
+        </div>
+        <script>if(window.innerWidth<768)document.getElementById('wiki-mobile-notice').style.display='block';</script>
         <div id="cat-sortable">
             <?php foreach ($categories as $cat) { ?>
             <div class="cat-sortable-item" data-cat-id="<?php echo $cat['lc_id']; ?>" style="display:flex;align-items:center;gap:0.5rem 1rem;padding:0.75rem 1rem;border-bottom:1px solid var(--mg-bg-tertiary);background:var(--mg-bg-secondary);flex-wrap:wrap;">

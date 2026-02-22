@@ -23,6 +23,15 @@ if ($mode == 'save') {
     $ac_name = isset($_POST['ac_name']) ? trim($_POST['ac_name']) : '';
     $ac_desc = isset($_POST['ac_desc']) ? trim($_POST['ac_desc']) : '';
     $ac_icon = isset($_POST['ac_icon']) ? trim($_POST['ac_icon']) : '';
+
+    // 아이콘 파일 업로드 처리
+    $uploaded = mg_handle_icon_upload('ac_icon_file', 'achievement', 'ac');
+    if ($uploaded !== null) {
+        $ac_icon = $uploaded;
+    } elseif (isset($_POST['del_ac_icon']) && $_POST['del_ac_icon'] == '1') {
+        $ac_icon = '';
+    }
+
     $ac_category = isset($_POST['ac_category']) ? trim($_POST['ac_category']) : 'activity';
     $ac_type = isset($_POST['ac_type']) ? trim($_POST['ac_type']) : 'progressive';
     $ac_condition = isset($_POST['ac_condition']) ? trim($_POST['ac_condition']) : '{}';
@@ -147,6 +156,13 @@ if ($mode == 'save_tier') {
     $at_name = isset($_POST['at_name']) ? trim($_POST['at_name']) : '';
     $at_target = max(1, (int)($_POST['at_target'] ?? 1));
     $at_icon = isset($_POST['at_icon']) ? trim($_POST['at_icon']) : '';
+
+    // 단계 아이콘 파일 업로드 처리
+    $uploaded = mg_handle_icon_upload('at_icon_file', 'achievement', 'at');
+    if ($uploaded !== null) {
+        $at_icon = $uploaded;
+    }
+
     $at_reward = isset($_POST['at_reward']) ? trim($_POST['at_reward']) : '{}';
 
     if (!$ac_id) {

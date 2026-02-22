@@ -21,10 +21,11 @@ $offset = ($page - 1) * $rows;
 // 검색 쿼리
 $where = "";
 if ($sfl && $stx) {
+    $stx_esc = sql_real_escape_string($stx);
     if ($sfl == 'mb_id') {
-        $where = " WHERE n.mb_id LIKE '%$stx%'";
+        $where = " WHERE n.mb_id LIKE '%{$stx_esc}%'";
     } else if ($sfl == 'noti_type') {
-        $where = " WHERE n.noti_type = '$stx'";
+        $where = " WHERE n.noti_type = '{$stx_esc}'";
     }
 }
 
@@ -57,6 +58,21 @@ $noti_types = array(
     'gift_rejected' => '선물 거절',
     'emoticon' => '이모티콘',
     'rp_reply' => 'RP 이음',
+    'expedition' => '파견',
+    'concierge_apply' => '의뢰 지원',
+    'concierge_match' => '의뢰 매칭',
+    'concierge_reward' => '의뢰 보상',
+    'concierge_complete' => '의뢰 완료',
+    'concierge_force_close' => '의뢰 강제종료',
+    'reward' => '보상',
+    'achievement' => '업적',
+    'prompt_submit' => '미션 제출',
+    'prompt_reward' => '미션 보상',
+    'prompt_reject' => '미션 반려',
+    'relation_request' => '관계 신청',
+    'relation_accepted' => '관계 수락',
+    'relation_rejected' => '관계 거절',
+    'relation_deleted' => '관계 해제',
     'system' => '시스템'
 );
 
@@ -80,7 +96,7 @@ require_once __DIR__.'/_head.php';
                 <option value="mb_id" <?php echo $sfl == 'mb_id' ? 'selected' : ''; ?>>회원ID</option>
                 <option value="noti_type" <?php echo $sfl == 'noti_type' ? 'selected' : ''; ?>>알림타입</option>
             </select>
-            <input type="text" name="stx" value="<?php echo $stx; ?>" class="mg-form-input" style="width:200px;flex:1;max-width:300px;" placeholder="검색어 입력">
+            <input type="text" name="stx" value="<?php echo htmlspecialchars($stx); ?>" class="mg-form-input" style="width:200px;flex:1;max-width:300px;" placeholder="검색어 입력">
             <button type="submit" class="mg-btn mg-btn-primary">검색</button>
         </form>
     </div>

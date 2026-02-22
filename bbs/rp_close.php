@@ -66,7 +66,7 @@ if ($ch_id > 0) {
         if ((int)$mem['ch_id'] === $owner_ch_id) continue;
         // 이미 완결된 캐릭터 skip
         $existing = sql_fetch("SELECT rc_id FROM {$g5['mg_rp_completion_table']} WHERE rt_id = {$rt_id} AND ch_id = ".(int)$mem['ch_id']);
-        if ($existing['rc_id']) continue;
+        if (!empty($existing['rc_id'])) continue;
 
         mg_rp_complete_character($rt_id, (int)$mem['ch_id'], 'manual', $member['mb_id'], true);
     }

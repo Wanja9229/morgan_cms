@@ -145,78 +145,105 @@ $ach_rarity_colors = array(
         </div>
     </div>
 
-    <!-- 2컬럼 그리드 -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-
-        <!-- 대표 캐릭터 -->
-        <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
-            <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary flex items-center justify-between">
-                <h2 class="text-sm font-semibold text-mg-text-primary flex items-center gap-2">
-                    <svg class="w-4 h-4 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                    </svg>
-                    대표 캐릭터
-                </h2>
-                <a href="<?php echo G5_BBS_URL; ?>/character.php" class="text-xs text-mg-accent hover:underline">캐릭터 관리</a>
-            </div>
-            <div class="p-4">
-                <?php if ($main_char) { ?>
-                <a href="<?php echo G5_BBS_URL; ?>/character_view.php?ch_id=<?php echo $main_char['ch_id']; ?>" class="flex items-center gap-4 group">
-                    <div class="w-16 h-16 rounded-lg bg-mg-bg-tertiary flex-shrink-0 overflow-hidden">
-                        <?php if (!empty($main_char['ch_thumb'])) { ?>
-                        <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.$main_char['ch_thumb']; ?>" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
-                        <?php } else { ?>
-                        <div class="w-full h-full flex items-center justify-center">
-                            <svg class="w-8 h-8 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                            </svg>
-                        </div>
-                        <?php } ?>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="font-semibold text-mg-text-primary group-hover:text-mg-accent transition-colors"><?php echo htmlspecialchars($main_char['ch_name']); ?></p>
-                        <?php if (!empty($main_char['ch_side'])) { ?>
-                        <p class="text-xs text-mg-text-muted"><?php echo htmlspecialchars($main_char['ch_side']); ?></p>
-                        <?php } ?>
-                    </div>
-                </a>
-                <?php } else { ?>
-                <div class="text-center py-6">
-                    <p class="text-sm text-mg-text-muted mb-2">등록된 캐릭터가 없습니다</p>
-                    <a href="<?php echo G5_BBS_URL; ?>/character_form.php" class="text-sm text-mg-accent hover:underline">캐릭터 만들기</a>
-                </div>
-                <?php } ?>
-            </div>
+    <!-- 바로가기 -->
+    <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden mb-6">
+        <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary">
+            <h2 class="text-sm font-semibold text-mg-text-primary">바로가기</h2>
         </div>
-
-        <!-- 인장 미리보기 -->
-        <?php if ($_seal_enabled) { ?>
-        <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
-            <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary flex items-center justify-between">
-                <h2 class="text-sm font-semibold text-mg-text-primary flex items-center gap-2">
-                    <svg class="w-4 h-4 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                    내 인장
-                </h2>
-                <a href="<?php echo G5_BBS_URL; ?>/seal_edit.php" class="text-xs text-mg-accent hover:underline">편집</a>
-            </div>
-            <div class="p-4">
-                <?php if ($seal) { ?>
-                <div style="transform:scale(0.9);transform-origin:top left;">
-                    <?php echo mg_render_seal($mb['mb_id'], 'compact'); ?>
-                </div>
-                <p class="text-xs text-mg-text-muted mt-2">상태: <?php echo $seal['seal_use'] ? '<span class="text-green-400">ON</span>' : '<span class="text-mg-text-muted">OFF</span>'; ?></p>
-                <?php } else { ?>
-                <div class="text-center py-6">
-                    <p class="text-sm text-mg-text-muted mb-2">인장이 설정되지 않았습니다</p>
-                    <a href="<?php echo G5_BBS_URL; ?>/seal_edit.php" class="text-sm text-mg-accent hover:underline">인장 만들기</a>
-                </div>
-                <?php } ?>
-            </div>
+        <div class="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            <a href="<?php echo G5_BBS_URL; ?>/attendance.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
+                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                </svg>
+                <span class="text-sm text-mg-text-secondary">출석체크</span>
+            </a>
+            <?php if ($_seal_enabled) { ?>
+            <a href="<?php echo G5_BBS_URL; ?>/seal_edit.php" data-no-spa class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
+                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <span class="text-sm text-mg-text-secondary">인장 편집</span>
+            </a>
+            <?php } ?>
+            <a href="<?php echo G5_BBS_URL; ?>/achievement.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
+                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                </svg>
+                <span class="text-sm text-mg-text-secondary">업적</span>
+            </a>
+            <a href="<?php echo G5_BBS_URL; ?>/notification.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
+                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                </svg>
+                <span class="text-sm text-mg-text-secondary">알림</span>
+            </a>
+            <a href="<?php echo G5_URL; ?>/bbs/memo.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
+                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                <span class="text-sm text-mg-text-secondary">쪽지</span>
+            </a>
+            <a href="<?php echo G5_URL; ?>/bbs/scrap.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
+                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                </svg>
+                <span class="text-sm text-mg-text-secondary">스크랩</span>
+            </a>
+            <a href="<?php echo G5_URL; ?>/bbs/point.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
+                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="text-sm text-mg-text-secondary">포인트 내역</span>
+            </a>
+            <a href="<?php echo G5_URL; ?>/bbs/profile.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
+                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span class="text-sm text-mg-text-secondary">회원정보 수정</span>
+            </a>
         </div>
-        <?php } ?>
+    </div>
 
+    <!-- 대표 캐릭터 -->
+    <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden mb-6">
+        <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-mg-text-primary flex items-center gap-2">
+                <svg class="w-4 h-4 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+                대표 캐릭터
+            </h2>
+            <a href="<?php echo G5_BBS_URL; ?>/character.php" class="text-xs text-mg-accent hover:underline">캐릭터 관리</a>
+        </div>
+        <div class="p-4">
+            <?php if ($main_char) { ?>
+            <a href="<?php echo G5_BBS_URL; ?>/character_view.php?ch_id=<?php echo $main_char['ch_id']; ?>" class="flex items-center gap-4 group">
+                <div class="w-16 h-16 rounded-lg bg-mg-bg-tertiary flex-shrink-0 overflow-hidden">
+                    <?php if (!empty($main_char['ch_thumb'])) { ?>
+                    <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.$main_char['ch_thumb']; ?>" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+                    <?php } else { ?>
+                    <div class="w-full h-full flex items-center justify-center">
+                        <svg class="w-8 h-8 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                    </div>
+                    <?php } ?>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-mg-text-primary group-hover:text-mg-accent transition-colors"><?php echo htmlspecialchars($main_char['ch_name']); ?></p>
+                    <?php if (!empty($main_char['ch_side'])) { ?>
+                    <p class="text-xs text-mg-text-muted"><?php echo htmlspecialchars($main_char['ch_side']); ?></p>
+                    <?php } ?>
+                </div>
+            </a>
+            <?php } else { ?>
+            <div class="text-center py-6">
+                <p class="text-sm text-mg-text-muted mb-2">등록된 캐릭터가 없습니다</p>
+                <a href="<?php echo G5_BBS_URL; ?>/character_form.php" class="text-sm text-mg-accent hover:underline">캐릭터 만들기</a>
+            </div>
+            <?php } ?>
+        </div>
     </div>
 
     <!-- 업적 쇼케이스 -->
@@ -387,65 +414,34 @@ $ach_rarity_colors = array(
 
     </div>
 
-    <!-- 바로가기 -->
+    <!-- 내 인장 -->
+    <?php if ($_seal_enabled) { ?>
     <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden mb-6">
-        <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary">
-            <h2 class="text-sm font-semibold text-mg-text-primary">바로가기</h2>
-        </div>
-        <div class="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            <a href="<?php echo G5_BBS_URL; ?>/attendance.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
-                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-                </svg>
-                <span class="text-sm text-mg-text-secondary">출석체크</span>
-            </a>
-            <?php if ($_seal_enabled) { ?>
-            <a href="<?php echo G5_BBS_URL; ?>/seal_edit.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
-                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-mg-text-primary flex items-center gap-2">
+                <svg class="w-4 h-4 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
-                <span class="text-sm text-mg-text-secondary">인장 편집</span>
-            </a>
+                내 인장
+            </h2>
+            <a href="<?php echo G5_BBS_URL; ?>/seal_edit.php" data-no-spa class="text-xs text-mg-accent hover:underline">편집</a>
+        </div>
+        <div class="p-4">
+            <?php if ($seal) { ?>
+            <div style="max-width:800px;margin:0 auto;">
+                <?php echo mg_render_seal($mb['mb_id'], 'full'); ?>
+            </div>
+            <p class="text-xs text-mg-text-muted mt-2">상태: <?php echo $seal['seal_use'] ? '<span class="text-green-400">ON</span>' : '<span class="text-mg-text-muted">OFF</span>'; ?></p>
+            <?php } else { ?>
+            <div class="text-center py-6">
+                <p class="text-sm text-mg-text-muted mb-2">인장이 설정되지 않았습니다</p>
+                <a href="<?php echo G5_BBS_URL; ?>/seal_edit.php" data-no-spa class="text-sm text-mg-accent hover:underline">인장 만들기</a>
+            </div>
             <?php } ?>
-            <a href="<?php echo G5_BBS_URL; ?>/achievement.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
-                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-                </svg>
-                <span class="text-sm text-mg-text-secondary">업적</span>
-            </a>
-            <a href="<?php echo G5_BBS_URL; ?>/notification.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
-                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                </svg>
-                <span class="text-sm text-mg-text-secondary">알림</span>
-            </a>
-            <a href="<?php echo G5_URL; ?>/bbs/memo.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
-                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                </svg>
-                <span class="text-sm text-mg-text-secondary">쪽지</span>
-            </a>
-            <a href="<?php echo G5_URL; ?>/bbs/scrap.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
-                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
-                </svg>
-                <span class="text-sm text-mg-text-secondary">스크랩</span>
-            </a>
-            <a href="<?php echo G5_URL; ?>/bbs/point.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
-                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <span class="text-sm text-mg-text-secondary">포인트 내역</span>
-            </a>
-            <a href="<?php echo G5_URL; ?>/bbs/profile.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
-                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-                <span class="text-sm text-mg-text-secondary">회원정보 수정</span>
-            </a>
         </div>
     </div>
+    <?php } ?>
+
 
 </div>
 

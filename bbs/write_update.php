@@ -376,6 +376,11 @@ if ($w == '' || $w == 'r') {
         if ($_mg_concierge_id > 0 && function_exists('mg_complete_concierge') && $member['mb_id']) {
             mg_complete_concierge($member['mb_id'], $_mg_concierge_id, $bo_table, $wr_id);
         }
+
+        // Morgan: 미션 엔트리 생성 (write hook)
+        if (function_exists('mg_prompt_after_write') && $member['mb_id']) {
+            mg_prompt_after_write($bo_table, $wr_id, $member['mb_id'], $wr_content);
+        }
     } else {
         // 답변은 코멘트 포인트를 부여함
         // 답변 포인트가 많은 경우 코멘트 대신 답변을 하는 경우가 많음

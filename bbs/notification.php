@@ -18,6 +18,11 @@ $unread_only = ($filter === 'unread');
 $notifications = mg_get_notifications($member['mb_id'], $page, $rows, $unread_only);
 $unread_count = mg_get_unread_notification_count($member['mb_id']);
 
+// 페이지 진입 시 전체 읽음 처리 (데이터 조회 후 실행하여 현재 페이지에서는 기존 상태 표시)
+if ($unread_count > 0) {
+    mg_mark_all_notifications_read($member['mb_id']);
+}
+
 // 알림 타입 라벨
 $noti_type_labels = array(
     'comment' => '댓글',
@@ -32,6 +37,21 @@ $noti_type_labels = array(
     'gift_rejected' => '선물 거절',
     'emoticon' => '이모티콘',
     'rp_reply' => 'RP 이음',
+    'expedition' => '파견',
+    'concierge_apply' => '의뢰 지원',
+    'concierge_match' => '의뢰 매칭',
+    'concierge_reward' => '의뢰 보상',
+    'concierge_complete' => '의뢰 완료',
+    'concierge_force_close' => '의뢰 강제종료',
+    'reward' => '보상',
+    'achievement' => '업적',
+    'prompt_submit' => '미션 제출',
+    'prompt_reward' => '미션 보상',
+    'prompt_reject' => '미션 반려',
+    'relation_request' => '관계 신청',
+    'relation_accepted' => '관계 수락',
+    'relation_rejected' => '관계 거절',
+    'relation_deleted' => '관계 해제',
     'system' => '시스템',
 );
 

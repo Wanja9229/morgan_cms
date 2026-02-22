@@ -120,6 +120,16 @@ sql_query(" delete from {$g5['board_new_table']} where bo_table = '$bo_table' an
 // 스크랩 삭제
 sql_query(" delete from {$g5['scrap_table']} where bo_table = '$bo_table' and wr_id = '{$write['wr_id']}' ");
 
+// Morgan: 미션 엔트리 정리
+if (isset($g5['mg_prompt_entry_table'])) {
+    sql_query("DELETE FROM {$g5['mg_prompt_entry_table']} WHERE bo_table = '{$bo_table}' AND wr_id = '{$write['wr_id']}'");
+}
+
+// Morgan: 글-캐릭터 연결 정리
+if (isset($g5['mg_write_character_table'])) {
+    sql_query("DELETE FROM {$g5['mg_write_character_table']} WHERE bo_table = '{$bo_table}' AND wr_id = '{$write['wr_id']}'");
+}
+
 /*
 // 공지사항 삭제
 $notice_array = explode("\n", trim($board['bo_notice']));

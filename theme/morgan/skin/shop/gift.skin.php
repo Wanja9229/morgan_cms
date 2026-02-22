@@ -68,7 +68,7 @@ $status_colors = array(
         <?php if (count($pending_gifts) > 0) { ?>
         <div class="space-y-4">
             <?php foreach ($pending_gifts as $gift) { ?>
-            <div class="card flex flex-col sm:flex-row gap-4" id="gift-<?php echo $gift['gf_id']; ?>">
+            <div class="card flex flex-col sm:flex-row gap-4" id="gift-<?php echo $gift['gf_id']; ?>" <?php if (isset($gift['gf_type']) && $gift['gf_type'] === 'inventory') { ?>data-gift-type="inventory"<?php } ?>>
                 <!-- 이미지 -->
                 <div class="w-full sm:w-24 flex-shrink-0">
                     <div class="aspect-square bg-mg-bg-tertiary rounded-lg overflow-hidden">
@@ -93,7 +93,12 @@ $status_colors = array(
                                 <span class="text-mg-accent"><?php echo $gift['from_nick'] ?: $gift['mb_id_from']; ?></span>님이 보냄
                             </p>
                         </div>
+                        <?php $is_inv_gift = (isset($gift['gf_type']) && $gift['gf_type'] === 'inventory'); ?>
+                        <?php if ($is_inv_gift) { ?>
+                        <span style="font-size:0.7rem;padding:0.15rem 0.4rem;background:var(--mg-bg-tertiary);border-radius:0.25rem;color:var(--mg-text-muted);">인벤토리</span>
+                        <?php } else { ?>
                         <span class="text-mg-accent font-medium"><?php echo mg_point_format($gift['si_price']); ?></span>
+                        <?php } ?>
                     </div>
 
                     <?php if ($gift['gf_message']) { ?>
@@ -147,6 +152,9 @@ $status_colors = array(
                     <tr>
                         <td class="px-4 py-3">
                             <span class="text-mg-text-primary"><?php echo htmlspecialchars($gift['si_name'] ?: '(삭제된 상품)'); ?></span>
+                            <?php if (isset($gift['gf_type']) && $gift['gf_type'] === 'inventory') { ?>
+                            <span style="font-size:0.65rem;padding:0.1rem 0.3rem;background:var(--mg-bg-tertiary);border-radius:0.2rem;color:var(--mg-text-muted);margin-left:0.25rem;">인벤토리</span>
+                            <?php } ?>
                         </td>
                         <td class="px-4 py-3">
                             <span class="text-mg-accent"><?php echo $gift['to_nick'] ?: $gift['mb_id_to']; ?></span>
@@ -242,7 +250,10 @@ function acceptGift(gf_id) {
 }
 
 function rejectGift(gf_id) {
-    if (!confirm('이 선물을 거절하시겠습니까?\n거절 시 보낸 사람에게 포인트가 환불됩니다.')) {
+    var giftEl = document.getElementById('gift-' + gf_id);
+    var isInv = giftEl && giftEl.querySelector('[data-gift-type="inventory"]');
+    var msg = isInv ? '이 선물을 거절하시겠습니까?\n거절 시 아이템이 보낸 사람에게 반환됩니다.' : '이 선물을 거절하시겠습니까?\n거절 시 보낸 사람에게 포인트가 환불됩니다.';
+    if (!confirm(msg)) {
         return;
     }
 

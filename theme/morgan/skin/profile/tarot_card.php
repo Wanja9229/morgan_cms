@@ -77,14 +77,14 @@ $ch_number = str_pad($char['ch_id'], 0, STR_PAD_LEFT);
 .skin-tarot button:hover { background: rgba(124,58,237,0.5) !important; transform: translateY(-1px); box-shadow: 0 0 15px rgba(124,58,237,0.4); }
 </style>
 
-<div class="mg-inner skin-tarot">
+<div class="mg-inner skin-tarot" style="max-width:800px;">
     <!-- 뒤로가기 -->
     <a href="javascript:history.back();" style="display:inline-flex;align-items:center;gap:4px;font-size:0.875rem;color:#a78bfa;margin-bottom:1rem;text-decoration:none;">
         <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
         <span>뒤로</span>
     </a>
 
-    <div class="tt-card" style="max-width:36rem;margin:0 auto;padding:2rem 2rem;">
+    <div class="tt-card" style="margin:0 auto;padding:2rem 2rem;">
         <!-- 장식 별 -->
         <div class="tt-star" style="top:12%;left:15%;animation-delay:0s;"></div>
         <div class="tt-star" style="top:8%;right:20%;animation-delay:0.7s;"></div>

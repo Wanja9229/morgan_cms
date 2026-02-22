@@ -120,7 +120,7 @@ $game_names = [
 ?>
 
 <!-- 탭 -->
-<div style="margin-bottom:1rem;display:flex;gap:0.5rem;">
+<div style="margin-bottom:1rem;display:flex;gap:0.5rem;flex-wrap:wrap;">
     <a href="?tab=settings" class="mg-btn <?php echo $tab == 'settings' ? 'mg-btn-primary' : 'mg-btn-secondary'; ?>">설정</a>
     <a href="?tab=dice" class="mg-btn <?php echo $tab == 'dice' ? 'mg-btn-primary' : 'mg-btn-secondary'; ?>">주사위 관리</a>
     <a href="?tab=fortune" class="mg-btn <?php echo $tab == 'fortune' ? 'mg-btn-primary' : 'mg-btn-secondary'; ?>">운세 관리</a>

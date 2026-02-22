@@ -117,7 +117,7 @@
             this.listEl.innerHTML = '<div class="py-6 text-center text-mg-text-muted text-sm">로딩중...</div>';
 
             var xhr = new XMLHttpRequest();
-            xhr.open('GET', this.bbs + '/notification_api.php?action=list&rows=10', true);
+            xhr.open('GET', this.bbs + '/notification_api.php?action=list&rows=10&unread_only=1', true);
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
             xhr.onload = function() {
                 if (xhr.status === 200) {
@@ -139,7 +139,7 @@
             if (!this.listEl) return;
 
             if (!items || items.length === 0) {
-                this.listEl.innerHTML = '<div class="py-8 text-center text-mg-text-muted text-sm">알림이 없습니다.</div>';
+                this.listEl.innerHTML = '<div class="py-8 text-center text-mg-text-muted text-sm">새로운 알림이 없습니다.</div>';
                 return;
             }
 

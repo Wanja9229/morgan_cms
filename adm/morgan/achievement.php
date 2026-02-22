@@ -290,8 +290,8 @@ $rarity_colors = array(
                         </select>
                     </div>
                     <div class="mg-form-group">
-                        <label class="mg-form-label">아이콘 (이미지 URL)</label>
-                        <input type="text" name="ac_icon" id="f_ac_icon" class="mg-form-input" placeholder="/data/achievement/icon.png">
+                        <label class="mg-form-label">아이콘</label>
+                        <?php mg_icon_input('ac_icon', '', array('size_guide' => '40x40px')); ?>
                     </div>
                     <div class="mg-form-group">
                         <label class="mg-form-label">희귀도</label>
@@ -394,7 +394,7 @@ function newAchievement() {
     document.getElementById('f_ac_desc').value = '';
     document.getElementById('f_ac_category').value = 'activity';
     document.getElementById('f_ac_type').value = 'progressive';
-    document.getElementById('f_ac_icon').value = '';
+    mgIconReset('ac_icon');
     document.getElementById('f_ac_rarity').value = 'common';
     document.getElementById('f_ac_order').value = '0';
     document.getElementById('f_ac_use').checked = true;
@@ -423,7 +423,7 @@ function editAchievement(acId) {
         document.getElementById('f_ac_desc').value = ac.ac_desc || '';
         document.getElementById('f_ac_category').value = ac.ac_category || 'activity';
         document.getElementById('f_ac_type').value = ac.ac_type || 'progressive';
-        document.getElementById('f_ac_icon').value = ac.ac_icon || '';
+        mgIconSet('ac_icon', ac.ac_icon || '');
         document.getElementById('f_ac_rarity').value = ac.ac_rarity || 'common';
         document.getElementById('f_ac_order').value = ac.ac_order || '0';
         document.getElementById('f_ac_use').checked = ac.ac_use == 1;
@@ -604,7 +604,7 @@ function escHtml(str) {
                     <td style="text-align:center;"><?php echo number_format($t['at_target']); ?></td>
                     <td>
                         <?php if ($t['at_icon']) { ?>
-                        <img src="<?php echo htmlspecialchars($t['at_icon']); ?>" style="width:24px;height:24px;object-fit:contain;">
+                        <?php echo mg_icon($t['at_icon'], 'w-6 h-6'); ?>
                         <?php } else { ?>
                         <span style="color:var(--mg-text-muted);">기본</span>
                         <?php } ?>
@@ -646,8 +646,8 @@ function escHtml(str) {
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1rem;">
                 <div class="mg-form-group">
-                    <label class="mg-form-label">아이콘 URL</label>
-                    <input type="text" name="at_icon" id="tf_at_icon" class="mg-form-input" placeholder="비워두면 기본">
+                    <label class="mg-form-label">아이콘</label>
+                    <?php mg_icon_input('at_icon', '', array('show_delete' => false, 'size_guide' => '40x40px')); ?>
                 </div>
                 <div class="mg-form-group">
                     <label class="mg-form-label">보상 유형</label>
@@ -696,7 +696,7 @@ function editTier(atId) {
     document.getElementById('tf_at_level').value = t.at_level;
     document.getElementById('tf_at_name').value = t.at_name;
     document.getElementById('tf_at_target').value = t.at_target;
-    document.getElementById('tf_at_icon').value = t.at_icon || '';
+    mgIconSet('at_icon', t.at_icon || '');
 
     var reward = {};
     try { reward = JSON.parse(t.at_reward || '{}'); } catch(e) {}
@@ -712,7 +712,7 @@ function resetTierForm() {
     document.getElementById('tf_at_level').value = '<?php echo count($edit_tiers) + 1; ?>';
     document.getElementById('tf_at_name').value = '';
     document.getElementById('tf_at_target').value = '10';
-    document.getElementById('tf_at_icon').value = '';
+    mgIconReset('at_icon');
     document.getElementById('tf_reward_type').value = '';
     document.getElementById('tf_reward_amount').value = '0';
     document.getElementById('tf_reward_code').value = '';

@@ -382,24 +382,22 @@ include_once(G5_THEME_PATH.'/head.php');
             $skin_default_label = $active_skin_id ? '인벤토리 기본값 (' . ($all_skin_names[$active_skin_id] ?? $active_skin_id) . ')' : '기본 스킨';
             $bg_default_label = $active_bg_id ? '인벤토리 기본값 (' . ($all_bg_names[$active_bg_id] ?? $active_bg_id) . ')' : '없음';
             ?>
-            <?php if (!empty($owned_skins) || !empty($owned_bgs) || $has_bg_custom) { ?>
             <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
                 <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary">
                     <h2 class="font-medium text-mg-text-primary">프로필 꾸미기</h2>
                 </div>
                 <div class="p-4 space-y-4">
-                    <?php if (!empty($owned_skins)) { ?>
                     <div>
                         <label for="ch_profile_skin" class="block text-sm font-medium text-mg-text-secondary mb-1.5">프로필 스킨</label>
                         <select name="ch_profile_skin" id="ch_profile_skin" class="w-full bg-mg-bg-tertiary border border-mg-bg-tertiary text-mg-text-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-mg-accent focus:border-transparent">
-                            <option value=""><?php echo htmlspecialchars($skin_default_label); ?></option>
+                            <option value="" <?php echo !$cur_skin ? 'selected' : ''; ?>><?php echo htmlspecialchars($skin_default_label); ?></option>
+                            <option value="default" <?php echo $cur_skin === 'default' ? 'selected' : ''; ?>>기본 스킨</option>
                             <?php foreach ($owned_skins as $sk_id => $sk_name) { ?>
                             <option value="<?php echo htmlspecialchars($sk_id); ?>" <?php echo $cur_skin === $sk_id ? 'selected' : ''; ?>><?php echo htmlspecialchars($sk_name); ?></option>
                             <?php } ?>
                         </select>
-                        <p class="text-xs text-mg-text-muted mt-1">인벤토리에서 장착한 스킨이 전체 캐릭터에 기본 적용됩니다. 이 캐릭터만 다르게 하려면 선택하세요.</p>
+                        <p class="text-xs text-mg-text-muted mt-1">인벤토리에서 장착한 스킨이 기본 적용됩니다. 이 캐릭터만 다르게 하려면 선택하세요.</p>
                     </div>
-                    <?php } ?>
                     <?php if (!empty($owned_bgs)) { ?>
                     <div>
                         <label for="ch_profile_bg" class="block text-sm font-medium text-mg-text-secondary mb-1.5">배경 효과</label>
@@ -448,7 +446,6 @@ include_once(G5_THEME_PATH.'/head.php');
                     <?php } ?>
                 </div>
             </div>
-            <?php } ?>
 
             <!-- 프로필 정보 (동적 필드) -->
             <?php foreach ($grouped_fields as $category => $fields) { ?>
@@ -698,6 +695,7 @@ include_once(G5_THEME_PATH.'/head.php');
                         </div>
                     </div>
                     <span class="text-xs text-yellow-400 bg-yellow-500/10 px-2 py-1 rounded">대기중</span>
+                    <button type="button" onclick="cfCancelRequest(<?php echo $rel['cr_id']; ?>, <?php echo $ch_id; ?>)" class="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-mg-bg-tertiary transition-colors" title="취소">취소</button>
                 </div>
                 <?php } ?>
             </div>
@@ -912,6 +910,20 @@ window.cfSubmitEdit = function() {
 };
 
 // 해제
+window.cfCancelRequest = function(crId, myChId) {
+    if (!confirm('보낸 신청을 취소하시겠습니까?')) return;
+    var data = new FormData();
+    data.append('action', 'delete');
+    data.append('cr_id', crId);
+    data.append('my_ch_id', myChId);
+    fetch(CF_REL_API, { method: 'POST', body: data })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            alert(res.message);
+            if (res.success) location.reload();
+        });
+};
+
 window.cfDeleteRelation = function(crId, myChId) {
     if (!confirm('이 관계를 해제하시겠습니까?')) return;
     var data = new FormData();

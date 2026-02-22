@@ -55,7 +55,7 @@ $ch_owner = htmlspecialchars($char['mb_nick']);
 .skin-spy [style*="max-height:12rem"]:hover img { transform: scale(1.03); }
 </style>
 
-<div class="mg-inner skin-spy">
+<div class="mg-inner skin-spy" style="max-width:800px;">
     <!-- 뒤로가기 -->
     <a href="javascript:history.back();" style="display:inline-flex;align-items:center;gap:4px;font-size:0.875rem;color:#94a3b8;margin-bottom:1rem;text-decoration:none;">
         <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>

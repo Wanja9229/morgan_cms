@@ -52,14 +52,14 @@ $ch_owner = htmlspecialchars($char['mb_nick']);
 .skin-wanted button:hover { background: #6d0000 !important; transform: translateY(-1px); }
 </style>
 
-<div class="mg-inner skin-wanted">
+<div class="mg-inner skin-wanted" style="max-width:800px;">
     <!-- 뒤로가기 -->
     <a href="javascript:history.back();" style="display:inline-flex;align-items:center;gap:4px;font-size:0.875rem;color:#8d6e63;margin-bottom:1rem;text-decoration:none;">
         <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
         <span>뒤로</span>
     </a>
 
-    <div class="wt-rough" style="max-width:40rem;margin:0 auto;background:#e2cfb6;padding:2rem 2rem;position:relative;overflow:hidden;border:4px solid rgba(58,42,26,0.2);">
+    <div class="wt-rough" style="margin:0 auto;background:#e2cfb6;padding:2rem 2rem;position:relative;overflow:hidden;border:4px solid rgba(58,42,26,0.2);">
 
         <!-- WANTED 헤더 -->
         <header style="text-align:center;margin-bottom:2rem;border-bottom:4px solid #3a2a1a;padding-bottom:1rem;">

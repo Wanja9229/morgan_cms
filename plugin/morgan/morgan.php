@@ -1736,6 +1736,78 @@ function mg_send_gift($mb_id_from, $mb_id_to, $si_id, $message = '') {
 }
 
 /**
+ * 인벤토리 아이템 선물 보내기
+ *
+ * @param string $mb_id_from 보내는 사람
+ * @param string $mb_id_to 받는 사람
+ * @param int $si_id 상품 ID
+ * @param string $message 메시지
+ * @return array ['success' => bool, 'message' => string]
+ */
+function mg_send_gift_from_inventory($mb_id_from, $mb_id_to, $si_id, $message = '') {
+    global $mg;
+
+    // 자기 자신에게 선물 불가
+    if ($mb_id_from == $mb_id_to) {
+        return array('success' => false, 'message' => '자기 자신에게는 선물할 수 없습니다.');
+    }
+
+    // 받는 사람 확인
+    $to_member = get_member($mb_id_to);
+    if (!$to_member['mb_id']) {
+        return array('success' => false, 'message' => '받는 사람을 찾을 수 없습니다.');
+    }
+
+    $si_id = (int)$si_id;
+    $safe_from = sql_real_escape_string($mb_id_from);
+    $safe_to = sql_real_escape_string($mb_id_to);
+
+    // 보유 확인
+    $inv_count = mg_get_inventory_count($mb_id_from, $si_id);
+    if ($inv_count < 1) {
+        return array('success' => false, 'message' => '해당 아이템을 보유하고 있지 않습니다.');
+    }
+
+    // 사용 중인 아이템은 선물 불가
+    $active = mg_get_active_items($mb_id_from);
+    foreach ($active as $a) {
+        if ((int)$a['si_id'] === $si_id) {
+            return array('success' => false, 'message' => '사용 중인 아이템은 선물할 수 없습니다. 먼저 해제해주세요.');
+        }
+    }
+
+    // 상품 정보 조회
+    $item = mg_get_shop_item($si_id);
+    if (!$item) {
+        return array('success' => false, 'message' => '상품 정보를 찾을 수 없습니다.');
+    }
+
+    $message = sql_real_escape_string(mb_substr($message, 0, 200));
+
+    // 인벤토리에서 차감
+    if ($inv_count <= 1) {
+        sql_query("DELETE FROM {$mg['inventory_table']} WHERE mb_id = '{$safe_from}' AND si_id = {$si_id}");
+    } else {
+        sql_query("UPDATE {$mg['inventory_table']} SET iv_count = iv_count - 1 WHERE mb_id = '{$safe_from}' AND si_id = {$si_id}");
+    }
+
+    // 선물 레코드 생성
+    sql_query("INSERT INTO {$mg['gift_table']} (mb_id_from, mb_id_to, si_id, gf_type, gf_message, gf_status)
+               VALUES ('{$safe_from}', '{$safe_to}', {$si_id}, 'inventory', '{$message}', 'pending')");
+
+    // 로그
+    sql_query("INSERT INTO {$mg['shop_log_table']} (mb_id, si_id, sl_price, sl_type)
+               VALUES ('{$safe_from}', {$si_id}, 0, 'gift_send')");
+
+    // 알림 전송
+    mg_notify($mb_id_to, 'gift_received', '선물이 도착했습니다',
+              $mb_id_from.'님이 '.$item['si_name'].'을(를) 선물로 보냈습니다.',
+              G5_BBS_URL.'/gift.php');
+
+    return array('success' => true, 'message' => '선물을 보냈습니다.');
+}
+
+/**
  * 선물 수락
  *
  * @param int $gf_id 선물 ID
@@ -1797,11 +1869,16 @@ function mg_reject_gift($gf_id, $mb_id) {
     // 상태 변경
     sql_query("UPDATE {$mg['gift_table']} SET gf_status = 'rejected' WHERE gf_id = {$gf_id}");
 
-    // 포인트 환불
-    insert_point($gift['mb_id_from'], $gift['si_price'], '선물 거절 환불: '.$gift['si_name']);
+    $gf_type = isset($gift['gf_type']) ? $gift['gf_type'] : 'shop';
 
-    // 판매 수량 감소
-    sql_query("UPDATE {$mg['shop_item_table']} SET si_stock_sold = si_stock_sold - 1 WHERE si_id = {$gift['si_id']}");
+    if ($gf_type === 'inventory') {
+        // 인벤토리 선물 거절: 아이템을 보낸 사람에게 반환
+        mg_add_to_inventory($gift['mb_id_from'], $gift['si_id']);
+    } else {
+        // 상점 선물 거절: 포인트 환불 + 판매 수량 감소
+        insert_point($gift['mb_id_from'], $gift['si_price'], '선물 거절 환불: '.$gift['si_name']);
+        sql_query("UPDATE {$mg['shop_item_table']} SET si_stock_sold = si_stock_sold - 1 WHERE si_id = {$gift['si_id']}");
+    }
 
     return array('success' => true, 'message' => '선물을 거절했습니다.');
 }
@@ -2029,6 +2106,159 @@ function mg_icon($icon, $class = 'w-5 h-5', $alt = '') {
  */
 function mg_heroicon($icon, $class = 'w-5 h-5') {
     return mg_icon($icon, $class);
+}
+
+/**
+ * 관리자 아이콘 입력 필드 컴포넌트
+ * Heroicons 텍스트 입력 + 이미지 파일 업로드 라디오 토글, 미리보기, 가이드 텍스트를 출력.
+ * 첫 호출 시 공용 JS 함수도 함께 출력.
+ *
+ * @param string $prefix   요소 ID 접두사 (페이지 내 고유)
+ * @param string $current  현재 아이콘 값 (Heroicon명 또는 이미지 경로)
+ * @param array  $opts     옵션:
+ *   text_name    - text input name (기본: $prefix)
+ *   file_name    - file input name (기본: {text_name}_file)
+ *   delete_name  - 삭제 checkbox name (기본: del_{prefix})
+ *   placeholder  - text input placeholder (기본: 'heart, shield, star 등')
+ *   size_guide   - 권장 크기 (기본: '24x24px')
+ *   show_preview - 기존 이미지 미리보기 (기본: true)
+ *   show_delete  - 삭제 체크박스 (기본: true)
+ *   compact      - 축소 모드 (기본: false)
+ */
+function mg_icon_input($prefix, $current = '', $opts = array()) {
+    static $js_loaded = false;
+
+    $text_name   = isset($opts['text_name'])   ? $opts['text_name']   : $prefix;
+    $file_name   = isset($opts['file_name'])   ? $opts['file_name']   : $text_name . '_file';
+    $delete_name = isset($opts['delete_name']) ? $opts['delete_name'] : 'del_' . $prefix;
+    $placeholder = isset($opts['placeholder']) ? $opts['placeholder'] : 'heart, shield, star 등';
+    $size_guide  = isset($opts['size_guide'])  ? $opts['size_guide']  : '24x24px';
+    $show_preview = isset($opts['show_preview']) ? $opts['show_preview'] : true;
+    $show_delete  = isset($opts['show_delete'])  ? $opts['show_delete']  : true;
+    $compact      = isset($opts['compact'])      ? $opts['compact']      : false;
+
+    $is_image = $current && (strpos($current, '/') !== false || strpos($current, 'http') === 0);
+
+    $font_sm = $compact ? '0.65rem' : '0.75rem';
+    $font_xs = $compact ? '0.6rem'  : '0.7rem';
+    $gap     = $compact ? '0.25rem' : '0.5rem';
+    $mb      = $compact ? '0.25rem' : '0.5rem';
+
+    // 미리보기
+    if ($show_preview) {
+        $prev_display = $is_image ? 'flex' : 'none';
+        echo '<div id="mgicon-' . $prefix . '-preview" style="display:' . $prev_display . ';align-items:center;margin-bottom:8px;">';
+        echo '<img id="mgicon-' . $prefix . '-img" src="' . ($is_image ? htmlspecialchars($current) : '') . '" style="width:32px;height:32px;object-fit:contain;background:var(--mg-bg-tertiary);border-radius:4px;padding:4px;">';
+        if ($show_delete) {
+            echo '<label style="margin-left:8px;color:var(--mg-error);font-size:' . $font_sm . ';cursor:pointer;">';
+            echo '<input type="checkbox" name="' . htmlspecialchars($delete_name) . '" value="1" onchange="mgIconDeleteToggle(\'' . $prefix . '\',this)"> 삭제';
+            echo '</label>';
+        }
+        echo '</div>';
+    }
+
+    // 라디오 토글
+    echo '<div style="display:flex;gap:' . $gap . ';margin-bottom:' . $mb . ';">';
+    echo '<label style="font-size:' . $font_sm . ';display:flex;align-items:center;gap:0.25rem;cursor:pointer;">';
+    echo '<input type="radio" name="' . $prefix . '_type" value="text" checked onchange="mgIconToggle(\'' . $prefix . '\')">';
+    echo '<span>Heroicons</span></label>';
+    echo '<label style="font-size:' . $font_sm . ';display:flex;align-items:center;gap:0.25rem;cursor:pointer;">';
+    echo '<input type="radio" name="' . $prefix . '_type" value="file" onchange="mgIconToggle(\'' . $prefix . '\')">';
+    echo '<span>이미지 업로드</span></label>';
+    echo '</div>';
+
+    // 텍스트 입력
+    echo '<div id="mgicon-' . $prefix . '-text">';
+    echo '<input type="text" name="' . htmlspecialchars($text_name) . '" id="mgicon-' . $prefix . '-input" class="mg-form-input" value="' . htmlspecialchars($current) . '" placeholder="' . htmlspecialchars($placeholder) . '">';
+    echo '</div>';
+
+    // 파일 입력
+    $file_style = $compact ? 'padding:0.25rem;font-size:0.75rem;' : 'padding:0.25rem;';
+    echo '<div id="mgicon-' . $prefix . '-file" style="display:none;">';
+    echo '<input type="file" name="' . htmlspecialchars($file_name) . '" accept="image/*" class="mg-form-input" style="' . $file_style . '">';
+    echo '</div>';
+
+    // 가이드 텍스트
+    echo '<p style="font-size:' . $font_xs . ';color:var(--mg-text-muted);margin-top:4px;">';
+    echo '<a href="https://heroicons.com/" target="_blank" style="color:var(--mg-accent);">Heroicons</a>';
+    echo ' 아이콘명 또는 이미지 파일 (권장: ' . htmlspecialchars($size_guide) . ')</p>';
+
+    // 공용 JS (첫 호출 시에만)
+    if (!$js_loaded) {
+        $js_loaded = true;
+        echo '<script>';
+        echo 'function mgIconToggle(p){';
+        echo 'var t=document.querySelector(\'input[name="\'+p+\'_type"]:checked\').value;';
+        echo 'document.getElementById("mgicon-"+p+"-text").style.display=t==="text"?"":"none";';
+        echo 'document.getElementById("mgicon-"+p+"-file").style.display=t==="file"?"":"none";';
+        echo '}';
+        echo 'function mgIconPreview(p,v){';
+        echo 'var pr=document.getElementById("mgicon-"+p+"-preview");';
+        echo 'if(!pr)return;';
+        echo 'var im=document.getElementById("mgicon-"+p+"-img");';
+        echo 'if(v&&(v.indexOf("/")!==-1||v.indexOf("http")===0)){';
+        echo 'im.src=v;pr.style.display="flex";pr.style.alignItems="center";pr.style.opacity="1";';
+        echo '}else{pr.style.display="none";}';
+        echo '}';
+        echo 'function mgIconDeleteToggle(p,cb){';
+        echo 'var pr=document.getElementById("mgicon-"+p+"-preview");';
+        echo 'if(pr)pr.style.opacity=cb.checked?"0.5":"1";';
+        echo '}';
+        echo 'function mgIconReset(p){';
+        echo 'var inp=document.getElementById("mgicon-"+p+"-input");';
+        echo 'if(inp)inp.value="";';
+        echo 'mgIconPreview(p,"");';
+        echo 'var r=document.querySelector(\'input[name="\'+p+\'_type"][value="text"]\');';
+        echo 'if(r)r.checked=true;';
+        echo 'mgIconToggle(p);';
+        echo 'var dc=document.querySelector("#mgicon-"+p+"-preview input[type=checkbox]");';
+        echo 'if(dc)dc.checked=false;';
+        echo 'var fi=document.querySelector("#mgicon-"+p+"-file input[type=file]");';
+        echo 'if(fi)fi.value="";';
+        echo '}';
+        echo 'function mgIconSet(p,v){';
+        echo 'var inp=document.getElementById("mgicon-"+p+"-input");';
+        echo 'if(inp)inp.value=v||"";';
+        echo 'mgIconPreview(p,v||"");';
+        echo 'var r=document.querySelector(\'input[name="\'+p+\'_type"][value="text"]\');';
+        echo 'if(r)r.checked=true;';
+        echo 'mgIconToggle(p);';
+        echo 'var dc=document.querySelector("#mgicon-"+p+"-preview input[type=checkbox]");';
+        echo 'if(dc)dc.checked=false;';
+        echo 'var fi=document.querySelector("#mgicon-"+p+"-file input[type=file]");';
+        echo 'if(fi)fi.value="";';
+        echo '}';
+        echo '</script>';
+    }
+}
+
+/**
+ * 아이콘 파일 업로드 처리
+ * @param string $file_key       $_FILES 키
+ * @param string $subdir          G5_DATA_PATH 하위 디렉토리
+ * @param string $filename_prefix 파일명 접두사
+ * @return string|null 성공 시 상대 경로, 업로드 없으면 null
+ */
+function mg_handle_icon_upload($file_key, $subdir, $filename_prefix = 'icon') {
+    if (empty($_FILES[$file_key]['name']) || $_FILES[$file_key]['error'] !== UPLOAD_ERR_OK) {
+        return null;
+    }
+
+    $upload_dir = G5_DATA_PATH . '/' . $subdir;
+    if (!is_dir($upload_dir)) @mkdir($upload_dir, 0755, true);
+
+    $ext = strtolower(pathinfo($_FILES[$file_key]['name'], PATHINFO_EXTENSION));
+    $allowed = array('jpg', 'jpeg', 'png', 'gif', 'svg', 'webp');
+    if (!in_array($ext, $allowed)) return null;
+
+    $filename = $filename_prefix . '_' . time() . '_' . uniqid() . '.' . $ext;
+    $target = $upload_dir . '/' . $filename;
+
+    if (move_uploaded_file($_FILES[$file_key]['tmp_name'], $target)) {
+        return '/data/' . $subdir . '/' . $filename;
+    }
+
+    return null;
 }
 
 /**
@@ -5864,12 +6094,12 @@ function mg_render_seal($mb_id, $mode = 'full')
         $text_color = ' style="color:' . htmlspecialchars($seal['seal_text_color']) . '"';
     }
 
-    // 캐릭터 썸네일
+    // 캐릭터 썸네일 (인라인 스타일 — JS 미리보기와 동일)
     $char_thumb = '';
     if ($seal['main_char'] && !empty($seal['main_char']['ch_thumb'])) {
-        $char_thumb = '<img src="' . MG_CHAR_IMAGE_URL . '/' . htmlspecialchars($seal['main_char']['ch_thumb']) . '" alt="" class="w-full h-full object-cover">';
+        $char_thumb = '<img src="' . MG_CHAR_IMAGE_URL . '/' . htmlspecialchars($seal['main_char']['ch_thumb']) . '" alt="" style="width:100%;height:100%;object-fit:cover;">';
     } else {
-        $char_thumb = '<svg class="w-6 h-6 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>';
+        $char_thumb = '<svg style="width:24px;height:24px;color:var(--mg-text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>';
     }
 
     // 트로피 HTML
@@ -5909,56 +6139,116 @@ function mg_render_seal($mb_id, $mode = 'full')
         $html .= '</div>';
     } else {
         // === FULL 모드 ===
-        $html .= '<div class="mg-seal mg-seal-full rounded-xl overflow-hidden mt-4" style="' . $bg_style . $border_style . '">';
-        $html .= '<div class="flex gap-4 p-4">';
+        $layout = !empty($seal['seal_layout']) ? json_decode($seal['seal_layout'], true) : null;
 
-        // 좌측: 캐릭터 썸네일
-        $html .= '<div class="flex-shrink-0">';
-        $html .= '<div class="w-16 h-16 rounded-lg overflow-hidden bg-mg-bg-tertiary flex items-center justify-center">' . $char_thumb . '</div>';
-        $html .= '</div>';
-
-        // 중앙: 정보
-        $html .= '<div class="flex-1 min-w-0"' . $text_color . '>';
-        $html .= '<div class="flex items-center gap-2 flex-wrap">';
-        $html .= '<span class="font-semibold text-sm text-mg-text-primary">' . htmlspecialchars($seal['mb_nick']) . '</span>';
-        if ($title_html) $html .= $title_html;
-        $html .= '</div>';
-
-        if (!empty($seal['seal_tagline'])) {
-            $html .= '<p class="text-xs text-mg-text-secondary mt-0.5">"' . htmlspecialchars($seal['seal_tagline']) . '"</p>';
+        // seal_layout이 비어있으면 기본 레이아웃 사용 (seal_edit.php DEFAULT_LAYOUT과 동일)
+        if (empty($layout['elements'])) {
+            $layout = array('elements' => array(
+                array('type' => 'character', 'x' => 0, 'y' => 0, 'w' => 3, 'h' => 4),
+                array('type' => 'nickname',  'x' => 3, 'y' => 0, 'w' => 5, 'h' => 1),
+                array('type' => 'tagline',   'x' => 3, 'y' => 1, 'w' => 8, 'h' => 1),
+                array('type' => 'text',      'x' => 3, 'y' => 2, 'w' => 8, 'h' => 2),
+                array('type' => 'trophy',    'x' => 13, 'y' => 0, 'w' => 1, 'h' => 1, 'slot' => 1),
+                array('type' => 'trophy',    'x' => 14, 'y' => 0, 'w' => 1, 'h' => 1, 'slot' => 2),
+                array('type' => 'trophy',    'x' => 15, 'y' => 0, 'w' => 1, 'h' => 1, 'slot' => 3),
+            ));
         }
 
-        // 자유 영역
-        if (!empty($seal['seal_content'])) {
-            $html .= '<div class="text-xs text-mg-text-muted mt-2 leading-relaxed">' . nl2br(htmlspecialchars(mb_strimwidth($seal['seal_content'], 0, 300, '...'))) . '</div>';
-        }
+        {
+            // === CSS Grid 레이아웃 ===
+            $text_color_style = !empty($seal['seal_text_color']) ? 'color:' . htmlspecialchars($seal['seal_text_color']) . ';' : '';
+            $html .= '<div class="mg-seal mg-seal-grid" style="margin-top:1.5rem;display:grid;grid-template-columns:repeat(16,1fr);grid-template-rows:repeat(6,1fr);aspect-ratio:16/6;'
+                . $bg_style . $border_style . $text_color_style . 'border-radius:12px;overflow:hidden;padding:6px;gap:3px;">';
 
-        // 이미지
-        if (!empty($seal['seal_image'])) {
-            $img_url = $seal['seal_image'];
-            if (strpos($img_url, 'http') !== 0) {
-                $img_url = MG_SEAL_IMAGE_URL . '/' . $seal['seal_image'];
+            // 전역 텍스트 색상 (요소별 color 없을 때 폴백)
+            $global_tc = !empty($seal['seal_text_color']) ? htmlspecialchars($seal['seal_text_color']) : '';
+
+            foreach ($layout['elements'] as $el) {
+                $type = $el['type'] ?? '';
+                $x = (int)($el['x'] ?? 0);
+                $y = (int)($el['y'] ?? 0);
+                $w = (int)($el['w'] ?? 1);
+                $h = (int)($el['h'] ?? 1);
+                $gc = ($x + 1) . ' / span ' . $w;
+                $gr = ($y + 1) . ' / span ' . $h;
+                // 셀 스타일 (seal_edit.php JS updatePreview와 동일한 순서)
+                $es = $el['style'] ?? array();
+                $align = $es['align'] ?? 'center';
+                $jc_map = array('left' => 'flex-start', 'center' => 'center', 'right' => 'flex-end');
+                $cell_style = 'grid-column:' . $gc . ';grid-row:' . $gr . ';overflow:hidden;display:flex;align-items:center;'
+                    . 'justify-content:' . ($jc_map[$align] ?? 'center') . ';text-align:' . htmlspecialchars($align) . ';min-width:0;';
+                // 텍스트 계열 요소에 패딩
+                if (in_array($type, array('nickname', 'tagline', 'text', 'link'))) $cell_style .= 'padding:2px 6px;';
+                if (!empty($es['bgColor'])) $cell_style .= 'background:' . htmlspecialchars($es['bgColor']) . ';';
+                if (!empty($es['borderColor'])) $cell_style .= 'border:1px solid ' . htmlspecialchars($es['borderColor']) . ';border-radius:6px;';
+
+                // 요소별 글자색 > 전역 텍스트 색상 > CSS 변수 기본값
+                $el_color = !empty($es['color']) ? htmlspecialchars($es['color']) : '';
+
+                $content = '';
+                switch ($type) {
+                    case 'character':
+                        $content = '<div style="width:100%;height:100%;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--mg-bg-tertiary,#313338);">' . $char_thumb . '</div>';
+                        break;
+                    case 'nickname':
+                        $content = '<span style="font-weight:600;font-size:14px;color:var(--mg-text-primary,#f2f3f5);">' . htmlspecialchars($seal['mb_nick']) . '</span>';
+                        break;
+                    case 'title':
+                        $content = $title_html;
+                        break;
+                    case 'tagline':
+                        if (!empty($seal['seal_tagline'])) {
+                            $tc = $el_color ?: ($global_tc ?: 'var(--mg-text-secondary,#b5bac1)');
+                            $content = '<span style="font-size:12px;color:' . $tc . ';">&ldquo;' . htmlspecialchars($seal['seal_tagline']) . '&rdquo;</span>';
+                        }
+                        break;
+                    case 'text':
+                        if (!empty($seal['seal_content'])) {
+                            $tc = $el_color ?: ($global_tc ?: 'var(--mg-text-muted,#949ba4)');
+                            $content = '<span style="font-size:11px;line-height:1.5;color:' . $tc . ';word-break:break-all;">' . nl2br(htmlspecialchars(mb_strimwidth($seal['seal_content'], 0, 300, '...'))) . '</span>';
+                        }
+                        break;
+                    case 'image':
+                        if (!empty($seal['seal_image'])) {
+                            $img_url = $seal['seal_image'];
+                            if (strpos($img_url, 'http') !== 0) {
+                                $img_url = MG_SEAL_IMAGE_URL . '/' . $seal['seal_image'];
+                            }
+                            $content = '<img src="' . htmlspecialchars($img_url) . '" alt="" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:4px;" loading="lazy">';
+                        }
+                        break;
+                    case 'link':
+                        if (!empty($seal['seal_link']) && mg_config('seal_link_allow', 1)) {
+                            $lt = !empty($seal['seal_link_text']) ? htmlspecialchars($seal['seal_link_text']) : htmlspecialchars(mb_strimwidth($seal['seal_link'], 0, 40, '...'));
+                            $content = '<a href="' . htmlspecialchars($seal['seal_link']) . '" target="_blank" rel="noopener" style="font-size:11px;color:var(--mg-accent,#f59f0a);display:inline-flex;align-items:center;gap:3px;">&#128279; ' . $lt . '</a>';
+                        }
+                        break;
+                    case 'trophy':
+                        $slot = (int)($el['slot'] ?? 1);
+                        $tr_idx = $slot - 1;
+                        if (!empty($seal['trophies'][$tr_idx])) {
+                            $tr = $seal['trophies'][$tr_idx];
+                            $t_name = $tr['tier_name'] ?: ($tr['ac_name'] ?? '');
+                            $t_icon = $tr['tier_icon'] ?: ($tr['ac_icon'] ?? '');
+                            $t_rarity = $tr['ac_rarity'] ?? 'common';
+                            $t_color = $rarity_colors[$t_rarity] ?? '#949ba4';
+                            $icon_h = $t_icon
+                                ? '<img src="' . htmlspecialchars($t_icon) . '" alt="" style="width:22px;height:22px;object-fit:contain;">'
+                                : '<span style="font-size:14px;">&#127942;</span>';
+                            $content = '<div style="display:flex;flex-direction:column;align-items:center;border:1.5px solid ' . $t_color . ';border-radius:6px;padding:2px;width:100%;height:100%;justify-content:center;" title="' . htmlspecialchars($t_name) . '">'
+                                . $icon_h
+                                . '<span style="font-size:8px;color:' . $t_color . ';max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' . htmlspecialchars(mb_strimwidth($t_name, 0, 10, '..')) . '</span>'
+                                . '</div>';
+                        }
+                        break;
+                }
+
+                if ($content) {
+                    $html .= '<div style="' . $cell_style . '">' . $content . '</div>';
+                }
             }
-            $html .= '<div class="mt-2"><img src="' . htmlspecialchars($img_url) . '" alt="" class="max-w-full max-h-[100px] rounded object-contain" loading="lazy"></div>';
+            $html .= '</div>';
         }
-
-        // 링크
-        if (!empty($seal['seal_link']) && mg_config('seal_link_allow', 1)) {
-            $link_text = !empty($seal['seal_link_text']) ? htmlspecialchars($seal['seal_link_text']) : htmlspecialchars(mb_strimwidth($seal['seal_link'], 0, 40, '...'));
-            $html .= '<div class="mt-1"><a href="' . htmlspecialchars($seal['seal_link']) . '" target="_blank" rel="noopener" class="text-[11px] text-mg-accent hover:underline inline-flex items-center gap-1">';
-            $html .= '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
-            $html .= $link_text . '</a></div>';
-        }
-
-        $html .= '</div>'; // 중앙 끝
-
-        // 우측: 트로피
-        if ($trophy_html) {
-            $html .= '<div class="flex-shrink-0 flex flex-col gap-1.5">' . $trophy_html . '</div>';
-        }
-
-        $html .= '</div>'; // flex 끝
-        $html .= '</div>'; // seal 끝
     }
 
     $cache[$cache_key] = $html;
