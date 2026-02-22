@@ -14,16 +14,12 @@ include_once(G5_PATH.'/plugin/morgan/morgan.php');
 // 검색 조건
 $sfl = isset($_GET['sfl']) ? clean_xss_tags($_GET['sfl']) : '';
 $stx = isset($_GET['stx']) ? clean_xss_tags($_GET['stx']) : '';
-$gr_id = isset($_GET['gr_id']) ? clean_xss_tags($_GET['gr_id']) : '';
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
 $rows = 20;
 $offset = ($page - 1) * $rows;
 
 // 검색 쿼리
 $where = "WHERE 1=1";
-if ($gr_id) {
-    $where .= " AND a.gr_id = '".sql_real_escape_string($gr_id)."'";
-}
 if ($sfl && $stx) {
     $stx_esc = sql_real_escape_string($stx);
     if ($sfl == 'bo_table') {
@@ -39,26 +35,19 @@ $row = sql_fetch($sql);
 $total_count = (int)$row['cnt'];
 $total_page = ceil($total_count / $rows);
 
-// 그룹 목록
-$groups = array();
-$gr_result = sql_query("SELECT gr_id, gr_subject FROM {$g5['group_table']} ORDER BY gr_order, gr_id");
-while ($gr = sql_fetch_array($gr_result)) {
-    $groups[$gr['gr_id']] = $gr['gr_subject'];
-}
-
 // 게시판 목록
 $sql = "SELECT a.*,
                (SELECT COUNT(*) FROM {$g5['write_prefix']}{$write_table} WHERE 1) as cnt
         FROM {$g5['board_table']} a
         {$where}
-        ORDER BY a.gr_id, a.bo_order, a.bo_table
+        ORDER BY a.bo_order, a.bo_table
         LIMIT {$offset}, {$rows}";
 
 // 게시판별 글 수 계산은 복잡하므로 목록에서 별도로
 $sql = "SELECT a.*
         FROM {$g5['board_table']} a
         {$where}
-        ORDER BY a.gr_id, a.bo_order, a.bo_table
+        ORDER BY a.bo_order, a.bo_table
         LIMIT {$offset}, {$rows}";
 $result = sql_query($sql);
 
@@ -80,32 +69,19 @@ require_once __DIR__.'/_head.php';
         <div class="mg-stat-label">전체 게시판</div>
         <div class="mg-stat-value"><?php echo number_format($total_count); ?></div>
     </div>
-    <div class="mg-stat-card">
-        <div class="mg-stat-label">그룹 수</div>
-        <div class="mg-stat-value"><?php echo count($groups); ?></div>
-    </div>
 </div>
 
 <!-- 검색 -->
 <div class="mg-card" style="margin-bottom:1rem;">
     <div class="mg-card-body" style="padding:1rem;">
         <form name="fsearch" method="get" style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
-            <select name="gr_id" class="mg-form-select" style="width:auto;">
-                <option value="">전체 그룹</option>
-                <?php foreach ($groups as $gid => $gname) { ?>
-                <option value="<?php echo $gid; ?>" <?php echo $gr_id == $gid ? 'selected' : ''; ?>>
-                    <?php echo htmlspecialchars($gname); ?>
-                </option>
-                <?php } ?>
-            </select>
             <select name="sfl" class="mg-form-select" style="width:auto;">
                 <option value="bo_table" <?php echo $sfl == 'bo_table' ? 'selected' : ''; ?>>TABLE</option>
                 <option value="bo_subject" <?php echo $sfl == 'bo_subject' ? 'selected' : ''; ?>>제목</option>
             </select>
             <input type="text" name="stx" value="<?php echo htmlspecialchars($stx); ?>" class="mg-form-input" style="width:200px;flex:1;max-width:300px;" placeholder="검색어 입력">
             <button type="submit" class="mg-btn mg-btn-primary">검색</button>
-            <a href="./boardgroup_list.php" class="mg-btn mg-btn-secondary" style="margin-left:auto;">그룹 관리</a>
-            <a href="./board_form.php" class="mg-btn mg-btn-success">게시판 추가</a>
+            <a href="./board_form.php" class="mg-btn mg-btn-success" style="margin-left:auto;">게시판 추가</a>
         </form>
     </div>
 </div>
@@ -116,7 +92,6 @@ require_once __DIR__.'/_head.php';
         <table class="mg-table" style="min-width:1000px;">
             <thead>
                 <tr>
-                    <th style="width:100px;">그룹</th>
                     <th style="width:120px;">TABLE</th>
                     <th>제목</th>
                     <th style="width:120px;">스킨</th>
@@ -131,12 +106,8 @@ require_once __DIR__.'/_head.php';
             <tbody>
                 <?php
                 while ($row = sql_fetch_array($result)) {
-                    $group_name = $groups[$row['gr_id']] ?? $row['gr_id'];
                 ?>
                 <tr>
-                    <td>
-                        <span style="font-size:0.75rem;color:var(--mg-text-muted);"><?php echo htmlspecialchars($group_name); ?></span>
-                    </td>
                     <td>
                         <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=<?php echo $row['bo_table']; ?>" target="_blank" style="color:var(--mg-text-primary);">
                             <?php echo $row['bo_table']; ?>
@@ -179,7 +150,7 @@ require_once __DIR__.'/_head.php';
                 <?php } ?>
                 <?php if ($total_count == 0) { ?>
                 <tr>
-                    <td colspan="10" style="text-align:center;padding:3rem;color:var(--mg-text-muted);">
+                    <td colspan="9" style="text-align:center;padding:3rem;color:var(--mg-text-muted);">
                         등록된 게시판이 없습니다.
                         <br><br>
                         <a href="./board_form.php" class="mg-btn mg-btn-primary">게시판 추가하기</a>
@@ -195,7 +166,7 @@ require_once __DIR__.'/_head.php';
 <?php if ($total_page > 1) { ?>
 <div class="mg-pagination">
     <?php
-    $query_string = 'gr_id='.urlencode($gr_id).'&sfl='.$sfl.'&stx='.urlencode($stx);
+    $query_string = 'sfl='.$sfl.'&stx='.urlencode($stx);
     $start_page = max(1, $page - 2);
     $end_page = min($total_page, $page + 2);
 

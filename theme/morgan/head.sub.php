@@ -144,6 +144,9 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
             #sidebar-backdrop { display: none !important; }
         }
         .px-2\.5 { padding-left: 0.625rem; padding-right: 0.625rem; }
+        /* peer-checked 보완 */
+        .peer:checked ~ .peer-checked\:border-mg-accent { border-color: var(--mg-accent) !important; }
+        .peer:checked ~ .peer-checked\:ring-mg-accent\/30 { --tw-ring-color: color-mix(in srgb, var(--mg-accent) 30%, transparent); }
         /* 버튼 색상 오버라이드 */
         .btn-primary, .mg-btn-primary {
             background-color: var(--mg-button) !important;

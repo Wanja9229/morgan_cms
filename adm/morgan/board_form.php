@@ -21,12 +21,8 @@ if (!$row['cnt']) {
 $w = isset($_GET['w']) ? $_GET['w'] : '';
 $bo_table = isset($_GET['bo_table']) ? clean_xss_tags($_GET['bo_table']) : '';
 
-// 그룹 목록
-$groups = array();
-$gr_result = sql_query("SELECT gr_id, gr_subject FROM {$g5['group_table']} ORDER BY gr_order, gr_id");
-while ($gr = sql_fetch_array($gr_result)) {
-    $groups[$gr['gr_id']] = $gr['gr_subject'];
-}
+// 그룹: community 고정 (그룹 기능 미사용)
+$default_gr_id = 'community';
 
 // 스킨 목록
 $board_skins = array();
@@ -142,17 +138,7 @@ require_once __DIR__.'/_head.php';
                             <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;">20자 이내, 영문소문자+숫자+_ 만 사용</div>
                             <?php } ?>
                         </div>
-                        <div class="mg-form-group">
-                            <label class="mg-form-label">그룹 <span style="color:var(--mg-error);">*</span></label>
-                            <select name="gr_id" class="mg-form-select" required>
-                                <option value="">선택</option>
-                                <?php foreach ($groups as $gid => $gname) { ?>
-                                <option value="<?php echo $gid; ?>" <?php echo $board['gr_id'] == $gid ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($gname); ?>
-                                </option>
-                                <?php } ?>
-                            </select>
-                        </div>
+                        <input type="hidden" name="gr_id" value="<?php echo $default_gr_id; ?>">
                     </div>
 
                     <div class="mg-form-group">
@@ -331,6 +317,13 @@ require_once __DIR__.'/_head.php';
                             <span>사이드뷰 사용</span>
                         </label>
                     </div>
+                    <div class="mg-form-group" style="border-top:1px solid rgba(255,255,255,0.06);padding-top:0.75rem;margin-top:0.25rem;">
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="checkbox" name="bo_anonymous" value="1" <?php echo ($board['bo_1'] ?? '') === 'anonymous' ? 'checked' : ''; ?>>
+                            <span>익명 게시판</span>
+                        </label>
+                        <p style="font-size:0.75rem;color:var(--mg-text-muted);margin:0.25rem 0 0 1.5rem;">작성자명이 "익명"으로 표시됩니다. 본인과 관리자만 실제 작성자를 확인할 수 있습니다.</p>
+                    </div>
                 </div>
             </div>
 
@@ -399,8 +392,13 @@ require_once __DIR__.'/_head.php';
     <div style="margin-top:1.5rem;display:flex;gap:0.5rem;">
         <a href="./board_list.php" class="mg-btn mg-btn-secondary">목록</a>
         <button type="submit" class="mg-btn mg-btn-primary"><?php echo $is_edit ? '수정' : '추가'; ?></button>
-        <?php if ($is_edit) { ?>
+        <?php
+        // 시스템 게시판은 삭제 불가
+        $system_boards = array('vent', 'commission', 'mission', 'lordby', 'lb_terminal', 'lb_intranet', 'lb_corkboard');
+        if ($is_edit && !in_array($board['bo_table'], $system_boards)) { ?>
         <button type="button" class="mg-btn mg-btn-danger" style="margin-left:auto;" onclick="deleteBoard()">삭제</button>
+        <?php } elseif ($is_edit && in_array($board['bo_table'], $system_boards)) { ?>
+        <span style="margin-left:auto; font-size:0.8rem; color:var(--mg-text-muted);">시스템 게시판은 삭제할 수 없습니다</span>
         <?php } ?>
     </div>
 </form>

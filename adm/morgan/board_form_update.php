@@ -24,6 +24,12 @@ if ($w === 'd') {
         alert('게시판을 선택해주세요.');
     }
 
+    // 시스템 게시판 삭제 방지
+    $system_boards = array('vent', 'commission', 'mission', 'lordby', 'lb_terminal', 'lb_intranet', 'lb_corkboard');
+    if (in_array($bo_table, $system_boards)) {
+        alert('시스템 게시판은 삭제할 수 없습니다.', $redirect_url);
+    }
+
     $board = sql_fetch("SELECT * FROM {$g5['board_table']} WHERE bo_table = '".sql_real_escape_string($bo_table)."'");
     if (!$board['bo_table']) {
         alert('존재하지 않는 게시판입니다.');
@@ -44,10 +50,8 @@ if (strlen($bo_table) > 20) {
     alert('테이블명은 20자 이내로 입력해주세요.');
 }
 
-$gr_id = isset($_POST['gr_id']) ? clean_xss_tags($_POST['gr_id']) : '';
-if (!$gr_id) {
-    alert('그룹을 선택해주세요.');
-}
+// 그룹: community 고정 (그룹 기능 미사용)
+$gr_id = 'community';
 
 $bo_subject = isset($_POST['bo_subject']) ? clean_xss_tags($_POST['bo_subject']) : '';
 if (!$bo_subject) {
@@ -82,6 +86,8 @@ $fields = array(
     'bo_use_secret' => isset($_POST['bo_use_secret']) ? 1 : 0,
     'bo_use_search' => isset($_POST['bo_use_search']) ? 1 : 0,
     'bo_use_sideview' => isset($_POST['bo_use_sideview']) ? 1 : 0,
+    'bo_1_subj' => isset($_POST['bo_anonymous']) ? '익명' : '',
+    'bo_1' => isset($_POST['bo_anonymous']) ? 'anonymous' : '',
     'bo_page_rows' => (int)($_POST['bo_page_rows'] ?? 15),
     'bo_mobile_page_rows' => (int)($_POST['bo_mobile_page_rows'] ?? 15),
     'bo_subject_len' => (int)($_POST['bo_subject_len'] ?? 60),

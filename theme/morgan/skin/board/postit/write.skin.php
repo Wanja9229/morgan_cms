@@ -12,6 +12,18 @@ if (!defined('_GNUBOARD_')) exit;
 $is_edit = $w === 'u';
 $form_title = $is_edit ? '포스트잇 수정' : '새 포스트잇';
 $auto_subject = $is_edit ? $subject : date('Y-m-d H:i') . ' 포스트잇';
+
+// 포스트잇 배경색 배열
+$postit_colors = array(
+    'bg-amber-900/30',
+    'bg-rose-900/30',
+    'bg-blue-900/30',
+    'bg-emerald-900/30',
+    'bg-violet-900/30',
+    'bg-cyan-900/30',
+    'bg-orange-900/30',
+);
+$current_color = $is_edit ? ($write['wr_1'] ?? '0') : '0';
 ?>
 
 <div id="bo_write" class="mg-inner">
@@ -35,6 +47,12 @@ $auto_subject = $is_edit ? $subject : date('Y-m-d H:i') . ' 포스트잇';
             <input type="hidden" name="token" value="">
             <input type="hidden" name="html" value="html1">
             <input type="hidden" name="wr_subject" id="wr_subject" value="<?php echo htmlspecialchars($auto_subject); ?>">
+            <input type="hidden" name="ca_name" value="<?php echo htmlspecialchars($write['ca_name'] ?? $sca ?? ''); ?>">
+            <input type="hidden" name="wr_4" value="<?php echo $is_edit ? htmlspecialchars($write['wr_4'] ?? '0') : rand(-15, 15); ?>">
+            <?php if ($is_edit) { ?>
+            <input type="hidden" name="wr_2" value="<?php echo htmlspecialchars($write['wr_2'] ?? ''); ?>">
+            <input type="hidden" name="wr_3" value="<?php echo htmlspecialchars($write['wr_3'] ?? ''); ?>">
+            <?php } ?>
 
             <?php echo $html_editor_head_script; ?>
 
@@ -75,11 +93,19 @@ $auto_subject = $is_edit ? $subject : date('Y-m-d H:i') . ' 포스트잇';
             <div class="mb-4">
                 <label for="wr_content" class="block text-sm font-medium text-mg-text-secondary mb-2">내용 <span class="text-mg-error">*</span></label>
                 <?php echo $html_editor; ?>
-                <?php if ($is_member) {
-                    $picker_id = 'write';
-                    $picker_target = 'wr_content';
-                    include(G5_THEME_PATH.'/skin/emoticon/picker.skin.php');
-                } ?>
+            </div>
+
+            <!-- 색상 선택 -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-mg-text-secondary mb-2">색상</label>
+                <div class="flex gap-2">
+                    <?php foreach ($postit_colors as $ci => $pc) { ?>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="wr_1" value="<?php echo $ci; ?>" <?php echo (string)$ci === (string)$current_color ? 'checked' : ''; ?> class="sr-only peer">
+                        <span class="block w-8 h-8 rounded-full <?php echo $pc; ?> border-2 border-transparent peer-checked:border-mg-accent peer-checked:ring-2 peer-checked:ring-mg-accent/30 transition-all"></span>
+                    </label>
+                    <?php } ?>
+                </div>
             </div>
 
             <!-- 비밀글 -->

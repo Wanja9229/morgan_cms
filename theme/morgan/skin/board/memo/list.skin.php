@@ -148,7 +148,7 @@ if (count($list) > 0) {
                                 if ($is_owner || $is_admin_user) {
                                 ?>
                                 <div class="prose prose-invert max-w-none text-mg-text-secondary text-sm leading-relaxed">
-                                    <?php echo $row['content']; ?>
+                                    <?php echo $row['content'] ?? conv_content($row['wr_content'] ?? '', 1); ?>
                                 </div>
                                 <?php } else { ?>
                                 <div class="flex items-center gap-2 text-mg-warning text-sm">
@@ -160,7 +160,7 @@ if (count($list) > 0) {
                                 <?php } ?>
                             <?php } else { ?>
                             <div class="prose prose-invert max-w-none text-mg-text-secondary text-sm leading-relaxed">
-                                <?php echo $row['content']; ?>
+                                <?php echo $row['content'] ?? conv_content($row['wr_content'] ?? '', 1); ?>
                             </div>
                             <?php } ?>
 
@@ -173,9 +173,19 @@ if (count($list) > 0) {
                                     <a href="<?php echo $row['href']; ?>" class="btn btn-secondary text-xs px-3 py-1">
                                         상세보기
                                     </a>
-                                    <?php if ($row['reply_href']) { ?>
+                                    <?php if (!empty($row['reply_href'])) { ?>
                                     <a href="<?php echo $row['reply_href']; ?>" class="btn btn-secondary text-xs px-3 py-1">
                                         답변
+                                    </a>
+                                    <?php } ?>
+                                    <?php if (!empty($row['edit_href'])) { ?>
+                                    <a href="<?php echo $row['edit_href']; ?>" class="btn btn-secondary text-xs px-3 py-1">
+                                        수정
+                                    </a>
+                                    <?php } ?>
+                                    <?php if (!empty($row['delete_href'])) { ?>
+                                    <a href="<?php echo $row['delete_href']; ?>" onclick="return confirm('정말 삭제하시겠습니까?');" class="btn btn-secondary text-xs px-3 py-1 text-red-400 hover:text-red-300">
+                                        삭제
                                     </a>
                                     <?php } ?>
                                 </div>

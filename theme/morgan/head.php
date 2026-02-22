@@ -390,7 +390,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
         <nav class="flex-1 overflow-y-auto px-2 pb-3">
             <div class="space-y-0.5">
             <?php foreach ($sidebar_boards as $sb) {
-                if ($sb['bo_table'] === 'mission') continue;
+                if (in_array($sb['bo_table'], array('mission', 'concierge_result'))) continue;
                 $bo_url = G5_BBS_URL . '/board.php?bo_table=' . $sb['bo_table'];
                 $is_current = ($_current_bo_table === $sb['bo_table']);
                 $active_class = $is_current

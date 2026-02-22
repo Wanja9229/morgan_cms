@@ -10,6 +10,12 @@ if (!defined('_GNUBOARD_')) exit;
 // Morgan 플러그인 로드
 include_once(G5_PATH.'/plugin/morgan/morgan.php');
 
+// 익명 게시판이면 목록으로 리다이렉트
+if (($board['bo_1'] ?? '') === 'anonymous') {
+    goto_url(get_pretty_url($bo_table));
+    exit;
+}
+
 // 좋아요 보상 잔여 횟수
 $_mg_like_daily = array('count' => 0, 'targets' => array());
 $_mg_like_limit = (int)mg_config('like_daily_limit', 5);
