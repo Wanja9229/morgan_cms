@@ -1,7 +1,7 @@
 # Morgan Edition - QA 로드맵
 
 > 작성일: 2026-02-20
-> 최종 업데이트: 2026-02-22 (인장 QA 완료, 활동 그룹 진입)
+> 최종 업데이트: 2026-02-22 (QA 1차 마무리 + 아이콘 컴포넌트화 + 캐릭터 슬롯 아이템)
 
 ---
 
@@ -35,10 +35,11 @@
 
 ---
 
-### 📍 현재 진행 위치: **Phase D-13~18. 활동 그룹 ✅ 완료 → 콘텐츠/재화 그룹 대기**
+### 📍 현재 진행 위치: **QA 1차 마무리 → 베타 모집 진행 중**
 
 Phase A(설정) + Phase B(회원/캐릭터/인장) + Phase D(활동: 출석/알림/업적) = 코드 검수 완료.
-다음: 콘텐츠 그룹(게시판/역극/미션/의뢰) 또는 재화/상점 그룹.
+아이콘 입력 컴포넌트화(mg_icon_input) + 캐릭터 슬롯 상점 아이템 추가 완료.
+다음: 베타 모집 후 콘텐츠 그룹(게시판/역극/미션/의뢰) 또는 재화/상점 그룹 QA 재개.
 
 ---
 
@@ -367,7 +368,7 @@ Phase A(설정) + Phase B(회원/캐릭터/인장) + Phase D(활동: 출석/알�
 | 항목 | 상태 | 비고 |
 |------|------|------|
 | 카테고리 관리 | [ ] | |
-| 상품 CRUD (9종 타입) | [ ] | |
+| 상품 CRUD (16종 타입) | [ ] | char_slot 추가됨 |
 | 기간 한정 판매 | [ ] | |
 | 프론트 상점 페이지 | [ ] | |
 | 구매 처리 | [ ] | |
@@ -488,6 +489,20 @@ Phase A(설정) + Phase B(회원/캐릭터/인장) + Phase D(활동: 출석/알�
 | 02-22 | `adm/morgan/notification.php` | XSS 수정 ($stx htmlspecialchars 적용) |
 | 02-22 | `adm/morgan/notification.php` | 알림 타입 목록 28종으로 보완 (12→28) |
 | 02-22 | `bbs/notification.php` | 알림 타입 라벨 28종으로 보완 (12→28) |
+| 02-22 | `plugin/morgan/morgan.php` | mg_icon_input() — 관리자 아이콘 입력 PHP 컴포넌트 (6개 파일 중복 제거) |
+| 02-22 | `plugin/morgan/morgan.php` | mg_handle_icon_upload() — 아이콘 업로드 공용 함수 |
+| 02-22 | `adm/morgan/achievement.php` | 아이콘 입력 → mg_icon_input() 교체 (업적+단계 2세트, JS 5개 제거) |
+| 02-22 | `adm/morgan/pioneer_facility.php` | 아이콘 입력 → mg_icon_input() 교체 (JS 3개 제거) |
+| 02-22 | `adm/morgan/pioneer_material.php` | 아이콘 입력 → mg_icon_input() 교체 (JS 3개 제거) |
+| 02-22 | `adm/morgan/shop_category.php` | 아이콘 입력 → mg_icon_input() 교체 (compact 모드) |
+| 02-22 | `adm/morgan/side_class.php` | 아이콘 입력 → mg_icon_input() 교체 (소속+유형 2세트) |
+| 02-22 | `adm/morgan/achievement_update.php` | 업로드 코드 → mg_handle_icon_upload() + 잔여 코드 정리 |
+| 02-22 | `bbs/achievement.php` | 업적 아이콘 `<img>` → mg_icon() 렌더링 (Heroicons 지원) |
+| 02-22 | `plugin/morgan/morgan.php` | mg_get_max_characters() — 기본값 + 슬롯 보너스 계산 |
+| 02-22 | `plugin/morgan/morgan.php` | mg_use_item() char_slot 즉시 소모 + 영구 적용 |
+| 02-22 | `plugin/morgan/morgan.php` | mg_unuse_item() char_slot 해제 차단 |
+| 02-22 | `bbs/character.php` | max_characters → mg_get_max_characters() 교체 |
+| 02-22 | `bbs/character_form.php` | max_characters → mg_get_max_characters() 교체 + 상점 안내 |
 
 ---
 
@@ -498,6 +513,7 @@ Phase A(설정) + Phase B(회원/캐릭터/인장) + Phase D(활동: 출석/알�
 | 항목 | 출처 | 우선도 | 비고 |
 |------|------|--------|------|
 | ~~M8: 인장 그리드 빌더~~ | Phase 13 확장 | ~~중~~ | ✅ 완료 — GridStack 16×6, 단일 페이지 통합 |
+| ~~M9: 캐릭터 슬롯 아이템~~ | 상점 확장 | ~~중~~ | ✅ 완료 — char_slot 타입, mg_get_max_characters(), 기본 1개 |
 | 의뢰 상점 아이템 연동 | Phase 18.3 | 저 | 슬롯 추가, 추첨 확률 UP |
 | 캐릭터 장비 시스템 | Phase 5.3 | - | 2차-B(SS Engine)로 이관 |
 
@@ -561,6 +577,7 @@ Phase A(설정) + Phase B(회원/캐릭터/인장) + Phase D(활동: 출석/알�
 | 02-20 (오후) | QA | 색상 감사(버튼글자/텍스트), 배경 투명도, 달력위젯, 위젯 UI |
 | 02-21 | QA | 스모크 테스트 버그 수정 (상점/역극/댓글/출석), 댓글 수정 기능 |
 | 02-22 | QA | 소속/유형·관계·인장 코드 검수, 게시판·역극·미션·의뢰 코드 검수 |
+| 02-22 | QA+기능 | QA 1차 마무리: 알림 보안수정, 출석 반응형, 업적 아이콘. 아이콘 입력 컴포넌트화(mg_icon_input). 캐릭터 슬롯 아이템+기본제한 1개. 마이그레이션 기록 정리 |
 
 ---
 
