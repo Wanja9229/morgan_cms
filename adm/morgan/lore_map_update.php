@@ -53,7 +53,7 @@ if ($mode == 'settings') {
         $allowed_ext = array('jpg', 'jpeg', 'png', 'gif', 'webp');
         $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
-        if (in_array($ext, $allowed_ext) && $file['size'] <= 10 * 1024 * 1024) {
+        if (in_array($ext, $allowed_ext) && $file['size'] <= mg_upload_max_file()) {
             if ($old_map_image) {
                 $old_file = str_replace(G5_DATA_URL, G5_DATA_PATH, $old_map_image);
                 if (file_exists($old_file)) @unlink($old_file);
@@ -242,7 +242,7 @@ function _upload_region_image($file, $mr_id) {
     $allowed_ext = array('jpg', 'jpeg', 'png', 'gif', 'webp');
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
-    if (!in_array($ext, $allowed_ext) || $file['size'] > 2 * 1024 * 1024) {
+    if (!in_array($ext, $allowed_ext) || $file['size'] > mg_upload_max_file()) {
         return '';
     }
 

@@ -1,7 +1,7 @@
 # Morgan Edition - QA 로드맵
 
 > 작성일: 2026-02-20
-> 최종 업데이트: 2026-02-22 (로드비 게시판 4종 + 그룹 UI 숨김 + 의뢰 탭 1차 수정)
+> 최종 업데이트: 2026-02-23 (인장 개편 + 상점탭 정리 + 미션 용어/UX 수정)
 
 ---
 
@@ -35,11 +35,12 @@
 
 ---
 
-### 📍 현재 진행 위치: **QA 1차 마무리 → 베타 모집 진행 중**
+### 📍 현재 진행 위치: **콘텐츠 그룹 QA 진행 중**
 
 Phase A(설정) + Phase B(회원/캐릭터/인장) + Phase D(활동: 출석/알림/업적) = 코드 검수 완료.
-아이콘 입력 컴포넌트화(mg_icon_input) + 캐릭터 슬롯 상점 아이템 추가 완료.
-다음: 베타 모집 후 콘텐츠 그룹(게시판/역극/미션/의뢰) 또는 재화/상점 그룹 QA 재개.
+Phase C(콘텐츠): 의뢰 E2E 10종 PASS, 미션 용어/UX 수정 완료.
+인장 시스템 개편(16×4 격자, 배경/테두리/호버 아이템), 상점 탭 재정리 완료.
+다음: 미션 E2E 사용자 직접 확인, 또는 Phase D(재화/상점) QA 재개.
 
 ---
 
@@ -228,13 +229,18 @@ Phase A(설정) + Phase B(회원/캐릭터/인장) + Phase D(활동: 출석/알�
 | 프론트 인장 편집/미리보기 | [x] | 단일 페이지 통합, GridStack 위젯 클릭→속성 패널, 실시간 미리보기 |
 | 인장 저장 (레이아웃) | [x] | GnuBoard addslashes → stripslashes 수정, fd.set 명시적 설정 |
 | 이미지 업로드/URL | [x] | 600×200 리사이즈, 5형식 지원 |
-| 배경/프레임 상점 연동 | [x] | seal_bg, seal_frame 아이템 타입 |
-| 트로피 (업적 쇼케이스) | [x] | 설정 가능 슬롯 수 |
+| 배경/프레임/호버 상점 연동 | [x] | seal_bg, seal_frame, seal_hover 아이템 타입 |
+| 트로피 (업적 쇼케이스) | [x] | 아이콘만 표시, 호버 시 이름 표시 |
 | 게시글 view 인장 표시 | [x] | 4개 게시판 스킨 + margin-top 간격 |
 | 캐릭터 프로필 인장 표시 | [x] | 11개 프로필 스킨 + margin-top 간격, JS↔PHP 렌더링 일치 |
 | 역극 이음 compact 모드 | [x] | rp_api.php compact 모드 |
 | 요소별 스타일/정렬 | [x] | 글자/배경/테두리색 + 좌/가운데/우 정렬 + 텍스트 패딩 |
 | 닉네임/한마디 세로 크기 | [x] | maxH:1→3 변경 |
+| **격자 16×4 개편** | [x] | 16×6→16×4, 눈금자, 요소 maxH 조정 |
+| **인장 배경색 (무료)** | [x] | seal_bg_color 컬럼, 색상 팔레트+커스텀 피커 |
+| **테두리 아이템 5종** | [x] | seal_frame: 골드/실버/네온/점선/그림자 |
+| **호버 아이템 4종** | [x] | seal_hover: 앰버/블루 글로우, 스케일업, 그림자 드랍 |
+| **프론트 셀 스타일** | [x] | 배경색+보더+라운딩 — 편집 영역과 일치 |
 | 관리자 설정 11개 키 | [x] | |
 | 관리자 인장 관리 UI | [x] | 헤더 텍스트 제거 |
 | 반응형 | [x] | 모바일 폴백(입력 폼) + PC GridStack |
@@ -325,36 +331,36 @@ Phase A(설정) + Phase B(회원/캐릭터/인장) + Phase D(활동: 출석/알�
 | auto/review/vote 모드 | [C] | 코드 검수 완료 — 3종 보상 로직 |
 | 태그 필터링 (M4) | [C] | 코드 검수 완료 — 클라이언트 사이드 JS 필터 |
 | 미션별 참여 통계 (M4) | [C] | 코드 검수 완료 |
-| 일괄 승인 + 우수작 선정 | [C] | 코드 검수 완료 — 승인/반려/보너스 + 보상 일괄 지급 |
+| 일괄 승인 + 선정작 지정 | [x] | "우수작"→"선정작" 용어 변경, 승인/반려/보너스 + 보상 일괄 지급 |
 | 프론트 미션 카드 목록 | [C] | 코드 검수 완료 — D-day 표시, 태그 필터 |
+| **프론트 자유글쓰기 차단** | [x] | 미션 선택 필수, 미션 없으면 글쓰기 비활성화 |
 | write hook 연결 | [C] | 🔧 write_update.php에 mg_prompt_after_write() 호출 추가 |
 | 글 삭제 시 엔트리 정리 | [C] | 🔧 delete.php에 mg_prompt_entry + mg_write_character 정리 추가 |
+| **관리자 목록 테이블** | [x] | 컬럼 너비 수정 (제목 세로 찍힘 해결) |
 | 미션 달력 위젯 | [x] | widget 등록 완료 |
 | 반응형 | [x] | 폼 그리드 768px 미디어 쿼리 + 모달 max-height 추가 |
 
-### 5.4 의뢰 관리 (`concierge.php`)
+### 5.4 의뢰 관리 (`concierge.php`) ✅
 
 | 항목 | 상태 | 비고 |
 |------|------|------|
-| 의뢰 목록/검색 | [C] | 코드 검수 완료 — 상태/타입 필터, 만료 자동 처리 |
-| 관리자 설정 (M2 개편) | [C] | 코드 검수 완료 — 7개 config 키 |
-| 의뢰 강제 종료 | [C] | 코드 검수 완료 — 관리자 취소 + 미이행 카운트 |
-| 프론트 의뢰 목록/상세/등록 | [-] | ⚠️ **탭 구조 리팩토링 필요** (아래 참조) |
-| 지원/매칭/추첨 | [C] | 코드 검수 완료 — 직접선택 + 추첨(boost x2) |
-| 페널티 시스템 | [C] | 코드 검수 완료 — 3회 미이행 → 30일 벤 |
-| 전용 게시판 (concierge_result) | [C] | 코드 검수 완료 — 4개 스킨 파일, write hook 연동 |
-| 포인트/업적 연동 | [C] | 코드 검수 완료 — insert_point + mg_trigger_achievement |
+| 의뢰 목록/검색 | [x] | E2E 검증 — 상태/타입 필터, 만료 자동 처리 |
+| 관리자 설정 (M2 개편) | [x] | E2E 검증 — 7개 config 키 |
+| 관리자 강제 종료/완료 | [x] | E2E 검증 — 관리자 취소 + 미이행 카운트 + 강제완료 배지 |
+| 프론트 3탭 (market/my/results) | [x] | E2E 검증 — 3탭 구조 완료, PHP 경고 0건 |
+| 지원/매칭/추첨 | [x] | E2E 검증 — 직접선택 + 추첨(boost x2) |
+| 정산/부분제출 | [x] | E2E 검증 — settle + force settle + 미제출분 환불 |
+| 페널티 시스템 | [x] | E2E 검증 — force_close 카운트 증가 확인 |
+| 전용 게시판 (concierge_result) | [x] | 🔧 테이블 접두사 수정 (`write_` → `g5_write_`) |
+| 포인트/업적 연동 | [x] | E2E 검증 — 전체 포인트 정합성 확인 (mb_point = SUM(po_point)) |
+| 무보수 의뢰 (0P) | [x] | E2E 검증 — 포인트 변동 없이 정상 완료 |
+| 의뢰 수정 유연성 | [x] | E2E 검증 — 제목 변경 OK, 포인트 변경 무시 |
+| 자동 만료/자동 강제종료 | [x] | E2E 검증 — 모집마감+수행마감 자동 처리 + 환불 |
 
-> **🔧 의뢰 탭 리팩토링 TODO** (02-22 작업 중단, 기획 재정리 후 진행)
->
-> 현재 상태: 등록 탭=전체 마켓, 진행 탭=나의 의뢰 대시보드(내가 등록한+지원한)로 1차 수정됨.
-> 문제: "진행" 탭에서 의뢰 수행 결과물(concierge_result)을 공개적으로 열람할 곳이 없음.
-> concierge_result 게시판이 별도 존재하지만 진입점이 부족하고, 진행 탭의 역할 범위가 불명확.
->
-> 기획 결정 필요:
-> - "진행" 탭의 대상: 개인 대시보드 vs 공개 수행 현황 vs 둘 다
-> - 결과물(concierge_result) 접근 동선: 탭 내 임베드 vs 별도 링크 vs 3탭 구조
-> - 의뢰 상세(concierge_view.php)의 결과물 섹션과의 중복/연계 정리
+> **E2E 시나리오 테스트 (02-23)**
+> 10개 시나리오 전부 PASS: 직접매칭, 추첨, 부분제출+정산, 강제종료, 자동만료,
+> 자동강제종료, 모집중취소, 수행자강제완료, 무보수의뢰, 수정유연성.
+> 발견 버그 2건 모두 수정 완료.
 
 ---
 
@@ -383,6 +389,7 @@ Phase A(설정) + Phase B(회원/캐릭터/인장) + Phase D(활동: 출석/알�
 | 항목 | 상태 | 비고 |
 |------|------|------|
 | 카테고리 관리 | [ ] | |
+| **상점 탭 재정리** | [x] | 프로필(skin/bg/border), 인장(bg/frame/hover) 분리, border/equip 탭 제거 |
 | 상품 CRUD (16종 타입) | [ ] | char_slot 추가됨 |
 | 기간 한정 판매 | [ ] | |
 | 프론트 상점 페이지 | [ ] | |
@@ -485,6 +492,18 @@ Phase A(설정) + Phase B(회원/캐릭터/인장) + Phase D(활동: 출석/알�
 | 02-21 | `MG_Game_Base.php` | insert_point() rel 파라미터 누락 수정 |
 | 02-21 | `adm/morgan/shop_item_form.php` | sc_id (카테고리) 필드 누락 추가 |
 | 02-21 | `adm/morgan/shop_item_update.php` | sc_id INSERT/UPDATE 누락 추가 |
+| 02-23 | `adm/morgan/concierge.php` | `$items` 변수 충돌 수정 — `_head.php`가 admin 메뉴로 덮어씀 → `$cc_list`로 변경 |
+| 02-23 | `bbs/concierge.php` | results 탭 "Undefined array key cnt" — 디버그 코드 제거 (원인은 테이블명) |
+| 02-23 | DB `write_concierge_result` | 테이블 접두사 누락 수정 — `write_concierge_result` → `g5_write_concierge_result` RENAME |
+| 02-23 | `db/migrations/20260219_*_concierge_result_board.php` | 테이블명 하드코딩 → `$g5['write_prefix']` 사용으로 수정 |
+| 02-23 | `bbs/seal_edit.php` | 격자 16×6→16×4, 눈금자 UI, 배경/테두리/호버 아이템 선택 UI |
+| 02-23 | `bbs/seal_edit_update.php` | seal_bg_color 저장, y/h 범위 4로 조정 |
+| 02-23 | `plugin/morgan/morgan.php` | mg_render_seal() 16×4, seal_bg_color, frame 스타일 확장, hover CSS, 프론트 셀 스타일, 트로피 아이콘 전용 |
+| 02-23 | `plugin/morgan/morgan.php` | 상점 탭 재정리: profile(skin/bg/border), seal(bg/frame/hover), seal_hover 라벨, stamp 아이콘 |
+| 02-23 | `adm/morgan/prompt.php` | 테이블 컬럼 너비 수정 + "우수작"→"선정작" 6곳 |
+| 02-23 | `adm/morgan/prompt_update.php` | "우수작"→"선정작" |
+| 02-23 | `theme/morgan/skin/board/prompt/list.skin.php` | "우수작"→"선정작" 2곳 |
+| 02-23 | `theme/morgan/skin/board/prompt/write.skin.php` | 자유글쓰기 차단, 미션 선택 필수, 미션 없으면 비활성화 |
 | 02-22 | `bbs/character_form.php` | 보낸 관계 신청 취소 버튼 추가 |
 | 02-22 | `bbs/rp_close.php` | `$existing['rc_id']` PHP 8 false 체크 |
 | 02-22 | `bbs/rp_api.php` | 배열 접근 null 안전 개선 |
@@ -594,6 +613,8 @@ Phase A(설정) + Phase B(회원/캐릭터/인장) + Phase D(활동: 출석/알�
 | 02-22 | QA | 소속/유형·관계·인장 코드 검수, 게시판·역극·미션·의뢰 코드 검수 |
 | 02-22 | QA+기능 | QA 1차 마무리: 알림 보안수정, 출석 반응형, 업적 아이콘. 아이콘 입력 컴포넌트화(mg_icon_input). 캐릭터 슬롯 아이템+기본제한 1개. 마이그레이션 기록 정리 |
 | 02-22 | 기능 | 로드비(Lordby) 게시판 스킨 4종 신규 (lb_terminal/lb_intranet/lb_corkboard/lb_default) — 인라인 댓글+모달 글쓰기, 공유 include 3파일 분리. 게시판 그룹 UI 숨김(gr_id 하드코딩 community). write 스킨 이모티콘 피커 제거(4종). 의뢰 탭 1차 수정(등록=전체마켓, 진행=나의 의뢰) — 기획 재정리 필요로 중단 |
+| 02-23 | 기능+QA | 의뢰 시스템 안정성 패치(settle/force_close/auto-expiry/edit flexibility) + 카드 UI 개편(3탭) + E2E 시나리오 테스트 10종 전체 PASS. 버그 2건 수정: 관리자 $items 변수 충돌, write_concierge_result 테이블 접두사 누락 |
+| 02-23 | 기능 | 인장 시스템 개편: 16×6→16×4 격자, 눈금자, 배경색(무료), 테두리 아이템 5종, 호버 아이템 4종, 전 요소 스타일 가능, 프론트 셀 스타일(배경+보더+라운딩). 상점 탭 재정리(프로필/인장 분리). 미션 QA: "우수작"→"선정작", 자유글쓰기 차단, 관리자 목록 컬럼 너비 수정. 트로피 텍스트 제거(아이콘+호버) |
 
 ---
 

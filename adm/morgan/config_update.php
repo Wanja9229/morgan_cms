@@ -92,13 +92,15 @@ $config_keys = array(
     'rp_max_member_default',
     'rp_max_member_limit',
     'rp_content_min',
+    // 파일 업로드 제한
+    'upload_max_file',
+    'upload_max_icon',
     // 이모티콘 설정
     'emoticon_use',
     'emoticon_creator_use',
     'emoticon_commission_rate',
     'emoticon_min_count',
     'emoticon_max_count',
-    'emoticon_image_max_size',
     'emoticon_image_size',
     // 보안 설정 (reCAPTCHA)
     'recaptcha_site_key',
@@ -112,20 +114,16 @@ $config_keys = array(
     'seal_content_max',
     'seal_image_upload',
     'seal_image_url',
-    'seal_image_max_size',
     'seal_link_allow',
     'seal_trophy_slots',
     'seal_show_in_rp',
     'seal_show_in_comment',
     // 위키 설정
     'lore_use',
-    'lore_image_max_size',
-    'lore_thumbnail_max_size',
     'lore_articles_per_page',
     // 미션 설정
     'prompt_enable',
     'prompt_show_closed',
-    'prompt_banner_max_size',
     'prompt_notify_submit',
     'prompt_notify_approve',
     'prompt_notify_reject',
@@ -133,7 +131,11 @@ $config_keys = array(
     'concierge_use',
     'concierge_max_slots',
     'concierge_max_applies',
-    'concierge_reward',
+    'concierge_point_min',
+    'concierge_point_max',
+    'concierge_fee_rate',
+    'concierge_match_mode_allowed',
+    'concierge_apply_anonymous',
     'concierge_penalty_count',
     'concierge_penalty_days',
     // 회원 레벨 설정
@@ -216,7 +218,7 @@ elseif (isset($_FILES['site_logo']) && $_FILES['site_logo']['error'] === UPLOAD_
     $allowed_ext = array('jpg', 'jpeg', 'png', 'gif', 'webp', 'svg');
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
-    if (in_array($ext, $allowed_ext) && $file['size'] <= 2 * 1024 * 1024) {
+    if (in_array($ext, $allowed_ext) && $file['size'] <= mg_upload_max_file()) {
         if ($old_logo) {
             $old_file = str_replace(G5_DATA_URL, G5_DATA_PATH, $old_logo);
             if (file_exists($old_file)) @unlink($old_file);
@@ -267,7 +269,7 @@ elseif (isset($_FILES['bg_image']) && $_FILES['bg_image']['error'] === UPLOAD_ER
     $allowed_ext = array('jpg', 'jpeg', 'png', 'gif', 'webp');
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
-    if (in_array($ext, $allowed_ext) && $file['size'] <= 10 * 1024 * 1024) {
+    if (in_array($ext, $allowed_ext) && $file['size'] <= mg_upload_max_file()) {
         // 기존 파일 삭제
         if ($old_bg_image) {
             $old_file = str_replace(G5_DATA_URL, G5_DATA_PATH, $old_bg_image);

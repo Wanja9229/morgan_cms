@@ -165,6 +165,24 @@ function _cfg_radio($name, $configs, $default = '1', $labels = array('사용', '
         </div>
     </div>
 
+    <div class="mg-card" style="margin-top:1.5rem;">
+        <div class="mg-card-header"><h3>파일 업로드 제한</h3></div>
+        <div class="mg-card-body">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem;">
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="upload_max_file">일반 파일 최대 크기 (KB)</label>
+                    <input type="number" name="upload_max_file" id="upload_max_file" value="<?php echo isset($mg_configs['upload_max_file']) ? $mg_configs['upload_max_file'] : '5120'; ?>" class="mg-form-input" min="512" max="51200">
+                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">이미지, 배너, 배경, 에디터 첨부 등 일반 파일 업로드에 적용 (기본 5120KB = 5MB)</small>
+                </div>
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="upload_max_icon">아이콘 파일 최대 크기 (KB)</label>
+                    <input type="number" name="upload_max_icon" id="upload_max_icon" value="<?php echo isset($mg_configs['upload_max_icon']) ? $mg_configs['upload_max_icon'] : '2048'; ?>" class="mg-form-input" min="128" max="10240">
+                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">이모티콘, 뱃지 아이콘 등 소형 파일 업로드에 적용 (기본 2048KB = 2MB)</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div style="margin-top:1.5rem;">
         <button type="submit" class="mg-btn mg-btn-primary">설정 저장</button>
     </div>
@@ -188,8 +206,8 @@ updateCaptchaToggles();
 function previewLogo(input) {
     if (input.files && input.files[0]) {
         var file = input.files[0];
-        if (file.size > 2 * 1024 * 1024) {
-            alert('로고 파일은 2MB 이하만 가능합니다.');
+        if (file.size > <?php echo mg_upload_max_file(); ?>) {
+            alert('파일 크기가 너무 큽니다.');
             input.value = '';
             return;
         }
@@ -369,10 +387,6 @@ function removeLogo() {
                     <input type="number" name="emoticon_max_count" id="emoticon_max_count" value="<?php echo isset($mg_configs['emoticon_max_count']) ? $mg_configs['emoticon_max_count'] : '30'; ?>" class="mg-form-input" min="1">
                 </div>
                 <div class="mg-form-group">
-                    <label class="mg-form-label" for="emoticon_image_max_size">이미지 최대 크기 (KB)</label>
-                    <input type="number" name="emoticon_image_max_size" id="emoticon_image_max_size" value="<?php echo isset($mg_configs['emoticon_image_max_size']) ? $mg_configs['emoticon_image_max_size'] : '512'; ?>" class="mg-form-input" min="64">
-                </div>
-                <div class="mg-form-group">
                     <label class="mg-form-label" for="emoticon_image_size">권장 이미지 크기 (px)</label>
                     <input type="number" name="emoticon_image_size" id="emoticon_image_size" value="<?php echo isset($mg_configs['emoticon_image_size']) ? $mg_configs['emoticon_image_size'] : '128'; ?>" class="mg-form-input" min="32">
                 </div>
@@ -411,10 +425,6 @@ function removeLogo() {
                     <input type="number" name="seal_content_max" id="seal_content_max" value="<?php echo isset($mg_configs['seal_content_max']) ? $mg_configs['seal_content_max'] : '300'; ?>" class="mg-form-input" min="50" max="1000">
                 </div>
                 <div class="mg-form-group">
-                    <label class="mg-form-label" for="seal_image_max_size">이미지 최대 크기 (KB)</label>
-                    <input type="number" name="seal_image_max_size" id="seal_image_max_size" value="<?php echo isset($mg_configs['seal_image_max_size']) ? $mg_configs['seal_image_max_size'] : '500'; ?>" class="mg-form-input" min="100" max="5000">
-                </div>
-                <div class="mg-form-group">
                     <label class="mg-form-label" for="seal_trophy_slots">트로피 슬롯 수</label>
                     <input type="number" name="seal_trophy_slots" id="seal_trophy_slots" value="<?php echo isset($mg_configs['seal_trophy_slots']) ? $mg_configs['seal_trophy_slots'] : '3'; ?>" class="mg-form-input" min="0" max="10">
                 </div>
@@ -443,14 +453,6 @@ function removeLogo() {
                     <?php echo _cfg_radio('lore_use', $mg_configs, '1'); ?>
                 </div>
                 <div class="mg-form-group">
-                    <label class="mg-form-label" for="lore_image_max_size">이미지 최대 크기 (KB)</label>
-                    <input type="number" name="lore_image_max_size" id="lore_image_max_size" value="<?php echo isset($mg_configs['lore_image_max_size']) ? $mg_configs['lore_image_max_size'] : '2048'; ?>" class="mg-form-input" min="100" max="10000">
-                </div>
-                <div class="mg-form-group">
-                    <label class="mg-form-label" for="lore_thumbnail_max_size">썸네일 최대 크기 (KB)</label>
-                    <input type="number" name="lore_thumbnail_max_size" id="lore_thumbnail_max_size" value="<?php echo isset($mg_configs['lore_thumbnail_max_size']) ? $mg_configs['lore_thumbnail_max_size'] : '500'; ?>" class="mg-form-input" min="100" max="5000">
-                </div>
-                <div class="mg-form-group">
                     <label class="mg-form-label" for="lore_articles_per_page">페이지당 문서 수</label>
                     <input type="number" name="lore_articles_per_page" id="lore_articles_per_page" value="<?php echo isset($mg_configs['lore_articles_per_page']) ? $mg_configs['lore_articles_per_page'] : '12'; ?>" class="mg-form-input" min="4" max="48">
                 </div>
@@ -474,10 +476,6 @@ function removeLogo() {
                 <div class="mg-form-group">
                     <label class="mg-form-label" for="prompt_show_closed">종료 미션 표시 수</label>
                     <input type="number" name="prompt_show_closed" id="prompt_show_closed" value="<?php echo isset($mg_configs['prompt_show_closed']) ? $mg_configs['prompt_show_closed'] : '3'; ?>" class="mg-form-input" min="0" max="20">
-                </div>
-                <div class="mg-form-group">
-                    <label class="mg-form-label" for="prompt_banner_max_size">배너 이미지 최대 크기 (KB)</label>
-                    <input type="number" name="prompt_banner_max_size" id="prompt_banner_max_size" value="<?php echo isset($mg_configs['prompt_banner_max_size']) ? $mg_configs['prompt_banner_max_size'] : '1024'; ?>" class="mg-form-input" min="100" max="5000">
                 </div>
             </div>
 
@@ -513,10 +511,46 @@ function removeLogo() {
                     <label class="mg-form-label" for="concierge_max_applies">동시 지원 가능 수</label>
                     <input type="number" name="concierge_max_applies" id="concierge_max_applies" value="<?php echo isset($mg_configs['concierge_max_applies']) ? $mg_configs['concierge_max_applies'] : '3'; ?>" class="mg-form-input" min="1" max="10">
                 </div>
+            </div>
+
+            <h5 style="font-size:0.8rem;font-weight:600;margin:1.25rem 0 0.75rem;color:var(--mg-text-muted);">포인트</h5>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem;">
                 <div class="mg-form-group">
-                    <label class="mg-form-label" for="concierge_reward">의뢰 수행 보상 (P)</label>
-                    <input type="number" name="concierge_reward" id="concierge_reward" value="<?php echo isset($mg_configs['concierge_reward']) ? $mg_configs['concierge_reward'] : '50'; ?>" class="mg-form-input" min="0">
+                    <label class="mg-form-label" for="concierge_point_min">보상 최솟값 (P)</label>
+                    <input type="number" name="concierge_point_min" id="concierge_point_min" value="<?php echo isset($mg_configs['concierge_point_min']) ? $mg_configs['concierge_point_min'] : '0'; ?>" class="mg-form-input" min="0">
+                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">0이면 무보수 의뢰 허용</small>
                 </div>
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="concierge_point_max">보상 최댓값 (P)</label>
+                    <input type="number" name="concierge_point_max" id="concierge_point_max" value="<?php echo isset($mg_configs['concierge_point_max']) ? $mg_configs['concierge_point_max'] : '1000'; ?>" class="mg-form-input" min="0">
+                </div>
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="concierge_fee_rate">수수료율 (%)</label>
+                    <input type="number" name="concierge_fee_rate" id="concierge_fee_rate" value="<?php echo isset($mg_configs['concierge_fee_rate']) ? $mg_configs['concierge_fee_rate'] : '0'; ?>" class="mg-form-input" min="0" max="50">
+                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">의뢰 완료 시 보상에서 차감 후 소멸 (0=수수료 없음)</small>
+                </div>
+            </div>
+
+            <h5 style="font-size:0.8rem;font-weight:600;margin:1.25rem 0 0.75rem;color:var(--mg-text-muted);">매칭</h5>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem;">
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="concierge_match_mode_allowed">허용 매칭 방식</label>
+                    <select name="concierge_match_mode_allowed" id="concierge_match_mode_allowed" class="mg-form-input">
+                        <?php $_mma = isset($mg_configs['concierge_match_mode_allowed']) ? $mg_configs['concierge_match_mode_allowed'] : 'both'; ?>
+                        <option value="both" <?php echo $_mma === 'both' ? 'selected' : ''; ?>>둘 다 허용</option>
+                        <option value="direct_only" <?php echo $_mma === 'direct_only' ? 'selected' : ''; ?>>직접선택만</option>
+                        <option value="lottery_only" <?php echo $_mma === 'lottery_only' ? 'selected' : ''; ?>>추첨만</option>
+                    </select>
+                </div>
+                <div class="mg-form-group">
+                    <label class="mg-form-label">신청자 익명</label>
+                    <?php echo _cfg_radio('concierge_apply_anonymous', $mg_configs, '0'); ?>
+                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">ON: 의뢰 작성자와 관리자만 신청자 정보 확인 가능</small>
+                </div>
+            </div>
+
+            <h5 style="font-size:0.8rem;font-weight:600;margin:1.25rem 0 0.75rem;color:var(--mg-text-muted);">페널티</h5>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem;">
                 <div class="mg-form-group">
                     <label class="mg-form-label" for="concierge_penalty_count">미이행 제한 횟수</label>
                     <input type="number" name="concierge_penalty_count" id="concierge_penalty_count" value="<?php echo isset($mg_configs['concierge_penalty_count']) ? $mg_configs['concierge_penalty_count'] : '3'; ?>" class="mg-form-input" min="1" max="20">

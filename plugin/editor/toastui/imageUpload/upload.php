@@ -1,5 +1,6 @@
 <?php
 require_once("config.php");
+include_once(G5_PATH.'/plugin/morgan/morgan.php');
 
 if (!function_exists('ft_nonce_is_valid')) {
     include_once('../editor.lib.php');
@@ -34,8 +35,8 @@ if (!in_array($ext, $allowed_ext)) {
     exit;
 }
 
-// 파일 크기 제한 (10MB)
-if ($filesize > 10 * 1024 * 1024) {
+// 파일 크기 제한
+if ($filesize > mg_upload_max_file()) {
     echo json_encode(array('error' => 'File too large'));
     exit;
 }

@@ -52,9 +52,9 @@ if (!in_array($ext, $allowed_ext)) {
     die(json_encode(['success' => false, 'message' => '허용되지 않는 파일 형식입니다. (jpg, png, gif, webp, svg)']));
 }
 
-// 파일 크기 제한 (5MB)
-if ($file['size'] > 5 * 1024 * 1024) {
-    die(json_encode(['success' => false, 'message' => '파일 크기는 5MB를 초과할 수 없습니다.']));
+// 파일 크기 제한
+if ($file['size'] > mg_upload_max_file()) {
+    die(json_encode(['success' => false, 'message' => '파일 크기가 너무 큽니다.']));
 }
 
 // MIME 타입 확인

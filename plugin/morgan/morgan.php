@@ -357,8 +357,8 @@ function mg_upload_character_image($file, $mb_id, $type = 'thumb') {
         return $result;
     }
 
-    // 파일 크기 체크 (5MB)
-    if ($file['size'] > 5 * 1024 * 1024) {
+    // 파일 크기 체크
+    if ($file['size'] > mg_upload_max_file()) {
         return $result;
     }
 
@@ -431,17 +431,17 @@ $mg['shop_type_groups'] = array(
     'decor' => array(
         'label' => '꾸미기',
         'icon' => 'sparkles',
-        'types' => array('title', 'badge', 'nick_color', 'nick_effect')
+        'types' => array('title', 'badge', 'nick_color', 'nick_effect', 'char_slot')
     ),
-    'border' => array(
-        'label' => '테두리',
-        'icon' => 'square',
-        'types' => array('profile_border')
+    'profile' => array(
+        'label' => '프로필',
+        'icon' => 'user',
+        'types' => array('profile_skin', 'profile_bg', 'profile_border')
     ),
-    'equip' => array(
-        'label' => '장비',
-        'icon' => 'shield',
-        'types' => array('equip')
+    'seal' => array(
+        'label' => '인장',
+        'icon' => 'stamp',
+        'types' => array('seal_bg', 'seal_frame', 'seal_hover')
     ),
     'material' => array(
         'label' => '재료',
@@ -476,6 +476,7 @@ $mg['shop_type_labels'] = array(
     'furniture' => '가구',
     'seal_bg' => '인장 배경',
     'seal_frame' => '인장 프레임',
+    'seal_hover' => '인장 호버',
     'char_slot' => '캐릭터 슬롯',
     'etc' => '기타'
 );
@@ -1319,7 +1320,7 @@ function mg_get_shop_item($si_id) {
  * @param int $si_id 상품 ID
  * @return array ['can_buy' => bool, 'message' => string]
  */
-function mg_can_buy_item($mb_id, $si_id) {
+function mg_can_buy_item($mb_id, $si_id, $is_gift = false) {
     global $mg, $member;
 
     $item = mg_get_shop_item($si_id);
@@ -1346,6 +1347,14 @@ function mg_can_buy_item($mb_id, $si_id) {
         $owned = mg_get_inventory_count($mb_id, $si_id);
         if ($owned >= $item['si_limit_per_user']) {
             return array('can_buy' => false, 'message' => '이미 최대 보유 수량에 도달했습니다.');
+        }
+    }
+
+    // 비소모 아이템 중복 구매 방지 (선물 제외)
+    if (!$is_gift && !$item['si_consumable'] && $item['si_type'] !== 'material') {
+        $owned = mg_get_inventory_count($mb_id, $si_id);
+        if ($owned > 0) {
+            return array('can_buy' => false, 'message' => '이미 보유한 아이템입니다.');
         }
     }
 
@@ -1569,7 +1578,7 @@ function mg_use_item($mb_id, $si_id, $ch_id = null) {
     }
 
     // 같은 타입의 다른 아이템 해제 (칭호, 닉네임색상 등은 하나만)
-    $exclusive_types = array('title', 'nick_color', 'nick_effect', 'seal_bg', 'seal_frame', 'profile_skin', 'profile_bg');
+    $exclusive_types = array('title', 'nick_color', 'nick_effect', 'seal_bg', 'seal_frame', 'seal_hover', 'profile_skin', 'profile_bg');
     if (in_array($item['si_type'], $exclusive_types)) {
         sql_query("DELETE FROM {$mg['item_active_table']}
                    WHERE mb_id = '{$mb_id}' AND ia_type = '{$item['si_type']}'");
@@ -1747,8 +1756,8 @@ function mg_send_gift($mb_id_from, $mb_id_to, $si_id, $message = '') {
         return array('success' => false, 'message' => '받는 사람을 찾을 수 없습니다.');
     }
 
-    // 구매 가능 체크 (포인트, 재고 등)
-    $check = mg_can_buy_item($mb_id_from, $si_id);
+    // 구매 가능 체크 (포인트, 재고 등 — 선물이므로 중복 보유 체크 제외)
+    $check = mg_can_buy_item($mb_id_from, $si_id, true);
     if (!$check['can_buy']) {
         return array('success' => false, 'message' => $check['message']);
     }
@@ -2135,6 +2144,7 @@ function mg_icon($icon, $class = 'w-5 h-5', $alt = '') {
         'bell' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>',
         'pencil-square' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>',
         'arrows-up-down' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"/>',
+        'stamp' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.5 3h5a1 1 0 011 1v3a1 1 0 01-.4.8L13 9.5v1.5h3.5a2 2 0 012 2V14H5.5v-1a2 2 0 012-2H11V9.5L8.9 7.8a1 1 0 01-.4-.8V4a1 1 0 011-1zM4 16.5h16v1a2 2 0 01-2 2H6a2 2 0 01-2-2v-1z"/>',
     );
 
     // 등록된 아이콘이면 SVG 반환
@@ -2278,6 +2288,20 @@ function mg_icon_input($prefix, $current = '', $opts = array()) {
 }
 
 /**
+ * 업로드 최대 용량 — 일반 파일 (bytes)
+ */
+function mg_upload_max_file() {
+    return (int)mg_config('upload_max_file', 5120) * 1024;
+}
+
+/**
+ * 업로드 최대 용량 — 아이콘 (bytes)
+ */
+function mg_upload_max_icon() {
+    return (int)mg_config('upload_max_icon', 2048) * 1024;
+}
+
+/**
  * 아이콘 파일 업로드 처리
  * @param string $file_key       $_FILES 키
  * @param string $subdir          G5_DATA_PATH 하위 디렉토리
@@ -2286,6 +2310,10 @@ function mg_icon_input($prefix, $current = '', $opts = array()) {
  */
 function mg_handle_icon_upload($file_key, $subdir, $filename_prefix = 'icon') {
     if (empty($_FILES[$file_key]['name']) || $_FILES[$file_key]['error'] !== UPLOAD_ERR_OK) {
+        return null;
+    }
+
+    if ($_FILES[$file_key]['size'] > mg_upload_max_icon()) {
         return null;
     }
 
@@ -4607,11 +4635,79 @@ function mg_get_concierge_list($status = null, $type = null, $page = 1, $per_pag
         $where .= " AND cc.cc_type = '" . sql_real_escape_string($type) . "'";
     }
 
-    // 만료 자동 처리
+    // 만료 자동 처리 (포인트 환불 포함)
     $now = date('Y-m-d H:i:s');
+    $expiring = sql_query("SELECT cc_id, mb_id, cc_title, cc_point_total
+                            FROM {$g5['mg_concierge_table']}
+                            WHERE cc_status = 'recruiting' AND cc_deadline < '{$now}'");
+    if ($expiring) {
+        while ($exp = sql_fetch_array($expiring)) {
+            if ((int)$exp['cc_point_total'] > 0) {
+                insert_point($exp['mb_id'], (int)$exp['cc_point_total'],
+                    '의뢰 만료 환불: ' . $exp['cc_title'],
+                    'mg_concierge', (int)$exp['cc_id'], '만료환불');
+            }
+        }
+    }
     sql_query("UPDATE {$g5['mg_concierge_table']}
                SET cc_status = 'expired'
                WHERE cc_status = 'recruiting' AND cc_deadline < '{$now}'");
+
+    // 수행 마감 자동 force_close (cc_complete_deadline 초과)
+    $deadline_expired = sql_query("SELECT cc_id, mb_id, cc_title, cc_point_total, cc_max_members
+                                    FROM {$g5['mg_concierge_table']}
+                                    WHERE cc_status = 'matched' AND cc_complete_deadline IS NOT NULL AND cc_complete_deadline < '{$now}'");
+    if ($deadline_expired) {
+        while ($de = sql_fetch_array($deadline_expired)) {
+            $de_cc_id = (int)$de['cc_id'];
+            $de_point = (int)$de['cc_point_total'];
+            $de_selected = max(1, (int)$de['cc_max_members']);
+
+            // 이미 결과 제출한 수행자는 제외 (이미 보상 받음)
+            $submitted_ids = array();
+            $sub_r = sql_query("SELECT ca_id FROM {$g5['mg_concierge_result_table']} WHERE cc_id = {$de_cc_id}");
+            if ($sub_r) { while ($sr = sql_fetch_array($sub_r)) $submitted_ids[] = (int)$sr['ca_id']; }
+
+            // 미제출 수행자만 force_closed + 페널티
+            $sel_r = sql_query("SELECT ca_id, mb_id FROM {$g5['mg_concierge_apply_table']}
+                                WHERE cc_id = {$de_cc_id} AND ca_status = 'selected'");
+            $actual_selected = 0;
+            while ($sr = sql_fetch_array($sel_r)) {
+                $actual_selected++;
+                if (!in_array((int)$sr['ca_id'], $submitted_ids)) {
+                    sql_query("UPDATE {$g5['mg_concierge_apply_table']} SET ca_status = 'force_closed' WHERE ca_id = " . (int)$sr['ca_id']);
+                    mg_notify($sr['mb_id'], 'concierge_force_close',
+                             '의뢰 수행 기한 만료',
+                             '"' . $de['cc_title'] . '" 의뢰 수행 기한이 만료되었습니다.',
+                             G5_BBS_URL . '/concierge.php?tab=market&cc_id=' . $de_cc_id);
+                }
+            }
+            if ($actual_selected === 0) $actual_selected = $de_selected;
+
+            // 미제출자 분만 환불 (제출자는 이미 보상 지급됨)
+            if ($de_point > 0) {
+                $submitted_count = count($submitted_ids);
+                $unpaid_count = $actual_selected - $submitted_count;
+                if ($unpaid_count > 0) {
+                    $per_person = (int)floor($de_point / $actual_selected);
+                    $refund = $per_person * $unpaid_count;
+                    if ($refund > 0) {
+                        insert_point($de['mb_id'], $refund,
+                            '의뢰 수행기한 만료 환불: ' . $de['cc_title'] . " ({$unpaid_count}명분)",
+                            'mg_concierge', $de_cc_id, '기한만료환불');
+                    }
+                }
+            }
+
+            sql_query("UPDATE {$g5['mg_concierge_table']} SET cc_status = 'force_closed' WHERE cc_id = {$de_cc_id}");
+
+            // 의뢰자 알림
+            mg_notify($de['mb_id'], 'concierge_force_close',
+                     '의뢰 수행 기한 만료',
+                     '"' . $de['cc_title'] . '" 의뢰 수행 기한이 만료되어 종료되었습니다.',
+                     G5_BBS_URL . '/concierge.php?tab=market&cc_id=' . $de_cc_id);
+        }
+    }
 
     $offset = ($page - 1) * $per_page;
 
@@ -4712,22 +4808,67 @@ function mg_create_concierge($mb_id, $data) {
     $content = sql_real_escape_string(clean_xss_tags($data['cc_content'], 0, 0, 0, 0));
     $type = in_array($data['cc_type'], array('collaboration', 'illustration', 'novel', 'other')) ? $data['cc_type'] : 'collaboration';
     $max_members = max(1, min(5, (int)$data['cc_max_members']));
-    $match_mode = in_array($data['cc_match_mode'], array('direct', 'lottery')) ? $data['cc_match_mode'] : 'direct';
+    $max_applicants = isset($data['cc_max_applicants']) && (int)$data['cc_max_applicants'] > 0 ? (int)$data['cc_max_applicants'] : null;
     $deadline = $data['cc_deadline'];
+    $complete_deadline = !empty($data['cc_complete_deadline']) ? $data['cc_complete_deadline'] : null;
+
+    // 매칭 방식 — 관리자 허용 범위 내에서 선택
+    $mode_allowed = mg_config('concierge_match_mode_allowed', 'both');
+    if ($mode_allowed === 'direct_only') {
+        $match_mode = 'direct';
+    } elseif ($mode_allowed === 'lottery_only') {
+        $match_mode = 'lottery';
+    } else {
+        $match_mode = in_array($data['cc_match_mode'], array('direct', 'lottery')) ? $data['cc_match_mode'] : 'direct';
+    }
 
     if (empty($title)) {
         return array('success' => false, 'message' => '의뢰 제목을 입력해주세요.');
     }
     if (strtotime($deadline) <= time()) {
-        return array('success' => false, 'message' => '마감일은 현재 시각 이후여야 합니다.');
+        return array('success' => false, 'message' => '모집 마감일은 현재 시각 이후여야 합니다.');
+    }
+    if ($complete_deadline && strtotime($complete_deadline) <= strtotime($deadline)) {
+        return array('success' => false, 'message' => '수행 마감일은 모집 마감일 이후여야 합니다.');
+    }
+    if ($max_applicants !== null && $max_applicants < $max_members) {
+        return array('success' => false, 'message' => '지원 상한은 선정 인원 이상이어야 합니다.');
+    }
+
+    // 포인트 처리
+    $point_total = max(0, (int)($data['cc_point_total'] ?? 0));
+    $point_min = (int)mg_config('concierge_point_min', 0);
+    $point_max = (int)mg_config('concierge_point_max', 1000);
+    if ($point_total > 0 && $point_total < $point_min) {
+        return array('success' => false, 'message' => "보상 포인트는 최소 {$point_min}P 이상이어야 합니다.");
+    }
+    if ($point_max > 0 && $point_total > $point_max) {
+        return array('success' => false, 'message' => "보상 포인트는 최대 {$point_max}P까지 가능합니다.");
+    }
+
+    // 보유 포인트 확인
+    if ($point_total > 0) {
+        $mb = sql_fetch("SELECT mb_point FROM {$g5['member_table']} WHERE mb_id = '{$mb_id_esc}'");
+        if ((int)$mb['mb_point'] < $point_total) {
+            return array('success' => false, 'message' => '보유 포인트가 부족합니다. (보유: ' . number_format((int)$mb['mb_point']) . 'P)');
+        }
     }
 
     $deadline_esc = sql_real_escape_string($deadline);
+    $complete_dl_esc = $complete_deadline ? "'" . sql_real_escape_string($complete_deadline) . "'" : 'NULL';
+    $max_app_sql = $max_applicants !== null ? $max_applicants : 'NULL';
+    $reward_memo = !empty($data['cc_reward_memo']) ? "'" . sql_real_escape_string(mb_substr(trim($data['cc_reward_memo']), 0, 200)) . "'" : 'NULL';
     sql_query("INSERT INTO {$g5['mg_concierge_table']}
-               (mb_id, ch_id, cc_title, cc_content, cc_type, cc_max_members, cc_match_mode, cc_deadline)
+               (mb_id, ch_id, cc_title, cc_content, cc_type, cc_max_members, cc_max_applicants, cc_match_mode, cc_point_total, cc_reward_memo, cc_deadline, cc_complete_deadline)
                VALUES ('{$mb_id_esc}', {$ch_id}, '{$title}', '{$content}', '{$type}', {$max_members},
-                       '{$match_mode}', '{$deadline_esc}')");
+                       {$max_app_sql}, '{$match_mode}', {$point_total}, {$reward_memo}, '{$deadline_esc}', {$complete_dl_esc})");
     $cc_id = sql_insert_id();
+
+    // 포인트 선불 차감
+    if ($point_total > 0) {
+        insert_point($mb_id, -$point_total, '의뢰 등록: ' . strip_tags($data['cc_title']),
+                    'mg_concierge', $cc_id, '등록');
+    }
 
     return array('success' => true, 'message' => '의뢰가 등록되었습니다.', 'cc_id' => $cc_id);
 }
@@ -4756,6 +4897,15 @@ function mg_apply_concierge($mb_id, $cc_id, $ch_id, $message = '') {
     // 본인 의뢰 지원 불가
     if ($cc['mb_id'] === $mb_id) {
         return array('success' => false, 'message' => '본인이 등록한 의뢰에는 지원할 수 없습니다.');
+    }
+
+    // 지원 인원 상한 체크
+    if ($cc['cc_max_applicants'] !== null && (int)$cc['cc_max_applicants'] > 0) {
+        $apply_cnt = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_concierge_apply_table']}
+                                 WHERE cc_id = {$cc_id} AND ca_status = 'pending'");
+        if ((int)$apply_cnt['cnt'] >= (int)$cc['cc_max_applicants']) {
+            return array('success' => false, 'message' => '지원 인원이 마감되었습니다.');
+        }
     }
 
     // 중복 지원 방지
@@ -4794,7 +4944,7 @@ function mg_apply_concierge($mb_id, $cc_id, $ch_id, $message = '') {
     mg_notify($cc['mb_id'], 'concierge_apply',
              '의뢰 지원 알림',
              ($my_nick['mb_nick'] ?? $mb_id) . '님이 "' . $cc['cc_title'] . '" 의뢰에 지원했습니다.',
-             G5_BBS_URL . '/concierge_view.php?cc_id=' . $cc_id);
+             G5_BBS_URL . '/concierge.php?tab=market&cc_id=' . $cc_id);
 
     return array('success' => true, 'message' => '지원이 완료되었습니다.');
 }
@@ -4832,7 +4982,7 @@ function mg_match_concierge($mb_id, $cc_id, $selected_ca_ids) {
             mg_notify($applicant['mb_id'], 'concierge_match',
                      '의뢰 매칭 완료',
                      '"' . $cc['cc_title'] . '" 의뢰에 선정되었습니다!',
-                     G5_BBS_URL . '/concierge_view.php?cc_id=' . $cc_id);
+                     G5_BBS_URL . '/concierge.php?tab=market&cc_id=' . $cc_id);
         }
     }
 
@@ -4846,7 +4996,7 @@ function mg_match_concierge($mb_id, $cc_id, $selected_ca_ids) {
         mg_notify($rej['mb_id'], 'concierge_match',
                  '의뢰 매칭 결과',
                  '"' . $cc['cc_title'] . '" 의뢰에 아쉽게도 선정되지 않았습니다.',
-                 G5_BBS_URL . '/concierge_view.php?cc_id=' . $cc_id);
+                 G5_BBS_URL . '/concierge.php?tab=market&cc_id=' . $cc_id);
     }
 
     // 의뢰 상태 변경
@@ -4875,7 +5025,7 @@ function mg_lottery_concierge($mb_id, $cc_id) {
 
     // 지원자 풀
     $applicants = array();
-    $result = sql_query("SELECT ca_id, mb_id, ca_has_boost FROM {$g5['mg_concierge_apply_table']}
+    $result = sql_query("SELECT ca_id, mb_id FROM {$g5['mg_concierge_apply_table']}
                          WHERE cc_id = {$cc_id} AND ca_status = 'pending'");
     while ($row = sql_fetch_array($result)) {
         $applicants[] = $row;
@@ -4885,24 +5035,18 @@ function mg_lottery_concierge($mb_id, $cc_id) {
         return array('success' => false, 'message' => '지원자가 없습니다.');
     }
 
-    // 가중치 풀 구성 (boost: x2)
+    // 균등 추첨
     $pool = array();
     foreach ($applicants as $a) {
-        $weight = $a['ca_has_boost'] ? 2 : 1;
-        for ($i = 0; $i < $weight; $i++) {
-            $pool[] = $a['ca_id'];
-        }
+        $pool[] = $a['ca_id'];
     }
 
-    // 추첨
     $max_members = (int)$cc['cc_max_members'];
     $selected = array();
     shuffle($pool);
     foreach ($pool as $ca_id) {
-        if (!in_array($ca_id, $selected)) {
-            $selected[] = $ca_id;
-            if (count($selected) >= $max_members) break;
-        }
+        $selected[] = $ca_id;
+        if (count($selected) >= $max_members) break;
     }
 
     return mg_match_concierge($mb_id, $cc_id, $selected);
@@ -4924,17 +5068,14 @@ function mg_complete_concierge($mb_id, $cc_id, $bo_table, $wr_id) {
         return array('success' => false, 'message' => '매칭 완료 상태의 의뢰만 결과를 등록할 수 있습니다.');
     }
 
-    // 수행자 확인
+    // 수행자 확인 (수행자만 결과 등록 가능, 의뢰자는 settle 사용)
     $apply = sql_fetch("SELECT ca_id FROM {$g5['mg_concierge_apply_table']}
                         WHERE cc_id = {$cc_id} AND mb_id = '{$mb_id_esc}' AND ca_status = 'selected'");
     if (!$apply || !$apply['ca_id']) {
-        // 의뢰자 본인이 수동 완료하는 경우
-        if ($cc['mb_id'] !== $mb_id) {
-            return array('success' => false, 'message' => '이 의뢰의 수행자가 아닙니다.');
-        }
+        return array('success' => false, 'message' => '이 의뢰의 수행자가 아닙니다.');
     }
 
-    $ca_id = $apply ? (int)$apply['ca_id'] : 0;
+    $ca_id = (int)$apply['ca_id'];
 
     // 중복 결과 방지
     if ($ca_id > 0) {
@@ -4950,33 +5091,48 @@ function mg_complete_concierge($mb_id, $cc_id, $bo_table, $wr_id) {
                (cc_id, ca_id, bo_table, wr_id)
                VALUES ({$cc_id}, {$ca_id}, '{$bo_table_esc}', {$wr_id})");
 
-    // 수행자 보상 지급
-    if ($ca_id > 0) {
-        $reward = (int)mg_config('concierge_reward', 50);
-        if ($reward > 0) {
-            insert_point($mb_id, $reward, '의뢰 수행 완료 보상 (' . $cc['cc_title'] . ')',
+    // 수행자 보상 지급 (포인트 균등 분배 - 수수료 차감)
+    if ($ca_id > 0 && (int)$cc['cc_point_total'] > 0) {
+        $selected_count_row = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_concierge_apply_table']}
+                                          WHERE cc_id = {$cc_id} AND ca_status = 'selected'");
+        $selected_count = max(1, (int)$selected_count_row['cnt']);
+        $per_person = (int)floor((int)$cc['cc_point_total'] / $selected_count);
+        $fee_rate = (int)mg_config('concierge_fee_rate', 0);
+        $fee = $fee_rate > 0 ? (int)floor($per_person * $fee_rate / 100) : 0;
+        $actual_reward = $per_person - $fee;
+
+        if ($actual_reward > 0) {
+            $fee_note = $fee > 0 ? " (수수료 {$fee}P)" : '';
+            insert_point($mb_id, $actual_reward, '의뢰 수행 보상: ' . $cc['cc_title'] . $fee_note,
                         'mg_concierge', $cc_id, '수행완료');
             mg_notify($mb_id, 'concierge_reward',
                      '의뢰 보상 지급',
-                     '"' . $cc['cc_title'] . '" 의뢰 수행 보상 ' . $reward . 'P가 지급되었습니다.',
-                     G5_BBS_URL . '/concierge_view.php?cc_id=' . $cc_id);
+                     '"' . $cc['cc_title'] . '" 의뢰 수행 보상 ' . $actual_reward . 'P가 지급되었습니다.' . $fee_note,
+                     G5_BBS_URL . '/concierge.php?tab=market&cc_id=' . $cc_id);
         }
     }
 
-    // 모든 수행자 결과 등록 확인 → 의뢰 완료
+    // 의뢰자에게 결과 등록 알림
+    if ($cc['mb_id'] !== $mb_id) {
+        mg_notify($cc['mb_id'], 'concierge_result',
+                 '의뢰 결과물 등록',
+                 '수행자가 "' . $cc['cc_title'] . '" 의뢰 결과물을 등록했습니다.',
+                 G5_BBS_URL . '/concierge.php?tab=market&cc_id=' . $cc_id);
+    }
+
+    // 모든 수행자 결과 등록 확인 → 의뢰 자동 완료
     $selected_count = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_concierge_apply_table']}
                                  WHERE cc_id = {$cc_id} AND ca_status = 'selected'");
     $result_count = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_concierge_result_table']}
                                WHERE cc_id = {$cc_id}");
 
-    // 의뢰자 본인 완료이거나 모든 수행자 결과 등록 시
-    if ($cc['mb_id'] === $mb_id || (int)$result_count['cnt'] >= (int)$selected_count['cnt']) {
+    if ((int)$result_count['cnt'] >= (int)$selected_count['cnt']) {
         sql_query("UPDATE {$g5['mg_concierge_table']} SET cc_status = 'completed' WHERE cc_id = {$cc_id}");
 
         mg_notify($cc['mb_id'], 'concierge_complete',
                  '의뢰 완료',
-                 '"' . $cc['cc_title'] . '" 의뢰가 완료되었습니다.',
-                 G5_BBS_URL . '/concierge_view.php?cc_id=' . $cc_id);
+                 '"' . $cc['cc_title'] . '" 의뢰가 완료되었습니다. 모든 수행자가 결과물을 등록했습니다.',
+                 G5_BBS_URL . '/concierge.php?tab=market&cc_id=' . $cc_id);
     }
 
     // 업적: 수행자 + 의뢰자 쌍방 트리거
@@ -5003,6 +5159,27 @@ function mg_cancel_concierge($mb_id, $cc_id) {
     }
     if (!in_array($cc['cc_status'], array('recruiting', 'matched'))) {
         return array('success' => false, 'message' => '취소할 수 없는 상태입니다.');
+    }
+
+    // 포인트 환불
+    if ((int)$cc['cc_point_total'] > 0) {
+        if ($cc['cc_status'] === 'recruiting') {
+            // 모집 중 취소: 전액 환불
+            insert_point($cc['mb_id'], (int)$cc['cc_point_total'],
+                '의뢰 취소 환불: ' . $cc['cc_title'],
+                'mg_concierge', $cc_id, '취소환불');
+        } else {
+            // 매칭 후 취소: 수수료 차감 후 환불
+            $fee_rate = (int)mg_config('concierge_fee_rate', 0);
+            $fee = $fee_rate > 0 ? (int)floor((int)$cc['cc_point_total'] * $fee_rate / 100) : 0;
+            $refund = (int)$cc['cc_point_total'] - $fee;
+            if ($refund > 0) {
+                $fee_note = $fee > 0 ? " (수수료 {$fee}P 차감)" : '';
+                insert_point($cc['mb_id'], $refund,
+                    '의뢰 취소 환불: ' . $cc['cc_title'] . $fee_note,
+                    'mg_concierge', $cc_id, '취소환불');
+            }
+        }
     }
 
     sql_query("UPDATE {$g5['mg_concierge_table']} SET cc_status = 'cancelled' WHERE cc_id = {$cc_id}");
@@ -5034,13 +5211,219 @@ function mg_force_close_concierge($mb_id, $cc_id) {
         mg_notify($row['mb_id'], 'concierge_force_close',
                  '의뢰 미이행 종료',
                  '"' . $cc['cc_title'] . '" 의뢰가 미이행으로 종료되었습니다.',
-                 G5_BBS_URL . '/concierge_view.php?cc_id=' . $cc_id);
+                 G5_BBS_URL . '/concierge.php?tab=market&cc_id=' . $cc_id);
+    }
+
+    // 포인트 전액 환불 (수행자 잘못이므로)
+    if ((int)$cc['cc_point_total'] > 0) {
+        insert_point($cc['mb_id'], (int)$cc['cc_point_total'],
+            '의뢰 미이행 환불: ' . $cc['cc_title'],
+            'mg_concierge', $cc_id, '미이행환불');
     }
 
     // 의뢰 상태 변경
     sql_query("UPDATE {$g5['mg_concierge_table']} SET cc_status = 'force_closed' WHERE cc_id = {$cc_id}");
 
     return array('success' => true, 'message' => '의뢰가 미이행으로 종료되었습니다.');
+}
+
+/**
+ * 의뢰 정산 완료 (전체 완료 / 강제 완료)
+ * - 의뢰자: 전체 완료 (결과 1건 이상 필요)
+ * - 의뢰자/수행자: 강제 완료 (is_force=true, 관리자 추적)
+ * - 미제출자 분 의뢰자 환불
+ */
+function mg_settle_concierge($mb_id, $cc_id, $is_force = false) {
+    global $g5;
+
+    $cc_id = (int)$cc_id;
+    $mb_id_esc = sql_real_escape_string($mb_id);
+    $cc = sql_fetch("SELECT * FROM {$g5['mg_concierge_table']} WHERE cc_id = {$cc_id}");
+    if (!$cc || $cc['cc_status'] !== 'matched') {
+        return array('success' => false, 'message' => '매칭 완료 상태의 의뢰만 정산할 수 있습니다.');
+    }
+
+    $is_owner = ($cc['mb_id'] === $mb_id);
+    $is_admin_settle = ($mb_id === 'admin'); // 관리자 호출
+
+    // 권한: 의뢰자 OK, 관리자 OK, 강제완료 시 결과 제출한 수행자도 OK
+    if (!$is_owner && !$is_admin_settle) {
+        if (!$is_force) {
+            return array('success' => false, 'message' => '의뢰자만 전체 완료를 실행할 수 있습니다.');
+        }
+        // 강제 완료: 결과 제출한 수행자인지 확인
+        $my_apply = sql_fetch("SELECT ca.ca_id FROM {$g5['mg_concierge_apply_table']} ca
+                               JOIN {$g5['mg_concierge_result_table']} cr ON ca.ca_id = cr.ca_id
+                               WHERE ca.cc_id = {$cc_id} AND ca.mb_id = '{$mb_id_esc}' AND ca.ca_status = 'selected'");
+        if (!$my_apply) {
+            return array('success' => false, 'message' => '결과물을 제출한 수행자만 강제 완료를 실행할 수 있습니다.');
+        }
+    }
+
+    // 전체 완료 (비강제)는 결과 1건 이상 필요
+    if (!$is_force && !$is_admin_settle) {
+        $result_cnt = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_concierge_result_table']} WHERE cc_id = {$cc_id}");
+        if ((int)$result_cnt['cnt'] === 0) {
+            return array('success' => false, 'message' => '결과물이 1건 이상 등록된 후에 전체 완료가 가능합니다.');
+        }
+    }
+
+    // 미제출자 분 환불 계산
+    $selected_row = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_concierge_apply_table']}
+                               WHERE cc_id = {$cc_id} AND ca_status = 'selected'");
+    $selected_count = max(1, (int)$selected_row['cnt']);
+    $result_row = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_concierge_result_table']} WHERE cc_id = {$cc_id}");
+    $result_count = (int)$result_row['cnt'];
+
+    $point_total = (int)$cc['cc_point_total'];
+    if ($point_total > 0 && $result_count < $selected_count) {
+        $per_person = (int)floor($point_total / $selected_count);
+        $unpaid_count = $selected_count - $result_count;
+        $refund = $per_person * $unpaid_count;
+        if ($refund > 0) {
+            insert_point($cc['mb_id'], $refund,
+                '의뢰 정산 미제출분 환불: ' . $cc['cc_title'] . " ({$unpaid_count}명분)",
+                'mg_concierge', $cc_id, '정산환불');
+        }
+    }
+
+    // 상태 변경
+    $force_sql = $is_force ? ", cc_force_completed = 1, cc_force_completed_by = '{$mb_id_esc}'" : '';
+    sql_query("UPDATE {$g5['mg_concierge_table']}
+               SET cc_status = 'completed'{$force_sql}
+               WHERE cc_id = {$cc_id}");
+
+    // 알림
+    $settle_type = $is_force ? '강제 완료' : '전체 완료';
+    mg_notify($cc['mb_id'], 'concierge_complete',
+             '의뢰 ' . $settle_type,
+             '"' . $cc['cc_title'] . '" 의뢰가 ' . $settle_type . '되었습니다.',
+             G5_BBS_URL . '/concierge.php?tab=market&cc_id=' . $cc_id);
+
+    // 선정 수행자에게도 알림
+    $performers = sql_query("SELECT mb_id FROM {$g5['mg_concierge_apply_table']}
+                             WHERE cc_id = {$cc_id} AND ca_status = 'selected'");
+    while ($p = sql_fetch_array($performers)) {
+        if ($p['mb_id'] !== $cc['mb_id'] && $p['mb_id'] !== $mb_id) {
+            mg_notify($p['mb_id'], 'concierge_complete',
+                     '의뢰 ' . $settle_type,
+                     '"' . $cc['cc_title'] . '" 의뢰가 ' . $settle_type . '되었습니다.',
+                     G5_BBS_URL . '/concierge.php?tab=market&cc_id=' . $cc_id);
+        }
+    }
+
+    // 업적 트리거
+    if (function_exists('mg_trigger_achievement')) {
+        mg_trigger_achievement($cc['mb_id'], 'concierge_request_count');
+    }
+
+    return array('success' => true, 'message' => '의뢰가 ' . $settle_type . '되었습니다.');
+}
+
+/**
+ * 의뢰 수정
+ */
+function mg_update_concierge($mb_id, $cc_id, $data) {
+    global $g5;
+
+    $cc_id = (int)$cc_id;
+    $mb_id_esc = sql_real_escape_string($mb_id);
+    $cc = sql_fetch("SELECT * FROM {$g5['mg_concierge_table']} WHERE cc_id = {$cc_id}");
+    if (!$cc || $cc['mb_id'] !== $mb_id) {
+        return array('success' => false, 'message' => '권한이 없습니다.');
+    }
+    if ($cc['cc_status'] !== 'recruiting') {
+        return array('success' => false, 'message' => '모집 중인 의뢰만 수정할 수 있습니다.');
+    }
+
+    // 지원자 존재 확인
+    $apply_cnt = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_concierge_apply_table']} WHERE cc_id = {$cc_id}");
+    $has_applicants = (int)$apply_cnt['cnt'] > 0;
+
+    $title = sql_real_escape_string(clean_xss_tags($data['cc_title']));
+    $content = sql_real_escape_string(clean_xss_tags($data['cc_content'], 0, 0, 0, 0));
+    $deadline = $data['cc_deadline'];
+    $complete_deadline = !empty($data['cc_complete_deadline']) ? $data['cc_complete_deadline'] : null;
+    $reward_memo_sql = !empty($data['cc_reward_memo']) ? "'" . sql_real_escape_string(mb_substr(trim($data['cc_reward_memo']), 0, 200)) . "'" : 'NULL';
+
+    if ($has_applicants) {
+        // 지원자 있으면: 제목/내용/마감일/추가보상메모만 수정 가능
+        // 포인트/선정인원/유형/매칭방식은 기존 값 유지
+        $type = $cc['cc_type'];
+        $max_members = (int)$cc['cc_max_members'];
+        $max_applicants = $cc['cc_max_applicants'] !== null ? (int)$cc['cc_max_applicants'] : null;
+        $match_mode = $cc['cc_match_mode'];
+        $new_point_total = (int)$cc['cc_point_total'];
+    } else {
+        // 지원자 없으면: 전체 수정 가능
+        $type = in_array($data['cc_type'], array('collaboration', 'illustration', 'novel', 'other')) ? $data['cc_type'] : $cc['cc_type'];
+        $max_members = max(1, min(5, (int)$data['cc_max_members']));
+        $max_applicants = isset($data['cc_max_applicants']) && (int)$data['cc_max_applicants'] > 0 ? (int)$data['cc_max_applicants'] : null;
+
+        // 매칭 방식
+        $mode_allowed = mg_config('concierge_match_mode_allowed', 'both');
+        if ($mode_allowed === 'direct_only') {
+            $match_mode = 'direct';
+        } elseif ($mode_allowed === 'lottery_only') {
+            $match_mode = 'lottery';
+        } else {
+            $match_mode = in_array($data['cc_match_mode'], array('direct', 'lottery')) ? $data['cc_match_mode'] : $cc['cc_match_mode'];
+        }
+
+        $new_point_total = max(0, (int)($data['cc_point_total'] ?? 0));
+    }
+
+    if (empty($title)) {
+        return array('success' => false, 'message' => '의뢰 제목을 입력해주세요.');
+    }
+    if (strtotime($deadline) <= time()) {
+        return array('success' => false, 'message' => '모집 마감일은 현재 시각 이후여야 합니다.');
+    }
+    if ($complete_deadline && strtotime($complete_deadline) <= strtotime($deadline)) {
+        return array('success' => false, 'message' => '수행 마감일은 모집 마감일 이후여야 합니다.');
+    }
+    if ($max_applicants !== null && $max_applicants < $max_members) {
+        return array('success' => false, 'message' => '지원 상한은 선정 인원 이상이어야 합니다.');
+    }
+
+    // 포인트 변경 처리 (지원자 없을 때만)
+    $old_point_total = (int)$cc['cc_point_total'];
+    if (!$has_applicants) {
+        $point_min = (int)mg_config('concierge_point_min', 0);
+        $point_max = (int)mg_config('concierge_point_max', 1000);
+        if ($new_point_total > 0 && $new_point_total < $point_min) {
+            return array('success' => false, 'message' => "보상 포인트는 최소 {$point_min}P 이상이어야 합니다.");
+        }
+        if ($point_max > 0 && $new_point_total > $point_max) {
+            return array('success' => false, 'message' => "보상 포인트는 최대 {$point_max}P까지 가능합니다.");
+        }
+
+        $diff = $new_point_total - $old_point_total;
+        if ($diff > 0) {
+            $mb = sql_fetch("SELECT mb_point FROM {$g5['member_table']} WHERE mb_id = '{$mb_id_esc}'");
+            if ((int)$mb['mb_point'] < $diff) {
+                return array('success' => false, 'message' => '보유 포인트가 부족합니다.');
+            }
+            insert_point($mb_id, -$diff, '의뢰 수정 추가 차감: ' . strip_tags($data['cc_title']),
+                        'mg_concierge', $cc_id, '수정차감');
+        } elseif ($diff < 0) {
+            insert_point($mb_id, abs($diff), '의뢰 수정 환불: ' . strip_tags($data['cc_title']),
+                        'mg_concierge', $cc_id, '수정환불');
+        }
+    }
+
+    $deadline_esc = sql_real_escape_string($deadline);
+    $complete_dl_esc = $complete_deadline ? "'" . sql_real_escape_string($complete_deadline) . "'" : 'NULL';
+    $max_app_sql = $max_applicants !== null ? $max_applicants : 'NULL';
+    sql_query("UPDATE {$g5['mg_concierge_table']} SET
+        cc_title = '{$title}', cc_content = '{$content}', cc_type = '{$type}',
+        cc_max_members = {$max_members}, cc_max_applicants = {$max_app_sql},
+        cc_match_mode = '{$match_mode}', cc_point_total = {$new_point_total},
+        cc_reward_memo = {$reward_memo_sql},
+        cc_deadline = '{$deadline_esc}', cc_complete_deadline = {$complete_dl_esc}
+        WHERE cc_id = {$cc_id}");
+
+    return array('success' => true, 'message' => '의뢰가 수정되었습니다.');
 }
 
 /**
@@ -6072,11 +6455,13 @@ function mg_get_seal($mb_id)
     $title_items = mg_get_active_items($mb_id, 'title');
     $seal['title_item'] = !empty($title_items) ? $title_items[0] : null;
 
-    // 배경/프레임 스킨
+    // 배경/프레임/호버 스킨
     $seal_bg = mg_get_active_items($mb_id, 'seal_bg');
     $seal['bg_item'] = !empty($seal_bg) ? $seal_bg[0] : null;
     $seal_frame = mg_get_active_items($mb_id, 'seal_frame');
     $seal['frame_item'] = !empty($seal_frame) ? $seal_frame[0] : null;
+    $seal_hover = mg_get_active_items($mb_id, 'seal_hover');
+    $seal['hover_item'] = !empty($seal_hover) ? $seal_hover[0] : null;
 
     // 트로피 (업적 쇼케이스)
     $seal['trophies'] = array();
@@ -6107,9 +6492,11 @@ function mg_render_seal($mb_id, $mode = 'full')
         return '';
     }
 
-    // 배경/프레임 스타일
-    $bg_style = 'background:#2b2d31;';
-    $border_style = 'border:1px solid #3f4147;';
+    // 배경/프레임/호버 스타일
+    $seal_bg_color = !empty($seal['seal_bg_color']) ? htmlspecialchars($seal['seal_bg_color']) : '#2b2d31';
+    $bg_style = 'background:' . $seal_bg_color . ';';
+    $border_style = 'border:1px solid #3f4147;border-radius:12px;';
+    $hover_css = '';
     if ($seal['bg_item']) {
         $effect = is_string($seal['bg_item']['si_effect']) ? json_decode($seal['bg_item']['si_effect'], true) : $seal['bg_item']['si_effect'];
         if (!empty($effect['bg_image'])) {
@@ -6120,9 +6507,19 @@ function mg_render_seal($mb_id, $mode = 'full')
     }
     if ($seal['frame_item']) {
         $effect = is_string($seal['frame_item']['si_effect']) ? json_decode($seal['frame_item']['si_effect'], true) : $seal['frame_item']['si_effect'];
-        if (!empty($effect['border_color'])) {
-            $border_style = "border:2px solid " . htmlspecialchars($effect['border_color']) . ";";
+        $bs = !empty($effect['border_style']) ? htmlspecialchars($effect['border_style']) : 'solid';
+        $bw = !empty($effect['border_width']) ? htmlspecialchars($effect['border_width']) : '2px';
+        $bc = !empty($effect['border_color']) ? htmlspecialchars($effect['border_color']) : '#3f4147';
+        $br = !empty($effect['border_radius']) ? htmlspecialchars($effect['border_radius']) : '12px';
+        $border_style = "border:{$bw} {$bs} {$bc};border-radius:{$br};";
+        if (!empty($effect['box_shadow'])) {
+            $border_style .= "box-shadow:" . htmlspecialchars($effect['box_shadow']) . ";";
         }
+    }
+    // 호버 효과
+    if (!empty($seal['hover_item'])) {
+        $effect = is_string($seal['hover_item']['si_effect']) ? json_decode($seal['hover_item']['si_effect'], true) : $seal['hover_item']['si_effect'];
+        $hover_css = $effect['css'] ?? '';
     }
 
     // 칭호 렌더링
@@ -6162,9 +6559,8 @@ function mg_render_seal($mb_id, $mode = 'full')
             $icon_html = $t_icon
                 ? '<img src="' . htmlspecialchars($t_icon) . '" alt="" class="w-6 h-6 object-contain">'
                 : '<span class="text-sm">&#127942;</span>';
-            $trophy_html .= '<div class="flex flex-col items-center" title="' . htmlspecialchars($t_name) . '" style="border:1.5px solid ' . $t_color . ';border-radius:6px;padding:3px 4px;min-width:40px;">'
+            $trophy_html .= '<div class="flex items-center justify-center" title="' . htmlspecialchars($t_name) . '" style="border:1.5px solid ' . $t_color . ';border-radius:6px;padding:3px 4px;min-width:32px;">'
                 . $icon_html
-                . '<span class="text-[9px] leading-tight text-center truncate max-w-[50px]" style="color:' . $t_color . ';">' . htmlspecialchars(mb_strimwidth($t_name, 0, 12, '..')) . '</span>'
                 . '</div>';
             $shown++;
         }
@@ -6189,10 +6585,10 @@ function mg_render_seal($mb_id, $mode = 'full')
         // seal_layout이 비어있으면 기본 레이아웃 사용 (seal_edit.php DEFAULT_LAYOUT과 동일)
         if (empty($layout['elements'])) {
             $layout = array('elements' => array(
-                array('type' => 'character', 'x' => 0, 'y' => 0, 'w' => 3, 'h' => 4),
+                array('type' => 'character', 'x' => 0, 'y' => 0, 'w' => 3, 'h' => 3),
                 array('type' => 'nickname',  'x' => 3, 'y' => 0, 'w' => 5, 'h' => 1),
                 array('type' => 'tagline',   'x' => 3, 'y' => 1, 'w' => 8, 'h' => 1),
-                array('type' => 'text',      'x' => 3, 'y' => 2, 'w' => 8, 'h' => 2),
+                array('type' => 'text',      'x' => 3, 'y' => 2, 'w' => 8, 'h' => 1),
                 array('type' => 'trophy',    'x' => 13, 'y' => 0, 'w' => 1, 'h' => 1, 'slot' => 1),
                 array('type' => 'trophy',    'x' => 14, 'y' => 0, 'w' => 1, 'h' => 1, 'slot' => 2),
                 array('type' => 'trophy',    'x' => 15, 'y' => 0, 'w' => 1, 'h' => 1, 'slot' => 3),
@@ -6202,8 +6598,15 @@ function mg_render_seal($mb_id, $mode = 'full')
         {
             // === CSS Grid 레이아웃 ===
             $text_color_style = !empty($seal['seal_text_color']) ? 'color:' . htmlspecialchars($seal['seal_text_color']) . ';' : '';
-            $html .= '<div class="mg-seal mg-seal-grid" style="margin-top:1.5rem;display:grid;grid-template-columns:repeat(16,1fr);grid-template-rows:repeat(6,1fr);aspect-ratio:16/6;'
-                . $bg_style . $border_style . $text_color_style . 'border-radius:12px;overflow:hidden;padding:6px;gap:3px;">';
+            $seal_class = 'mg-seal mg-seal-grid';
+            $seal_uid = 'mg-seal-' . preg_replace('/[^a-z0-9_-]/i', '', $mb_id);
+            // 호버 효과
+            if ($hover_css) {
+                $html .= '<style>.' . $seal_uid . ' > div:hover{' . $hover_css . '}</style>';
+                $seal_class .= ' ' . $seal_uid;
+            }
+            $html .= '<div class="' . $seal_class . '" style="margin-top:1.5rem;display:grid;grid-template-columns:repeat(16,1fr);grid-template-rows:repeat(4,1fr);aspect-ratio:16/4;'
+                . $bg_style . $border_style . $text_color_style . 'overflow:hidden;padding:6px;gap:3px;">';
 
             // 전역 텍스트 색상 (요소별 color 없을 때 폴백)
             $global_tc = !empty($seal['seal_text_color']) ? htmlspecialchars($seal['seal_text_color']) : '';
@@ -6221,9 +6624,11 @@ function mg_render_seal($mb_id, $mode = 'full')
                 $align = $es['align'] ?? 'center';
                 $jc_map = array('left' => 'flex-start', 'center' => 'center', 'right' => 'flex-end');
                 $cell_style = 'grid-column:' . $gc . ';grid-row:' . $gr . ';overflow:hidden;display:flex;align-items:center;'
-                    . 'justify-content:' . ($jc_map[$align] ?? 'center') . ';text-align:' . htmlspecialchars($align) . ';min-width:0;';
+                    . 'justify-content:' . ($jc_map[$align] ?? 'center') . ';text-align:' . htmlspecialchars($align) . ';min-width:0;transition:all 0.2s ease;'
+                    . 'background:rgba(49,51,56,0.6);border-radius:6px;border:1px solid rgba(255,255,255,0.06);';
                 // 텍스트 계열 요소에 패딩
                 if (in_array($type, array('nickname', 'tagline', 'text', 'link'))) $cell_style .= 'padding:2px 6px;';
+                // 사용자 지정 스타일이 있으면 기본값 덮어쓰기
                 if (!empty($es['bgColor'])) $cell_style .= 'background:' . htmlspecialchars($es['bgColor']) . ';';
                 if (!empty($es['borderColor'])) $cell_style .= 'border:1px solid ' . htmlspecialchars($es['borderColor']) . ';border-radius:6px;';
 
@@ -6280,9 +6685,8 @@ function mg_render_seal($mb_id, $mode = 'full')
                             $icon_h = $t_icon
                                 ? '<img src="' . htmlspecialchars($t_icon) . '" alt="" style="width:22px;height:22px;object-fit:contain;">'
                                 : '<span style="font-size:14px;">&#127942;</span>';
-                            $content = '<div style="display:flex;flex-direction:column;align-items:center;border:1.5px solid ' . $t_color . ';border-radius:6px;padding:2px;width:100%;height:100%;justify-content:center;" title="' . htmlspecialchars($t_name) . '">'
+                            $content = '<div style="display:flex;align-items:center;justify-content:center;border:1.5px solid ' . $t_color . ';border-radius:6px;padding:2px;width:100%;height:100%;" title="' . htmlspecialchars($t_name) . '">'
                                 . $icon_h
-                                . '<span style="font-size:8px;color:' . $t_color . ';max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' . htmlspecialchars(mb_strimwidth($t_name, 0, 10, '..')) . '</span>'
                                 . '</div>';
                         }
                         break;
@@ -6306,7 +6710,7 @@ function mg_render_seal($mb_id, $mode = 'full')
 function mg_upload_seal_image($file, $mb_id)
 {
     $allowed_ext = array('jpg', 'jpeg', 'png', 'gif', 'webp');
-    $max_size = (int)mg_config('seal_image_max_size', 500) * 1024;
+    $max_size = mg_upload_max_file();
 
     if ($file['error'] !== UPLOAD_ERR_OK) {
         return array('success' => false, 'message' => '파일 업로드 오류입니다.');
@@ -6551,7 +6955,7 @@ function mg_get_map_regions($active_only = false)
 function mg_upload_lore_image($file, $type = 'article', $id = 0)
 {
     $allowed_ext = array('jpg', 'jpeg', 'png', 'gif', 'webp');
-    $max_size = (int)mg_config('lore_image_max_size', 2048) * 1024;
+    $max_size = mg_upload_max_file();
 
     if ($file['error'] !== UPLOAD_ERR_OK) {
         return array('success' => false, 'message' => '파일 업로드 오류');
@@ -6764,7 +7168,7 @@ function mg_prompt_give_reward($pm_id, $pe_id, $is_bonus = false)
 
     // 포인트 지급
     if ($point > 0 && function_exists('insert_point')) {
-        $desc = "[미션] {$prompt['pm_title']}" . ($is_bonus ? ' (우수작)' : '');
+        $desc = "[미션] {$prompt['pm_title']}" . ($is_bonus ? ' (선정작)' : '');
         insert_point($entry['mb_id'], $point, $desc, 'prompt', $pm_id, 'reward');
     }
 
@@ -6897,7 +7301,7 @@ function mg_prompt_vote_settle($pm_id)
 function mg_upload_prompt_banner($file, $pm_id = 0)
 {
     $allowed_ext = array('jpg', 'jpeg', 'png', 'gif', 'webp');
-    $max_size = (int)mg_config('prompt_banner_max_size', 1024) * 1024;
+    $max_size = mg_upload_max_file();
 
     if ($file['error'] !== UPLOAD_ERR_OK) {
         return array('success' => false, 'message' => '파일 업로드 오류');

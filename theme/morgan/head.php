@@ -7,6 +7,14 @@
 
 if (!defined('_GNUBOARD_')) exit;
 
+// concierge_result 게시판 목록 → 의뢰 페이지로 리다이렉트
+if (isset($bo_table) && $bo_table === 'concierge_result'
+    && basename($_SERVER['SCRIPT_NAME'] ?? '') === 'board.php'
+    && !isset($_GET['wr_id']) && empty($_GET['w'])) {
+    header('Location: ' . G5_BBS_URL . '/concierge.php?tab=results');
+    exit;
+}
+
 // head.sub.php 포함 (HTML 시작)
 include_once(G5_THEME_PATH.'/head.sub.php');
 
@@ -53,8 +61,9 @@ if (function_exists('mg_config') && mg_config('lore_use', '1') == '1') {
 // 현재 페이지 감지 (게시판/역극/기타)
 $_current_script = basename($_SERVER['SCRIPT_NAME'] ?? '');
 $_is_rp_page = in_array($_current_script, array('rp_list.php', 'rp_close.php', 'rp_reply.php'));
-// 역극 페이지에서는 게시판 포커싱 제거
-$_current_bo_table = ($_is_rp_page || !isset($bo_table)) ? '' : $bo_table;
+// 역극/의뢰수행 페이지에서는 게시판 포커싱 제거
+$_is_concierge_result = (isset($bo_table) && $bo_table === 'concierge_result');
+$_current_bo_table = ($_is_rp_page || $_is_concierge_result || !isset($bo_table)) ? '' : $bo_table;
 $_is_mission_page = ($_current_bo_table === 'mission');
 $_is_board_page = !empty($_current_bo_table);
 $_is_community_section = $_is_board_page && !$_is_mission_page;
@@ -66,7 +75,7 @@ $_is_shop_page = ($_current_script === 'shop.php');
 $_is_new_page = ($_current_script === 'new.php');
 $_is_notification_page = ($_current_script === 'notification.php');
 $_is_inventory_page = ($_current_script === 'inventory.php');
-$_is_concierge_page = in_array($_current_script, array('concierge.php', 'concierge_view.php', 'concierge_write.php'));
+$_is_concierge_page = in_array($_current_script, array('concierge.php', 'concierge_view.php', 'concierge_write.php')) || $_is_concierge_result;
 $_is_pioneer_page = ($_current_script === 'pioneer.php');
 $_is_mypage = in_array($_current_script, array('mypage.php', 'seal_edit.php'));
 $_is_lore_page = in_array($_current_script, array('lore.php', 'lore_view.php', 'lore_timeline.php', 'lore_map.php'));

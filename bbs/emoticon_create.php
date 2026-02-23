@@ -46,7 +46,7 @@ include_once(G5_THEME_PATH.'/head.php');
 
 $min_count = (int)mg_config('emoticon_min_count', 8);
 $max_count = (int)mg_config('emoticon_max_count', 30);
-$max_size = (int)mg_config('emoticon_image_max_size', 512);
+$max_size = (int)mg_config('upload_max_icon', 2048);
 $rec_size = (int)mg_config('emoticon_image_size', 128);
 
 include_once(G5_THEME_PATH.'/skin/emoticon/create.skin.php');

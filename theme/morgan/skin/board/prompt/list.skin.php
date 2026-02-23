@@ -207,7 +207,7 @@ function _prompt_mode_label($mode) {
                         <div class="text-sm">
                             <span class="text-mg-accent font-medium"><?php echo number_format($ap['pm_point']); ?>P</span>
                             <?php if ((int)$ap['pm_bonus_point'] > 0) { ?>
-                            <span class="text-mg-text-muted ml-1">+ 우수작 <?php echo number_format($ap['pm_bonus_point']); ?>P</span>
+                            <span class="text-mg-text-muted ml-1">+ 선정작 <?php echo number_format($ap['pm_bonus_point']); ?>P</span>
                             <?php } ?>
                         </div>
                         <div class="flex items-center gap-3">
@@ -537,7 +537,7 @@ function openPromptDetail(pmId) {
     var metaHtml = '<div class="flex flex-wrap gap-4 text-sm">';
     metaHtml += '<div><span class="text-mg-text-muted">보상</span> <span class="text-mg-accent font-medium">' + data.pm_point.toLocaleString() + 'P</span>';
     if (data.pm_bonus_point > 0) {
-        metaHtml += ' <span class="text-mg-text-muted">+ 우수작 ' + data.pm_bonus_point.toLocaleString() + 'P</span>';
+        metaHtml += ' <span class="text-mg-text-muted">+ 선정작 ' + data.pm_bonus_point.toLocaleString() + 'P</span>';
     }
     metaHtml += '</div>';
     if (data.pm_min_chars > 0) {

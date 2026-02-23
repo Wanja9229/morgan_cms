@@ -103,6 +103,9 @@ if ($mode == 'add' || $mode == 'edit') {
 
             // 새 이미지 업로드
             if ($badge_icon_type === 'file' && isset($_FILES['badge_icon_file']) && $_FILES['badge_icon_file']['error'] == 0) {
+                if ($_FILES['badge_icon_file']['size'] > mg_upload_max_icon()) {
+                    alert('아이콘 파일 크기가 너무 큽니다.');
+                }
                 $upload_dir = G5_DATA_PATH . '/shop/icons';
                 if (!is_dir($upload_dir)) {
                     mkdir($upload_dir, 0755, true);
@@ -167,6 +170,9 @@ if ($mode == 'add' || $mode == 'edit') {
 
     // 새 이미지 업로드
     if (isset($_FILES['si_image']) && $_FILES['si_image']['error'] == 0) {
+        if ($_FILES['si_image']['size'] > mg_upload_max_file()) {
+            alert('파일 크기가 너무 큽니다.');
+        }
         $upload_dir = G5_DATA_PATH . '/shop';
         if (!is_dir($upload_dir)) {
             mkdir($upload_dir, 0755, true);

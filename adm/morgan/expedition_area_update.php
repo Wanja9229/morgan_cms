@@ -122,7 +122,7 @@ elseif (isset($_FILES['ea_image_file']) && $_FILES['ea_image_file']['error'] ===
     $allowed_ext = array('jpg', 'jpeg', 'png', 'gif', 'webp');
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
-    if (in_array($ext, $allowed_ext) && $file['size'] <= 5 * 1024 * 1024) {
+    if (in_array($ext, $allowed_ext) && $file['size'] <= mg_upload_max_file()) {
         // 기존 파일 삭제
         if ($old_image) {
             $old_file = G5_PATH . $old_image;

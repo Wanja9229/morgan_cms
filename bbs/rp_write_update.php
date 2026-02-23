@@ -49,6 +49,9 @@ if (!$char || $char['mb_id'] != $member['mb_id'] || $char['ch_state'] != 'approv
 // Image upload
 $rt_image = '';
 if (isset($_FILES['rt_image']) && $_FILES['rt_image']['error'] == 0) {
+    if ($_FILES['rt_image']['size'] > mg_upload_max_file()) {
+        alert('파일 크기가 너무 큽니다.');
+    }
     $allowed = array('jpg', 'jpeg', 'png', 'gif', 'webp');
     $ext = strtolower(pathinfo($_FILES['rt_image']['name'], PATHINFO_EXTENSION));
     if (in_array($ext, $allowed)) {

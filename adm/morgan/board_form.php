@@ -394,7 +394,7 @@ require_once __DIR__.'/_head.php';
         <button type="submit" class="mg-btn mg-btn-primary"><?php echo $is_edit ? '수정' : '추가'; ?></button>
         <?php
         // 시스템 게시판은 삭제 불가
-        $system_boards = array('vent', 'commission', 'mission', 'lordby', 'lb_terminal', 'lb_intranet', 'lb_corkboard');
+        $system_boards = array('vent', 'commission', 'mission', 'lordby', 'lb_terminal', 'lb_intranet', 'lb_corkboard', 'concierge_result');
         if ($is_edit && !in_array($board['bo_table'], $system_boards)) { ?>
         <button type="button" class="mg-btn mg-btn-danger" style="margin-left:auto;" onclick="deleteBoard()">삭제</button>
         <?php } elseif ($is_edit && in_array($board['bo_table'], $system_boards)) { ?>

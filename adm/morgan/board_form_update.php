@@ -25,7 +25,7 @@ if ($w === 'd') {
     }
 
     // 시스템 게시판 삭제 방지
-    $system_boards = array('vent', 'commission', 'mission', 'lordby', 'lb_terminal', 'lb_intranet', 'lb_corkboard');
+    $system_boards = array('vent', 'commission', 'mission', 'lordby', 'lb_terminal', 'lb_intranet', 'lb_corkboard', 'concierge_result');
     if (in_array($bo_table, $system_boards)) {
         alert('시스템 게시판은 삭제할 수 없습니다.', $redirect_url);
     }

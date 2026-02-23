@@ -127,7 +127,7 @@ if (isset($_FILES['es_preview_file']) && $_FILES['es_preview_file']['error'] ===
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
     $allowed = array('jpg', 'jpeg', 'png', 'gif', 'webp');
 
-    if (in_array($ext, $allowed) && $file['size'] <= 1024 * 1024) {
+    if (in_array($ext, $allowed) && $file['size'] <= mg_upload_max_file()) {
         $old_set = mg_get_emoticon_set($es_id);
         if ($old_set && $old_set['es_preview']) {
             $old_file = str_replace(MG_EMOTICON_URL, MG_EMOTICON_PATH, $old_set['es_preview']);
@@ -181,7 +181,7 @@ if (isset($_FILES['emoticon_files'])) {
     $files = $_FILES['emoticon_files'];
     $new_codes = isset($_POST['new_em_codes']) ? $_POST['new_em_codes'] : array();
     $allowed_ext = array('jpg', 'jpeg', 'png', 'gif', 'webp');
-    $max_file_size = (int)mg_config('emoticon_image_max_size', 512) * 1024;
+    $max_file_size = mg_upload_max_icon();
     $max_count = (int)mg_config('emoticon_max_count', 30);
 
     // 현재 이모티콘 수 확인

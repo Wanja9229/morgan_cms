@@ -60,8 +60,8 @@ if (!$item) {
     exit;
 }
 
-// 구매 가능 여부 체크 (선물도 구매와 동일한 조건 적용)
-$_can_buy = mg_can_buy_item($member['mb_id'], $si_id);
+// 구매 가능 여부 체크 (선물이므로 중복 보유 체크 제외)
+$_can_buy = mg_can_buy_item($member['mb_id'], $si_id, true);
 if (!$_can_buy['can_buy']) {
     echo json_encode(['success' => false, 'message' => $_can_buy['message']]);
     exit;

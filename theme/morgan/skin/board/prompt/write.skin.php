@@ -63,11 +63,19 @@ foreach ($active_prompts as $ap) {
             <?php echo $html_editor_head_script; ?>
 
             <!-- 미션 선택 -->
-            <?php if (count($active_prompts) > 0 || $edit_pm_id) { ?>
+            <?php
+            $no_active_prompts = (count($active_prompts) === 0 && !$edit_pm_id);
+            ?>
             <div class="mb-4">
-                <label class="block text-sm font-medium text-mg-text-secondary mb-2">미션 선택</label>
-                <select name="pm_id" id="pm_id_select" class="input" <?php echo ($is_edit && $edit_pm_id) || !$prompt_level_ok ? 'disabled' : ''; ?>>
-                    <option value="0"><?php echo $prompt_level_ok ? '자유 글쓰기 (미션 없음)' : '접근 권한이 없습니다'; ?></option>
+                <label class="block text-sm font-medium text-mg-text-secondary mb-2">미션 선택 <span class="text-mg-error">*</span></label>
+                <?php if ($no_active_prompts) { ?>
+                <div class="p-4 bg-mg-bg-primary rounded-lg border border-mg-bg-tertiary text-center">
+                    <p class="text-sm text-mg-text-muted">현재 참여 가능한 미션이 없습니다.</p>
+                </div>
+                <input type="hidden" name="pm_id" value="0">
+                <?php } else { ?>
+                <select name="pm_id" id="pm_id_select" class="input" required <?php echo ($is_edit && $edit_pm_id) || !$prompt_level_ok ? 'disabled' : ''; ?>>
+                    <option value=""><?php echo $prompt_level_ok ? '-- 미션을 선택하세요 --' : '접근 권한이 없습니다'; ?></option>
                     <?php foreach ($active_prompts as $ap) {
                         $ap_date = '';
                         if ($ap['pm_start_date'] && $ap['pm_end_date']) {
@@ -84,8 +92,10 @@ foreach ($active_prompts as $ap) {
                 <input type="hidden" name="pm_id" value="<?php echo $edit_pm_id; ?>">
                 <p class="text-xs text-mg-text-muted mt-1">수정 시 미션은 변경할 수 없습니다.</p>
                 <?php } ?>
+                <?php } ?>
             </div>
 
+            <?php if (!$no_active_prompts) { ?>
             <!-- 미션 정보 박스 -->
             <div id="prompt_info_box" class="mb-4 p-4 bg-mg-bg-primary rounded-lg border border-mg-bg-tertiary" style="display:none;">
                 <div class="text-sm text-mg-text-secondary mb-2" id="prompt_desc"></div>
@@ -243,7 +253,7 @@ foreach ($active_prompts as $ap) {
             <!-- 버튼 -->
             <div class="flex items-center justify-between">
                 <a href="<?php echo $list_href; ?>" class="btn btn-secondary">취소</a>
-                <button type="submit" id="btn_submit" class="btn btn-primary">
+                <button type="submit" id="btn_submit" class="btn btn-primary" <?php echo $no_active_prompts ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''; ?>>
                     <?php echo $is_edit ? '수정하기' : '작성하기'; ?>
                 </button>
             </div>
@@ -352,6 +362,14 @@ var _fwrite_submitting = false;
 function fwrite_submit(f) {
     if (_fwrite_submitting) return true;
 
+    // 미션 선택 필수 체크
+    var pmId = pmSelect ? parseInt(pmSelect.value) : 0;
+    if (!pmId) {
+        alert('미션을 선택해주세요.');
+        if (pmSelect) pmSelect.focus();
+        return false;
+    }
+
     if (!f.wr_subject.value.trim()) {
         alert('제목을 입력해주세요.');
         f.wr_subject.focus();
@@ -359,9 +377,6 @@ function fwrite_submit(f) {
     }
 
     <?php echo $editor_js; ?>
-
-    // 미션 글자수 체크
-    var pmId = pmSelect ? parseInt(pmSelect.value) : 0;
     if (pmId && promptData[pmId] && promptData[pmId].min_chars > 0) {
         var len = getContentLength();
         if (len < promptData[pmId].min_chars) {

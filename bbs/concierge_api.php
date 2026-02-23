@@ -54,6 +54,24 @@ switch ($action) {
             echo json_encode(array('success' => false, 'message' => '의뢰를 찾을 수 없습니다.'));
             exit;
         }
+
+        // 익명 마스킹
+        if (mg_config('concierge_apply_anonymous', '0') === '1') {
+            $is_owner = ($cc['mb_id'] === $mb_id);
+            $is_super = ($is_admin === 'super');
+            if (!$is_owner && !$is_super) {
+                foreach ($cc['applies'] as &$_a) {
+                    if ($_a['mb_id'] === $mb_id) continue; // 본인은 표시
+                    if ($_a['ca_status'] === 'selected' && in_array($cc['cc_status'], array('matched', 'completed'))) continue;
+                    $_a['mb_nick'] = '익명';
+                    $_a['ch_name'] = '';
+                    $_a['ch_thumb'] = '';
+                    $_a['ca_message'] = '';
+                }
+                unset($_a);
+            }
+        }
+
         echo json_encode(array('success' => true, 'data' => $cc));
         break;
 
@@ -65,11 +83,39 @@ switch ($action) {
             'cc_content' => isset($_POST['cc_content']) ? trim($_POST['cc_content']) : '',
             'cc_type' => isset($_POST['cc_type']) ? $_POST['cc_type'] : 'collaboration',
             'cc_max_members' => isset($_POST['cc_max_members']) ? (int)$_POST['cc_max_members'] : 1,
+            'cc_max_applicants' => isset($_POST['cc_max_applicants']) ? (int)$_POST['cc_max_applicants'] : 0,
             'cc_match_mode' => isset($_POST['cc_match_mode']) ? $_POST['cc_match_mode'] : 'direct',
+            'cc_point_total' => isset($_POST['cc_point_total']) ? (int)$_POST['cc_point_total'] : 0,
+            'cc_reward_memo' => isset($_POST['cc_reward_memo']) ? trim($_POST['cc_reward_memo']) : '',
             'cc_deadline' => isset($_POST['cc_deadline']) ? $_POST['cc_deadline'] : '',
+            'cc_complete_deadline' => isset($_POST['cc_complete_deadline']) ? $_POST['cc_complete_deadline'] : '',
         );
 
         $result = mg_create_concierge($mb_id, $data);
+        echo json_encode($result);
+        break;
+
+    // 의뢰 수정
+    case 'update':
+        $cc_id = isset($_POST['cc_id']) ? (int)$_POST['cc_id'] : 0;
+        if (!$cc_id) {
+            echo json_encode(array('success' => false, 'message' => '잘못된 요청입니다.'));
+            exit;
+        }
+        $data = array(
+            'cc_title' => isset($_POST['cc_title']) ? trim($_POST['cc_title']) : '',
+            'cc_content' => isset($_POST['cc_content']) ? trim($_POST['cc_content']) : '',
+            'cc_type' => isset($_POST['cc_type']) ? $_POST['cc_type'] : 'collaboration',
+            'cc_max_members' => isset($_POST['cc_max_members']) ? (int)$_POST['cc_max_members'] : 1,
+            'cc_max_applicants' => isset($_POST['cc_max_applicants']) ? (int)$_POST['cc_max_applicants'] : 0,
+            'cc_match_mode' => isset($_POST['cc_match_mode']) ? $_POST['cc_match_mode'] : 'direct',
+            'cc_point_total' => isset($_POST['cc_point_total']) ? (int)$_POST['cc_point_total'] : 0,
+            'cc_reward_memo' => isset($_POST['cc_reward_memo']) ? trim($_POST['cc_reward_memo']) : '',
+            'cc_deadline' => isset($_POST['cc_deadline']) ? $_POST['cc_deadline'] : '',
+            'cc_complete_deadline' => isset($_POST['cc_complete_deadline']) ? $_POST['cc_complete_deadline'] : '',
+        );
+
+        $result = mg_update_concierge($mb_id, $cc_id, $data);
         echo json_encode($result);
         break;
 
@@ -165,6 +211,20 @@ switch ($action) {
         }
 
         $result = mg_complete_concierge($mb_id, $cc_id, $bo_table, $wr_id);
+        echo json_encode($result);
+        break;
+
+    // 정산 완료 (전체 완료 / 강제 완료)
+    case 'settle':
+        $cc_id = isset($_POST['cc_id']) ? (int)$_POST['cc_id'] : 0;
+        $force = isset($_POST['force']) && $_POST['force'] === '1';
+
+        if (!$cc_id) {
+            echo json_encode(array('success' => false, 'message' => '잘못된 요청입니다.'));
+            exit;
+        }
+
+        $result = mg_settle_concierge($mb_id, $cc_id, $force);
         echo json_encode($result);
         break;
 

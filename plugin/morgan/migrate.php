@@ -58,21 +58,30 @@ function mg_run_migrations() {
                 error_log("[Morgan Migration] PHP FAILED: {$filename} — " . $e->getMessage());
             }
         } else {
-            // SQL 마이그레이션: 세미콜론으로 분리 실행
+            // SQL 마이그레이션: mysqli_multi_query로 전체 실행
+            // (PREPARE/EXECUTE, ADD COLUMN IF NOT EXISTS 등 복합 구문 지원)
             $sql_content = file_get_contents($file);
             if (!trim($sql_content)) continue;
 
-            $statements = array_filter(array_map('trim', explode(';', $sql_content)));
             $success = true;
+            $link = $g5['connect_db'];
 
-            foreach ($statements as $stmt) {
-                if (!$stmt) continue;
-                $ret = @sql_query($stmt, false);
-                if ($ret === false) {
+            if (@mysqli_multi_query($link, $sql_content)) {
+                // 모든 결과 세트를 소비해야 다음 쿼리가 정상 동작
+                do {
+                    if ($r = mysqli_store_result($link)) {
+                        mysqli_free_result($r);
+                    }
+                } while (mysqli_more_results($link) && mysqli_next_result($link));
+
+                // 마지막 에러 확인
+                if (mysqli_errno($link)) {
                     $success = false;
-                    error_log("[Morgan Migration] FAILED: {$filename} — " . substr($stmt, 0, 200));
-                    break;
+                    error_log("[Morgan Migration] FAILED: {$filename} — " . mysqli_error($link));
                 }
+            } else {
+                $success = false;
+                error_log("[Morgan Migration] FAILED: {$filename} — " . mysqli_error($link));
             }
         }
 

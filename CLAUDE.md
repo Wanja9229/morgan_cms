@@ -176,11 +176,13 @@ include(G5_THEME_PATH.'/skin/emoticon/picker.skin.php');
 17. 탐색 파견 + 댓글 주사위 + 이모티콘 피커 보완
 18. 의뢰 매칭 (DB 3테이블, 의뢰/지원/매칭/추첨, write hook, 보상 티어)
 
-### 2차 작업 (별도 진행)
+### 2차 작업 (별도 진행) → `docs/ROADMAP_PHASE2.md`
 - **2차-A**: 연구 트리 (공동 투자, 시설 해금) → `docs/plans/RESEARCH_TREE.md`
 - **2차-B**: SS Engine (세미 턴제 RPG) → `docs/plans/SS_ENGINE_DESIGN.md`
 - **2차-C**: 진영 컨텐츠 (익명망 + 카드배틀 + 점령전) → `docs/plans/FACTION.md`
 - **2차-D**: 마이룸 (아이소메트릭 2D 방 꾸미기) → `docs/MODULES.md`
+- **2차-E**: VN Engine (비주얼 노벨) → `docs/plans/VN_ENGINE.md`
+- **2차-F**: SRPG (그리드 Co-op PvE) → `docs/plans/morgan_srpg_system_plan.md`
 
 ## 상세 문서
 
@@ -188,6 +190,7 @@ include(G5_THEME_PATH.'/skin/emoticon/picker.skin.php');
 |------|------|
 | 핵심 참조 (DB, 파일, 헬퍼) | `docs/CORE.md` |
 | 전체 로드맵 | `docs/ROADMAP.md` |
+| 2차 로드맵 | `docs/ROADMAP_PHASE2.md` |
 | 2차 모듈 전략 | `docs/MODULES.md` |
 | 환경 세팅 | `docs/SETUP.md` |
 | UI 디자인 시스템 | `docs/plans/UI.md` |

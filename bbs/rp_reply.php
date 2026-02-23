@@ -61,6 +61,10 @@ if (!$join_check['can_join']) {
 // Image upload
 $rr_image = '';
 if (isset($_FILES['rr_image']) && $_FILES['rr_image']['error'] == 0) {
+    if ($_FILES['rr_image']['size'] > mg_upload_max_file()) {
+        echo json_encode(array('success' => false, 'message' => '파일 크기가 너무 큽니다.'));
+        exit;
+    }
     $allowed = array('jpg', 'jpeg', 'png', 'gif', 'webp');
     $ext = strtolower(pathinfo($_FILES['rr_image']['name'], PATHINFO_EXTENSION));
     if (in_array($ext, $allowed)) {

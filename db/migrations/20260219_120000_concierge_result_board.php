@@ -97,9 +97,10 @@ if (!$bo_check['bo_table']) {
 }
 
 // ── 2) write 테이블 생성 ────────────────────────────
-$wt_check = sql_query("SHOW TABLES LIKE 'write_concierge_result'", false);
+$_wt_name = $g5['write_prefix'] . 'concierge_result';
+$wt_check = sql_query("SHOW TABLES LIKE '{$_wt_name}'", false);
 if (!$wt_check || !sql_num_rows($wt_check)) {
-    sql_query("CREATE TABLE IF NOT EXISTS `write_concierge_result` (
+    sql_query("CREATE TABLE IF NOT EXISTS `{$_wt_name}` (
         `wr_id` int(11) NOT NULL AUTO_INCREMENT,
         `wr_num` int(11) NOT NULL DEFAULT '0',
         `wr_reply` varchar(10) NOT NULL DEFAULT '',

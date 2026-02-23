@@ -234,7 +234,9 @@
                         '/download.php',
                         '/formmail.php',
                         '/rp_api.php',
-                        '/write.php'
+                        '/write.php',
+                        '/concierge_view.php',
+                        '/concierge_write.php'
                     ];
                     for (const pattern of excludePatterns) {
                         if (linkUrl.pathname.includes(pattern)) return false;
@@ -399,6 +401,8 @@
                     } else if (script === 'board.php' || script === 'write.php' || script === 'view.php') {
                         if (boTable === 'mission') {
                             activeId = 'mission';
+                        } else if (boTable === 'concierge_result') {
+                            activeId = 'concierge';
                         } else {
                             activeId = 'board';
                             isCommunity = true;

@@ -299,19 +299,19 @@ $entry_status_labels = array(
 
 <div class="mg-card">
     <div class="mg-card-body" style="padding:0;overflow-x:auto;">
-        <table class="mg-table" style="min-width:1000px;">
+        <table class="mg-table" style="min-width:1100px;">
             <thead>
                 <tr>
-                    <th style="width:50px;">ID</th>
-                    <th style="width:140px;">게시판</th>
-                    <th>제목</th>
-                    <th style="width:100px;text-align:center;">주기</th>
-                    <th style="width:60px;text-align:center;">모드</th>
-                    <th style="width:100px;text-align:center;">상태</th>
-                    <th style="width:220px;">기간</th>
-                    <th style="width:80px;text-align:center;">제출수</th>
-                    <th style="width:110px;">작성일</th>
-                    <th style="width:245px;text-align:center;">관리</th>
+                    <th style="width:40px;">ID</th>
+                    <th style="width:100px;">게시판</th>
+                    <th style="min-width:160px;">제목</th>
+                    <th style="width:60px;text-align:center;">주기</th>
+                    <th style="width:50px;text-align:center;">모드</th>
+                    <th style="width:70px;text-align:center;">상태</th>
+                    <th style="width:200px;">기간</th>
+                    <th style="width:55px;text-align:center;">제출</th>
+                    <th style="width:90px;">작성일</th>
+                    <th style="width:200px;text-align:center;">관리</th>
                 </tr>
             </thead>
             <tbody>
@@ -511,11 +511,11 @@ function deletePrompt(pmId, title) {
                     <input type="number" name="pm_point" class="mg-form-input" value="<?php echo $edit_pm ? (int)$edit_pm['pm_point'] : 0; ?>" min="0">
                 </div>
                 <div class="mg-form-group">
-                    <label class="mg-form-label">우수작 추가 보상</label>
+                    <label class="mg-form-label">선정작 추가 보상</label>
                     <input type="number" name="pm_bonus_point" class="mg-form-input" value="<?php echo $edit_pm ? (int)$edit_pm['pm_bonus_point'] : 0; ?>" min="0">
                 </div>
                 <div class="mg-form-group">
-                    <label class="mg-form-label">우수작 인원</label>
+                    <label class="mg-form-label">선정작 인원</label>
                     <input type="number" name="pm_bonus_count" class="mg-form-input" value="<?php echo $edit_pm ? (int)$edit_pm['pm_bonus_count'] : 0; ?>" min="0">
                 </div>
             </div>
@@ -680,7 +680,7 @@ function deletePrompt(pmId, title) {
                 <div style="font-size:0.85rem;">
                     +<?php echo number_format($review_pm['pm_point']); ?>P
                     <?php if ((int)$review_pm['pm_bonus_point'] > 0) { ?>
-                    <span style="color:var(--mg-accent);">(우수 +<?php echo number_format($review_pm['pm_bonus_point']); ?>)</span>
+                    <span style="color:var(--mg-accent);">(선정작 +<?php echo number_format($review_pm['pm_bonus_point']); ?>)</span>
                     <?php } ?>
                 </div>
             </div>
@@ -740,7 +740,7 @@ function deletePrompt(pmId, title) {
 
     <div style="display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap;">
         <button type="button" class="mg-btn mg-btn-success mg-btn-sm" onclick="bulkAction('approve')">선택 일괄 승인</button>
-        <button type="button" class="mg-btn mg-btn-primary mg-btn-sm" onclick="bulkAction('bonus')">선택 우수작 선정</button>
+        <button type="button" class="mg-btn mg-btn-primary mg-btn-sm" onclick="bulkAction('bonus')">선택 선정작 지정</button>
         <button type="button" class="mg-btn mg-btn-primary mg-btn-sm" onclick="bulkAction('reward_all')">보상 일괄 지급</button>
         <?php if ($review_pm['pm_mode'] === 'vote') { ?>
         <button type="button" class="mg-btn mg-btn-primary mg-btn-sm" onclick="bulkAction('vote_settle')" style="background:var(--mg-accent);color:var(--mg-bg-primary);">투표 정산</button>
@@ -785,7 +785,7 @@ function deletePrompt(pmId, title) {
                             <span style="color:var(--mg-text-muted);"><?php echo htmlspecialchars($entry['wr_subject']); ?></span>
                             <?php } ?>
                             <?php if ($entry['pe_is_bonus']) { ?>
-                            <span class="mg-badge mg-badge-warning" style="font-size:0.65rem;vertical-align:middle;margin-left:0.25rem;">우수작</span>
+                            <span class="mg-badge mg-badge-warning" style="font-size:0.65rem;vertical-align:middle;margin-left:0.25rem;">선정작</span>
                             <?php } ?>
                             <?php if ($entry['pe_admin_memo']) { ?>
                             <br><small style="color:var(--mg-error);">반려 사유: <?php echo htmlspecialchars($entry['pe_admin_memo']); ?></small>
@@ -879,7 +879,7 @@ function bulkAction(action) {
     }
     var msg = '';
     if (action === 'approve') msg = checked.length + '건을 일괄 승인하시겠습니까?';
-    else if (action === 'bonus') msg = checked.length + '건을 우수작으로 선정하시겠습니까?';
+    else if (action === 'bonus') msg = checked.length + '건을 선정작으로 지정하시겠습니까?';
     else if (action === 'reward_all') msg = '승인된 모든 엔트리에 보상을 일괄 지급하시겠습니까?';
     else if (action === 'vote_settle') msg = '추천수 기준 투표 정산을 진행하시겠습니까?\n상위 N명에게 보너스, 전원에게 기본 보상이 지급됩니다.';
 

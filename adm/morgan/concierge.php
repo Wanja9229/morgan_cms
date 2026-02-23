@@ -14,6 +14,7 @@ include_once(G5_PATH.'/plugin/morgan/morgan.php');
 $search_mb_id = isset($_GET['mb_id']) ? clean_xss_tags($_GET['mb_id']) : '';
 $search_status = isset($_GET['status']) ? clean_xss_tags($_GET['status']) : '';
 $search_type = isset($_GET['type']) ? clean_xss_tags($_GET['type']) : '';
+$search_force = isset($_GET['force_only']) && $_GET['force_only'] === '1';
 
 // 페이지네이션
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
@@ -38,6 +39,9 @@ if ($search_status) {
 if ($search_type) {
     $where .= " AND cc.cc_type = '" . sql_real_escape_string($search_type) . "'";
 }
+if ($search_force) {
+    $where .= " AND cc.cc_force_completed = 1";
+}
 
 // 전체 수
 $total_row = sql_fetch("SELECT COUNT(*) as cnt
@@ -58,9 +62,9 @@ $sql = "SELECT cc.*, m.mb_nick, ch.ch_name,
         ORDER BY cc.cc_id DESC
         LIMIT {$offset}, {$per_page}";
 $result = sql_query($sql);
-$items = array();
+$cc_list = array();
 while ($row = sql_fetch_array($result)) {
-    $items[] = $row;
+    $cc_list[] = $row;
 }
 
 $type_labels = array('collaboration' => '합작', 'illustration' => '일러스트', 'novel' => '소설', 'other' => '기타');
@@ -107,6 +111,13 @@ require_once __DIR__.'/_head.php';
                     <option value="other" <?php echo $search_type === 'other' ? 'selected' : ''; ?>>기타</option>
                 </select>
             </div>
+            <div class="mg-form-group" style="margin-bottom:0;">
+                <label class="mg-form-label" style="font-size:0.75rem;">&nbsp;</label>
+                <label style="display:flex;align-items:center;gap:4px;font-size:0.85rem;cursor:pointer;">
+                    <input type="checkbox" name="force_only" value="1" <?php echo $search_force ? 'checked' : ''; ?>>
+                    강제 완료 건만
+                </label>
+            </div>
             <button type="submit" class="mg-btn mg-btn-primary mg-btn-sm">검색</button>
             <a href="<?php echo G5_ADMIN_URL; ?>/morgan/concierge.php" class="mg-btn mg-btn-secondary mg-btn-sm">초기화</a>
         </form>
@@ -121,48 +132,68 @@ require_once __DIR__.'/_head.php';
 <!-- 목록 -->
 <div class="mg-card">
     <div class="mg-card-body" style="padding:0;overflow-x:auto;">
-        <table class="mg-table" style="min-width:900px;">
+        <table class="mg-table" style="min-width:1000px;">
             <thead>
                 <tr>
                     <th style="width:50px;">ID</th>
                     <th>의뢰자</th>
-                    <th>캐릭터</th>
                     <th>제목</th>
-                    <th style="width:70px;">유형</th>
-                    <th style="width:70px;">지원/모집</th>
-                    <th style="width:80px;">매칭</th>
-                    <th>마감일</th>
+                    <th style="width:60px;">유형</th>
+                    <th style="width:60px;">보상</th>
+                    <th>추가보상</th>
+                    <th style="width:80px;">지원/선정</th>
+                    <th style="width:60px;">매칭</th>
+                    <th>모집마감</th>
+                    <th>수행마감</th>
                     <th style="width:70px;">상태</th>
                     <th style="width:80px;">관리</th>
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($items as $item) {
+                <?php foreach ($cc_list as $item) {
                     $badge = isset($status_badges[$item['cc_status']]) ? $status_badges[$item['cc_status']] : $item['cc_status'];
                     $type_label = isset($type_labels[$item['cc_type']]) ? $type_labels[$item['cc_type']] : $item['cc_type'];
                 ?>
                 <tr>
                     <td style="text-align:center;"><?php echo $item['cc_id']; ?></td>
                     <td><?php echo htmlspecialchars($item['mb_nick'] ?: $item['mb_id']); ?></td>
-                    <td><?php echo htmlspecialchars($item['ch_name'] ?: '-'); ?></td>
                     <td>
-                        <?php echo htmlspecialchars(mb_substr($item['cc_title'], 0, 30)); ?>
-                        <?php if (mb_strlen($item['cc_title']) > 30) echo '...'; ?>
+                        <?php echo htmlspecialchars(mb_substr($item['cc_title'], 0, 25)); ?>
+                        <?php if (mb_strlen($item['cc_title']) > 25) echo '...'; ?>
                     </td>
                     <td style="text-align:center;"><?php echo $type_label; ?></td>
-                    <td style="text-align:center;"><?php echo $item['apply_count']; ?>/<?php echo $item['cc_max_members']; ?></td>
+                    <td style="text-align:center;"><?php echo (int)$item['cc_point_total'] > 0 ? number_format($item['cc_point_total']).'P' : '-'; ?></td>
+                    <td style="font-size:0.8rem;"><?php echo htmlspecialchars($item['cc_reward_memo'] ?? '') ?: '-'; ?></td>
+                    <td style="text-align:center;">
+                        <?php
+                        $max_app = $item['cc_max_applicants'] ? (int)$item['cc_max_applicants'] : '∞';
+                        echo $item['apply_count'] . '/' . $max_app;
+                        echo ' <small style="color:var(--mg-text-muted);">선정' . $item['selected_count'] . '/' . $item['cc_max_members'] . '</small>';
+                        ?>
+                    </td>
                     <td style="text-align:center;"><?php echo $item['cc_match_mode'] === 'lottery' ? '추첨' : '직접'; ?></td>
                     <td style="font-size:0.8rem;"><?php echo substr($item['cc_deadline'], 0, 16); ?></td>
-                    <td style="text-align:center;"><?php echo $badge; ?></td>
+                    <td style="font-size:0.8rem;"><?php echo $item['cc_complete_deadline'] ? substr($item['cc_complete_deadline'], 0, 16) : '-'; ?></td>
                     <td style="text-align:center;">
-                        <?php if (in_array($item['cc_status'], array('recruiting', 'matched'))) { ?>
+                        <?php echo $badge; ?>
+                        <?php if (!empty($item['cc_force_completed'])) { ?>
+                        <br><span class="mg-badge mg-badge-warning" style="font-size:0.65rem;">강제<?php echo $item['cc_force_completed_by'] ? '('.$item['cc_force_completed_by'].')' : ''; ?></span>
+                        <?php } ?>
+                    </td>
+                    <td style="text-align:center;">
+                        <?php if ($item['cc_status'] === 'matched') { ?>
+                        <div style="display:flex;flex-direction:column;gap:3px;">
+                            <button type="button" class="mg-btn mg-btn-warning mg-btn-sm" onclick="adminSettle(<?php echo $item['cc_id']; ?>)">강제완료</button>
+                            <button type="button" class="mg-btn mg-btn-danger mg-btn-sm" onclick="adminForceClose(<?php echo $item['cc_id']; ?>)">강제종료</button>
+                        </div>
+                        <?php } elseif ($item['cc_status'] === 'recruiting') { ?>
                         <button type="button" class="mg-btn mg-btn-danger mg-btn-sm" onclick="cancelConcierge(<?php echo $item['cc_id']; ?>)">취소</button>
                         <?php } else { echo '-'; } ?>
                     </td>
                 </tr>
                 <?php } ?>
-                <?php if (empty($items)) { ?>
-                <tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--mg-text-muted);">등록된 의뢰가 없습니다.</td></tr>
+                <?php if (empty($cc_list)) { ?>
+                <tr><td colspan="12" style="text-align:center;padding:2rem;color:var(--mg-text-muted);">등록된 의뢰가 없습니다.</td></tr>
                 <?php } ?>
             </tbody>
         </table>
@@ -177,6 +208,7 @@ require_once __DIR__.'/_head.php';
     if ($search_mb_id) $query_params[] = 'mb_id=' . urlencode($search_mb_id);
     if ($search_status) $query_params[] = 'status=' . urlencode($search_status);
     if ($search_type) $query_params[] = 'type=' . urlencode($search_type);
+    if ($search_force) $query_params[] = 'force_only=1';
     $base_url = G5_ADMIN_URL . '/morgan/concierge.php?' . implode('&', $query_params);
     if (!empty($query_params)) $base_url .= '&';
 
@@ -189,16 +221,28 @@ require_once __DIR__.'/_head.php';
 <?php } ?>
 
 <script>
-function cancelConcierge(cc_id) {
-    if (!confirm('이 의뢰를 관리자 권한으로 취소하시겠습니까?')) return;
-
-    // 관리자 강제 취소
+function _adminSubmit(action, cc_id) {
     var form = document.createElement('form');
     form.method = 'post';
     form.action = '<?php echo G5_ADMIN_URL; ?>/morgan/concierge_update.php';
-    form.innerHTML = '<input type="hidden" name="w" value="cancel"><input type="hidden" name="cc_id" value="' + cc_id + '">';
+    form.innerHTML = '<input type="hidden" name="w" value="' + action + '"><input type="hidden" name="cc_id" value="' + cc_id + '">';
     document.body.appendChild(form);
     form.submit();
+}
+
+function cancelConcierge(cc_id) {
+    if (!confirm('이 의뢰를 관리자 권한으로 취소하시겠습니까?\n포인트가 전액 환불됩니다.')) return;
+    _adminSubmit('cancel', cc_id);
+}
+
+function adminSettle(cc_id) {
+    if (!confirm('관리자 강제 완료하시겠습니까?\n제출 수행자에게 보상이 지급되고, 미제출분은 의뢰자에게 환불됩니다.')) return;
+    _adminSubmit('force_complete', cc_id);
+}
+
+function adminForceClose(cc_id) {
+    if (!confirm('관리자 강제 종료하시겠습니까?\n수행자에게 페널티가 부여되고 포인트가 전액 환불됩니다.')) return;
+    _adminSubmit('force_close', cc_id);
 }
 </script>
 
