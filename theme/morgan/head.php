@@ -465,8 +465,10 @@ if (isset($is_ajax_request) && $is_ajax_request) {
             sessionStorage.setItem('mg_board_panel', 'closed');
         });
 
-        // 초기 로드 시 저장된 상태 복원
-        if (isCommunityPage) {
+        // 초기 로드 시: 모바일에서는 패널 닫기, 데스크탑에서는 저장된 상태 복원
+        if (window.innerWidth < 1024) {
+            if (isOpen) closePanel();
+        } else if (isCommunityPage) {
             var _bpStored = sessionStorage.getItem('mg_board_panel');
             if (_bpStored === 'closed') {
                 closePanel();
@@ -650,8 +652,10 @@ if (isset($is_ajax_request) && $is_ajax_request) {
             sessionStorage.setItem('mg_lore_panel', 'closed');
         });
 
-        // 초기 로드 시 저장된 상태 복원
-        if (isLorePage) {
+        // 초기 로드 시: 모바일에서는 패널 닫기, 데스크탑에서는 저장된 상태 복원
+        if (window.innerWidth < 1024) {
+            if (isLoreOpen) closeLore();
+        } else if (isLorePage) {
             var _lpStored = sessionStorage.getItem('mg_lore_panel');
             if (_lpStored === 'closed') {
                 closeLore();
