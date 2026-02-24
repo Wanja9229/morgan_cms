@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <?php } ?>
                 <?php if ($member_total_count == 0) { ?>
                 <tr>
-                    <td colspan="6" style="text-align:center;padding:2rem;color:var(--mg-text-muted);">회원이 없습니다.</td>
+                    <td colspan="5" style="text-align:center;padding:2rem;color:var(--mg-text-muted);">회원이 없습니다.</td>
                 </tr>
                 <?php } ?>
             </tbody>

@@ -78,9 +78,9 @@ if (!empty($list)) {
         $dice_val = $is_dice ? (int)$row['wr_2'] : 0;
         $is_dice_best = ($is_dice && $dice_val === $mg_dice_max_val && $mg_dice_max_val > 0);
         ?>
-        <div id="<?php echo $comment_id; ?>_<?php echo $row['wr_id']; ?>" class="py-4 <?php echo $row['wr_comment_reply'] ? 'pl-8' : ''; ?> <?php echo $is_dice ? 'rounded-lg my-1' : ''; ?>" <?php echo $is_dice ? 'style="background:rgba(245,159,10,0.08);"' : ''; ?>>
+        <div id="<?php echo $comment_id; ?>_<?php echo $row['wr_id']; ?>" class="py-4 <?php echo $row['wr_comment_reply'] ? 'pl-8' : ''; ?> <?php echo $is_dice ? 'rounded my-1' : ''; ?>" <?php echo $is_dice ? 'style="background:var(--mg-bg-tertiary);padding:0.5rem 0.75rem;"' : ''; ?>>
             <!-- 댓글 헤더 -->
-            <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center justify-between <?php echo $is_dice ? 'mb-1' : 'mb-2'; ?>">
                 <div class="flex items-center gap-2">
                     <?php if ($row['wr_comment_reply']) { ?>
                     <svg class="w-4 h-4 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -123,8 +123,7 @@ if (!empty($list)) {
             <!-- 댓글 내용 -->
             <div id="cmt_txt_<?php echo $row['wr_id']; ?>" class="text-sm text-mg-text-secondary">
                 <?php if ($is_dice) { ?>
-                <span class="text-lg font-bold text-mg-accent"><svg style="display:inline-block;width:18px;height:18px;vertical-align:middle;margin-right:2px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="3" stroke-width="2"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/></svg> <?php echo $dice_val; ?></span>
-                <?php if ($is_dice_best) { ?><span class="ml-1 text-yellow-400 font-bold" title="최고값">BEST</span><?php } ?>
+                <span class="text-sm font-semibold text-mg-text-primary"><svg style="display:inline-block;width:14px;height:14px;vertical-align:middle;margin-right:2px;opacity:0.6;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="3" stroke-width="2"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/></svg> <?php echo $dice_val; ?></span><?php if ($is_dice_best) { ?><span class="ml-1 font-bold" style="color:var(--mg-accent);font-size:0.7rem;">BEST</span><?php } ?>
                 <?php } else { ?>
                 <?php echo mg_render_emoticons($row['content']); ?>
                 <?php } ?>
@@ -150,7 +149,7 @@ if (!empty($list)) {
     ?>
     <?php if ($is_comment_write) { ?>
     <form name="fcomment" id="fcomment" action="<?php echo $comment_action_url; ?>" method="post" onsubmit="return fcomment_submit(this);">
-        <input type="hidden" name="w" value="">
+        <input type="hidden" name="w" value="c">
         <input type="hidden" name="bo_table" value="<?php echo $bo_table; ?>">
         <input type="hidden" name="wr_id" value="<?php echo $wr_id; ?>">
         <input type="hidden" name="comment_id" value="">
@@ -222,7 +221,7 @@ function comment_reply(cmt_id) {
     var f = document.fcomment;
     var html = '<div class="mt-3 p-3 bg-mg-bg-primary rounded">';
     html += '<form name="fcommentreply" action="' + f.action + '" method="post" onsubmit="return fcomment_submit(this);">';
-    html += '<input type="hidden" name="w" value="">';
+    html += '<input type="hidden" name="w" value="c">';
     html += '<input type="hidden" name="bo_table" value="<?php echo $bo_table; ?>">';
     html += '<input type="hidden" name="wr_id" value="<?php echo $wr_id; ?>">';
     html += '<input type="hidden" name="comment_id" value="' + cmt_id + '">';

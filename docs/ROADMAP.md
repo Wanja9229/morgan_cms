@@ -611,6 +611,19 @@
 - [x] 캐릭터 폼 JS 필터링 (소속 선택 시 유형 자동 필터)
 - [x] 관리자 side_class.php 접기/드래그 정렬 + 사용법 가이드
 
+### 보상 관리 검수
+- [x] 보상 관리 5탭 반응형 확인 (게시판별/활동/역극/좋아요/정산)
+- [x] 댓글 주사위 설정을 보상 관리 → 게시판 수정 페이지로 이동
+
+### 댓글 시스템 검수 (진행중)
+- [x] 댓글 작성 `w` 값 버그 수정 (`value=""` → `value="c"`)
+- [x] 댓글 주사위 UI 개선 (배경색, 패딩, 크기 축소)
+- [x] comment_update_after hook 파라미터 불일치 수정 (`$board` 배열 → `$bo_table` 추출)
+- [x] 댓글 CREATE/EDIT/DELETE: 6개 게시판 전체 정상 (notice, gallery, owner, mission, log, concierge_result)
+- [ ] 댓글 REPLY(대댓글): notice/mission OK, gallery/log/concierge_result 미확인 (자동화 테스트 한계, 수동 검증 필요)
+- [ ] RP 댓글(이음) CRUD 수동 검증
+- [ ] 의뢰 지원 시스템 검증
+
 ### 스모크 테스트 (베타 배포 전 코드 레벨 검증)
 - [x] 상점: mg_buy_item/mg_send_gift/mg_accept_gift 반환값 비교 수정 ($result === true → $result['success'])
 - [x] 상점: 관리자 상품 등록/수정에 sc_id(카테고리) 누락 수정
@@ -844,6 +857,7 @@ new_cms/
 | 2026-02-22 | 스모크 테스트: 상점 반환값 비교, RP 뷰 링크, $comment_id, insert_point rel 파라미터, sc_id 누락 수정 |
 | 2026-02-23 | 파일 업로드 용량 통합 (16곳 → mg_upload_max_file/mg_upload_max_icon 2키) |
 | 2026-02-23 | 2차 작업 로드맵 분리 → ROADMAP_PHASE2.md, 2차-F SRPG 기획 추가 |
+| 2026-02-24 | 보상 관리 검수, 주사위 설정 이동, 댓글 CRUD 검수 (hook 파라미터 버그 수정, w값 버그 수정) |
 
 ---
 

@@ -105,6 +105,13 @@ $board = array(
 $is_edit = false;
 $page_title = '게시판 추가';
 
+// 주사위 설정 기본값
+$dice_settings = array(
+    'br_dice_use' => 0,
+    'br_dice_once' => 1,
+    'br_dice_max' => 100,
+);
+
 if ($w == 'u' && $bo_table) {
     $is_edit = true;
     $page_title = '게시판 수정';
@@ -114,6 +121,12 @@ if ($w == 'u' && $bo_table) {
         alert('존재하지 않는 게시판입니다.', './board_list.php');
     }
     $board = array_merge($board, $loaded);
+
+    // 주사위 설정 로드 (mg_board_reward 테이블)
+    $reward_row = sql_fetch("SELECT br_dice_use, br_dice_once, br_dice_max FROM {$g5['mg_board_reward_table']} WHERE bo_table = '".sql_real_escape_string($bo_table)."'");
+    if ($reward_row) {
+        $dice_settings = array_merge($dice_settings, $reward_row);
+    }
 }
 
 $g5['title'] = $page_title;
@@ -324,6 +337,28 @@ require_once __DIR__.'/_head.php';
                         </label>
                         <p style="font-size:0.75rem;color:var(--mg-text-muted);margin:0.25rem 0 0 1.5rem;">작성자명이 "익명"으로 표시됩니다. 본인과 관리자만 실제 작성자를 확인할 수 있습니다.</p>
                     </div>
+
+                    <?php if ($is_edit) { ?>
+                    <div class="mg-form-group" style="border-top:1px solid rgba(255,255,255,0.06);padding-top:0.75rem;margin-top:0.25rem;">
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="checkbox" name="br_dice_use" id="br_dice_use" value="1" <?php echo $dice_settings['br_dice_use'] ? 'checked' : ''; ?>>
+                            <span>댓글 주사위</span>
+                        </label>
+                        <p style="font-size:0.75rem;color:var(--mg-text-muted);margin:0.25rem 0 0 1.5rem;">활성화 시 댓글 영역에 주사위 버튼이 표시됩니다.</p>
+                        <div id="dice_options" style="<?php echo $dice_settings['br_dice_use'] ? '' : 'display:none;'; ?>margin-left:1.5rem;margin-top:0.5rem;">
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                                <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                                    <input type="checkbox" name="br_dice_once" value="1" <?php echo $dice_settings['br_dice_once'] ? 'checked' : ''; ?>>
+                                    <span style="font-size:0.85rem;">1인 1회 제한</span>
+                                </label>
+                                <div class="mg-form-group" style="margin:0;">
+                                    <label class="mg-form-label" style="font-size:0.8rem;">최대값</label>
+                                    <input type="number" name="br_dice_max" value="<?php echo (int)$dice_settings['br_dice_max']; ?>" class="mg-form-input" min="1" max="9999" style="padding:4px 8px;font-size:0.85rem;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php } ?>
                 </div>
             </div>
 
@@ -407,6 +442,13 @@ require_once __DIR__.'/_head.php';
 document.querySelector('input[name="bo_use_category"]').addEventListener('change', function() {
     document.getElementById('category_list_wrap').style.display = this.checked ? '' : 'none';
 });
+
+var diceUseEl = document.getElementById('br_dice_use');
+if (diceUseEl) {
+    diceUseEl.addEventListener('change', function() {
+        document.getElementById('dice_options').style.display = this.checked ? '' : 'none';
+    });
+}
 
 function deleteBoard() {
     if (!confirm('이 게시판을 삭제하시겠습니까?\n\n게시판의 모든 글과 댓글이 함께 삭제됩니다.')) return;

@@ -118,6 +118,16 @@ if ($w === 'u' && $old_bo_table) {
 
     sql_query("UPDATE {$g5['board_table']} SET ".implode(', ', $set_clause)." WHERE bo_table = '".sql_real_escape_string($old_bo_table)."'");
 
+    // 주사위 설정 저장 (mg_board_reward 테이블)
+    $br_dice_use = isset($_POST['br_dice_use']) ? 1 : 0;
+    $br_dice_once = isset($_POST['br_dice_once']) ? 1 : 0;
+    $br_dice_max = max(1, (int)($_POST['br_dice_max'] ?? 100));
+    $bo_esc = sql_real_escape_string($old_bo_table);
+
+    sql_query("INSERT INTO {$g5['mg_board_reward_table']} (bo_table, br_dice_use, br_dice_once, br_dice_max)
+               VALUES ('{$bo_esc}', {$br_dice_use}, {$br_dice_once}, {$br_dice_max})
+               ON DUPLICATE KEY UPDATE br_dice_use = {$br_dice_use}, br_dice_once = {$br_dice_once}, br_dice_max = {$br_dice_max}");
+
     alert('게시판이 수정되었습니다.', './board_form.php?w=u&bo_table='.$old_bo_table);
 
 } else {

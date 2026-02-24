@@ -43,20 +43,24 @@ function mg_write_update_after($board, $wr_id, $w, $qstr, $redirect_url) {
 /**
  * 댓글 작성/수정 후 캐릭터 연결 저장
  */
-add_event('comment_update_after', 'mg_comment_update_after', 1, 5);
+add_event('comment_update_after', 'mg_comment_update_after', 1, 7);
 
-function mg_comment_update_after($bo_table, $wr_id, $w, $comment_id, $member) {
+// run_event 호출: ('comment_update_after', $board, $wr_id, $w, $qstr, $redirect_url, $comment_id, $reply_array)
+function mg_comment_update_after($board, $wr_id, $w, $qstr, $redirect_url, $comment_id, $reply_array) {
     global $is_member;
 
     // 로그인 회원만
     if (!$is_member) return;
+
+    $bo_table = is_array($board) ? ($board['bo_table'] ?? '') : $board;
+    if (!$bo_table) return;
 
     // 캐릭터 ID 확인
     $ch_id = isset($_POST['mg_ch_id']) ? (int)$_POST['mg_ch_id'] : 0;
 
     // 신규 댓글의 경우 comment_id가 새로 생성된 댓글의 wr_id
     // 기존 댓글 수정의 경우 comment_id가 수정 대상 wr_id
-    $target_wr_id = $comment_id;
+    $target_wr_id = (int)$comment_id;
 
     // 캐릭터 연결 저장
     mg_set_write_character($bo_table, $target_wr_id, $ch_id);
