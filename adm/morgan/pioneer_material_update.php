@@ -59,7 +59,7 @@ if ($w === 'give') {
     alert("{$mb_id}님에게 {$mt_name} {$amount}개를 지급했습니다.", $redirect_url);
 }
 
-// 노동력 지급
+// 스테미나 지급
 if ($w === 'stamina') {
     $mb_id = isset($_POST['mb_id']) ? clean_xss_tags($_POST['mb_id']) : '';
     $amount = isset($_POST['amount']) ? (int)$_POST['amount'] : 0;
@@ -68,7 +68,7 @@ if ($w === 'stamina') {
         alert('회원 ID를 입력해주세요.');
     }
     if ($amount < 1) {
-        alert('노동력 수량을 올바르게 입력해주세요.');
+        alert('스테미나 수량을 올바르게 입력해주세요.');
     }
 
     // 회원 확인
@@ -79,15 +79,15 @@ if ($w === 'stamina') {
 
     $mb_id_esc = sql_real_escape_string($mb_id);
 
-    // 노동력 레코드가 없으면 생성
+    // 스테미나 레코드가 없으면 생성
     mg_get_stamina($mb_id);
 
-    // 노동력 추가
+    // 스테미나 추가
     sql_query("UPDATE {$mg['user_stamina_table']}
                SET us_current = us_current + {$amount}
                WHERE mb_id = '{$mb_id_esc}'");
 
-    alert("{$mb_id}님에게 노동력 {$amount}을(를) 지급했습니다.", $redirect_url);
+    alert("{$mb_id}님에게 스테미나 {$amount}을(를) 지급했습니다.", $redirect_url);
 }
 
 // 재료 추가/수정

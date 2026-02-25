@@ -88,11 +88,14 @@ switch ($action) {
 $isFinalized = (isset($result['phase']) && $result['phase'] === 'finalize' && !empty($result['success']));
 
 if ($isFinalized) {
-    // Morgan: 출석 재료 보상
-    if (function_exists('mg_pioneer_enabled') && mg_pioneer_enabled()) {
-        $mat_reward = mg_reward_material($mb_id, 'attendance');
-        if ($mat_reward) {
-            $result['material_reward'] = $mat_reward;
+    // Morgan: 출석 재료 보상 (출석 관리 설정)
+    if (function_exists('mg_reward_material_from_config') && function_exists('mg_pioneer_enabled') && mg_pioneer_enabled()) {
+        $att_mat_config = mg_config('attendance_material_reward', '');
+        if ($att_mat_config) {
+            $mat_reward = mg_reward_material_from_config($mb_id, $att_mat_config);
+            if ($mat_reward) {
+                $result['material_reward'] = $mat_reward;
+            }
         }
     }
 

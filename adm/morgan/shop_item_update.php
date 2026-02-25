@@ -35,9 +35,12 @@ if ($mode == 'add' || $mode == 'edit') {
         alert('필수 항목을 입력해주세요.');
     }
 
-    // 프로필 스킨은 신규 등록 불가 (개발자가 직접 DB에 등록)
+    // 프로필 스킨/배경은 신규 등록 불가 (개발자가 직접 DB에 등록)
     if ($mode == 'add' && $si_type == 'profile_skin') {
         alert('프로필 스킨은 관리자 페이지에서 신규 등록할 수 없습니다.');
+    }
+    if ($mode == 'add' && $si_type == 'profile_bg') {
+        alert('프로필 배경은 관리자 페이지에서 신규 등록할 수 없습니다.');
     }
 
     // 효과 데이터 처리
@@ -50,6 +53,10 @@ if ($mode == 'add' || $mode == 'edit') {
                 $effect_data['title'] = $effect['title'];
                 $effect_data['title_color'] = $effect['title_color'] ?? '#ffffff';
             }
+            break;
+        case 'title_prefix':
+        case 'title_suffix':
+            // 칭호 뽑기: effect 데이터 없음 (풀에서 랜덤 지급)
             break;
         case 'nick_color':
             if (!empty($effect['nick_color'])) {
@@ -83,6 +90,45 @@ if ($mode == 'add' || $mode == 'edit') {
             $bg_id = $effect['bg_id'] ?? '';
             if (isset($valid_bgs[$bg_id])) {
                 $effect_data['bg_id'] = $bg_id;
+            }
+            break;
+        case 'seal_frame':
+            $effect_data['border_color'] = $effect['border_color'] ?? '#d4a843';
+            $valid_styles = array('solid', 'double', 'dashed', 'dotted', 'groove', 'ridge');
+            $effect_data['border_style'] = in_array($effect['border_style'] ?? '', $valid_styles) ? $effect['border_style'] : 'solid';
+            $valid_widths = array('1px', '2px', '3px', '4px');
+            $effect_data['border_width'] = in_array($effect['border_width'] ?? '', $valid_widths) ? $effect['border_width'] : '2px';
+            $valid_radius = array('0', '6px', '12px', '16px', '24px');
+            $effect_data['border_radius'] = in_array($effect['border_radius'] ?? '', $valid_radius) ? $effect['border_radius'] : '12px';
+            $valid_shadows = array(
+                '',
+                '0 2px 8px rgba(0,0,0,0.3)',
+                '0 4px 20px rgba(0,0,0,0.4)',
+                '0 8px 32px rgba(0,0,0,0.5)',
+                '0 0 12px rgba(245,159,10,0.4)',
+                '0 0 12px rgba(59,130,246,0.4)',
+            );
+            $shadow_val = $effect['box_shadow'] ?? '';
+            if ($shadow_val && in_array($shadow_val, $valid_shadows)) {
+                $effect_data['box_shadow'] = $shadow_val;
+            }
+            break;
+        case 'seal_bg':
+            $valid_bgs = mg_get_seal_bg_list();
+            $bg_id = $effect['bg_id'] ?? '';
+            if ($bg_id && isset($valid_bgs[$bg_id])) {
+                $effect_data['bg_id'] = $bg_id;
+            }
+            if (!empty($effect['bg_color'])) {
+                $effect_data['bg_color'] = $effect['bg_color'];
+            }
+            break;
+        case 'seal_hover':
+            $presets = mg_get_seal_hover_presets();
+            $hover_id = $effect['hover_id'] ?? '';
+            if ($hover_id && isset($presets[$hover_id])) {
+                $effect_data['hover_id'] = $hover_id;
+                $effect_data['css'] = $presets[$hover_id]['css'];
             }
             break;
         case 'badge':
@@ -272,11 +318,12 @@ if (isset($_POST['btn_delete'])) {
     }
 
     $type_group = isset($_POST['type_group']) ? $_POST['type_group'] : '';
+    $si_type_f = isset($_POST['si_type']) ? $_POST['si_type'] : '';
     $sfl = isset($_POST['sfl']) ? $_POST['sfl'] : '';
     $stx = isset($_POST['stx']) ? $_POST['stx'] : '';
     $page = isset($_POST['page']) ? (int)$_POST['page'] : 1;
 
-    goto_url('./shop_item_list.php?type_group=' . $type_group . '&sfl=' . $sfl . '&stx=' . urlencode($stx) . '&page=' . $page);
+    goto_url('./shop_item_list.php?type_group=' . $type_group . '&si_type=' . $si_type_f . '&sfl=' . $sfl . '&stx=' . urlencode($stx) . '&page=' . $page);
 }
 
 goto_url('./shop_item_list.php');

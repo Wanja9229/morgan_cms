@@ -26,7 +26,7 @@ $relation_url = G5_BBS_URL . '/relation.php';
             <div class="flex items-center gap-2">
                 <span class="text-mg-accent"><?php echo mg_icon('bolt', 'w-6 h-6'); ?></span>
                 <div>
-                    <div class="text-xs text-mg-text-muted">노동력</div>
+                    <div class="text-xs text-mg-text-muted">스테미나</div>
                     <div class="font-bold text-mg-accent" id="stamina-display"><?php echo $my_stamina['current']; ?> / <?php echo $my_stamina['max']; ?></div>
                 </div>
             </div>
@@ -64,7 +64,7 @@ $relation_url = G5_BBS_URL . '/relation.php';
         <?php if ($ui_mode === 'map' && $map_image) { ?>
         <div id="area-map-view" style="display:block;">
             <div id="map-container" style="position:relative;overflow:auto;max-height:70vh;border-radius:12px;border:1px solid var(--mg-bg-tertiary);">
-                <img src="<?php echo $map_image; ?>" id="map-image" style="display:block;width:100%;min-width:600px;" alt="세계관 맵" draggable="false">
+                <img src="<?php echo $map_image; ?>" id="map-image" style="display:block;width:100%;min-width:600px;" alt="파견 지도" draggable="false">
                 <div id="map-markers"></div>
                 <div id="map-popup" style="display:none;position:absolute;z-index:20;"></div>
             </div>
@@ -110,7 +110,8 @@ $relation_url = G5_BBS_URL . '/relation.php';
             <div class="flex flex-wrap gap-3 text-sm mb-4" id="dm-stats">
                 <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg" style="background:var(--mg-bg-primary);"><svg class="w-4 h-4" style="color:var(--mg-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> <span id="dm-stamina">0</span></span>
                 <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg" style="background:var(--mg-bg-primary);"><svg class="w-4 h-4" style="color:var(--mg-text-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> <span id="dm-duration">0분</span></span>
-                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg" style="background:var(--mg-bg-primary);"><svg class="w-4 h-4" style="color:var(--mg-text-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg> +<span id="dm-partner-pt">0</span>P</span>
+                <span id="dm-point-reward-wrap" class="inline-flex items-center gap-1 px-2 py-1 rounded-lg" style="background:var(--mg-bg-primary);display:none;"><svg class="w-4 h-4" style="color:var(--mg-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> <span id="dm-point-reward">0</span>P</span>
+                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg" style="background:var(--mg-bg-primary);"><svg class="w-4 h-4" style="color:var(--mg-text-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg> 파트너 +<span id="dm-partner-pt">0</span>P</span>
             </div>
             <div id="dm-drops" class="flex flex-wrap gap-2 mb-4"></div>
 
@@ -367,12 +368,19 @@ $relation_url = G5_BBS_URL . '/relation.php';
                 });
             }
 
+            var pointText = '';
+            var ptMin = parseInt(area.ea_point_min) || 0;
+            var ptMax = parseInt(area.ea_point_max) || 0;
+            if (ptMin > 0) {
+                pointText = ptMin === ptMax ? '+' + ptMin + 'P' : '+' + ptMin + '~' + ptMax + 'P';
+            }
+
             var bodyHtml = '<div class="exp-card-body">' +
                 '<div class="exp-card-name">' + escHtml(area.ea_name) + '</div>' +
                 '<div class="exp-card-desc">' + escHtml(area.ea_desc || '') + '</div>' +
                 '<div class="exp-card-meta">' +
                     '<span>' + durText.trim() + '</span>' +
-                    '<span>+' + area.ea_partner_point + 'P</span>' +
+                    (pointText ? '<span>' + pointText + '</span>' : '') +
                 '</div>' +
                 (dropsHtml ? '<div class="exp-card-drops">' + dropsHtml + '</div>' : '') +
                 (locked ? '<div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:6px;">' + escHtml(area.unlock_facility_name || '시설') + ' 건설 필요</div>' : '') +
@@ -446,7 +454,7 @@ $relation_url = G5_BBS_URL . '/relation.php';
                 '<div class="map-popup-meta">' +
                     '<span>' + area.ea_stamina_cost + '</span>' +
                     '<span>' + durText.trim() + '</span>' +
-                    '<span>+' + area.ea_partner_point + 'P</span>' +
+                    (function(){ var mn=parseInt(area.ea_point_min)||0, mx=parseInt(area.ea_point_max)||0; return mn > 0 ? '<span>' + (mn===mx ? '+'+mn+'P' : '+'+mn+'~'+mx+'P') + '</span>' : ''; })() +
                 '</div>' +
                 '<button class="map-popup-btn" onclick="openDispatchModalById(' + area.ea_id + ')">파견 보내기</button>' +
             '</div></div>';
@@ -505,6 +513,17 @@ $relation_url = G5_BBS_URL . '/relation.php';
         document.getElementById('dm-duration').textContent = durText.trim();
         document.getElementById('dm-partner-pt').textContent = area.ea_partner_point;
 
+        // 보상 포인트 표시
+        var ptMin = parseInt(area.ea_point_min) || 0;
+        var ptMax = parseInt(area.ea_point_max) || 0;
+        var ptWrap = document.getElementById('dm-point-reward-wrap');
+        if (ptMin > 0) {
+            document.getElementById('dm-point-reward').textContent = ptMin === ptMax ? ptMin : ptMin + '~' + ptMax;
+            ptWrap.style.display = '';
+        } else {
+            ptWrap.style.display = 'none';
+        }
+
         // 드롭 테이블
         var dropsEl = document.getElementById('dm-drops');
         dropsEl.innerHTML = '';
@@ -539,7 +558,7 @@ $relation_url = G5_BBS_URL . '/relation.php';
     };
 
     document.getElementById('dispatch-modal').addEventListener('click', function(e) {
-        if (e.target === this) closeDispatchModal();
+        if (e.target === this && document._mgMdTarget === this) closeDispatchModal();
     });
 
     // === 모달 내 캐릭터 로드 ===
@@ -658,7 +677,7 @@ $relation_url = G5_BBS_URL . '/relation.php';
         var areaName = area ? area.ea_name : '파견지';
         var cost = area ? area.ea_stamina_cost : 0;
 
-        if (!confirm(areaName + ' 파견을 보내시겠습니까?\n(노동력 ' + cost + ' 소모)')) return;
+        if (!confirm(areaName + ' 파견을 보내시겠습니까?\n(스테미나 ' + cost + ' 소모)')) return;
 
         api('start', {
             ch_id: selected.ch_id,
@@ -694,7 +713,7 @@ $relation_url = G5_BBS_URL . '/relation.php';
 
     // === 파견 취소 ===
     window.cancelExpedition = function(el_id) {
-        if (!confirm('파견을 취소하시겠습니까?\n노동력은 반환되지 않습니다.')) return;
+        if (!confirm('파견을 취소하시겠습니까?\n스테미나는 반환되지 않습니다.')) return;
 
         api('cancel', { el_id: el_id }, 'POST').then(function(data) {
             alert(data.message);
@@ -710,7 +729,21 @@ $relation_url = G5_BBS_URL . '/relation.php';
         var container = document.getElementById('reward-items');
         container.innerHTML = '';
 
+        var hasReward = false;
+
+        // 포인트 보상
+        if (rewards && rewards.point && parseInt(rewards.point) > 0) {
+            hasReward = true;
+            container.innerHTML +=
+                '<div class="flex items-center justify-between p-3 rounded-lg border border-mg-bg-tertiary bg-mg-bg-primary">' +
+                    '<span class="text-mg-text-primary" style="display:flex;align-items:center;gap:6px;"><svg class="w-4 h-4" style="color:var(--mg-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> 포인트</span>' +
+                    '<span class="font-bold" style="color:var(--mg-accent);">+' + rewards.point + 'P</span>' +
+                '</div>';
+        }
+
+        // 재료 보상
         if (rewards && rewards.items && rewards.items.length > 0) {
+            hasReward = true;
             rewards.items.forEach(function(item) {
                 var cls = item.is_rare ? 'border-purple-500 bg-purple-500/10' : 'border-mg-bg-tertiary bg-mg-bg-primary';
                 var nameClass = item.is_rare ? 'text-purple-400 font-semibold' : 'text-mg-text-primary';
@@ -720,8 +753,10 @@ $relation_url = G5_BBS_URL . '/relation.php';
                         '<span class="font-bold text-mg-text-primary">x' + item.amount + '</span>' +
                     '</div>';
             });
-        } else {
-            container.innerHTML = '<div class="text-center text-mg-text-muted py-2">획득한 재료가 없습니다.</div>';
+        }
+
+        if (!hasReward) {
+            container.innerHTML = '<div class="text-center text-mg-text-muted py-2">획득한 보상이 없습니다.</div>';
         }
 
         document.getElementById('reward-modal').style.display = 'flex';
@@ -732,7 +767,7 @@ $relation_url = G5_BBS_URL . '/relation.php';
     };
 
     document.getElementById('reward-modal').addEventListener('click', function(e) {
-        if (e.target === this) closeRewardModal();
+        if (e.target === this && document._mgMdTarget === this) closeRewardModal();
     });
 
     // === 파트너 이력 ===
@@ -793,14 +828,19 @@ $relation_url = G5_BBS_URL . '/relation.php';
                 }
 
                 var rewardsText = '';
-                if (h.el_rewards_parsed && h.el_rewards_parsed.items && h.el_rewards_parsed.items.length > 0) {
+                if (h.el_rewards_parsed) {
                     var parts = [];
-                    h.el_rewards_parsed.items.forEach(function(item) {
-                        parts.push(item.mt_name + ' x' + item.amount + (item.is_rare ? 'RARE' : ''));
-                    });
-                    rewardsText = parts.join(', ');
+                    if (h.el_rewards_parsed.point && parseInt(h.el_rewards_parsed.point) > 0) {
+                        parts.push('+' + h.el_rewards_parsed.point + 'P');
+                    }
+                    if (h.el_rewards_parsed.items && h.el_rewards_parsed.items.length > 0) {
+                        h.el_rewards_parsed.items.forEach(function(item) {
+                            parts.push(item.mt_name + ' x' + item.amount + (item.is_rare ? ' RARE' : ''));
+                        });
+                    }
+                    rewardsText = parts.length > 0 ? parts.join(', ') : (h.el_status === 'claimed' ? '(보상 없음)' : '');
                 } else if (h.el_status === 'claimed') {
-                    rewardsText = '(드롭 없음)';
+                    rewardsText = '(보상 없음)';
                 }
 
                 var dateText = (h.el_start || '').substring(5, 16);

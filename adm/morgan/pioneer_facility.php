@@ -29,13 +29,8 @@ $g5['title'] = '시설 관리';
 require_once __DIR__.'/_head.php';
 ?>
 
-<!-- 안내 -->
-<div class="mg-alert mg-alert-info" style="margin-bottom:1rem;">
-    시설은 유저들이 노동력과 재료를 기여하여 건설합니다. <strong>노동력과 재료가 모두 충족되면 자동으로 완공</strong>됩니다.<br>
-    <span style="font-size:0.85rem;color:var(--mg-text-muted);">강제완공 버튼은 테스트나 긴급 상황에서만 사용하세요.</span>
-</div>
-
 <!-- 통계 -->
+<?php $_pvm = mg_config('pioneer_view_mode', 'card'); $_pmi = mg_config('pioneer_map_image', ''); ?>
 <div class="mg-stats-grid">
     <div class="mg-stat-card">
         <div class="mg-stat-label">전체 시설</div>
@@ -55,9 +50,98 @@ require_once __DIR__.'/_head.php';
     </div>
 </div>
 
-<!-- 시설 추가 버튼 -->
-<div style="margin-bottom:1rem;text-align:right;">
+<!-- UI 모드 토글 + 추가 버튼 -->
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;">
+    <div style="display:flex;align-items:center;gap:0.75rem;">
+        <span style="font-size:0.85rem;color:var(--mg-text-secondary);">유저 UI:</span>
+        <div style="display:inline-flex;border-radius:8px;overflow:hidden;border:1px solid var(--mg-bg-tertiary);">
+            <button type="button" id="btn-mode-card" onclick="setViewMode('card')" style="padding:6px 14px;font-size:0.8rem;border:none;cursor:pointer;transition:background 0.15s;<?php echo $_pvm !== 'base' ? 'background:var(--mg-accent);color:var(--mg-bg-primary);font-weight:600;' : 'background:var(--mg-bg-primary);color:var(--mg-text-secondary);'; ?>">카드뷰</button>
+            <button type="button" id="btn-mode-base" onclick="setViewMode('base')" style="padding:6px 14px;font-size:0.8rem;border:none;cursor:pointer;transition:background 0.15s;<?php echo $_pvm === 'base' ? 'background:var(--mg-accent);color:var(--mg-bg-primary);font-weight:600;' : 'background:var(--mg-bg-primary);color:var(--mg-text-secondary);'; ?>"<?php echo !$_pmi ? ' disabled title="거점 이미지를 먼저 등록하세요"' : ''; ?>>거점뷰</button>
+        </div>
+    </div>
     <button type="button" class="mg-btn mg-btn-primary" onclick="openFacilityModal()">시설 추가</button>
+</div>
+
+<!-- 거점뷰 설정 (거점뷰일 때만 표시) -->
+<div id="base-section" style="display:<?php echo $_pvm === 'base' ? 'block' : 'none'; ?>;">
+    <!-- 거점 이미지 업로드 -->
+    <div class="mg-card" style="margin-bottom:1rem;">
+        <div class="mg-card-header">
+            <h3>거점 이미지</h3>
+            <span style="font-size:0.8rem;color:var(--mg-text-muted);">시설 배치용 거점 맵 이미지</span>
+        </div>
+        <div class="mg-card-body">
+            <?php if ($_pmi) { ?>
+            <div style="margin-bottom:12px;">
+                <img src="<?php echo htmlspecialchars($_pmi); ?>" style="max-width:300px;max-height:150px;border-radius:8px;border:1px solid var(--mg-bg-tertiary);">
+            </div>
+            <?php } ?>
+            <form id="view-config-form" method="post" action="<?php echo G5_ADMIN_URL; ?>/morgan/pioneer_facility_update.php" enctype="multipart/form-data" style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;">
+                <input type="hidden" name="w" value="config">
+                <input type="hidden" name="pioneer_view_mode" value="base">
+                <input type="hidden" name="pioneer_map_action" id="pioneer_map_action" value="">
+                <div class="mg-form-group" style="margin-bottom:0;">
+                    <label class="mg-form-label" style="font-size:0.75rem;">이미지 (JPG/PNG/WebP, 최대 20MB, 권장 1600px+)</label>
+                    <input type="file" name="pioneer_map_image_file" accept="image/*" class="mg-form-input" style="width:280px;">
+                </div>
+                <button type="submit" class="mg-btn mg-btn-primary mg-btn-sm">업로드</button>
+                <?php if ($_pmi) { ?>
+                <button type="button" class="mg-btn mg-btn-danger mg-btn-sm" onclick="deleteBaseImage()">이미지 삭제</button>
+                <?php } ?>
+            </form>
+        </div>
+    </div>
+
+    <?php if ($_pmi) { ?>
+    <!-- 맵 마커 편집기 -->
+    <div class="mg-card" style="margin-bottom:1rem;">
+        <div class="mg-card-header">
+            <h3>마커 배치</h3>
+            <span style="font-size:0.8rem;color:var(--mg-text-muted);">시설 선택 후 맵 클릭으로 좌표 지정 · 기존 마커 클릭 시 수정</span>
+        </div>
+        <div class="mg-card-body">
+            <div style="display:flex;gap:1rem;margin-bottom:0.75rem;flex-wrap:wrap;align-items:center;">
+                <label style="font-size:0.85rem;color:var(--mg-text-secondary);">배치할 시설:</label>
+                <select id="marker-target-fc" class="mg-form-input" style="width:auto;min-width:200px;">
+                    <option value="">-- 시설 선택 --</option>
+                    <?php foreach ($facilities as $fc): ?>
+                    <option value="<?php echo $fc['fc_id']; ?>"
+                            data-x="<?php echo $fc['fc_map_x'] ?? ''; ?>"
+                            data-y="<?php echo $fc['fc_map_y'] ?? ''; ?>">
+                        <?php echo htmlspecialchars($fc['fc_name']); ?>
+                        <?php if ($fc['fc_map_x'] !== null): ?>(<?php echo round($fc['fc_map_x'],1); ?>%, <?php echo round($fc['fc_map_y'],1); ?>%)<?php endif; ?>
+                    </option>
+                    <?php endforeach; ?>
+                </select>
+                <button type="button" class="mg-btn mg-btn-sm mg-btn-secondary" onclick="removeMarkerCoord()" title="선택 시설의 좌표 제거">좌표 제거</button>
+                <span id="marker-status" style="font-size:0.8rem;color:var(--mg-accent);"></span>
+            </div>
+            <div id="map-marker-container" style="position:relative;display:inline-block;max-width:100%;cursor:crosshair;border:2px solid var(--mg-bg-tertiary);border-radius:6px;overflow:hidden;">
+                <img id="map-marker-img" src="<?php echo htmlspecialchars($_pmi); ?>" alt="거점 맵"
+                     style="display:block;max-width:100%;height:auto;"
+                     onclick="placeMarker(event)">
+                <?php foreach ($facilities as $fc):
+                    if ($fc['fc_map_x'] === null || $fc['fc_map_y'] === null) continue;
+                ?>
+                <div class="map-admin-marker"
+                     data-fc-id="<?php echo $fc['fc_id']; ?>"
+                     style="position:absolute;left:<?php echo $fc['fc_map_x']; ?>%;top:<?php echo $fc['fc_map_y']; ?>%;transform:translate(-50%,-50%);z-index:10;">
+                    <div style="width:14px;height:14px;border-radius:50%;background:var(--mg-accent);border:2px solid #fff;box-shadow:0 0 6px rgba(0,0,0,0.5);"></div>
+                    <div style="position:absolute;top:-22px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:0.7rem;color:#fff;background:rgba(0,0,0,0.75);padding:1px 6px;border-radius:3px;pointer-events:none;">
+                        <?php echo htmlspecialchars($fc['fc_name']); ?>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </div>
+    <?php } ?>
+</div>
+
+<!-- 안내 -->
+<div class="mg-alert mg-alert-info" style="margin-bottom:1rem;">
+    시설은 유저들이 스테미나와 재료를 기여하여 건설합니다. <strong>스테미나와 재료가 모두 충족되면 자동으로 완공</strong>됩니다.<br>
+    <span style="font-size:0.85rem;color:var(--mg-text-muted);">강제완공 버튼은 테스트나 긴급 상황에서만 사용하세요.</span>
 </div>
 
 <!-- 시설 목록 -->
@@ -70,7 +154,7 @@ require_once __DIR__.'/_head.php';
                     <th style="width:70px;">아이콘</th>
                     <th style="width:140px;">시설명</th>
                     <th style="width:75px;">상태</th>
-                    <th style="width:120px;">노동력</th>
+                    <th style="width:120px;">스테미나</th>
                     <th style="width:180px;">재료</th>
                     <th style="width:110px;">해금</th>
                     <th style="width:210px;">관리</th>
@@ -131,7 +215,7 @@ require_once __DIR__.'/_head.php';
                                 'shop' => '상점',
                                 'gift' => '선물함',
                                 'achievement' => '업적',
-                                'history' => '연혁',
+                                'history' => '연대기',
                                 'fountain' => '분수대'
                             );
                             $label = isset($unlock_labels[$fc['fc_unlock_type']]) ? $unlock_labels[$fc['fc_unlock_type']] : $fc['fc_unlock_type'];
@@ -203,7 +287,7 @@ require_once __DIR__.'/_head.php';
                 </div>
 
                 <div class="mg-form-group">
-                    <label class="mg-form-label">필요 노동력 *</label>
+                    <label class="mg-form-label">필요 스테미나 *</label>
                     <input type="number" name="fc_stamina_cost" id="fc_stamina_cost" class="mg-form-input" min="0" value="100" required>
                 </div>
 
@@ -219,6 +303,17 @@ require_once __DIR__.'/_head.php';
                     </div>
                 </div>
 
+                <div id="map-coord-section" class="mg-form-group" style="display:none;">
+                    <label class="mg-form-label">맵 좌표 (거점뷰용)</label>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <label style="font-size:0.8rem;color:var(--mg-text-muted);">X%</label>
+                        <input type="number" name="fc_map_x" id="fc_map_x" class="mg-form-input" style="width:100px;" min="0" max="100" step="0.1" placeholder="0.0">
+                        <label style="font-size:0.8rem;color:var(--mg-text-muted);">Y%</label>
+                        <input type="number" name="fc_map_y" id="fc_map_y" class="mg-form-input" style="width:100px;" min="0" max="100" step="0.1" placeholder="0.0">
+                    </div>
+                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">이미지 좌상단 기준 백분율 좌표 (0~100)</small>
+                </div>
+
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
                     <div class="mg-form-group">
                         <label class="mg-form-label">해금 대상 타입</label>
@@ -228,7 +323,7 @@ require_once __DIR__.'/_head.php';
                             <option value="shop">상점</option>
                             <option value="gift">선물함</option>
                             <option value="achievement">업적</option>
-                            <option value="history">연혁</option>
+                            <option value="history">연대기</option>
                             <option value="fountain">분수대</option>
                         </select>
                     </div>
@@ -274,6 +369,64 @@ require_once __DIR__.'/_head.php';
 
 <script>
 var facilities = <?php echo json_encode($facilities); ?>;
+var pioneerViewMode = '<?php echo mg_config('pioneer_view_mode', 'card'); ?>';
+
+// UI 모드 전환 (AJAX)
+function setViewMode(mode) {
+    var formData = new FormData();
+    formData.append('action', 'set_view_mode');
+    formData.append('mode', mode);
+
+    fetch('<?php echo G5_ADMIN_URL; ?>/morgan/pioneer_facility_update.php', {
+        method: 'POST',
+        body: formData
+    }).then(function(r) { return r.json(); }).then(function(data) {
+        if (data.success) {
+            pioneerViewMode = data.mode;
+            var btnCard = document.getElementById('btn-mode-card');
+            var btnBase = document.getElementById('btn-mode-base');
+            if (data.mode === 'card') {
+                btnCard.style.background = 'var(--mg-accent)';
+                btnCard.style.color = 'var(--mg-bg-primary)';
+                btnCard.style.fontWeight = '600';
+                btnBase.style.background = 'var(--mg-bg-primary)';
+                btnBase.style.color = 'var(--mg-text-secondary)';
+                btnBase.style.fontWeight = '';
+            } else {
+                btnBase.style.background = 'var(--mg-accent)';
+                btnBase.style.color = 'var(--mg-bg-primary)';
+                btnBase.style.fontWeight = '600';
+                btnCard.style.background = 'var(--mg-bg-primary)';
+                btnCard.style.color = 'var(--mg-text-secondary)';
+                btnCard.style.fontWeight = '';
+            }
+            document.getElementById('base-section').style.display = data.mode === 'base' ? 'block' : 'none';
+            updateMapCoordSection();
+        }
+    });
+}
+
+// 거점 이미지 삭제 (AJAX)
+function deleteBaseImage() {
+    if (!confirm('거점 이미지를 삭제하시겠습니까?\n카드뷰로 자동 전환됩니다.')) return;
+
+    var formData = new FormData();
+    formData.append('action', 'delete_base_image');
+
+    fetch('<?php echo G5_ADMIN_URL; ?>/morgan/pioneer_facility_update.php', {
+        method: 'POST',
+        body: formData
+    }).then(function(r) { return r.json(); }).then(function(data) {
+        if (data.success) location.reload();
+    });
+}
+
+// 거점뷰일 때만 좌표 입력 표시
+function updateMapCoordSection() {
+    var section = document.getElementById('map-coord-section');
+    if (section) section.style.display = pioneerViewMode === 'base' ? 'block' : 'none';
+}
+updateMapCoordSection();
 
 function toggleUnlockTarget() {
     var type = document.getElementById('fc_unlock_type').value;
@@ -295,8 +448,9 @@ function toggleUnlockTarget() {
         targetGroup.style.display = 'none';
         helpText.textContent = '';
     } else if (type === 'history') {
-        textInput.style.display = 'block';
-        helpText.textContent = '연혁 ID를 입력하세요 (선택)';
+        // 연혁은 기능 자체 해금이므로 대상 ID 불필요
+        targetGroup.style.display = 'none';
+        helpText.textContent = '';
     } else {
         targetGroup.style.display = 'none';
         helpText.textContent = '';
@@ -311,8 +465,6 @@ function syncUnlockTarget() {
 
     if (type === 'board') {
         hidden.value = document.getElementById('fc_unlock_target_board').value;
-    } else if (type === 'history') {
-        hidden.value = document.getElementById('fc_unlock_target_text').value;
     } else {
         hidden.value = '';
     }
@@ -327,7 +479,10 @@ function openFacilityModal() {
     document.getElementById('fc_unlock_target_board').value = '';
     document.getElementById('fc_unlock_target_text').value = '';
     mgIconReset('fc_icon');
+    document.getElementById('fc_map_x').value = '';
+    document.getElementById('fc_map_y').value = '';
     toggleUnlockTarget();
+    updateMapCoordSection();
     document.getElementById('facility-modal').style.display = 'flex';
 }
 
@@ -347,6 +502,11 @@ function editFacility(fc_id) {
 
     // 아이콘 설정
     mgIconSet('fc_icon', fc.fc_icon || '');
+
+    // 좌표 설정
+    document.getElementById('fc_map_x').value = fc.fc_map_x || '';
+    document.getElementById('fc_map_y').value = fc.fc_map_y || '';
+    updateMapCoordSection();
 
     // 해금 대상 필드 설정
     if (fc.fc_unlock_type === 'board') {
@@ -411,8 +571,111 @@ function deleteFacility(fc_id) {
 
 // 모달 외부 클릭 시 닫기
 document.getElementById('facility-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeModal();
+    if (e.target === this && document._mgMdTarget === this) closeModal();
 });
+
+// === 맵 마커 배치 ===
+function placeMarker(e) {
+    var select = document.getElementById('marker-target-fc');
+    if (!select) return;
+    var fcId = select.value;
+    if (!fcId) {
+        document.getElementById('marker-status').textContent = '먼저 시설을 선택하세요';
+        setTimeout(function(){ document.getElementById('marker-status').textContent = ''; }, 2000);
+        return;
+    }
+
+    var img = document.getElementById('map-marker-img');
+    var rect = img.getBoundingClientRect();
+    var x = ((e.clientX - rect.left) / rect.width * 100).toFixed(2);
+    var y = ((e.clientY - rect.top) / rect.height * 100).toFixed(2);
+
+    // AJAX로 좌표 저장
+    saveMarkerCoord(fcId, x, y);
+}
+
+function saveMarkerCoord(fcId, x, y) {
+    var formData = new FormData();
+    formData.append('w', 'marker');
+    formData.append('fc_id', fcId);
+    formData.append('fc_map_x', x);
+    formData.append('fc_map_y', y);
+
+    fetch('<?php echo G5_ADMIN_URL; ?>/morgan/pioneer_facility_update.php', {
+        method: 'POST',
+        body: formData
+    }).then(function(res){ return res.text(); }).then(function(html) {
+        // 마커 갱신
+        updateMarkerOnMap(fcId, x, y);
+        updateSelectOption(fcId, x, y);
+        document.getElementById('marker-status').textContent = '좌표 저장됨 (' + x + '%, ' + y + '%)';
+        setTimeout(function(){ document.getElementById('marker-status').textContent = ''; }, 3000);
+    }).catch(function(err) {
+        alert('좌표 저장 실패: ' + err);
+    });
+}
+
+function removeMarkerCoord() {
+    var select = document.getElementById('marker-target-fc');
+    if (!select || !select.value) return;
+    var fcId = select.value;
+
+    var formData = new FormData();
+    formData.append('w', 'marker');
+    formData.append('fc_id', fcId);
+    formData.append('fc_map_x', '');
+    formData.append('fc_map_y', '');
+
+    fetch('<?php echo G5_ADMIN_URL; ?>/morgan/pioneer_facility_update.php', {
+        method: 'POST',
+        body: formData
+    }).then(function(res){ return res.text(); }).then(function() {
+        // 맵에서 마커 제거
+        var existing = document.querySelector('.map-admin-marker[data-fc-id="' + fcId + '"]');
+        if (existing) existing.remove();
+        updateSelectOption(fcId, '', '');
+        document.getElementById('marker-status').textContent = '좌표가 제거되었습니다';
+        setTimeout(function(){ document.getElementById('marker-status').textContent = ''; }, 3000);
+    });
+}
+
+function updateMarkerOnMap(fcId, x, y) {
+    var container = document.getElementById('map-marker-container');
+    if (!container) return;
+
+    // 기존 마커 제거
+    var existing = container.querySelector('.map-admin-marker[data-fc-id="' + fcId + '"]');
+    if (existing) existing.remove();
+
+    // 시설명 가져오기
+    var select = document.getElementById('marker-target-fc');
+    var option = select.querySelector('option[value="' + fcId + '"]');
+    var name = option ? option.textContent.split('(')[0].trim() : '';
+
+    // 새 마커 추가
+    var marker = document.createElement('div');
+    marker.className = 'map-admin-marker';
+    marker.setAttribute('data-fc-id', fcId);
+    marker.style.cssText = 'position:absolute;left:' + x + '%;top:' + y + '%;transform:translate(-50%,-50%);z-index:10;';
+    marker.innerHTML =
+        '<div style="width:14px;height:14px;border-radius:50%;background:var(--mg-accent);border:2px solid #fff;box-shadow:0 0 6px rgba(0,0,0,0.5);"></div>' +
+        '<div style="position:absolute;top:-22px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:0.7rem;color:#fff;background:rgba(0,0,0,0.75);padding:1px 6px;border-radius:3px;pointer-events:none;">' + name + '</div>';
+    container.appendChild(marker);
+}
+
+function updateSelectOption(fcId, x, y) {
+    var select = document.getElementById('marker-target-fc');
+    var option = select.querySelector('option[value="' + fcId + '"]');
+    if (!option) return;
+    var name = option.textContent.split('(')[0].trim();
+    if (x && y) {
+        option.textContent = name + ' (' + parseFloat(x).toFixed(1) + '%, ' + parseFloat(y).toFixed(1) + '%)';
+    } else {
+        option.textContent = name;
+    }
+    option.setAttribute('data-x', x);
+    option.setAttribute('data-y', y);
+}
 </script>
 
 <?php

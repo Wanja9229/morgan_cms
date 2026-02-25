@@ -5,25 +5,8 @@
 
 if (!defined('_GNUBOARD_')) exit;
 
-// 상품 타입명
-$item_type_names = array(
-    'title' => '칭호',
-    'badge' => '뱃지',
-    'nick_color' => '닉네임 색상',
-    'nick_effect' => '닉네임 효과',
-    'profile_border' => '프로필 테두리',
-    'profile_skin' => '프로필 스킨',
-    'profile_bg' => '프로필 배경',
-    'equip' => '장비',
-    'emoticon_set' => '이모티콘',
-    'emoticon_reg' => '이모티콘 등록권',
-    'furniture' => '가구',
-    'material' => '재료',
-    'seal_bg' => '인장 배경',
-    'seal_frame' => '인장 프레임',
-    'char_slot' => '캐릭터 슬롯',
-    'etc' => '기타'
-);
+// 상품 타입명 (morgan.php 단일 소스)
+$item_type_names = $mg['shop_type_labels'];
 
 // 효과 데이터 (mg_get_shop_item()에서 이미 디코딩됨)
 $effect = is_array($item['si_effect']) ? $item['si_effect'] : (json_decode($item['si_effect'], true) ?: array());
@@ -151,10 +134,11 @@ if ($item['si_stock'] > 0) {
                         <?php } ?>
 
                         <?php if ($gift_use == '1' && $can_buy === true) { ?>
-                        <button type="button" onclick="openGiftModal(<?php echo $item['si_id']; ?>)" class="bg-mg-warning hover:opacity-80 text-white font-bold py-3 px-6 rounded-lg transition-opacity">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <button type="button" onclick="openGiftModal(<?php echo $item['si_id']; ?>)" class="bg-mg-warning hover:opacity-80 text-white font-bold py-3 px-4 rounded-lg transition-opacity flex items-center gap-2" style="min-width:44px;min-height:44px;">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
                             </svg>
+                            <span class="hidden sm:inline text-sm">선물</span>
                         </button>
                         <?php } ?>
                     <?php } else { ?>
@@ -183,12 +167,20 @@ if ($item['si_stock'] > 0) {
         <div class="mt-6 pt-6 border-t border-mg-bg-tertiary">
             <h2 class="font-bold text-mg-text-primary mb-3">효과 미리보기</h2>
             <div class="bg-mg-bg-primary rounded-lg p-4">
-                <?php if ($item['si_type'] == 'title' && !empty($effect['title'])) { ?>
-                <div class="flex items-center gap-2">
-                    <span class="px-2 py-0.5 text-sm rounded" style="background:<?php echo $effect['title_color'] ?? '#5865f2'; ?>20;color:<?php echo $effect['title_color'] ?? '#5865f2'; ?>">
-                        <?php echo htmlspecialchars($effect['title']); ?>
-                    </span>
-                    <span class="text-mg-text-primary"><?php echo $member['mb_nick']; ?></span>
+                <?php if (in_array($item['si_type'], array('title_prefix', 'title_suffix'))) {
+                    $pool_type = ($item['si_type'] === 'title_prefix') ? 'prefix' : 'suffix';
+                    $sample_titles = mg_get_title_pool($pool_type);
+                    $sample_count = count($sample_titles);
+                ?>
+                <div class="text-center">
+                    <p class="text-mg-text-secondary mb-3">구매 시 아래 <?php echo $sample_count; ?>종 중 랜덤 1개 획득</p>
+                    <div class="flex flex-wrap gap-1.5 justify-center">
+                        <?php foreach ($sample_titles as $st) { ?>
+                        <span class="px-2 py-1 bg-mg-bg-tertiary text-mg-text-secondary text-xs rounded">
+                            <?php echo htmlspecialchars($st['tp_name']); ?>
+                        </span>
+                        <?php } ?>
+                    </div>
                 </div>
                 <?php } elseif ($item['si_type'] == 'nick_color' && !empty($effect['nick_color'])) { ?>
                 <span style="color:<?php echo $effect['nick_color']; ?>;font-weight:bold;"><?php echo $member['mb_nick']; ?></span>
@@ -282,32 +274,134 @@ if ($item['si_stock'] > 0) {
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
+@keyframes mgGachaFadeIn { from { opacity:0; transform:scale(.95); } to { opacity:1; transform:scale(1); } }
 </style>
 
 <script>
 function buyItem(si_id) {
-    if (!confirm('이 상품을 구매하시겠습니까?\n\n가격: <?php echo mg_point_format($item['si_price']); ?>')) {
-        return;
-    }
+    var isTitle = <?php echo in_array($item['si_type'], array('title_prefix','title_suffix')) ? 'true' : 'false'; ?>;
+    var confirmMsg = isTitle
+        ? '칭호 뽑기를 진행하시겠습니까?\n\n가격: <?php echo mg_point_format($item['si_price']); ?>\n(이미 보유한 칭호가 나올 수 있습니다)'
+        : '이 상품을 구매하시겠습니까?\n\n가격: <?php echo mg_point_format($item['si_price']); ?>';
+    if (!confirm(confirmMsg)) return;
 
     fetch('<?php echo G5_BBS_URL; ?>/shop_buy.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: 'si_id=' + si_id
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success && data.title_draw) {
+            showTitleGacha(data.title_draw, data.new_point);
+        } else if (data.success) {
             alert(data.message + '\n\n남은 포인트: ' + data.new_point + 'P');
             location.reload();
         } else {
             alert(data.message);
         }
     })
-    .catch(error => {
-        alert('오류가 발생했습니다.');
-        console.error(error);
-    });
+    .catch(function(e) { alert('오류가 발생했습니다.'); console.error(e); });
+}
+
+// 칭호 뽑기 슬롯 연출
+function showTitleGacha(draw, newPoint) {
+    var pool = draw.pool;
+    var result = draw.tp_name;
+    var isNew = draw.is_new;
+    var isPrefix = draw.tp_type === 'prefix';
+    var typeLabel = isPrefix ? '접두칭호' : '접미칭호';
+    var accentColor = isPrefix ? '#facc15' : '#00ffcc';
+
+    var overlay = document.createElement('div');
+    overlay.className = 'fixed inset-0 bg-black/80 flex items-center justify-center z-[9999]';
+    overlay.style.cssText = 'animation:mgGachaFadeIn .3s ease';
+    overlay.innerHTML =
+        '<div class="w-full max-w-sm mx-4 text-center" style="background:#1e1e1e;border:1px solid #333;border-radius:12px;padding:32px 24px;box-shadow:0 10px 40px rgba(0,0,0,.6);">' +
+            '<p style="color:#888;font-size:.85rem;margin-bottom:20px;font-weight:500;">' + typeLabel + ' 뽑기</p>' +
+            '<div id="gachaScreen" style="background:#000;border:1px solid #444;border-radius:8px;padding:28px 16px;margin-bottom:24px;box-shadow:inset 0 0 20px rgba(0,0,0,.8);position:relative;overflow:hidden;">' +
+                '<div style="display:flex;justify-content:center;align-items:center;gap:6px;font-size:1.3rem;">' +
+                    '<span style="color:#555;font-weight:300;">「</span><span id="gachaSlot" style="color:' + accentColor + ';font-weight:800;min-width:80px;display:inline-block;">???</span><span style="color:#555;font-weight:300;">」</span><span style="color:#bbb;font-weight:400;"><?php echo htmlspecialchars($member['mb_nick']); ?></span>' +
+                '</div>' +
+                '<div id="gachaScanline" style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,.015) 2px,rgba(255,255,255,.015) 4px);pointer-events:none;"></div>' +
+            '</div>' +
+            '<div id="gachaResult" style="display:none;">' +
+                '<p id="gachaResultText" style="font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:4px;"></p>' +
+                '<p id="gachaResultSub" style="font-size:.85rem;margin-bottom:4px;"></p>' +
+                '<p style="font-size:.75rem;color:#666;margin-bottom:16px;">남은 포인트: ' + newPoint + 'P</p>' +
+                '<button onclick="this.closest(\'.fixed\').remove();location.reload();" style="padding:10px 28px;background:#2a2a2a;color:#fff;border:1px solid #444;border-radius:6px;font-weight:600;cursor:pointer;transition:background .2s;" onmouseover="this.style.background=\'#3a3a3a\'" onmouseout="this.style.background=\'#2a2a2a\'">확인</button>' +
+            '</div>' +
+        '</div>';
+    document.body.appendChild(overlay);
+
+    var slotEl = document.getElementById('gachaSlot');
+    var rollCount = 0;
+    var maxRolls = 28;
+    var baseInterval = 35;
+
+    // 다다닥 바뀌는 텍스트 롤링
+    slotEl.style.filter = 'blur(1px)';
+    slotEl.style.opacity = '0.8';
+    slotEl.style.transform = 'scale(1.05)';
+    slotEl.style.transition = 'all 0.08s';
+
+    function doRoll() {
+        slotEl.textContent = pool[Math.floor(Math.random() * pool.length)];
+        rollCount++;
+
+        if (rollCount < maxRolls) {
+            // 점점 느려지는 간격
+            var delay = baseInterval + Math.pow(rollCount / maxRolls, 2) * 120;
+            setTimeout(doRoll, delay);
+        } else {
+            // 최종 결과 — 약간의 드라마틱 정지
+            setTimeout(function() {
+                slotEl.textContent = result;
+                slotEl.style.filter = 'none';
+                slotEl.style.opacity = '1';
+                slotEl.style.transform = 'scale(1)';
+                slotEl.style.transition = 'all 0.08s';
+
+                // pop + glow
+                setTimeout(function() {
+                    var glowColor = isNew ? '0,255,204' : '255,100,100';
+                    slotEl.style.color = isNew ? '#00ffcc' : '#ff6b6b';
+                    slotEl.style.textShadow = '0 0 12px rgba(' + glowColor + ',0.6)';
+                    slotEl.style.transform = 'scale(1.2)';
+                    slotEl.style.transition = 'all 0.3s cubic-bezier(0.175,0.885,0.32,1.275)';
+
+                    setTimeout(function() {
+                        slotEl.style.transform = 'scale(1)';
+                        slotEl.style.transition = 'transform 0.2s ease';
+                    }, 300);
+
+                    // 결과 메시지 표시
+                    setTimeout(function() {
+                        var resultDiv = document.getElementById('gachaResult');
+                        var textEl = document.getElementById('gachaResultText');
+                        var subEl = document.getElementById('gachaResultSub');
+                        textEl.textContent = '\u300C' + result + '\u300D';
+                        if (isNew) {
+                            subEl.textContent = '새로운 칭호를 획득했습니다!';
+                            subEl.style.color = '#00ffcc';
+                        } else {
+                            subEl.textContent = '이미 보유한 칭호입니다...';
+                            subEl.style.color = '#ff6b6b';
+                        }
+                        resultDiv.style.display = 'block';
+                        resultDiv.style.animation = 'mgGachaFadeIn .3s ease';
+                    }, 400);
+                }, 80);
+            }, 150);
+        }
+    }
+    setTimeout(doRoll, 200);
+}
+
+function escH(s) {
+    var d = document.createElement('div');
+    d.appendChild(document.createTextNode(s));
+    return d.innerHTML;
 }
 
 function openGiftModal() {

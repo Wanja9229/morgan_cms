@@ -64,17 +64,8 @@ $type_names = array(
     'gift_receive' => '선물 수령'
 );
 
-$item_types = array(
-    'title' => '칭호',
-    'badge' => '뱃지',
-    'nick_color' => '닉네임 색상',
-    'nick_effect' => '닉네임 효과',
-    'profile_border' => '프로필 테두리',
-    'equip' => '장비',
-    'emoticon_set' => '이모티콘',
-    'furniture' => '가구',
-    'etc' => '기타'
-);
+// morgan.php의 $mg['shop_type_labels']를 단일 소스로 사용
+$item_types = isset($mg['shop_type_labels']) ? $mg['shop_type_labels'] : array();
 
 $g5['title'] = '구매/선물 내역';
 require_once __DIR__.'/_head.php';

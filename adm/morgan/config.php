@@ -231,6 +231,7 @@ function removeLogo() {
     document.getElementById('site_logo').value = '';
     document.getElementById('site_logo_preview').innerHTML = '<span style="color:var(--mg-text-muted);font-size:0.8rem;">로고가 삭제됩니다 (저장 시 적용)</span>';
 }
+
 </script>
 
 <?php } elseif ($tab == 'member') { ?>
@@ -440,6 +441,18 @@ function removeLogo() {
                     <label class="mg-form-label">댓글에 표시</label>
                     <?php echo _cfg_radio('seal_show_in_comment', $mg_configs, '0', array('표시', '미표시')); ?>
                     <small style="color:var(--mg-text-muted);font-size:0.75rem;">게시글 댓글에 인장 표시 (부하 주의)</small>
+                </div>
+            </div>
+
+            <hr style="border:0;border-top:1px solid var(--mg-bg-tertiary);margin:1.5rem 0;">
+
+            <h4 style="font-size:0.9rem;font-weight:600;margin-bottom:1rem;color:var(--mg-text-secondary);">개척 설정</h4>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:1.5rem; margin-bottom:1.5rem;">
+                <div class="mg-form-group">
+                    <label class="mg-form-label">개척 시스템</label>
+                    <?php echo _cfg_radio('pioneer_use', $mg_configs, '1'); ?>
+                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">뷰 모드·거점 이미지는 <a href="<?php echo G5_ADMIN_URL; ?>/morgan/pioneer_facility.php" style="color:var(--mg-accent);">시설 관리</a>에서 설정합니다.</small>
                 </div>
             </div>
 

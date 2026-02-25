@@ -58,35 +58,61 @@ require_once __DIR__.'/_head.php';
         <span style="font-size:0.85rem;color:var(--mg-text-secondary);">유저 UI:</span>
         <div style="display:inline-flex;border-radius:8px;overflow:hidden;border:1px solid var(--mg-bg-tertiary);">
             <button type="button" id="btn-mode-list" onclick="setUiMode('list')" style="padding:6px 14px;font-size:0.8rem;border:none;cursor:pointer;transition:background 0.15s;<?php echo $ui_mode !== 'map' ? 'background:var(--mg-accent);color:var(--mg-bg-primary);font-weight:600;' : 'background:var(--mg-bg-primary);color:var(--mg-text-secondary);'; ?>">카드 목록</button>
-            <button type="button" id="btn-mode-map" onclick="setUiMode('map')" style="padding:6px 14px;font-size:0.8rem;border:none;cursor:pointer;transition:background 0.15s;<?php echo $ui_mode === 'map' ? 'background:var(--mg-accent);color:var(--mg-bg-primary);font-weight:600;' : 'background:var(--mg-bg-primary);color:var(--mg-text-secondary);'; ?>"<?php echo !$map_image ? ' disabled title="세계관 > 지도에서 맵 이미지를 먼저 등록하세요"' : ''; ?>>세계관 맵</button>
+            <button type="button" id="btn-mode-map" onclick="setUiMode('map')" style="padding:6px 14px;font-size:0.8rem;border:none;cursor:pointer;transition:background 0.15s;<?php echo $ui_mode === 'map' ? 'background:var(--mg-accent);color:var(--mg-bg-primary);font-weight:600;' : 'background:var(--mg-bg-primary);color:var(--mg-text-secondary);'; ?>"<?php echo !$map_image ? ' disabled title="파견 지도 이미지를 먼저 등록하세요"' : ''; ?>>파견 지도</button>
         </div>
-        <?php if (!$map_image) { ?>
-        <span style="font-size:0.75rem;color:var(--mg-text-muted);">맵 모드: <a href="<?php echo G5_ADMIN_URL; ?>/morgan/lore_map.php" style="color:var(--mg-accent);">지도 관리</a>에서 이미지 등록 필요</span>
-        <?php } ?>
     </div>
     <button type="button" class="mg-btn mg-btn-primary" onclick="openAreaModal()">파견지 추가</button>
 </div>
 
-<?php if ($map_image) { ?>
-<!-- 맵 비주얼 에디터 -->
-<div class="mg-card" style="margin-bottom:1rem;">
-    <div class="mg-card-header">
-        <h3>맵 에디터</h3>
-        <span style="font-size:0.8rem;color:var(--mg-text-muted);">맵 위를 클릭하여 마커를 배치하세요 · 기존 마커 클릭 시 수정</span>
-    </div>
-    <div class="mg-card-body" style="padding:0;">
-        <div id="map-mobile-notice" style="display:none;padding:0.75rem 1rem;background:var(--mg-bg-tertiary);border-left:3px solid var(--mg-accent);">
-            <strong style="font-size:0.85rem;color:var(--mg-text-primary);">PC 환경 권장</strong>
-            <p style="font-size:0.8rem;color:var(--mg-text-muted);margin-top:0.25rem;">맵 마커 배치/편집은 PC에서 최적화되어 있습니다. 모바일에서는 정확한 위치 지정이 어려울 수 있습니다.</p>
+<!-- 파견 지도 관리 (맵 모드일 때만 표시) -->
+<div id="map-section" style="display:<?php echo $ui_mode === 'map' ? 'block' : 'none'; ?>;">
+    <!-- 맵 이미지 업로드 -->
+    <div class="mg-card" style="margin-bottom:1rem;">
+        <div class="mg-card-header">
+            <h3>파견 지도</h3>
+            <span style="font-size:0.8rem;color:var(--mg-text-muted);">파견 전용 지도 이미지 (세계관 맵과 별도)</span>
         </div>
-        <script>if(window.innerWidth<768)document.getElementById('map-mobile-notice').style.display='block';</script>
-        <div id="map-editor" style="position:relative;overflow:auto;max-height:600px;cursor:crosshair;">
-            <img src="<?php echo htmlspecialchars($map_image); ?>" id="map-editor-img" style="display:block;width:100%;min-width:600px;" alt="세계관 맵" draggable="false">
-            <div id="map-editor-markers"></div>
+        <div class="mg-card-body">
+            <?php if ($map_image) { ?>
+            <div style="margin-bottom:12px;">
+                <img src="<?php echo htmlspecialchars($map_image); ?>" style="max-width:300px;max-height:150px;border-radius:8px;border:1px solid var(--mg-bg-tertiary);">
+            </div>
+            <?php } ?>
+            <form id="map-upload-form" method="post" action="<?php echo G5_ADMIN_URL; ?>/morgan/expedition_area_update.php" enctype="multipart/form-data" style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;">
+                <input type="hidden" name="action" value="upload_map_image">
+                <div class="mg-form-group" style="margin-bottom:0;">
+                    <label class="mg-form-label" style="font-size:0.75rem;">지도 이미지 (JPG/PNG/WebP, 최대 20MB)</label>
+                    <input type="file" name="map_image_file" accept="image/*" class="mg-form-input" style="width:280px;">
+                </div>
+                <button type="submit" class="mg-btn mg-btn-primary mg-btn-sm">업로드</button>
+                <?php if ($map_image) { ?>
+                <button type="button" class="mg-btn mg-btn-danger mg-btn-sm" onclick="deleteMapImage()">이미지 삭제</button>
+                <?php } ?>
+            </form>
         </div>
     </div>
+
+    <?php if ($map_image) { ?>
+    <!-- 맵 비주얼 에디터 -->
+    <div class="mg-card" style="margin-bottom:1rem;">
+        <div class="mg-card-header">
+            <h3>마커 배치</h3>
+            <span style="font-size:0.8rem;color:var(--mg-text-muted);">맵 위를 클릭하여 마커를 배치하세요 · 기존 마커 클릭 시 수정</span>
+        </div>
+        <div class="mg-card-body" style="padding:0;">
+            <div id="map-mobile-notice" style="display:none;padding:0.75rem 1rem;background:var(--mg-bg-tertiary);border-left:3px solid var(--mg-accent);">
+                <strong style="font-size:0.85rem;color:var(--mg-text-primary);">PC 환경 권장</strong>
+                <p style="font-size:0.8rem;color:var(--mg-text-muted);margin-top:0.25rem;">맵 마커 배치/편집은 PC에서 최적화되어 있습니다.</p>
+            </div>
+            <script>if(window.innerWidth<768)document.getElementById('map-mobile-notice').style.display='block';</script>
+            <div id="map-editor" style="position:relative;overflow:auto;max-height:600px;cursor:crosshair;">
+                <img src="<?php echo htmlspecialchars($map_image); ?>" id="map-editor-img" style="display:block;width:100%;min-width:600px;" alt="파견 지도" draggable="false">
+                <div id="map-editor-markers"></div>
+            </div>
+        </div>
+    </div>
+    <?php } ?>
 </div>
-<?php } ?>
 
 <!-- 목록 -->
 <div class="mg-card">
@@ -100,7 +126,7 @@ require_once __DIR__.'/_head.php';
                     <th style="width:70px;">상태</th>
                     <th style="width:80px;">스태미나</th>
                     <th style="width:80px;">소요시간</th>
-                    <th style="width:70px;">파트너PT</th>
+                    <th style="width:90px;">보상</th>
                     <th style="width:180px;">드롭 아이템</th>
                     <th style="width:70px;">좌표</th>
                     <th style="width:100px;">해금 조건</th>
@@ -139,7 +165,18 @@ require_once __DIR__.'/_head.php';
                     <td style="text-align:center;"><?php echo $status_badge; ?></td>
                     <td style="text-align:center;"><?php echo $area['ea_stamina_cost']; ?></td>
                     <td style="text-align:center;"><?php echo trim($duration_text); ?></td>
-                    <td style="text-align:center;"><?php echo $area['ea_partner_point']; ?>P</td>
+                    <td style="text-align:center;font-size:0.85rem;">
+                        <?php if (($area['ea_point_min'] ?? 0) > 0) {
+                            $min = (int)$area['ea_point_min'];
+                            $max = (int)$area['ea_point_max'];
+                            echo $min === $max ? $min.'P' : $min.'~'.$max.'P';
+                        } else {
+                            echo '<span style="color:var(--mg-text-muted);">-</span>';
+                        } ?>
+                        <?php if ($area['ea_partner_point'] > 0) { ?>
+                        <br><span style="font-size:0.75rem;color:var(--mg-text-muted);">파트너 +<?php echo $area['ea_partner_point']; ?>P</span>
+                        <?php } ?>
+                    </td>
                     <td style="font-size:0.85rem;">
                         <?php foreach ($area['drops'] as $drop) {
                             $rare_style = $drop['ed_is_rare'] ? 'color:#a78bfa;font-weight:bold;' : '';
@@ -220,8 +257,8 @@ require_once __DIR__.'/_head.php';
 
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
                     <div class="mg-form-group">
-                        <label class="mg-form-label">아이콘 (Heroicons명)</label>
-                        <input type="text" name="ea_icon" id="ea_icon" class="mg-form-input" placeholder="globe-americas, fire 등">
+                        <label class="mg-form-label">아이콘</label>
+                        <?php mg_icon_input('ea_icon', '', array('placeholder' => 'globe-americas, fire 등', 'delete_name' => 'del_ea_icon')); ?>
                     </div>
                     <div class="mg-form-group">
                         <label class="mg-form-label">정렬 순서</label>
@@ -243,7 +280,7 @@ require_once __DIR__.'/_head.php';
                     <p style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:4px;">JPG, PNG, GIF, WebP / 최대 5MB / 권장 16:9 비율</p>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
                     <div class="mg-form-group">
                         <label class="mg-form-label">필요 스태미나 *</label>
                         <input type="number" name="ea_stamina_cost" id="ea_stamina_cost" class="mg-form-input" min="1" value="2" required>
@@ -252,9 +289,23 @@ require_once __DIR__.'/_head.php';
                         <label class="mg-form-label">소요시간 (분) *</label>
                         <input type="number" name="ea_duration" id="ea_duration" class="mg-form-input" min="1" value="60" required>
                     </div>
-                    <div class="mg-form-group">
-                        <label class="mg-form-label">파트너 보상PT</label>
-                        <input type="number" name="ea_partner_point" id="ea_partner_point" class="mg-form-input" min="0" value="10">
+                </div>
+
+                <div class="mg-form-group">
+                    <label class="mg-form-label">보상 포인트 (참가자)</label>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <input type="number" name="ea_point_min" id="ea_point_min" class="mg-form-input" style="width:100px;" min="0" value="0" placeholder="최소">
+                        <span style="color:var(--mg-text-muted);">~</span>
+                        <input type="number" name="ea_point_max" id="ea_point_max" class="mg-form-input" style="width:100px;" min="0" value="0" placeholder="최대">
+                        <span style="font-size:0.8rem;color:var(--mg-text-muted);">P (0이면 포인트 보상 없음)</span>
+                    </div>
+                </div>
+
+                <div class="mg-form-group">
+                    <label class="mg-form-label">파트너 보너스PT</label>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <input type="number" name="ea_partner_point" id="ea_partner_point" class="mg-form-input" style="width:100px;" min="0" value="10">
+                        <span style="font-size:0.8rem;color:var(--mg-text-muted);">P (파트너로 선택된 유저에게 지급)</span>
                     </div>
                 </div>
 
@@ -455,6 +506,9 @@ function openAreaModal(mapX, mapY) {
     document.getElementById('ea_image_preview').style.display = 'none';
     document.getElementById('ea_image_img').src = '';
     document.getElementById('ea_image_action').value = '';
+    mgIconReset('ea_icon');
+    document.getElementById('ea_point_min').value = 0;
+    document.getElementById('ea_point_max').value = 0;
 
     if (mapX !== undefined && mapY !== undefined) {
         document.getElementById('ea_map_x').value = mapX;
@@ -479,10 +533,12 @@ function editArea(ea_id) {
     document.getElementById('form_ea_id').value = ea_id;
     document.getElementById('ea_name').value = area.ea_name;
     document.getElementById('ea_desc').value = area.ea_desc || '';
-    document.getElementById('ea_icon').value = area.ea_icon || '';
+    mgIconSet('ea_icon', area.ea_icon || '');
     document.getElementById('ea_order').value = area.ea_order;
     document.getElementById('ea_stamina_cost').value = area.ea_stamina_cost;
     document.getElementById('ea_duration').value = area.ea_duration;
+    document.getElementById('ea_point_min').value = area.ea_point_min || 0;
+    document.getElementById('ea_point_max').value = area.ea_point_max || 0;
     document.getElementById('ea_partner_point').value = area.ea_partner_point;
     document.getElementById('ea_status').value = area.ea_status;
     document.getElementById('ea_unlock_facility').value = area.ea_unlock_facility || 0;
@@ -535,6 +591,7 @@ function setUiMode(mode) {
             // 버튼 스타일 전환
             var btnList = document.getElementById('btn-mode-list');
             var btnMap = document.getElementById('btn-mode-map');
+            var mapSection = document.getElementById('map-section');
             if (mode === 'map') {
                 btnMap.style.background = 'var(--mg-accent)';
                 btnMap.style.color = 'var(--mg-bg-primary)';
@@ -542,6 +599,7 @@ function setUiMode(mode) {
                 btnList.style.background = 'var(--mg-bg-primary)';
                 btnList.style.color = 'var(--mg-text-secondary)';
                 btnList.style.fontWeight = '';
+                if (mapSection) mapSection.style.display = 'block';
             } else {
                 btnList.style.background = 'var(--mg-accent)';
                 btnList.style.color = 'var(--mg-bg-primary)';
@@ -549,7 +607,24 @@ function setUiMode(mode) {
                 btnMap.style.background = 'var(--mg-bg-primary)';
                 btnMap.style.color = 'var(--mg-text-secondary)';
                 btnMap.style.fontWeight = '';
+                if (mapSection) mapSection.style.display = 'none';
             }
+        }
+    });
+}
+
+// === 파견 지도 이미지 삭제 ===
+function deleteMapImage() {
+    if (!confirm('파견 지도 이미지를 삭제하시겠습니까?\n맵 모드가 비활성화됩니다.')) return;
+
+    var fd = new FormData();
+    fd.append('action', 'delete_map_image');
+
+    fetch(UPDATE_URL, { method: 'POST', credentials: 'same-origin', body: fd }).then(function(r) { return r.json(); }).then(function(data) {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || '삭제 실패');
         }
     });
 }
@@ -560,7 +635,7 @@ function closeModal() {
 }
 
 document.getElementById('area-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeModal();
+    if (e.target === this && document._mgMdTarget === this) closeModal();
 });
 
 function escHtml(str) {

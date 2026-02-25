@@ -96,6 +96,10 @@ $g5['mg_game_fortune_table'] = 'mg_game_fortune';
 $g5['mg_game_lottery_prize_table'] = 'mg_game_lottery_prize';
 $g5['mg_game_lottery_board_table'] = 'mg_game_lottery_board';
 $g5['mg_game_lottery_user_table'] = 'mg_game_lottery_user';
+// 칭호 시스템
+$g5['mg_title_pool_table'] = 'mg_title_pool';
+$g5['mg_member_title_table'] = 'mg_member_title';
+$g5['mg_title_setting_table'] = 'mg_title_setting';
 // 마이그레이션
 $g5['mg_migrations_table'] = 'mg_migrations';
 
@@ -175,6 +179,10 @@ $mg['reward_queue_table'] = $g5['mg_reward_queue_table'];
 // 관계 시스템
 $mg['relation_table'] = $g5['mg_relation_table'];
 $mg['relation_icon_table'] = $g5['mg_relation_icon_table'];
+// 칭호 시스템
+$mg['title_pool_table'] = $g5['mg_title_pool_table'];
+$mg['member_title_table'] = $g5['mg_member_title_table'];
+$mg['title_setting_table'] = $g5['mg_title_setting_table'];
 // 세계관 맵 지역
 $mg['map_region_table'] = $g5['mg_map_region_table'];
 // 탐색 파견 시스템
@@ -426,22 +434,30 @@ function mg_render_profile_value($field) {
     }
 }
 
-// 상점 아이템 타입 그룹 (카테고리 대체)
+// 상점 아이템 타입 그룹 (1차 카테고리)
 $mg['shop_type_groups'] = array(
     'decor' => array(
         'label' => '꾸미기',
         'icon' => 'sparkles',
-        'types' => array('title', 'badge', 'nick_color', 'nick_effect', 'char_slot')
+        'types' => array('title_prefix', 'title_suffix', 'badge', 'nick_color', 'nick_effect'),
+        'sub_groups' => array(
+            'title' => array('label' => '칭호', 'types' => array('title_prefix', 'title_suffix')),
+        )
     ),
     'profile' => array(
         'label' => '프로필',
         'icon' => 'user',
-        'types' => array('profile_skin', 'profile_bg', 'profile_border')
+        'types' => array('profile_border', 'profile_skin', 'profile_bg')
     ),
     'seal' => array(
         'label' => '인장',
         'icon' => 'stamp',
-        'types' => array('seal_bg', 'seal_frame', 'seal_hover')
+        'types' => array('seal_frame', 'seal_bg', 'seal_hover')
+    ),
+    'system' => array(
+        'label' => '이용권',
+        'icon' => 'ticket',
+        'types' => array('char_slot', 'emoticon_reg', 'concierge_extra')
     ),
     'material' => array(
         'label' => '재료',
@@ -456,30 +472,51 @@ $mg['shop_type_groups'] = array(
     'etc' => array(
         'label' => '기타',
         'icon' => 'gift',
-        'types' => array('etc')
+        'types' => array('equip', 'etc')
     )
 );
 
-// 타입별 라벨
-$mg['shop_type_labels'] = array(
-    'title' => '칭호',
-    'badge' => '뱃지',
-    'nick_color' => '닉네임 색상',
-    'nick_effect' => '닉네임 효과',
-    'profile_border' => '프로필 테두리',
-    'profile_skin' => '프로필 스킨',
-    'profile_bg' => '프로필 배경',
-    'equip' => '장비',
-    'emoticon_set' => '이모티콘',
-    'emoticon_reg' => '이모티콘 등록권',
-    'material' => '재료',
-    'furniture' => '가구',
-    'seal_bg' => '인장 배경',
-    'seal_frame' => '인장 프레임',
-    'seal_hover' => '인장 호버',
-    'char_slot' => '캐릭터 슬롯',
-    'etc' => '기타'
-);
+/**
+ * 상점 아이템 타입 전체 정의 (단일 소스)
+ * name: 표시 라벨, desc: 설명, group: 그룹 키
+ */
+function mg_get_item_types() {
+    return array(
+        // 꾸미기
+        'title_prefix' => array('name' => '접두칭호 뽑기', 'desc' => '랜덤 접두칭호 1개 획득 (중복 가능)', 'group' => 'decor'),
+        'title_suffix' => array('name' => '접미칭호 뽑기', 'desc' => '랜덤 접미칭호 1개 획득 (중복 가능)', 'group' => 'decor'),
+        'badge' => array('name' => '뱃지', 'desc' => '프로필에 표시되는 뱃지', 'group' => 'decor'),
+        'nick_color' => array('name' => '닉네임 색상', 'desc' => '닉네임 색상 변경', 'group' => 'decor'),
+        'nick_effect' => array('name' => '닉네임 효과', 'desc' => '닉네임에 애니메이션 효과', 'group' => 'decor'),
+        // 프로필
+        'profile_border' => array('name' => '프로필 테두리', 'desc' => '프로필 이미지 테두리', 'group' => 'profile'),
+        'profile_skin' => array('name' => '프로필 스킨', 'desc' => '프로필 레이아웃 스킨 (개발자 등록)', 'group' => 'profile'),
+        'profile_bg' => array('name' => '프로필 배경', 'desc' => '프로필 배경 효과 (개발자 등록)', 'group' => 'profile'),
+        // 인장
+        'seal_frame' => array('name' => '인장 프레임', 'desc' => '인장 테두리 프레임', 'group' => 'seal'),
+        'seal_bg' => array('name' => '인장 배경', 'desc' => '인장 배경 효과', 'group' => 'seal'),
+        'seal_hover' => array('name' => '인장 호버', 'desc' => '인장 호버 효과', 'group' => 'seal'),
+        // 이용권
+        'char_slot' => array('name' => '캐릭터 슬롯', 'desc' => '사용 시 캐릭터를 1개 더 생성할 수 있습니다 (영구, 해제 불가)', 'group' => 'system'),
+        'emoticon_reg' => array('name' => '이모티콘 등록권', 'desc' => '커스텀 이모티콘 등록 권한', 'group' => 'system'),
+        'concierge_extra' => array('name' => '추가 의뢰권', 'desc' => '추가 의뢰 등록 권한 (소모품)', 'group' => 'system'),
+        // 재료·가구·기타
+        'material' => array('name' => '재료', 'desc' => '개척 시스템 재료 아이템', 'group' => 'material'),
+        'furniture' => array('name' => '가구', 'desc' => '마이룸 가구', 'group' => 'furniture'),
+        'equip' => array('name' => '장비', 'desc' => '캐릭터 장착 아이템', 'group' => 'etc'),
+        'etc' => array('name' => '기타', 'desc' => '기타 아이템', 'group' => 'etc'),
+    );
+}
+
+/**
+ * 동시에 하나만 활성화 가능한 아이템 타입 목록
+ */
+function mg_get_exclusive_types() {
+    return array('nick_color', 'nick_effect', 'seal_bg', 'seal_frame', 'seal_hover', 'profile_skin', 'profile_bg');
+}
+
+// 타입별 라벨 (mg_get_item_types에서 자동 추출)
+$mg['shop_type_labels'] = array_map(function($t) { return $t['name']; }, mg_get_item_types());
 
 // ======================================
 // 설정 로드 함수
@@ -646,7 +683,7 @@ function mg_get_profile_fields($only_active = true) {
     $fields = array();
     while ($row = sql_fetch_array($result)) {
         if ($row['pf_options']) {
-            $row['pf_options'] = json_decode($row['pf_options'], true);
+            $row['pf_options'] = json_decode($row['pf_options'], true) ?: array();
         }
         $fields[] = $row;
     }
@@ -946,7 +983,7 @@ function mg_get_main_widgets() {
             ORDER BY widget_order ASC";
     $result = sql_query($sql);
     while ($widget = sql_fetch_array($result)) {
-        $widget['widget_config'] = $widget['widget_config'] ? json_decode($widget['widget_config'], true) : array();
+        $widget['widget_config'] = $widget['widget_config'] ? (json_decode($widget['widget_config'], true) ?? array()) : array();
         $widgets[] = $widget;
     }
 
@@ -1210,7 +1247,7 @@ function mg_get_shop_items($sc_id = 0, $page = 1, $rows = 12) {
 
     $items = array();
     while ($row = sql_fetch_array($result)) {
-        $row['si_effect'] = $row['si_effect'] ? json_decode($row['si_effect'], true) : array();
+        $row['si_effect'] = $row['si_effect'] ? (json_decode($row['si_effect'], true) ?? array()) : array();
         $row['status'] = mg_get_item_status($row);
         $items[] = $row;
     }
@@ -1254,7 +1291,7 @@ function mg_get_shop_items_by_type($types = array(), $page = 1, $rows = 12) {
 
     $items = array();
     while ($row = sql_fetch_array($result)) {
-        $row['si_effect'] = $row['si_effect'] ? json_decode($row['si_effect'], true) : array();
+        $row['si_effect'] = $row['si_effect'] ? (json_decode($row['si_effect'], true) ?? array()) : array();
         $row['status'] = mg_get_item_status($row);
         $items[] = $row;
     }
@@ -1306,7 +1343,7 @@ function mg_get_shop_item($si_id) {
     $item = sql_fetch($sql);
 
     if ($item) {
-        $item['si_effect'] = $item['si_effect'] ? json_decode($item['si_effect'], true) : array();
+        $item['si_effect'] = $item['si_effect'] ? (json_decode($item['si_effect'], true) ?? array()) : array();
         $item['status'] = mg_get_item_status($item);
     }
 
@@ -1350,8 +1387,9 @@ function mg_can_buy_item($mb_id, $si_id, $is_gift = false) {
         }
     }
 
-    // 비소모 아이템 중복 구매 방지 (선물 제외)
-    if (!$is_gift && !$item['si_consumable'] && $item['si_type'] !== 'material') {
+    // 비소모 아이템 중복 구매 방지 (선물, 재료, 칭호 뽑기 제외)
+    $no_dup_check = array('material', 'title_prefix', 'title_suffix');
+    if (!$is_gift && !$item['si_consumable'] && !in_array($item['si_type'], $no_dup_check)) {
         $owned = mg_get_inventory_count($mb_id, $si_id);
         if ($owned > 0) {
             return array('can_buy' => false, 'message' => '이미 보유한 아이템입니다.');
@@ -1381,16 +1419,28 @@ function mg_buy_item($mb_id, $si_id) {
     $mb_id = sql_real_escape_string($mb_id);
 
     // 포인트 차감
-    insert_point($mb_id, -$item['si_price'], '상점 구매: '.$item['si_name']);
+    insert_point($mb_id, -$item['si_price'], '상점 구매: '.$item['si_name'], 'mg_shop_item', $si_id, '구매');
 
     // 판매 수량 증가
     sql_query("UPDATE {$mg['shop_item_table']} SET si_stock_sold = si_stock_sold + 1 WHERE si_id = {$si_id}");
 
-    // 재료 타입이면 재료 직접 지급, 아니면 인벤토리에 추가
+    // 타입별 처리 분기
     if ($item['si_type'] === 'material' && !empty($item['si_effect']['material_id'])) {
+        // 재료: 인벤토리 대신 재료 직접 지급
         $mt_id = (int)$item['si_effect']['material_id'];
         $amount = (int)($item['si_effect']['material_amount'] ?? 1);
         mg_add_material($mb_id, $mt_id, $amount);
+    } elseif (in_array($item['si_type'], array('title_prefix', 'title_suffix'))) {
+        // 칭호 뽑기: 인벤토리 대신 랜덤 칭호 지급
+        $draw_type = ($item['si_type'] === 'title_prefix') ? 'prefix' : 'suffix';
+        $draw_result = mg_draw_random_title($mb_id, $draw_type);
+        // 구매 로그 먼저 기록
+        sql_query("INSERT INTO {$mg['shop_log_table']} (mb_id, si_id, sl_price, sl_type)
+                   VALUES ('{$mb_id}', {$si_id}, {$item['si_price']}, 'purchase')");
+        $msg = $draw_result['is_new']
+            ? '「'.$draw_result['tp_name'].'」 칭호를 획득했습니다!'
+            : '「'.$draw_result['tp_name'].'」 — 이미 보유한 칭호입니다.';
+        return array('success' => true, 'message' => $msg, 'item' => $item, 'title_draw' => $draw_result);
     } else {
         mg_add_to_inventory($mb_id, $si_id);
     }
@@ -1493,7 +1543,7 @@ function mg_get_inventory($mb_id, $sc_id = 0, $page = 0, $limit = 0) {
 
     $items = array();
     while ($row = sql_fetch_array($result)) {
-        $row['si_effect'] = $row['si_effect'] ? json_decode($row['si_effect'], true) : array();
+        $row['si_effect'] = $row['si_effect'] ? (json_decode($row['si_effect'], true) ?? array()) : array();
         // 사용 중인지 체크
         $row['is_active'] = mg_is_item_active($mb_id, $row['si_id']);
         $items[] = $row;
@@ -1578,8 +1628,7 @@ function mg_use_item($mb_id, $si_id, $ch_id = null) {
     }
 
     // 같은 타입의 다른 아이템 해제 (칭호, 닉네임색상 등은 하나만)
-    $exclusive_types = array('title', 'nick_color', 'nick_effect', 'seal_bg', 'seal_frame', 'seal_hover', 'profile_skin', 'profile_bg');
-    if (in_array($item['si_type'], $exclusive_types)) {
+    if (in_array($item['si_type'], mg_get_exclusive_types())) {
         sql_query("DELETE FROM {$mg['item_active_table']}
                    WHERE mb_id = '{$mb_id}' AND ia_type = '{$item['si_type']}'");
     }
@@ -1653,7 +1702,7 @@ function mg_get_active_items($mb_id, $type = null) {
 
     $items = array();
     while ($row = sql_fetch_array($result)) {
-        $row['si_effect'] = $row['si_effect'] ? json_decode($row['si_effect'], true) : array();
+        $row['si_effect'] = $row['si_effect'] ? (json_decode($row['si_effect'], true) ?? array()) : array();
         $items[] = $row;
     }
 
@@ -1710,6 +1759,29 @@ function mg_get_profile_bg_list() {
     );
 }
 
+function mg_get_seal_bg_list() {
+    return array(
+        'fog'    => '안개',
+        'waves'  => '물결',
+        'cells'  => '셀',
+        'net'    => '네트워크',
+        'ripple' => '파문',
+    );
+}
+
+function mg_get_seal_hover_presets() {
+    return array(
+        'glow_amber' => array('name' => '앰버 글로우', 'css' => 'box-shadow: 0 0 12px rgba(245,159,10,0.5); transition: all 0.2s ease;'),
+        'glow_blue'  => array('name' => '블루 글로우', 'css' => 'box-shadow: 0 0 12px rgba(59,130,246,0.5); transition: all 0.2s ease;'),
+        'glow_green' => array('name' => '그린 글로우', 'css' => 'box-shadow: 0 0 12px rgba(34,197,94,0.5); transition: all 0.2s ease;'),
+        'glow_red'   => array('name' => '레드 글로우', 'css' => 'box-shadow: 0 0 12px rgba(239,68,68,0.5); transition: all 0.2s ease;'),
+        'glow_purple'=> array('name' => '퍼플 글로우', 'css' => 'box-shadow: 0 0 12px rgba(168,85,247,0.5); transition: all 0.2s ease;'),
+        'scale'      => array('name' => '스케일업', 'css' => 'transform: scale(1.05); transition: all 0.2s ease;'),
+        'shadow'     => array('name' => '그림자 드랍', 'css' => 'box-shadow: 0 4px 12px rgba(0,0,0,0.5); transition: all 0.2s ease;'),
+        'lift'       => array('name' => '리프트', 'css' => 'transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.3); transition: all 0.2s ease;'),
+    );
+}
+
 /**
  * 회원의 활성 프로필 배경 효과 ID 반환 (없으면 null)
  */
@@ -1734,6 +1806,26 @@ function mg_has_bg_custom_perm($mb_id) {
 }
 
 /**
+ * 선물 공통 검증 (자기 자신 체크 + 받는 사람 존재 확인)
+ *
+ * @param string $mb_id_from 보내는 사람
+ * @param string $mb_id_to 받는 사람
+ * @return array ['valid' => bool, 'message' => string, 'to_member' => array|null]
+ */
+function _mg_validate_gift($mb_id_from, $mb_id_to) {
+    if ($mb_id_from == $mb_id_to) {
+        return array('valid' => false, 'message' => '자기 자신에게는 선물할 수 없습니다.', 'to_member' => null);
+    }
+
+    $to_member = get_member($mb_id_to);
+    if (!$to_member['mb_id']) {
+        return array('valid' => false, 'message' => '받는 사람을 찾을 수 없습니다.', 'to_member' => null);
+    }
+
+    return array('valid' => true, 'message' => '', 'to_member' => $to_member);
+}
+
+/**
  * 선물 보내기
  *
  * @param string $mb_id_from 보내는 사람
@@ -1745,15 +1837,9 @@ function mg_has_bg_custom_perm($mb_id) {
 function mg_send_gift($mb_id_from, $mb_id_to, $si_id, $message = '') {
     global $mg, $member;
 
-    // 자기 자신에게 선물 불가
-    if ($mb_id_from == $mb_id_to) {
-        return array('success' => false, 'message' => '자기 자신에게는 선물할 수 없습니다.');
-    }
-
-    // 받는 사람 확인
-    $to_member = get_member($mb_id_to);
-    if (!$to_member['mb_id']) {
-        return array('success' => false, 'message' => '받는 사람을 찾을 수 없습니다.');
+    $v = _mg_validate_gift($mb_id_from, $mb_id_to);
+    if (!$v['valid']) {
+        return array('success' => false, 'message' => $v['message']);
     }
 
     // 구매 가능 체크 (포인트, 재고 등 — 선물이므로 중복 보유 체크 제외)
@@ -1768,14 +1854,14 @@ function mg_send_gift($mb_id_from, $mb_id_to, $si_id, $message = '') {
     $message = sql_real_escape_string(mb_substr($message, 0, 200));
 
     // 포인트 차감
-    insert_point($mb_id_from, -$item['si_price'], '선물 보내기: '.$item['si_name'].' → '.$mb_id_to);
+    insert_point($mb_id_from, -$item['si_price'], '선물 보내기: '.$item['si_name'].' → '.$mb_id_to, 'mg_shop_item', $si_id, '선물');
 
     // 판매 수량 증가
     sql_query("UPDATE {$mg['shop_item_table']} SET si_stock_sold = si_stock_sold + 1 WHERE si_id = {$si_id}");
 
     // 선물 레코드 생성
-    sql_query("INSERT INTO {$mg['gift_table']} (mb_id_from, mb_id_to, si_id, gf_message, gf_status)
-               VALUES ('{$mb_id_from}', '{$mb_id_to}', {$si_id}, '{$message}', 'pending')");
+    sql_query("INSERT INTO {$mg['gift_table']} (mb_id_from, mb_id_to, si_id, gf_type, gf_message, gf_status)
+               VALUES ('{$mb_id_from}', '{$mb_id_to}', {$si_id}, 'shop', '{$message}', 'pending')");
 
     // 구매 로그
     sql_query("INSERT INTO {$mg['shop_log_table']} (mb_id, si_id, sl_price, sl_type)
@@ -1801,15 +1887,9 @@ function mg_send_gift($mb_id_from, $mb_id_to, $si_id, $message = '') {
 function mg_send_gift_from_inventory($mb_id_from, $mb_id_to, $si_id, $message = '') {
     global $mg;
 
-    // 자기 자신에게 선물 불가
-    if ($mb_id_from == $mb_id_to) {
-        return array('success' => false, 'message' => '자기 자신에게는 선물할 수 없습니다.');
-    }
-
-    // 받는 사람 확인
-    $to_member = get_member($mb_id_to);
-    if (!$to_member['mb_id']) {
-        return array('success' => false, 'message' => '받는 사람을 찾을 수 없습니다.');
+    $v = _mg_validate_gift($mb_id_from, $mb_id_to);
+    if (!$v['valid']) {
+        return array('success' => false, 'message' => $v['message']);
     }
 
     $si_id = (int)$si_id;
@@ -1862,6 +1942,25 @@ function mg_send_gift_from_inventory($mb_id_from, $mb_id_to, $si_id, $message = 
 }
 
 /**
+ * 대기 중인 선물 조회 (수락/거절 공통)
+ *
+ * @param int $gf_id 선물 ID
+ * @param string $mb_id 받는 사람 ID
+ * @return array|false 선물 정보 또는 false
+ */
+function _mg_get_pending_gift($gf_id, $mb_id) {
+    global $mg;
+
+    $gf_id = (int)$gf_id;
+    $mb_id = sql_real_escape_string($mb_id);
+
+    $sql = "SELECT g.*, i.si_name, i.si_price FROM {$mg['gift_table']} g
+            JOIN {$mg['shop_item_table']} i ON g.si_id = i.si_id
+            WHERE g.gf_id = {$gf_id} AND g.mb_id_to = '{$mb_id}' AND g.gf_status = 'pending'";
+    return sql_fetch($sql);
+}
+
+/**
  * 선물 수락
  *
  * @param int $gf_id 선물 ID
@@ -1871,18 +1970,13 @@ function mg_send_gift_from_inventory($mb_id_from, $mb_id_to, $si_id, $message = 
 function mg_accept_gift($gf_id, $mb_id) {
     global $mg;
 
-    $gf_id = (int)$gf_id;
-    $mb_id = sql_real_escape_string($mb_id);
-
-    // 선물 조회
-    $sql = "SELECT g.*, i.si_name FROM {$mg['gift_table']} g
-            JOIN {$mg['shop_item_table']} i ON g.si_id = i.si_id
-            WHERE g.gf_id = {$gf_id} AND g.mb_id_to = '{$mb_id}' AND g.gf_status = 'pending'";
-    $gift = sql_fetch($sql);
-
+    $gift = _mg_get_pending_gift($gf_id, $mb_id);
     if (!$gift) {
         return array('success' => false, 'message' => '선물을 찾을 수 없습니다.');
     }
+
+    $gf_id = (int)$gf_id;
+    $mb_id = sql_real_escape_string($mb_id);
 
     // 상태 변경
     sql_query("UPDATE {$mg['gift_table']} SET gf_status = 'accepted' WHERE gf_id = {$gf_id}");
@@ -1907,18 +2001,12 @@ function mg_accept_gift($gf_id, $mb_id) {
 function mg_reject_gift($gf_id, $mb_id) {
     global $mg;
 
-    $gf_id = (int)$gf_id;
-    $mb_id = sql_real_escape_string($mb_id);
-
-    // 선물 조회
-    $sql = "SELECT g.*, i.si_name, i.si_price FROM {$mg['gift_table']} g
-            JOIN {$mg['shop_item_table']} i ON g.si_id = i.si_id
-            WHERE g.gf_id = {$gf_id} AND g.mb_id_to = '{$mb_id}' AND g.gf_status = 'pending'";
-    $gift = sql_fetch($sql);
-
+    $gift = _mg_get_pending_gift($gf_id, $mb_id);
     if (!$gift) {
         return array('success' => false, 'message' => '선물을 찾을 수 없습니다.');
     }
+
+    $gf_id = (int)$gf_id;
 
     // 상태 변경
     sql_query("UPDATE {$mg['gift_table']} SET gf_status = 'rejected' WHERE gf_id = {$gf_id}");
@@ -1930,7 +2018,7 @@ function mg_reject_gift($gf_id, $mb_id) {
         mg_add_to_inventory($gift['mb_id_from'], $gift['si_id']);
     } else {
         // 상점 선물 거절: 포인트 환불 + 판매 수량 감소
-        insert_point($gift['mb_id_from'], $gift['si_price'], '선물 거절 환불: '.$gift['si_name']);
+        insert_point($gift['mb_id_from'], $gift['si_price'], '선물 거절 환불: '.$gift['si_name'], 'mg_gift', $gf_id, '환불');
         sql_query("UPDATE {$mg['shop_item_table']} SET si_stock_sold = si_stock_sold - 1 WHERE si_id = {$gift['si_id']}");
     }
 
@@ -1973,9 +2061,10 @@ function mg_get_pending_gifts($mb_id, $limit = 0) {
  *
  * @param string $mb_id 회원 ID
  * @param string $mb_nick 닉네임
+ * @param int $ch_id 캐릭터 ID (0이면 프로필 칭호 사용)
  * @return string HTML
  */
-function mg_render_nickname($mb_id, $mb_nick) {
+function mg_render_nickname($mb_id, $mb_nick, $ch_id = 0) {
     static $cache = array();
 
     if (isset($cache[$mb_id])) {
@@ -1985,44 +2074,34 @@ function mg_render_nickname($mb_id, $mb_nick) {
         $cache[$mb_id] = $active;
     }
 
-    $prefix = '';
-    $suffix = '';
     $style = '';
-    $class = '';
+    $nick_class = '';
 
     foreach ($active as $item) {
-        $effect = $item['si_effect'];
+        $eff = $item['si_effect'];
+        if (!$eff || !is_array($eff)) continue;
 
         switch ($item['si_type']) {
-            case 'title':
-                if (isset($effect['position']) && $effect['position'] == 'suffix') {
-                    $color = isset($effect['color']) ? $effect['color'] : '#FFD700';
-                    $suffix = ' <span style="color:'.$color.'">'.$effect['text'].'</span>';
-                } else {
-                    $color = isset($effect['color']) ? $effect['color'] : '#FFD700';
-                    $prefix = '<span style="color:'.$color.'">'.$effect['text'].'</span> ';
-                }
-                break;
-
             case 'nick_color':
-                if (isset($effect['color'])) {
-                    $style .= 'color:'.$effect['color'].';';
+                if (isset($eff['nick_color'])) {
+                    $style .= 'color:'.$eff['nick_color'].';';
                 }
                 break;
 
             case 'nick_effect':
-                if (isset($effect['effect'])) {
-                    switch ($effect['effect']) {
-                        case 'bold':
-                            $style .= 'font-weight:bold;';
-                            break;
-                        case 'shadow':
-                            $color = isset($effect['value']) ? $effect['value'] : '#000000';
-                            $style .= 'text-shadow:1px 1px 2px '.$color.';';
-                            break;
+                if (isset($eff['nick_effect'])) {
+                    switch ($eff['nick_effect']) {
                         case 'glow':
-                            $color = isset($effect['value']) ? $effect['value'] : '#f59f0a';
-                            $style .= 'text-shadow:0 0 5px '.$color.';';
+                            $style .= 'text-shadow:0 0 6px currentColor;';
+                            break;
+                        case 'rainbow':
+                            $nick_class = 'mg-nick-rainbow';
+                            break;
+                        case 'shake':
+                            $nick_class = 'mg-nick-shake';
+                            break;
+                        case 'gradient':
+                            $nick_class = 'mg-nick-gradient';
                             break;
                     }
                 }
@@ -2030,12 +2109,25 @@ function mg_render_nickname($mb_id, $mb_nick) {
         }
     }
 
-    $nick_html = htmlspecialchars($mb_nick);
-    if ($style) {
-        $nick_html = '<span style="'.$style.'">'.$nick_html.'</span>';
+    // 칭호 조회: 캐릭터 지정 시 캐릭터 칭호, 아니면 프로필 칭호
+    $titles = mg_get_active_titles($mb_id, $ch_id);
+    $title_html = '';
+    $cls = $nick_class ? ' '.$nick_class : '';
+
+    // 접두+접미를 하나로 합쳐서 「접두 접미」 형태로 표시
+    $title_parts = array();
+    if ($titles['prefix']) $title_parts[] = htmlspecialchars($titles['prefix']);
+    if ($titles['suffix']) $title_parts[] = htmlspecialchars($titles['suffix']);
+    if (!empty($title_parts)) {
+        $title_html = '<span class="mg-title'.$cls.'" style="'.$style.'">「'.implode(' ', $title_parts).'」</span> ';
     }
 
-    return $prefix . $nick_html . $suffix;
+    $nick_html = htmlspecialchars($mb_nick);
+    if ($style || $nick_class) {
+        $nick_html = '<span class="'.$nick_class.'" style="'.$style.'">'.$nick_html.'</span>';
+    }
+
+    return $title_html . $nick_html;
 }
 
 /**
@@ -2106,6 +2198,7 @@ function mg_icon($icon, $class = 'w-5 h-5', $alt = '') {
         'film' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"/>',
         'musical-note' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>',
         'ticket' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>',
+        'tag' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5a1.99 1.99 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>',
         // 커뮤니케이션
         'chat-bubble-left' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.068.157 2.148.279 3.238.364.466.037.893.281 1.153.671L12 21l2.652-3.978c.26-.39.687-.634 1.153-.67 1.09-.086 2.17-.208 3.238-.365 1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/>',
         'envelope' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/>',
@@ -3152,7 +3245,7 @@ function mg_buy_emoticon_set($mb_id, $es_id) {
 
         // 크리에이터가 있으면 수수료 처리
         if ($set['es_creator_id']) {
-            $commission_rate = (int)mg_config('emoticon_commission_rate', 10);
+            $commission_rate = min(99, max(0, (int)mg_config('emoticon_commission_rate', 10)));
             $commission = (int)floor($price * $commission_rate / 100);
             $creator_revenue = $price - $commission;
 
@@ -3507,6 +3600,31 @@ function mg_add_emoticon($es_id, $code, $image, $order = 0) {
  * @param int $exclude_em_id 제외할 em_id (수정 시)
  * @return bool 중복 여부
  */
+/**
+ * 이모티콘 코드 포맷 검증 (:영문숫자_: 형식)
+ *
+ * @param string $code 코드
+ * @return array ['valid' => bool, 'message' => string, 'code' => string]
+ */
+function mg_validate_emoticon_code($code) {
+    $code = trim($code);
+
+    if (!$code) {
+        return array('valid' => false, 'message' => '코드를 입력해주세요.', 'code' => $code);
+    }
+
+    // :로 감싸지 않은 경우 자동 감싸기
+    if ($code[0] !== ':') $code = ':' . $code;
+    if (substr($code, -1) !== ':') $code = $code . ':';
+
+    // :영문숫자_: 패턴 체크 (최소 3자: :x:)
+    if (!preg_match('/^:[a-zA-Z0-9_]{1,50}:$/', $code)) {
+        return array('valid' => false, 'message' => '코드는 영문, 숫자, 밑줄(_)만 사용 가능합니다. 예: :smile:', 'code' => $code);
+    }
+
+    return array('valid' => true, 'message' => '', 'code' => strtolower($code));
+}
+
 function mg_emoticon_code_exists($code, $exclude_em_id = 0) {
     global $mg;
 
@@ -3551,7 +3669,7 @@ function mg_consume_emoticon_reg($mb_id) {
 // ======================================
 
 /**
- * 유저 노동력 가져오기 (패시브 리셋 포함)
+ * 유저 스테미나 가져오기 (패시브 리셋 포함)
  *
  * @param string $mb_id 회원 ID
  * @return array ['current' => int, 'max' => int]
@@ -3584,7 +3702,7 @@ function mg_get_stamina($mb_id) {
 }
 
 /**
- * 유저 노동력 차감
+ * 유저 스테미나 차감
  *
  * @param string $mb_id 회원 ID
  * @param int $amount 차감량
@@ -3596,7 +3714,7 @@ function mg_use_stamina($mb_id, $amount) {
     $amount = (int)$amount;
     if ($amount <= 0) return false;
 
-    // 현재 노동력 확인 (패시브 리셋 트리거)
+    // 현재 스테미나 확인 (패시브 리셋 트리거)
     $stamina = mg_get_stamina($mb_id);
     if ($stamina['current'] < $amount) return false;
 
@@ -3796,7 +3914,7 @@ function mg_get_facility_materials($fc_id) {
 function mg_get_facility_progress($facility) {
     $progress = ['stamina' => 0, 'total' => 0, 'materials' => []];
 
-    // 노동력 진행률
+    // 스테미나 진행률
     if ($facility['fc_stamina_cost'] > 0) {
         $progress['stamina'] = min(100, ($facility['fc_stamina_current'] / $facility['fc_stamina_cost']) * 100);
     } else {
@@ -3827,7 +3945,7 @@ function mg_get_facility_progress($facility) {
 }
 
 /**
- * 시설에 노동력 투입
+ * 시설에 스테미나 투입
  *
  * @param int $fc_id 시설 ID
  * @param string $mb_id 회원 ID
@@ -3854,18 +3972,18 @@ function mg_contribute_stamina($fc_id, $mb_id, $amount) {
         return ['success' => false, 'message' => '건설 중인 시설에만 투입할 수 있습니다.'];
     }
 
-    // 필요한 남은 노동력
+    // 필요한 남은 스테미나
     $remaining = $facility['fc_stamina_cost'] - $facility['fc_stamina_current'];
     if ($remaining <= 0) {
-        return ['success' => false, 'message' => '이 시설은 더 이상 노동력이 필요하지 않습니다.'];
+        return ['success' => false, 'message' => '이 시설은 더 이상 스테미나가 필요하지 않습니다.'];
     }
 
     // 실제 투입량 조정
     $actual_amount = min($amount, $remaining);
 
-    // 노동력 차감
+    // 스테미나 차감
     if (!mg_use_stamina($mb_id, $actual_amount)) {
-        return ['success' => false, 'message' => '노동력이 부족합니다.'];
+        return ['success' => false, 'message' => '스테미나가 부족합니다.'];
     }
 
     // 시설에 투입
@@ -3879,13 +3997,13 @@ function mg_contribute_stamina($fc_id, $mb_id, $amount) {
                (fc_id, mb_id, fcn_type, fcn_amount, fcn_datetime)
                VALUES ({$fc_id}, '{$mb_id_esc}', 'stamina', {$actual_amount}, '{$now}')");
 
-    // 업적 트리거 (개척 노동력)
+    // 업적 트리거 (개척 스테미나)
     mg_trigger_achievement($mb_id, 'pioneer_stamina_total', $actual_amount);
 
     // 완공 체크
     mg_check_facility_complete($fc_id);
 
-    return ['success' => true, 'message' => "노동력 {$actual_amount}을(를) 투입했습니다.", 'amount' => $actual_amount];
+    return ['success' => true, 'message' => "스테미나 {$actual_amount}을(를) 투입했습니다.", 'amount' => $actual_amount];
 }
 
 /**
@@ -3979,7 +4097,7 @@ function mg_check_facility_complete($fc_id) {
         return false;
     }
 
-    // 노동력 체크
+    // 스테미나 체크
     if ($facility['fc_stamina_current'] < $facility['fc_stamina_cost']) {
         return false;
     }
@@ -4024,7 +4142,7 @@ function mg_record_facility_honor($fc_id) {
 
     $fc_id = (int)$fc_id;
 
-    // 노동력 기여 TOP 3
+    // 스테미나 기여 TOP 3
     $stamina_result = sql_query("SELECT mb_id, SUM(fcn_amount) as total
                                   FROM {$mg['facility_contribution_table']}
                                   WHERE fc_id = {$fc_id} AND fcn_type = 'stamina'
@@ -4119,48 +4237,75 @@ function mg_get_facility_ranking($fc_id, $category = 'stamina', $limit = 10) {
 }
 
 /**
- * 활동 보상 재료 지급
+ * JSON 설정 기반 재료 보상 지급
  *
  * @param string $mb_id 회원 ID
- * @param string $activity 활동 유형 (write, comment, rp, attendance)
- * @return array|null ['mt_name' => string, 'amount' => int] 또는 null (미지급)
+ * @param string|array $config JSON 문자열 또는 배열
+ *   {"mode":"fixed|random|pool", "chance":100, "items":[{"mt_code":"wood","amount":1,"weight":1}]}
+ * @return array|null ['mt_name'=>string, 'mt_icon'=>string, 'amount'=>int] 또는 null
  */
-function mg_reward_material($mb_id, $activity) {
-    $config_key = 'pioneer_' . $activity . '_reward';
-    $reward_str = mg_config($config_key, '');
-
-    if (empty($reward_str)) return null;
-
-    // 보상 형식 파싱: "wood:1" 또는 "random:1:30" (30% 확률로 랜덤 재료 1개)
-    $parts = explode(':', $reward_str);
-
-    if ($parts[0] === 'random') {
-        $amount = (int)($parts[1] ?? 1);
-        $chance = (int)($parts[2] ?? 100);
-
-        // 확률 체크
-        if (mt_rand(1, 100) > $chance) return null;
-
-        // 랜덤 재료 선택
-        $types = mg_get_material_types();
-        if (empty($types)) return null;
-
-        $mt = $types[array_rand($types)];
-        mg_add_material($mb_id, $mt['mt_id'], $amount);
-
-        return ['mt_name' => $mt['mt_name'], 'mt_icon' => $mt['mt_icon'], 'amount' => $amount];
-    } else {
-        // 지정 재료: "wood:1"
-        $mt_code = $parts[0];
-        $amount = (int)($parts[1] ?? 1);
-
-        $mt = mg_get_material_type_by_code($mt_code);
-        if (!$mt) return null;
-
-        mg_add_material($mb_id, $mt['mt_id'], $amount);
-
-        return ['mt_name' => $mt['mt_name'], 'mt_icon' => $mt['mt_icon'], 'amount' => $amount];
+function mg_reward_material_from_config($mb_id, $config) {
+    if (is_string($config)) {
+        $config = json_decode($config, true);
     }
+    if (!$config || empty($config['mode']) || empty($config['items'])) return null;
+
+    $mode = $config['mode'];
+    $chance = max(0, min(100, (int)($config['chance'] ?? 100)));
+
+    // 확률 체크
+    if ($chance < 100 && mt_rand(1, 100) > $chance) return null;
+
+    $items = $config['items'];
+    if (empty($items)) return null;
+
+    $chosen = null;
+
+    switch ($mode) {
+        case 'fixed':
+            // 첫 번째 아이템 확정 지급
+            $chosen = $items[0];
+            break;
+
+        case 'random':
+            // 전체 등록 재료 중 랜덤
+            $types = mg_get_material_types();
+            if (empty($types)) return null;
+            $mt = $types[array_rand($types)];
+            $amount = (int)($items[0]['amount'] ?? 1);
+            mg_add_material($mb_id, $mt['mt_id'], $amount);
+            return ['mt_name' => $mt['mt_name'], 'mt_icon' => $mt['mt_icon'], 'amount' => $amount];
+
+        case 'pool':
+            // 가중치 랜덤 선택
+            $total_weight = 0;
+            foreach ($items as $item) {
+                $total_weight += max(1, (int)($item['weight'] ?? 1));
+            }
+            $roll = mt_rand(1, $total_weight);
+            $cumulative = 0;
+            foreach ($items as $item) {
+                $cumulative += max(1, (int)($item['weight'] ?? 1));
+                if ($roll <= $cumulative) {
+                    $chosen = $item;
+                    break;
+                }
+            }
+            break;
+
+        default:
+            return null;
+    }
+
+    if (!$chosen || empty($chosen['mt_code'])) return null;
+
+    $mt = mg_get_material_type_by_code($chosen['mt_code']);
+    if (!$mt) return null;
+
+    $amount = max(1, (int)($chosen['amount'] ?? 1));
+    mg_add_material($mb_id, $mt['mt_id'], $amount);
+
+    return ['mt_name' => $mt['mt_name'], 'mt_icon' => $mt['mt_icon'], 'amount' => $amount];
 }
 
 /**
@@ -4206,13 +4351,14 @@ function mg_get_expedition_areas($status = null, $mb_id = null) {
 
         // 해금 조건 체크
         $row['is_unlocked'] = true;
-        if ($row['ea_unlock_facility'] && $mb_id) {
+        $row['unlock_facility_name'] = '';
+        if ($row['ea_unlock_facility']) {
             $fc = sql_fetch("SELECT fc_id, fc_name, fc_status FROM {$g5['mg_facility_table']}
                             WHERE fc_id = " . (int)$row['ea_unlock_facility']);
-            if (!$fc || $fc['fc_status'] !== 'complete') {
+            $row['unlock_facility_name'] = $fc ? $fc['fc_name'] : '';
+            if ($mb_id && (!$fc || $fc['fc_status'] !== 'complete')) {
                 $row['is_unlocked'] = false;
             }
-            $row['unlock_facility_name'] = $fc ? $fc['fc_name'] : '';
         }
 
         $areas[] = $row;
@@ -4453,6 +4599,25 @@ function mg_claim_expedition($mb_id, $el_id) {
         mg_add_material($mb_id, $item['mt_id'], $item['amount']);
     }
 
+    // 참가자 포인트 보상
+    $area = sql_fetch("SELECT ea_name, ea_partner_point, ea_point_min, ea_point_max
+                       FROM {$g5['mg_expedition_area_table']} WHERE ea_id = " . (int)$log['ea_id']);
+    $point_min = $area ? (int)($area['ea_point_min'] ?? 0) : 0;
+    $point_max = $area ? (int)($area['ea_point_max'] ?? 0) : 0;
+    $earned_point = 0;
+    if ($point_min > 0 && $point_max >= $point_min) {
+        $earned_point = mt_rand($point_min, $point_max);
+        if ($has_partner && $earned_point > 0) {
+            $earned_point = (int)ceil($earned_point * 1.2); // 파트너 보너스 +20%
+        }
+        if ($earned_point > 0) {
+            insert_point($mb_id, $earned_point,
+                        '파견 보상 (' . ($area ? $area['ea_name'] : '') . ')',
+                        'mg_expedition_log', $el_id, '파견');
+        }
+    }
+    $drop_result['point'] = $earned_point;
+
     // 상태 업데이트 + 보상 기록
     $rewards_json = sql_real_escape_string(json_encode($drop_result, JSON_UNESCAPED_UNICODE));
     sql_query("UPDATE {$g5['mg_expedition_log_table']}
@@ -4461,8 +4626,6 @@ function mg_claim_expedition($mb_id, $el_id) {
 
     // 파트너 보상
     if ($log['partner_mb_id']) {
-        $area = sql_fetch("SELECT ea_partner_point, ea_name FROM {$g5['mg_expedition_area_table']}
-                          WHERE ea_id = " . (int)$log['ea_id']);
         $partner_point = $area ? (int)$area['ea_partner_point'] : 10;
         if ($partner_point > 0) {
             insert_point($log['partner_mb_id'], $partner_point,
@@ -4538,7 +4701,7 @@ function mg_get_expedition_history($mb_id, $limit = 10) {
     $history = array();
     while ($row = sql_fetch_array($result)) {
         if ($row['el_rewards']) {
-            $row['el_rewards_parsed'] = json_decode($row['el_rewards'], true);
+            $row['el_rewards_parsed'] = json_decode($row['el_rewards'], true) ?: array();
         }
         $history[] = $row;
     }
@@ -5527,7 +5690,7 @@ function mg_get_board_reward($bo_table) {
  * @param int $wr_id 게시글 ID
  * @return bool 보상 적용 여부
  */
-function mg_apply_board_reward($mb_id, $bo_table, $content_len, $has_image, $wr_id) {
+function mg_apply_board_reward($mb_id, $bo_table, $wr_id) {
     global $g5;
 
     $br = mg_get_board_reward($bo_table);
@@ -5544,16 +5707,8 @@ function mg_apply_board_reward($mb_id, $bo_table, $content_len, $has_image, $wr_
         if (($cnt['cnt'] ?? 0) >= $br['br_daily_limit']) return true; // 적용됨 (but 제한 도달)
     }
 
-    // 포인트 계산
+    // 포인트 계산 (기본 보상만 지급)
     $point = (int)$br['br_point'];
-    if ($content_len >= 1000 && (int)$br['br_bonus_1000'] > 0) {
-        $point += (int)$br['br_bonus_1000'];
-    } elseif ($content_len >= 500 && (int)$br['br_bonus_500'] > 0) {
-        $point += (int)$br['br_bonus_500'];
-    }
-    if ($has_image && (int)$br['br_bonus_image'] > 0) {
-        $point += (int)$br['br_bonus_image'];
-    }
 
     // 포인트 지급
     if ($point > 0) {
@@ -5562,10 +5717,13 @@ function mg_apply_board_reward($mb_id, $bo_table, $content_len, $has_image, $wr_
         insert_point($mb_id, $point, "{$bo_subject} {$wr_id} 글쓰기", $bo_table, $wr_id, '쓰기');
     }
 
-    // 재료 드롭
-    if ($br['br_material_use'] && (int)$br['br_material_chance'] > 0) {
+    // 재료 드롭 (새 JSON 형식 우선, 레거시 폴백)
+    if (!empty($br['br_material_list']) && $br['br_material_list'][0] === '{') {
+        mg_reward_material_from_config($mb_id, $br['br_material_list']);
+    } elseif ($br['br_material_use'] && (int)$br['br_material_chance'] > 0) {
+        // 레거시: 체크박스 + 확률 방식
         if (mt_rand(1, 100) <= (int)$br['br_material_chance']) {
-            $mat_list = $br['br_material_list'] ? json_decode($br['br_material_list'], true) : array();
+            $mat_list = $br['br_material_list'] ? (json_decode($br['br_material_list'], true) ?? array()) : array();
             if (!empty($mat_list)) {
                 $code = $mat_list[array_rand($mat_list)];
                 $mt = mg_get_material_type_by_code($code);
@@ -5577,6 +5735,15 @@ function mg_apply_board_reward($mb_id, $bo_table, $content_len, $has_image, $wr_
     }
 
     return true;
+}
+
+/**
+ * 게시판 댓글 재료 보상 적용
+ */
+function mg_apply_board_comment_material($mb_id, $bo_table) {
+    $br = mg_get_board_reward($bo_table);
+    if (!$br || empty($br['br_material_comment'])) return null;
+    return mg_reward_material_from_config($mb_id, $br['br_material_comment']);
 }
 
 /**
@@ -5841,7 +6008,7 @@ function mg_add_reward_queue($mb_id, $bo_table, $wr_id, $rwt_id) {
  * @param string $admin_mb_id
  * @return array
  */
-function mg_approve_reward($rq_id, $admin_mb_id) {
+function mg_approve_reward($rq_id, $admin_mb_id, $options = array()) {
     global $g5;
 
     $rq = sql_fetch("SELECT * FROM {$g5['mg_reward_queue_table']} WHERE rq_id = {$rq_id}");
@@ -5852,13 +6019,25 @@ function mg_approve_reward($rq_id, $admin_mb_id) {
         return array('success' => false, 'message' => '이미 처리된 요청입니다.');
     }
 
-    // 보상 유형 조회
-    $rwt = sql_fetch("SELECT * FROM {$g5['mg_reward_type_table']} WHERE rwt_id = {$rq['rwt_id']}");
+    // 옵션 파싱
+    $override_rwt_id = isset($options['rwt_id']) ? (int)$options['rwt_id'] : 0;
+    $override_point = isset($options['point']) ? $options['point'] : null; // null = 유형 기본값 사용
+    $admin_note = isset($options['note']) ? trim($options['note']) : '';
+
+    // 보상 유형 조회 (오버라이드 있으면 변경된 유형 사용)
+    $rwt_id = $override_rwt_id > 0 ? $override_rwt_id : $rq['rwt_id'];
+    $rwt = sql_fetch("SELECT * FROM {$g5['mg_reward_type_table']} WHERE rwt_id = {$rwt_id}");
     if (!$rwt['rwt_id']) {
         return array('success' => false, 'message' => '보상 유형을 찾을 수 없습니다.');
     }
 
-    $point = (int)$rwt['rwt_point'];
+    // 포인트 결정: 수동 입력 > 유형 기본값
+    $point = ($override_point !== null && $override_point !== '') ? (int)$override_point : (int)$rwt['rwt_point'];
+    $original_rwt_name = '';
+    if ($override_rwt_id > 0 && $override_rwt_id != $rq['rwt_id']) {
+        $orig = sql_fetch("SELECT rwt_name FROM {$g5['mg_reward_type_table']} WHERE rwt_id = {$rq['rwt_id']}");
+        $original_rwt_name = $orig['rwt_name'] ?? '';
+    }
 
     // 포인트 지급
     if ($point > 0) {
@@ -5886,8 +6065,13 @@ function mg_approve_reward($rq_id, $admin_mb_id) {
 
     // 상태 업데이트
     $admin_esc = sql_real_escape_string($admin_mb_id);
+    $note_esc = sql_real_escape_string($admin_note);
+    $override_rwt_sql = $override_rwt_id > 0 ? $override_rwt_id : 'NULL';
+    $override_point_sql = ($override_point !== null && $override_point !== '') ? (int)$override_point : 'NULL';
     sql_query("UPDATE {$g5['mg_reward_queue_table']}
-        SET rq_status = 'approved', rq_process_datetime = NOW(), rq_process_mb_id = '{$admin_esc}'
+        SET rq_status = 'approved', rq_process_datetime = NOW(), rq_process_mb_id = '{$admin_esc}',
+            rq_override_rwt_id = {$override_rwt_sql}, rq_override_point = {$override_point_sql},
+            rq_admin_note = '{$note_esc}'
         WHERE rq_id = {$rq_id}");
 
     // 알림
@@ -5895,6 +6079,8 @@ function mg_approve_reward($rq_id, $admin_mb_id) {
         $url = get_pretty_url($rq['bo_table'], $rq['wr_id']);
         $extra = $rwt['rwt_name'];
         if ($point > 0) $extra .= " (+{$point}P)";
+        if ($original_rwt_name) $extra .= " (요청: {$original_rwt_name})";
+        if ($admin_note) $extra .= "\n관리자: {$admin_note}";
         mg_notify($rq['mb_id'], 'reward', '보상이 승인되었습니다', $extra, $url);
     }
 
@@ -8055,4 +8241,200 @@ function mg_staff_sync_role($sr_id)
     while ($row = sql_fetch_array($result)) {
         mg_staff_sync_auth($row['mb_id']);
     }
+}
+
+// ======================================
+// 칭호 뽑기 시스템
+// ======================================
+
+/**
+ * 칭호 풀 조회
+ */
+function mg_get_title_pool($type = '') {
+    global $g5;
+    $where = "WHERE tp_use = 1";
+    if ($type && in_array($type, array('prefix', 'suffix'))) {
+        $where .= " AND tp_type = '{$type}'";
+    }
+    $result = sql_query("SELECT * FROM {$g5['mg_title_pool_table']} {$where} ORDER BY tp_order, tp_id");
+    $pool = array();
+    while ($row = sql_fetch_array($result)) {
+        $pool[] = $row;
+    }
+    return $pool;
+}
+
+/**
+ * 랜덤 칭호 뽑기
+ */
+function mg_draw_random_title($mb_id, $type) {
+    global $g5;
+    $pool = mg_get_title_pool($type);
+    if (empty($pool)) {
+        return array('success' => false, 'tp_id' => 0, 'tp_name' => '', 'is_new' => false, 'pool' => array());
+    }
+
+    // 랜덤 선택
+    $idx = mt_rand(0, count($pool) - 1);
+    $drawn = $pool[$idx];
+
+    // 이미 보유 체크
+    $mb_esc = sql_real_escape_string($mb_id);
+    $existing = sql_fetch("SELECT mt_id FROM {$g5['mg_member_title_table']}
+        WHERE mb_id = '{$mb_esc}' AND tp_id = {$drawn['tp_id']}");
+    $is_new = empty($existing['mt_id']);
+
+    if ($is_new) {
+        sql_query("INSERT IGNORE INTO {$g5['mg_member_title_table']} (mb_id, tp_id)
+            VALUES ('{$mb_esc}', {$drawn['tp_id']})");
+    }
+
+    // 애니메이션용 풀 이름 목록
+    $pool_names = array_map(function($t) { return $t['tp_name']; }, $pool);
+
+    return array(
+        'success' => true,
+        'tp_id' => (int)$drawn['tp_id'],
+        'tp_name' => $drawn['tp_name'],
+        'tp_type' => $type,
+        'is_new' => $is_new,
+        'pool' => $pool_names
+    );
+}
+
+/**
+ * 유저 보유 칭호 조회
+ */
+function mg_get_member_titles($mb_id, $type = '') {
+    global $g5;
+    $mb_esc = sql_real_escape_string($mb_id);
+    $join_where = "";
+    if ($type && in_array($type, array('prefix', 'suffix'))) {
+        $join_where = " AND p.tp_type = '{$type}'";
+    }
+    $result = sql_query("SELECT mt.mt_id, mt.tp_id, mt.mt_datetime, p.tp_type, p.tp_name
+        FROM {$g5['mg_member_title_table']} mt
+        JOIN {$g5['mg_title_pool_table']} p ON mt.tp_id = p.tp_id
+        WHERE mt.mb_id = '{$mb_esc}'{$join_where}
+        ORDER BY p.tp_type, p.tp_order, p.tp_id");
+    $titles = array();
+    while ($row = sql_fetch_array($result)) {
+        $titles[] = $row;
+    }
+    return $titles;
+}
+
+/**
+ * 칭호 삭제
+ */
+function mg_delete_member_title($mb_id, $tp_id) {
+    global $g5;
+    $mb_esc = sql_real_escape_string($mb_id);
+    $tp_id = (int)$tp_id;
+
+    // 현재 설정에서 사용 중이면 해제
+    sql_query("UPDATE {$g5['mg_title_setting_table']}
+        SET prefix_tp_id = IF(prefix_tp_id = {$tp_id}, NULL, prefix_tp_id),
+            suffix_tp_id = IF(suffix_tp_id = {$tp_id}, NULL, suffix_tp_id)
+        WHERE mb_id = '{$mb_esc}'");
+    // 캐릭터 설정에서도 해제
+    sql_query("UPDATE {$g5['mg_character_table']}
+        SET ch_title_prefix_id = IF(ch_title_prefix_id = {$tp_id}, NULL, ch_title_prefix_id),
+            ch_title_suffix_id = IF(ch_title_suffix_id = {$tp_id}, NULL, ch_title_suffix_id)
+        WHERE mb_id = '{$mb_esc}'");
+
+    sql_query("DELETE FROM {$g5['mg_member_title_table']}
+        WHERE mb_id = '{$mb_esc}' AND tp_id = {$tp_id}");
+    return true;
+}
+
+/**
+ * 프로필 칭호 설정 조회
+ */
+function mg_get_title_setting($mb_id) {
+    global $g5;
+    $mb_esc = sql_real_escape_string($mb_id);
+    $row = sql_fetch("SELECT * FROM {$g5['mg_title_setting_table']} WHERE mb_id = '{$mb_esc}'");
+    return $row ?: array('mb_id' => $mb_id, 'prefix_tp_id' => null, 'suffix_tp_id' => null);
+}
+
+/**
+ * 프로필 칭호 설정 저장
+ */
+function mg_set_title_setting($mb_id, $prefix_tp_id, $suffix_tp_id) {
+    global $g5;
+    $mb_esc = sql_real_escape_string($mb_id);
+    $prefix_val = $prefix_tp_id ? (int)$prefix_tp_id : 'NULL';
+    $suffix_val = $suffix_tp_id ? (int)$suffix_tp_id : 'NULL';
+
+    sql_query("INSERT INTO {$g5['mg_title_setting_table']} (mb_id, prefix_tp_id, suffix_tp_id)
+        VALUES ('{$mb_esc}', {$prefix_val}, {$suffix_val})
+        ON DUPLICATE KEY UPDATE prefix_tp_id = {$prefix_val}, suffix_tp_id = {$suffix_val}");
+    return true;
+}
+
+/**
+ * 캐릭터 칭호 설정 저장
+ */
+function mg_set_character_title($ch_id, $prefix_tp_id, $suffix_tp_id) {
+    global $g5;
+    $ch_id = (int)$ch_id;
+    $prefix_val = $prefix_tp_id ? (int)$prefix_tp_id : 'NULL';
+    $suffix_val = $suffix_tp_id ? (int)$suffix_tp_id : 'NULL';
+
+    sql_query("UPDATE {$g5['mg_character_table']}
+        SET ch_title_prefix_id = {$prefix_val}, ch_title_suffix_id = {$suffix_val}
+        WHERE ch_id = {$ch_id}");
+    return true;
+}
+
+/**
+ * 활성 칭호 조회 (렌더링용)
+ * ch_id > 0: 캐릭터 칭호, 0: 프로필 칭호
+ */
+function mg_get_active_titles($mb_id, $ch_id = 0) {
+    global $g5;
+    static $title_cache = array();
+    $cache_key = $mb_id . '_' . $ch_id;
+
+    if (isset($title_cache[$cache_key])) {
+        return $title_cache[$cache_key];
+    }
+
+    $result = array('prefix' => '', 'suffix' => '');
+    $mb_esc = sql_real_escape_string($mb_id);
+
+    if ($ch_id > 0) {
+        // 캐릭터 칭호
+        $ch_id = (int)$ch_id;
+        $char = sql_fetch("SELECT ch_title_prefix_id, ch_title_suffix_id
+            FROM {$g5['mg_character_table']} WHERE ch_id = {$ch_id} AND mb_id = '{$mb_esc}'");
+        if ($char) {
+            if ($char['ch_title_prefix_id']) {
+                $tp = sql_fetch("SELECT tp_name FROM {$g5['mg_title_pool_table']} WHERE tp_id = ".(int)$char['ch_title_prefix_id']);
+                if ($tp) $result['prefix'] = $tp['tp_name'];
+            }
+            if ($char['ch_title_suffix_id']) {
+                $tp = sql_fetch("SELECT tp_name FROM {$g5['mg_title_pool_table']} WHERE tp_id = ".(int)$char['ch_title_suffix_id']);
+                if ($tp) $result['suffix'] = $tp['tp_name'];
+            }
+        }
+    } else {
+        // 프로필 칭호
+        $setting = sql_fetch("SELECT prefix_tp_id, suffix_tp_id
+            FROM {$g5['mg_title_setting_table']} WHERE mb_id = '{$mb_esc}'");
+        if ($setting) {
+            if ($setting['prefix_tp_id']) {
+                $tp = sql_fetch("SELECT tp_name FROM {$g5['mg_title_pool_table']} WHERE tp_id = ".(int)$setting['prefix_tp_id']);
+                if ($tp) $result['prefix'] = $tp['tp_name'];
+            }
+            if ($setting['suffix_tp_id']) {
+                $tp = sql_fetch("SELECT tp_name FROM {$g5['mg_title_pool_table']} WHERE tp_id = ".(int)$setting['suffix_tp_id']);
+                if ($tp) $result['suffix'] = $tp['tp_name'];
+            }
+        }
+    }
+
+    $title_cache[$cache_key] = $result;
+    return $result;
 }

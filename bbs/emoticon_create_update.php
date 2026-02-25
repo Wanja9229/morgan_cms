@@ -150,9 +150,9 @@ if (isset($_FILES['es_preview_file']) && $_FILES['es_preview_file']['error'] ===
 if (isset($_POST['em_codes']) && is_array($_POST['em_codes'])) {
     foreach ($_POST['em_codes'] as $em_id => $code) {
         $em_id = (int)$em_id;
-        $code = trim($code);
-        if ($em_id > 0 && $code) {
-            $code_esc = sql_real_escape_string($code);
+        $cv = mg_validate_emoticon_code($code);
+        if ($em_id > 0 && $cv['valid']) {
+            $code_esc = sql_real_escape_string($cv['code']);
             sql_query("UPDATE {$g5['mg_emoticon_table']}
                        SET em_code = '{$code_esc}'
                        WHERE em_id = {$em_id} AND es_id = {$es_id}");
@@ -206,13 +206,21 @@ if (isset($_FILES['emoticon_files'])) {
             @chmod($target, 0644);
             $image_url = $set_url . '/' . $new_name;
 
-            // 코드 결정
+            // 코드 결정 + 포맷 검증
             $base = pathinfo($files['name'][$i], PATHINFO_FILENAME);
             $base = preg_replace('/[^a-zA-Z0-9_]/', '_', $base);
-            $code = isset($new_codes[$i]) && trim($new_codes[$i]) ? trim($new_codes[$i]) : ':' . strtolower($base) . ':';
+            $raw_code = isset($new_codes[$i]) && trim($new_codes[$i]) ? trim($new_codes[$i]) : ':' . strtolower($base) . ':';
 
+            $cv = mg_validate_emoticon_code($raw_code);
+            $code = $cv['valid'] ? $cv['code'] : ':' . strtolower($base) . ':';
+
+            // 중복 코드 해결 (접미사 증가하며 미사용 코드 탐색)
             if (mg_emoticon_code_exists($code)) {
-                $code = ':' . strtolower($base) . '_' . $i . ':';
+                $suffix = $i;
+                do {
+                    $code = ':' . strtolower($base) . '_' . $suffix . ':';
+                    $suffix++;
+                } while (mg_emoticon_code_exists($code) && $suffix < 999);
             }
 
             mg_add_emoticon($es_id, $code, $image_url, $order);

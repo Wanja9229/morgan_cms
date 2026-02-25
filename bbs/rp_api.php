@@ -46,9 +46,7 @@ switch ($action) {
 
         $replies = mg_get_rp_replies_by_character($rt_id, $ch_id);
 
-        // 이모티콘 렌더링 + 인장 적용
-        $seal_cache = array();
-        $show_seal = function_exists('mg_render_seal') && mg_config('seal_show_in_rp', 1);
+        // 이모티콘 렌더링
         foreach ($replies as &$r) {
             $content_html = htmlspecialchars($r['rr_content']);
             $content_html = nl2br($content_html);
@@ -56,13 +54,6 @@ switch ($action) {
                 $content_html = mg_render_emoticons($content_html);
             }
             $r['rr_content_html'] = $content_html;
-            // compact 인장
-            if ($show_seal && !empty($r['mb_id'])) {
-                if (!isset($seal_cache[$r['mb_id']])) {
-                    $seal_cache[$r['mb_id']] = mg_render_seal($r['mb_id'], 'compact');
-                }
-                $r['seal_html'] = $seal_cache[$r['mb_id']];
-            }
         }
         unset($r);
 

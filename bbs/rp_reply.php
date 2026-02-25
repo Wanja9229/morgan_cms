@@ -100,10 +100,6 @@ if ($result['success']) {
         );
     }
 
-    // Morgan: RP 이음 재료 보상
-    if (function_exists('mg_pioneer_enabled') && mg_pioneer_enabled()) {
-        mg_reward_material($member['mb_id'], 'rp');
-    }
 
     // Morgan: 잇기 누적 보상 체크
     if (function_exists('mg_rp_check_reply_reward')) {

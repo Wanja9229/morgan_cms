@@ -138,6 +138,8 @@ $config_keys = array(
     'concierge_apply_anonymous',
     'concierge_penalty_count',
     'concierge_penalty_days',
+    // 개척 설정
+    'pioneer_use',
     // 회원 레벨 설정
     'rp_min_level',
     'concierge_min_level',

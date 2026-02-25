@@ -916,7 +916,7 @@ function closeRejectModal() {
 }
 
 document.getElementById('reject-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeRejectModal();
+    if (e.target === this && document._mgMdTarget === this) closeRejectModal();
 });
 
 function submitReject() {

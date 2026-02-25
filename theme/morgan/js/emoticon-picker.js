@@ -13,6 +13,16 @@ var MgEmoticonPicker = (function() {
     }
 
     function _loadEmoticons(callback) {
+        // 구매 후 캐시 무효화 플래그 체크
+        try {
+            var clearFlag = localStorage.getItem('mg_emoticon_cache_clear');
+            if (clearFlag) {
+                _cache = null;
+                _loaded = false;
+                localStorage.removeItem('mg_emoticon_cache_clear');
+            }
+        } catch(e) {}
+
         if (_loaded && _cache) {
             callback(_cache);
             return;
@@ -142,11 +152,19 @@ var MgEmoticonPicker = (function() {
                     popup.style.bottom = 'auto';
                 }
 
-                // 오른쪽 정렬 (화면 밖으로 안 나가게)
-                var rightPos = window.innerWidth - rect.right;
-                if (rightPos < 0) rightPos = 8;
-                popup.style.right = rightPos + 'px';
-                popup.style.left = 'auto';
+                // 수평 위치: 모바일에서는 중앙, 데스크톱에서는 버튼 기준 오른쪽 정렬
+                var popW = Math.min(340, window.innerWidth - 16);
+                popup.style.width = popW + 'px';
+                if (window.innerWidth <= 480) {
+                    popup.style.left = ((window.innerWidth - popW) / 2) + 'px';
+                    popup.style.right = 'auto';
+                } else {
+                    var rightPos = window.innerWidth - rect.right;
+                    if (rightPos + popW > window.innerWidth - 8) rightPos = 8;
+                    if (rightPos < 0) rightPos = 8;
+                    popup.style.right = rightPos + 'px';
+                    popup.style.left = 'auto';
+                }
             }
 
             _loadEmoticons(function(data) {

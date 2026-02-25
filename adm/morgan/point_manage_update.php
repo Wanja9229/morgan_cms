@@ -67,7 +67,8 @@ if ($mode == 'give_ajax') {
 
     // 포인트 지급/차감
     $po_content_final = '[관리자] ' . $po_content;
-    insert_point($mb_id, $po_point, $po_content_final, 'admin', $member['mb_id'], '관리자 수동');
+    $admin_mb_id = isset($member['mb_id']) ? $member['mb_id'] : (isset($_SESSION['ss_mb_id']) ? $_SESSION['ss_mb_id'] : 'admin');
+    insert_point($mb_id, $po_point, $po_content_final, 'admin', $admin_mb_id, '관리자 수동');
 
     // 새 포인트 조회
     $new_mb = get_member($mb_id);
@@ -119,7 +120,8 @@ if ($mode == 'give') {
 
     // 포인트 지급/차감 (그누보드 함수 사용)
     $po_content_final = '[관리자] ' . $po_content;
-    insert_point($mb_id, $po_point, $po_content_final, 'admin', $member['mb_id'], '관리자 수동');
+    $admin_mb_id = isset($member['mb_id']) ? $member['mb_id'] : (isset($_SESSION['ss_mb_id']) ? $_SESSION['ss_mb_id'] : 'admin');
+    insert_point($mb_id, $po_point, $po_content_final, 'admin', $admin_mb_id, '관리자 수동');
 
     // 로그
     $action = $po_point > 0 ? '지급' : '차감';

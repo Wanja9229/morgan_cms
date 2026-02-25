@@ -65,7 +65,7 @@ $condition_types = array(
     'attendance_total' => '누적 출석일',
     'point_current' => '보유 포인트',
     'shop_buy_count' => '상점 구매 횟수',
-    'pioneer_stamina_total' => '개척 노동력 총 투입',
+    'pioneer_stamina_total' => '개척 스테미나 총 투입',
     'pioneer_material_total' => '개척 재료 총 투입',
     'pioneer_facility_count' => '시설 참여 수',
     'emoticon_own_count' => '이모티콘 보유 수',
@@ -456,7 +456,7 @@ function closeAchModal() {
 }
 
 document.getElementById('ach-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeAchModal();
+    if (e.target === this && document._mgMdTarget === this) closeAchModal();
 });
 
 function toggleAchType() {

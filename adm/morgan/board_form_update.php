@@ -75,10 +75,10 @@ $fields = array(
     'bo_upload_level' => (int)($_POST['bo_upload_level'] ?? 1),
     'bo_download_level' => (int)($_POST['bo_download_level'] ?? 1),
     'bo_html_level' => (int)($_POST['bo_html_level'] ?? 1),
-    'bo_read_point' => (int)($_POST['bo_read_point'] ?? 0),
-    'bo_write_point' => (int)($_POST['bo_write_point'] ?? 0),
-    'bo_comment_point' => (int)($_POST['bo_comment_point'] ?? 0),
-    'bo_download_point' => (int)($_POST['bo_download_point'] ?? 0),
+    'bo_read_point' => 0,
+    'bo_write_point' => 0,
+    'bo_comment_point' => 0,
+    'bo_download_point' => 0,
     'bo_use_category' => isset($_POST['bo_use_category']) ? 1 : 0,
     'bo_category_list' => isset($_POST['bo_category_list']) ? clean_xss_tags($_POST['bo_category_list']) : '',
     'bo_use_good' => isset($_POST['bo_use_good']) ? 1 : 0,
@@ -224,6 +224,16 @@ if ($w === 'u' && $old_bo_table) {
     if (!is_dir($board_path)) {
         @mkdir($board_path, 0755, true);
     }
+
+    // 주사위 설정 저장 (mg_board_reward 테이블)
+    $br_dice_use = isset($_POST['br_dice_use']) ? 1 : 0;
+    $br_dice_once = isset($_POST['br_dice_once']) ? 1 : 0;
+    $br_dice_max = max(1, (int)($_POST['br_dice_max'] ?? 100));
+    $bo_esc = sql_real_escape_string($bo_table);
+
+    sql_query("INSERT INTO {$g5['mg_board_reward_table']} (bo_table, br_dice_use, br_dice_once, br_dice_max)
+               VALUES ('{$bo_esc}', {$br_dice_use}, {$br_dice_once}, {$br_dice_max})
+               ON DUPLICATE KEY UPDATE br_dice_use = {$br_dice_use}, br_dice_once = {$br_dice_once}, br_dice_max = {$br_dice_max}");
 
     alert('게시판이 생성되었습니다.', './board_form.php?w=u&bo_table='.$bo_table);
 }

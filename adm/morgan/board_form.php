@@ -66,10 +66,10 @@ $board = array(
     'bo_upload_level' => 1,
     'bo_download_level' => 1,
     'bo_html_level' => 1,
-    'bo_read_point' => $config['cf_read_point'],
-    'bo_write_point' => $config['cf_write_point'],
-    'bo_comment_point' => $config['cf_comment_point'],
-    'bo_download_point' => $config['cf_download_point'],
+    'bo_read_point' => 0,
+    'bo_write_point' => 0,
+    'bo_comment_point' => 0,
+    'bo_download_point' => 0,
     'bo_use_category' => 0,
     'bo_category_list' => '',
     'bo_use_sideview' => 0,
@@ -258,30 +258,6 @@ require_once __DIR__.'/_head.php';
                 </div>
             </div>
 
-            <!-- 포인트 설정 -->
-            <div class="mg-card" style="margin-bottom:1.5rem;">
-                <div class="mg-card-header">포인트 설정</div>
-                <div class="mg-card-body">
-                    <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:1rem;">
-                        <div class="mg-form-group">
-                            <label class="mg-form-label">읽기</label>
-                            <input type="number" name="bo_read_point" value="<?php echo $board['bo_read_point']; ?>" class="mg-form-input">
-                        </div>
-                        <div class="mg-form-group">
-                            <label class="mg-form-label">글쓰기</label>
-                            <input type="number" name="bo_write_point" value="<?php echo $board['bo_write_point']; ?>" class="mg-form-input">
-                        </div>
-                        <div class="mg-form-group">
-                            <label class="mg-form-label">댓글</label>
-                            <input type="number" name="bo_comment_point" value="<?php echo $board['bo_comment_point']; ?>" class="mg-form-input">
-                        </div>
-                        <div class="mg-form-group">
-                            <label class="mg-form-label">다운로드</label>
-                            <input type="number" name="bo_download_point" value="<?php echo $board['bo_download_point']; ?>" class="mg-form-input">
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- 우측: 기능/표시 설정 -->

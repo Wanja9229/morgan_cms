@@ -134,10 +134,10 @@ require_once __DIR__.'/_head.php';
     </div>
 </div>
 
-<!-- 유저 노동력 지급 -->
+<!-- 유저 스테미나 지급 -->
 <div class="mg-card" style="margin-top:1rem;">
     <div class="mg-card-header">
-        <h3>유저 노동력 수동 지급</h3>
+        <h3>유저 스테미나 수동 지급</h3>
     </div>
     <div class="mg-card-body">
         <form method="post" action="<?php echo G5_ADMIN_URL; ?>/morgan/pioneer_material_update.php" style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end;">
@@ -147,13 +147,13 @@ require_once __DIR__.'/_head.php';
                 <input type="text" name="mb_id" class="mg-form-input" required style="width:150px;">
             </div>
             <div class="mg-form-group" style="margin-bottom:0;">
-                <label class="mg-form-label">추가 노동력</label>
+                <label class="mg-form-label">추가 스테미나</label>
                 <input type="number" name="amount" class="mg-form-input" required min="1" value="10" style="width:100px;">
             </div>
             <button type="submit" class="mg-btn mg-btn-primary">지급</button>
         </form>
         <p style="margin-top:0.5rem;font-size:0.85rem;color:var(--mg-text-muted);">
-            * 현재 노동력에 추가됩니다 (일일 상한 초과 가능)
+            * 현재 스테미나에 추가됩니다 (일일 상한 초과 가능)
         </p>
     </div>
 </div>
@@ -254,7 +254,7 @@ function deleteMaterial(mt_id) {
 
 // 모달 외부 클릭 시 닫기
 document.getElementById('material-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeModal();
+    if (e.target === this && document._mgMdTarget === this) closeModal();
 });
 </script>
 

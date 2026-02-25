@@ -122,7 +122,7 @@ if ($w == 'c') // 댓글 입력
         if (!$reply_array['wr_id'])
             alert('답변할 댓글이 없습니다.\\n\\n답변하는 동안 댓글이 삭제되었을 수 있습니다.');
 
-        if($wr['wr_parent'] != $reply_array['wr_parent'])
+        if((int)$wr_id != (int)$reply_array['wr_parent'])
             alert('댓글을 등록할 수 없습니다.');
 
         $tmp_comment = $reply_array['wr_comment'];
@@ -223,9 +223,9 @@ if ($w == 'c') // 댓글 입력
     // 포인트 부여
     insert_point($member['mb_id'], $board['bo_comment_point'], "{$board['bo_subject']} {$wr_id}-{$comment_id} 댓글쓰기", $bo_table, $comment_id, '댓글');
 
-    // Morgan: 댓글 재료 보상
-    if (function_exists('mg_pioneer_enabled') && mg_pioneer_enabled() && $member['mb_id']) {
-        mg_reward_material($member['mb_id'], 'comment');
+    // Morgan: 댓글 재료 보상 (게시판별 설정)
+    if (function_exists('mg_apply_board_comment_material') && $member['mb_id']) {
+        mg_apply_board_comment_material($member['mb_id'], $bo_table);
     }
 
     // Morgan: 댓글/답글 알림
@@ -403,8 +403,9 @@ else if ($w == 'cu') // 댓글 수정
 
 delete_cache_latest($bo_table);
 
-$redirect_url = short_url_clean(G5_HTTP_BBS_URL.'/board.php?bo_table='.$bo_table.'&amp;wr_id='.$wr['wr_parent'].'&amp;'.$qstr.'&amp;#c_'.$comment_id);
+$redirect_url = short_url_clean(G5_HTTP_BBS_URL.'/board.php?bo_table='.$bo_table.'&amp;wr_id='.$wr_id.'&amp;'.$qstr.'&amp;#c_'.$comment_id);
 
 run_event('comment_update_after', $board, $wr_id, $w, $qstr, $redirect_url, $comment_id, $reply_array);
 
-goto_url($redirect_url);
+$alert_msg = ($w == 'c') ? '댓글이 등록되었습니다.' : '댓글이 수정되었습니다.';
+alert($alert_msg, $redirect_url);

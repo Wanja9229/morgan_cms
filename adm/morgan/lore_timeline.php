@@ -376,7 +376,7 @@ function closeEraModal() {
 }
 
 document.getElementById('era-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeEraModal();
+    if (e.target === this && document._mgMdTarget === this) closeEraModal();
 });
 
 // === 이벤트 모달 ===
@@ -447,7 +447,7 @@ function closeEventModal() {
 }
 
 document.getElementById('event-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeEventModal();
+    if (e.target === this && document._mgMdTarget === this) closeEventModal();
 });
 
 // === 이벤트 이미지 미리보기 ===

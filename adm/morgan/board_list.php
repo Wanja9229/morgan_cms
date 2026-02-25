@@ -95,9 +95,8 @@ require_once __DIR__.'/_head.php';
                     <th style="width:120px;">TABLE</th>
                     <th>제목</th>
                     <th style="width:120px;">스킨</th>
-                    <th style="width:60px;">읽기</th>
-                    <th style="width:60px;">쓰기</th>
-                    <th style="width:60px;">댓글</th>
+                    <th style="width:60px;">읽기Lv</th>
+                    <th style="width:60px;">쓰기Lv</th>
                     <th style="width:60px;">순서</th>
                     <th style="width:60px;">검색</th>
                     <th style="width:100px;">관리</th>
@@ -122,13 +121,10 @@ require_once __DIR__.'/_head.php';
                         <?php echo $row['bo_skin']; ?>
                     </td>
                     <td style="text-align:center;font-size:0.8rem;">
-                        <?php echo number_format($row['bo_read_point']); ?>
+                        <?php echo $row['bo_read_level']; ?>
                     </td>
                     <td style="text-align:center;font-size:0.8rem;">
-                        <?php echo number_format($row['bo_write_point']); ?>
-                    </td>
-                    <td style="text-align:center;font-size:0.8rem;">
-                        <?php echo number_format($row['bo_comment_point']); ?>
+                        <?php echo $row['bo_write_level']; ?>
                     </td>
                     <td style="text-align:center;font-size:0.8rem;">
                         <?php echo $row['bo_order']; ?>
@@ -150,7 +146,7 @@ require_once __DIR__.'/_head.php';
                 <?php } ?>
                 <?php if ($total_count == 0) { ?>
                 <tr>
-                    <td colspan="9" style="text-align:center;padding:3rem;color:var(--mg-text-muted);">
+                    <td colspan="8" style="text-align:center;padding:3rem;color:var(--mg-text-muted);">
                         등록된 게시판이 없습니다.
                         <br><br>
                         <a href="./board_form.php" class="mg-btn mg-btn-primary">게시판 추가하기</a>

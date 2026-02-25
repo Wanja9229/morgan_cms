@@ -62,11 +62,16 @@ if ($result['success']) {
         mg_trigger_achievement($member['mb_id'], 'shop_buy_count');
     }
 
-    echo json_encode([
+    $response = array(
         'success' => true,
-        'message' => '구매가 완료되었습니다.',
+        'message' => $result['message'] ?? '구매가 완료되었습니다.',
         'new_point' => number_format($member['mb_point'])
-    ]);
+    );
+    // 칭호 뽑기 결과 전달
+    if (isset($result['title_draw'])) {
+        $response['title_draw'] = $result['title_draw'];
+    }
+    echo json_encode($response);
 } else {
     echo json_encode(['success' => false, 'message' => $result['message']]);
 }

@@ -2,6 +2,12 @@
  * Morgan Edition - Main JavaScript
  */
 
+// 모달 배경 클릭 보호 — 드래그 시작이 배경일 때만 닫힘 허용
+(function() {
+    document.addEventListener('mousedown', function(e) { document._mgMdTarget = e.target; }, true);
+    document.addEventListener('touchstart', function(e) { document._mgMdTarget = e.target; }, true);
+})();
+
 (function() {
     'use strict';
 

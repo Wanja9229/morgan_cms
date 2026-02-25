@@ -246,6 +246,49 @@ include_once(G5_THEME_PATH.'/head.php');
                         </label>
                         <p class="text-xs text-mg-text-muted mt-1 ml-8">대표 캐릭터는 게시글 작성 시 기본으로 선택됩니다.</p>
                     </div>
+
+                    <?php if ($is_edit) {
+                        $my_titles_for_char = mg_get_member_titles($member['mb_id']);
+                        $ch_prefix_titles = array_filter($my_titles_for_char, function($t) { return $t['tp_type'] === 'prefix'; });
+                        $ch_suffix_titles = array_filter($my_titles_for_char, function($t) { return $t['tp_type'] === 'suffix'; });
+                    ?>
+                    <!-- 칭호 설정 -->
+                    <div class="border-t border-mg-bg-tertiary pt-4">
+                        <label class="block text-sm font-medium text-mg-text-secondary mb-2">칭호 설정</label>
+                        <?php if (!empty($ch_prefix_titles) || !empty($ch_suffix_titles)) { ?>
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <div class="flex-1">
+                                <label class="text-xs text-mg-text-muted block mb-1">접두칭호</label>
+                                <select id="chTitlePrefix" class="w-full bg-mg-bg-primary border border-mg-bg-tertiary rounded-lg px-3 py-2 text-mg-text-primary text-sm focus:border-mg-accent focus:outline-none">
+                                    <option value="">없음</option>
+                                    <?php foreach ($ch_prefix_titles as $pt) { ?>
+                                    <option value="<?php echo $pt['tp_id']; ?>" <?php echo ($char['ch_title_prefix_id'] ?? '') == $pt['tp_id'] ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($pt['tp_name']); ?>
+                                    </option>
+                                    <?php } ?>
+                                </select>
+                            </div>
+                            <div class="flex-1">
+                                <label class="text-xs text-mg-text-muted block mb-1">접미칭호</label>
+                                <select id="chTitleSuffix" class="w-full bg-mg-bg-primary border border-mg-bg-tertiary rounded-lg px-3 py-2 text-mg-text-primary text-sm focus:border-mg-accent focus:outline-none">
+                                    <option value="">없음</option>
+                                    <?php foreach ($ch_suffix_titles as $st) { ?>
+                                    <option value="<?php echo $st['tp_id']; ?>" <?php echo ($char['ch_title_suffix_id'] ?? '') == $st['tp_id'] ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($st['tp_name']); ?>
+                                    </option>
+                                    <?php } ?>
+                                </select>
+                            </div>
+                            <div class="flex items-end">
+                                <button type="button" onclick="saveCharTitle()" class="px-4 py-2 bg-mg-accent hover:bg-mg-accent-hover text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap">칭호 저장</button>
+                            </div>
+                        </div>
+                        <p class="text-xs text-mg-text-muted mt-2">이 캐릭터로 글을 쓸 때 「접두 접미」 닉네임 형태로 표시됩니다.</p>
+                        <?php } else { ?>
+                        <p class="text-xs text-mg-text-muted">보유한 칭호가 없습니다. <a href="<?php echo G5_BBS_URL; ?>/shop.php?tab=decor&type=title" class="text-mg-accent hover:underline">상점</a>에서 뽑기를 통해 획득하세요.</p>
+                        <?php } ?>
+                    </div>
+                    <?php } ?>
                 </div>
             </div>
 
@@ -533,6 +576,24 @@ include_once(G5_THEME_PATH.'/head.php');
                     <?php } ?>
                 </div>
             </div>
+            <?php } ?>
+
+            <?php if ($is_edit) { ?>
+            <script>
+            function saveCharTitle() {
+                var prefix = document.getElementById('chTitlePrefix').value;
+                var suffix = document.getElementById('chTitleSuffix').value;
+                fetch('<?php echo G5_BBS_URL; ?>/title_api.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'action=set_character&ch_id=<?php echo $ch_id; ?>&prefix_tp_id=' + prefix + '&suffix_tp_id=' + suffix
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    alert(data.success ? '칭호가 저장되었습니다.' : (data.message || '저장에 실패했습니다.'));
+                });
+            }
+            </script>
             <?php } ?>
 
             <!-- 버튼 -->
@@ -941,7 +1002,7 @@ window.cfDeleteRelation = function(crId, myChId) {
 // 모달 외부 클릭 닫기
 ['cf-accept-modal', 'cf-edit-modal'].forEach(function(id) {
     document.getElementById(id)?.addEventListener('click', function(e) {
-        if (e.target === this) closeCfModal(id);
+        if (e.target === this && document._mgMdTarget === this) closeCfModal(id);
     });
 });
 <?php } ?>

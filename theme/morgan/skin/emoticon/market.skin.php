@@ -75,7 +75,7 @@ if (!defined('_GNUBOARD_')) exit;
 </div>
 
 <!-- 셋 상세 모달 -->
-<div id="emoticonDetailModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60" onclick="if(event.target===this) closeSetDetail();">
+<div id="emoticonDetailModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60" onclick="if(event.target===this && document._mgMdTarget===this) closeSetDetail();">
     <div class="bg-mg-bg-secondary border border-mg-bg-tertiary rounded-xl max-w-lg w-11/12 max-h-[80vh] overflow-y-auto p-5">
         <div id="emoticonDetailContent">
             <div class="text-center py-8 text-mg-text-muted">로딩중...</div>

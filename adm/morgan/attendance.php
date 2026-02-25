@@ -177,10 +177,138 @@ $game_names = [
         </div>
     </div>
 
+    <!-- 출석 재료 보상 -->
+    <div class="mg-card" style="margin-bottom:1.5rem;">
+        <div class="mg-card-header">출석 재료 보상 (개척 시스템)</div>
+        <div class="mg-card-body">
+            <div class="mg-form-group">
+                <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                    <input type="checkbox" id="att_mat_use" name="att_mat_use" value="1" onchange="toggleAttMat()" <?php
+                        $att_mat_cfg = mg_get_config('attendance_material_reward', '');
+                        $att_mat_data = $att_mat_cfg ? json_decode($att_mat_cfg, true) : null;
+                        echo ($att_mat_data && !empty($att_mat_data['items'])) ? 'checked' : '';
+                    ?>>
+                    <span class="mg-form-label" style="margin:0;">출석 시 재료 드롭</span>
+                </label>
+            </div>
+            <div id="att-material-settings" style="display:none;">
+                <div id="att-mat-config"></div>
+            </div>
+        </div>
+    </div>
+
     <div style="display:flex;gap:0.5rem;">
         <button type="submit" class="mg-btn mg-btn-primary">저장</button>
     </div>
 </form>
+
+<script>
+var materialTypes = <?php
+    $mat_types = function_exists('mg_get_material_types') ? mg_get_material_types() : array();
+    echo json_encode(array_values($mat_types));
+?>;
+
+// 재료 피커 함수 (reward.php와 동일 로직)
+function renderMaterialPicker(containerId, config) {
+    var c = document.getElementById(containerId);
+    if (!c) return;
+    if (!config || !config.mode) config = {mode: 'fixed', chance: 100, items: []};
+    var prefix = containerId.replace('-config', '');
+    var html = '';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem;">';
+    html += '<div class="mg-form-group"><label class="mg-form-label">분배 모드</label>';
+    html += '<select class="mg-form-input" id="' + prefix + '-mode" onchange="matModeChange(\'' + prefix + '\')" style="font-size:0.85rem;">';
+    html += '<option value="fixed"' + (config.mode === 'fixed' ? ' selected' : '') + '>고정 (첫 아이템)</option>';
+    html += '<option value="random"' + (config.mode === 'random' ? ' selected' : '') + '>랜덤 (전체 중 하나)</option>';
+    html += '<option value="pool"' + (config.mode === 'pool' ? ' selected' : '') + '>가중 풀 (가중치)</option>';
+    html += '</select></div>';
+    html += '<div class="mg-form-group"><label class="mg-form-label">발동 확률 (%)</label>';
+    html += '<input type="number" class="mg-form-input" id="' + prefix + '-chance" value="' + (config.chance || 100) + '" min="1" max="100" style="font-size:0.85rem;"></div>';
+    html += '</div>';
+    html += '<div class="mg-form-group"><label class="mg-form-label">재료 목록</label>';
+    html += '<div id="' + prefix + '-items">';
+    (config.items || []).forEach(function(item, idx) {
+        html += renderMaterialRow(prefix, idx, item);
+    });
+    html += '</div>';
+    html += '<button type="button" class="mg-btn mg-btn-secondary" style="font-size:0.8rem;padding:0.3rem 0.6rem;margin-top:0.5rem;" onclick="addMaterialRow(\'' + prefix + '\')">+ 재료 추가</button></div>';
+    c.innerHTML = html;
+    matModeChange(prefix);
+}
+
+var _matRowIdx = {};
+function renderMaterialRow(prefix, idx, item) {
+    if (!item) item = {mt_code: '', amount: 1, weight: 1};
+    _matRowIdx[prefix] = Math.max(_matRowIdx[prefix] || 0, idx + 1);
+    var html = '<div class="mat-row" data-idx="' + idx + '" style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.5rem;">';
+    html += '<select class="mg-form-input mat-code" style="flex:2;font-size:0.85rem;"><option value="">-- 선택 --</option>';
+    materialTypes.forEach(function(mt) {
+        html += '<option value="' + mt.mt_code + '"' + (item.mt_code === mt.mt_code ? ' selected' : '') + '>' + mt.mt_name + '</option>';
+    });
+    html += '</select>';
+    html += '<input type="number" class="mg-form-input mat-amount" value="' + (item.amount || 1) + '" min="1" style="width:60px;font-size:0.85rem;" title="수량">';
+    html += '<input type="number" class="mg-form-input mat-weight" value="' + (item.weight || 1) + '" min="1" style="width:60px;font-size:0.85rem;" title="가중치">';
+    html += '<button type="button" style="background:none;border:none;color:var(--mg-text-muted);cursor:pointer;font-size:1.2rem;padding:0 4px;" onclick="this.closest(\'.mat-row\').remove()" title="삭제">&times;</button></div>';
+    return html;
+}
+
+function addMaterialRow(prefix) {
+    var idx = _matRowIdx[prefix] || 0;
+    _matRowIdx[prefix] = idx + 1;
+    document.getElementById(prefix + '-items').insertAdjacentHTML('beforeend', renderMaterialRow(prefix, idx, null));
+    matModeChange(prefix);
+}
+
+function matModeChange(prefix) {
+    var mode = document.getElementById(prefix + '-mode').value;
+    var container = document.getElementById(prefix + '-items');
+    if (!container) return;
+    container.querySelectorAll('.mat-weight').forEach(function(el) {
+        el.style.display = mode === 'pool' ? '' : 'none';
+    });
+}
+
+function collectMaterialConfig(prefix) {
+    var modeEl = document.getElementById(prefix + '-mode');
+    var chanceEl = document.getElementById(prefix + '-chance');
+    if (!modeEl) return '';
+    var items = [];
+    document.getElementById(prefix + '-items').querySelectorAll('.mat-row').forEach(function(row) {
+        var code = row.querySelector('.mat-code').value;
+        var amount = parseInt(row.querySelector('.mat-amount').value) || 1;
+        var weight = parseInt(row.querySelector('.mat-weight').value) || 1;
+        if (code) items.push({mt_code: code, amount: amount, weight: weight});
+    });
+    if (items.length === 0) return '';
+    return JSON.stringify({mode: modeEl.value, chance: parseInt(chanceEl.value) || 100, items: items});
+}
+
+function toggleAttMat() {
+    document.getElementById('att-material-settings').style.display =
+        document.getElementById('att_mat_use').checked ? '' : 'none';
+}
+
+// 초기 렌더링
+(function() {
+    var cfg = <?php echo json_encode($att_mat_data); ?> || null;
+    renderMaterialPicker('att-mat-config', cfg);
+    toggleAttMat();
+})();
+
+// 폼 submit 시 JSON 수집
+document.getElementById('fattendance').addEventListener('submit', function(e) {
+    var useEl = document.getElementById('att_mat_use');
+    var hiddenInput = document.getElementById('att_mat_json');
+    if (!hiddenInput) {
+        hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'attendance_material_reward';
+        hiddenInput.id = 'att_mat_json';
+        this.appendChild(hiddenInput);
+    }
+    hiddenInput.value = useEl.checked ? collectMaterialConfig('att-mat') : '';
+});
+</script>
 
 <?php } elseif ($tab == 'dice') { ?>
 <!-- 주사위 관리 탭 -->
@@ -383,7 +511,7 @@ function closeFortuneModal() {
     document.getElementById('fortune-modal').style.display = 'none';
 }
 document.getElementById('fortune-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeFortuneModal();
+    if (e.target === this && document._mgMdTarget === this) closeFortuneModal();
 });
 </script>
 
@@ -539,7 +667,7 @@ function closeLotteryModal() {
     document.getElementById('lottery-modal').style.display = 'none';
 }
 document.getElementById('lottery-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeLotteryModal();
+    if (e.target === this && document._mgMdTarget === this) closeLotteryModal();
 });
 </script>
 

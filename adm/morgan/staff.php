@@ -158,7 +158,7 @@ include_once('./_head.php');
 
     <!-- 역할 편집 모달 -->
     <div id="roleModal" class="mg-modal" style="display:none;">
-        <div class="mg-modal-overlay" onclick="closeRoleModal()"></div>
+        <div class="mg-modal-overlay" onclick="if(document._mgMdTarget===this)closeRoleModal()"></div>
         <div class="mg-modal-content" style="max-width:640px; max-height:85vh; overflow-y:auto;">
             <div class="mg-modal-header">
                 <h3 id="roleModalTitle">역할 추가</h3>
@@ -286,7 +286,7 @@ include_once('./_head.php');
 
     <!-- 스태프 추가 모달 -->
     <div id="memberModal" class="mg-modal" style="display:none;">
-        <div class="mg-modal-overlay" onclick="closeMemberModal()"></div>
+        <div class="mg-modal-overlay" onclick="if(document._mgMdTarget===this)closeMemberModal()"></div>
         <div class="mg-modal-content" style="max-width:480px;">
             <div class="mg-modal-header">
                 <h3 id="memberModalTitle">스태프 추가</h3>

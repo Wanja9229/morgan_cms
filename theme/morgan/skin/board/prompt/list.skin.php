@@ -333,9 +333,9 @@ function _prompt_mode_label($mode) {
                                     <?php } ?>
                                     <span class="text-mg-text-secondary"><?php echo htmlspecialchars($row_char['ch_name']); ?></span>
                                 </a>
-                                <span class="text-mg-text-muted">@<?php echo $row['name']; ?></span>
+                                <span class="text-mg-text-muted">@<?php echo mg_render_nickname($row['mb_id'], $row['wr_name'], $row_char['ch_id']); ?></span>
                                 <?php } else { ?>
-                                <span><?php echo $row['name']; ?></span>
+                                <span><?php echo $row['mb_id'] ? mg_render_nickname($row['mb_id'], $row['wr_name']) : htmlspecialchars($row['wr_name']); ?></span>
                                 <?php } ?>
                                 <span><?php echo $row['datetime2']; ?></span>
                                 <span>조회 <?php echo $row['wr_hit']; ?></span>
@@ -427,7 +427,7 @@ function _prompt_mode_label($mode) {
 
 <!-- 미션 상세 모달 -->
 <div id="mg-prompt-detail-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
-    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closePromptDetail()"></div>
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="if(document._mgMdTarget===this)closePromptDetail()"></div>
     <div class="relative z-10 w-full max-w-2xl bg-mg-bg-secondary rounded-xl shadow-2xl overflow-hidden" style="max-height:80vh;display:flex;flex-direction:column;">
         <div id="prompt-detail-banner"></div>
         <div class="flex-1 overflow-y-auto p-6">

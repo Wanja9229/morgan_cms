@@ -86,7 +86,7 @@ $_show_rp = function_exists('mg_config') ? mg_config('rp_use', '1') : '1';
 $_show_mission = function_exists('mg_config') ? mg_config('prompt_enable', '1') : '1';
 $_show_concierge = function_exists('mg_config') ? mg_config('concierge_use', '1') : '1';
 
-// 개척 시스템: 유저 노동력
+// 개척 시스템: 유저 스테미나
 $_user_stamina = null;
 if ($is_member && function_exists('mg_pioneer_enabled') && mg_pioneer_enabled()) {
     $_user_stamina = mg_get_stamina($member['mb_id']);
@@ -364,7 +364,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
 
         <!-- 개척 -->
         <?php if ($is_member && $_user_stamina) { ?>
-        <a href="<?php echo G5_BBS_URL; ?>/pioneer.php" class="sidebar-icon group relative <?php echo $_is_pioneer_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="개척 (노동력: <?php echo $_user_stamina['current']; ?>/<?php echo $_user_stamina['max']; ?>)" data-sidebar-id="pioneer">
+        <a href="<?php echo G5_BBS_URL; ?>/pioneer.php" class="sidebar-icon group relative <?php echo $_is_pioneer_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="개척 (스테미나: <?php echo $_user_stamina['current']; ?>/<?php echo $_user_stamina['max']; ?>)" data-sidebar-id="pioneer">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
             </svg>
@@ -518,6 +518,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
                     <span class="truncate">연대기</span>
                     <span class="lp-dot ml-auto w-1 h-1 rounded-full bg-mg-accent <?php echo ($_current_script !== 'lore_timeline.php') ? 'hidden' : ''; ?>"></span>
                 </a>
+                <?php if (mg_config('expedition_map_image', '')) { ?>
                 <a href="<?php echo G5_BBS_URL; ?>/lore_map.php" data-lore-page="lore_map.php"
                    class="lp-item flex items-center gap-2 px-2 py-1.5 rounded text-sm transition-colors <?php echo $map_active; ?>">
                     <svg class="lp-icon w-3.5 h-3.5 flex-shrink-0 <?php echo ($_current_script === 'lore_map.php') ? 'text-mg-accent' : 'text-mg-text-muted'; ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -526,6 +527,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
                     <span class="truncate">지도</span>
                     <span class="lp-dot ml-auto w-1 h-1 rounded-full bg-mg-accent <?php echo ($_current_script !== 'lore_map.php') ? 'hidden' : ''; ?>"></span>
                 </a>
+                <?php } ?>
             </div>
 
             <!-- 카테고리별 문서 -->

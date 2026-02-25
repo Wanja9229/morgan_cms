@@ -261,7 +261,7 @@ if ($profile_bg_id) {
 
     // 모달 외부 클릭으로 닫기
     document.getElementById('rel-request-modal').addEventListener('click', function(e) {
-        if (e.target === this) closeRelRequestModal();
+        if (e.target === this && document._mgMdTarget === this) closeRelRequestModal();
     });
 })();
 </script>

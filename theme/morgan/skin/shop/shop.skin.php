@@ -24,8 +24,8 @@ $item_type_names = $type_labels;
         </div>
     </div>
 
-    <!-- 타입 그룹 탭 -->
-    <div class="mb-6 overflow-x-auto">
+    <!-- 1차 카테고리 탭 -->
+    <div class="mb-3 overflow-x-auto">
         <div class="flex gap-2 min-w-max">
             <a href="<?php echo G5_BBS_URL; ?>/shop.php" class="px-4 py-2 rounded-lg font-medium transition-colors <?php echo (!$is_emoticon_tab && empty($tab)) ? 'bg-mg-accent text-white' : 'bg-mg-bg-secondary text-mg-text-secondary hover:bg-mg-bg-tertiary'; ?>">
                 전체
@@ -44,6 +44,34 @@ $item_type_names = $type_labels;
             <?php } ?>
         </div>
     </div>
+
+    <!-- 2차 타입 서브탭 (1차 선택 시, 타입이 2개 이상인 그룹만) -->
+    <?php if ($tab && isset($type_groups[$tab]) && count($type_groups[$tab]['types']) > 1) {
+        $group_def = $type_groups[$tab];
+        $sub_groups = isset($group_def['sub_groups']) ? $group_def['sub_groups'] : array();
+        $grouped_types = array(); // sub_group에 포함된 타입들
+        foreach ($sub_groups as $sg) { foreach ($sg['types'] as $_t) $grouped_types[] = $_t; }
+    ?>
+    <div class="mb-6 overflow-x-auto">
+        <div class="flex gap-1.5 min-w-max">
+            <a href="<?php echo G5_BBS_URL; ?>/shop.php?tab=<?php echo $tab; ?>" class="px-3 py-1.5 rounded text-sm transition-colors <?php echo empty($sub_type) ? 'bg-mg-bg-tertiary text-mg-text-primary font-medium' : 'text-mg-text-muted hover:text-mg-text-secondary hover:bg-mg-bg-secondary'; ?>">
+                전체
+            </a>
+            <?php foreach ($sub_groups as $sg_key => $sg) { ?>
+            <a href="<?php echo G5_BBS_URL; ?>/shop.php?tab=<?php echo $tab; ?>&type=<?php echo $sg_key; ?>" class="px-3 py-1.5 rounded text-sm transition-colors <?php echo $sub_type === $sg_key ? 'bg-mg-bg-tertiary text-mg-text-primary font-medium' : 'text-mg-text-muted hover:text-mg-text-secondary hover:bg-mg-bg-secondary'; ?>">
+                <?php echo htmlspecialchars($sg['label']); ?>
+            </a>
+            <?php } ?>
+            <?php foreach ($group_def['types'] as $t_key) { if (in_array($t_key, $grouped_types)) continue; ?>
+            <a href="<?php echo G5_BBS_URL; ?>/shop.php?tab=<?php echo $tab; ?>&type=<?php echo $t_key; ?>" class="px-3 py-1.5 rounded text-sm transition-colors <?php echo $sub_type === $t_key ? 'bg-mg-bg-tertiary text-mg-text-primary font-medium' : 'text-mg-text-muted hover:text-mg-text-secondary hover:bg-mg-bg-secondary'; ?>">
+                <?php echo $item_type_names[$t_key] ?? $t_key; ?>
+            </a>
+            <?php } ?>
+        </div>
+    </div>
+    <?php } elseif (!$tab || !isset($type_groups[$tab])) { ?>
+    <div class="mb-3"></div>
+    <?php } ?>
 
     <?php if ($is_emoticon_tab) { ?>
     <!-- 이모티콘 탭 콘텐츠 -->
@@ -130,7 +158,7 @@ $item_type_names = $type_labels;
     <?php } ?>
 
     <!-- 셋 상세 모달 -->
-    <div id="emoticonDetailModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60" onclick="if(event.target===this) closeSetDetail();">
+    <div id="emoticonDetailModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60" onclick="if(event.target===this && document._mgMdTarget===this) closeSetDetail();">
         <div class="bg-mg-bg-secondary border border-mg-bg-tertiary rounded-xl max-w-lg w-11/12 max-h-[80vh] overflow-y-auto p-5">
             <div id="emoticonDetailContent">
                 <div class="text-center py-8 text-mg-text-muted">로딩중...</div>
@@ -202,6 +230,7 @@ $item_type_names = $type_labels;
     <div class="mt-8 flex justify-center gap-1">
         <?php
         $query = $tab ? "tab={$tab}&" : '';
+        if ($sub_type) $query .= "type={$sub_type}&";
         $start_page = max(1, $page - 2);
         $end_page = min($total_page, $page + 2);
 
@@ -343,6 +372,9 @@ function buyEmoticonSet(esId) {
         var res = JSON.parse(xhr.responseText);
         alert(res.message);
         if (res.success) {
+            // 피커 캐시 무효화 (SPA 전환 시에도 반영되도록)
+            if (typeof MgEmoticonPicker !== 'undefined') MgEmoticonPicker.clearCache();
+            try { localStorage.setItem('mg_emoticon_cache_clear', Date.now()); } catch(e) {}
             closeSetDetail();
             location.reload();
         }

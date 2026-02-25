@@ -84,7 +84,7 @@ if (!empty($list)) {
                 <div class="flex items-center gap-2">
                     <?php if ($row['wr_comment_reply']) { ?>
                     <svg class="w-4 h-4 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 4v7a3 3 0 003 3h5m0 0l-3-3m3 3l-3 3"/>
                     </svg>
                     <?php } ?>
                     <?php
@@ -99,9 +99,9 @@ if (!empty($list)) {
                         <?php } ?>
                         <span class="font-medium text-mg-text-primary"><?php echo htmlspecialchars($cmt_char['ch_name']); ?></span>
                     </a>
-                    <span class="text-xs text-mg-text-muted">@<?php echo $row['name']; ?></span>
+                    <span class="text-xs text-mg-text-muted">@<?php echo mg_render_nickname($row['mb_id'], $row['wr_name'], $cmt_char['ch_id']); ?></span>
                     <?php } else { ?>
-                    <span class="font-medium text-mg-text-primary"><?php echo $row['name']; ?></span>
+                    <span class="font-medium text-mg-text-primary"><?php echo $row['mb_id'] ? mg_render_nickname($row['mb_id'], $row['wr_name']) : htmlspecialchars($row['wr_name']); ?></span>
                     <?php } ?>
                     <span class="text-xs text-mg-text-muted"><?php echo $row['datetime']; ?></span>
                 </div>
@@ -231,18 +231,25 @@ function comment_reply(cmt_id) {
     html += '<input type="text" name="wr_name" class="input w-24 text-sm" placeholder="이름" required>';
     html += '<input type="password" name="wr_password" class="input w-24 text-sm" placeholder="비밀번호" required>';
     html += '</div>';
-    <?php } elseif (count($mg_cmt_my_chars) > 0) { ?>
-    html += '<div class="mb-2">';
+    <?php } else { ?>
+    html += '<div class="flex items-center gap-2 mb-2">';
+    <?php if (count($mg_cmt_my_chars) > 0) { ?>
     html += '<select name="mg_ch_id" class="input w-auto text-sm">';
     html += '<option value="0">캐릭터 없이 작성</option>';
     <?php foreach ($mg_cmt_my_chars as $ch) { ?>
     html += '<option value="<?php echo $ch['ch_id']; ?>"<?php echo $ch['ch_id'] == $mg_cmt_default_ch_id ? ' selected' : ''; ?>><?php echo addslashes(htmlspecialchars($ch['ch_name'])); ?><?php echo $ch['ch_main'] ? ' (대표)' : ''; ?></option>';
     <?php } ?>
     html += '</select>';
+    <?php } ?>
+    <?php if (function_exists('mg_config') && mg_config('emoticon_use', '1') == '1') { ?>
+    html += '<button type="button" class="mg-emoticon-btn" onclick="MgEmoticonPicker.toggleInToolbar(\'wr_content_reply_' + cmt_id + '\', this)" title="이모티콘">';
+    html += '<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="1.5"/><path stroke-linecap="round" stroke-width="1.5" d="M8 14s1.5 2 4 2 4-2 4-2"/><circle cx="9" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1" fill="currentColor" stroke="none"/></svg>';
+    html += '</button>';
+    <?php } ?>
     html += '</div>';
     <?php } ?>
     html += '<div class="flex gap-2">';
-    html += '<textarea name="wr_content" rows="2" class="input flex-1 text-sm resize-none" placeholder="답글을 입력하세요" required></textarea>';
+    html += '<textarea name="wr_content" id="wr_content_reply_' + cmt_id + '" rows="2" class="input flex-1 text-sm resize-none" placeholder="답글을 입력하세요" required></textarea>';
     html += '<button type="submit" class="btn btn-primary text-sm self-end">등록</button>';
     html += '</div></form></div>';
 

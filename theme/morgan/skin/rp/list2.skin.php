@@ -624,7 +624,6 @@ function rp_time_ago($datetime) {
         if (reply.rr_image) {
             imageHtml = '<div class="mt-1.5"><img src="' + escapeHtml(reply.rr_image) + '" class="rounded-lg max-h-40 object-cover cursor-pointer hover:opacity-80 transition-opacity" onclick="openImageModal(this.src)" alt=""></div>';
         }
-
         var isOwner = reply.mb_id === ownerMbId;
         var canEdit = IS_MEMBER && reply.mb_id === CURRENT_MB_ID;
         var canDelete = canEdit || IS_ADMIN;

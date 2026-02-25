@@ -235,7 +235,7 @@ include_once(G5_THEME_PATH.'/skin/board/_lb_common.php');
 
     <!-- 글쓰기 모달 -->
     <?php if ($write_href) { ?>
-    <div id="lb_modal_overlay" class="lb-modal-overlay hidden" onclick="lbCloseWrite()"></div>
+    <div id="lb_modal_overlay" class="lb-modal-overlay hidden" onclick="if(document._mgMdTarget===this)lbCloseWrite()"></div>
     <div id="lb_write_modal" class="lb-write-modal lb-modal hidden">
         <div class="vamp-header">
             <span>root@scarlet-echo:~/write_msg</span>

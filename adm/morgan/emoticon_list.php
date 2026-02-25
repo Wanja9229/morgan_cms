@@ -74,6 +74,15 @@ require_once __DIR__.'/_head.php';
     width: 48px; height: 48px; object-fit: contain; border-radius: 4px;
     background: var(--mg-bg-tertiary);
 }
+@media (max-width: 768px) {
+    .mg-hide-mobile { display: none !important; }
+    #fsearch_emo { flex-direction: column; }
+    #fsearch_emo .mg-form-select,
+    #fsearch_emo .mg-form-input,
+    #fsearch_emo .mg-btn { width: 100% !important; max-width: none !important; }
+    #fsearch_emo .mg-btn-secondary { margin-left: 0 !important; }
+    .mg-emoticon-preview { width: 40px; height: 40px; }
+}
 </style>
 
 <!-- 통계 -->
@@ -99,7 +108,7 @@ require_once __DIR__.'/_head.php';
 <!-- 검색 -->
 <div class="mg-card" style="margin-bottom:1rem;">
     <div class="mg-card-body" style="padding:1rem;">
-        <form name="fsearch" method="get" style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
+        <form name="fsearch" id="fsearch_emo" method="get" style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
             <select name="status" class="mg-form-select" style="width:auto;">
                 <option value="all" <?php echo $status == 'all' ? 'selected' : ''; ?>>전체 상태</option>
                 <option value="pending" <?php echo $status == 'pending' ? 'selected' : ''; ?>>심사대기</option>
@@ -120,20 +129,20 @@ require_once __DIR__.'/_head.php';
         <form name="femoticonlist" id="femoticonlist" method="post" action="./emoticon_form_update.php">
             <input type="hidden" name="action" value="bulk_delete">
 
-            <table class="mg-table" style="min-width:800px;">
+            <table class="mg-table" style="min-width:640px;">
                 <thead>
                     <tr>
                         <th style="width:40px;"><input type="checkbox" onclick="checkAll(this);"></th>
-                        <th style="width:100px;">미리보기</th>
+                        <th style="width:60px;">미리보기</th>
                         <th>셋 이름</th>
-                        <th style="width:100px;">제작자</th>
-                        <th style="width:80px;">상태</th>
-                        <th style="width:60px;">개수</th>
-                        <th style="width:80px;">가격</th>
-                        <th style="width:60px;">판매</th>
-                        <th style="width:60px;">사용</th>
-                        <th style="width:130px;">등록일</th>
-                        <th style="width:120px;">관리</th>
+                        <th style="width:80px;">제작자</th>
+                        <th style="width:70px;">상태</th>
+                        <th style="width:50px;">개수</th>
+                        <th style="width:70px;">가격</th>
+                        <th class="mg-hide-mobile" style="width:50px;">판매</th>
+                        <th class="mg-hide-mobile" style="width:50px;">사용</th>
+                        <th class="mg-hide-mobile" style="width:120px;">등록일</th>
+                        <th style="width:100px;">관리</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -160,15 +169,15 @@ require_once __DIR__.'/_head.php';
                         <td><span class="mg-badge <?php echo $st['class']; ?>"><?php echo $st['label']; ?></span></td>
                         <td style="text-align:center;"><?php echo (int)$row['em_count']; ?></td>
                         <td style="text-align:right;"><?php echo number_format((int)$row['es_price']); ?>P</td>
-                        <td style="text-align:center;"><?php echo number_format((int)$row['es_sales_count']); ?></td>
-                        <td style="text-align:center;">
+                        <td class="mg-hide-mobile" style="text-align:center;"><?php echo number_format((int)$row['es_sales_count']); ?></td>
+                        <td class="mg-hide-mobile" style="text-align:center;">
                             <?php if ($row['es_use']) { ?>
                             <span style="color:var(--mg-success);">O</span>
                             <?php } else { ?>
                             <span style="color:var(--mg-text-muted);">X</span>
                             <?php } ?>
                         </td>
-                        <td style="font-size:0.8rem;"><?php echo substr($row['es_datetime'], 0, 16); ?></td>
+                        <td class="mg-hide-mobile" style="font-size:0.8rem;"><?php echo substr($row['es_datetime'], 0, 16); ?></td>
                         <td>
                             <div style="display:flex;gap:0.25rem;flex-wrap:nowrap;">
                                 <a href="./emoticon_form.php?es_id=<?php echo $row['es_id']; ?>" class="mg-btn mg-btn-secondary mg-btn-sm" style="white-space:nowrap;">수정</a>

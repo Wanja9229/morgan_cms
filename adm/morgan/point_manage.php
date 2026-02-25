@@ -366,7 +366,7 @@ function givePoint(form) {
     <?php
     $start_page_num = max(1, $page - 2);
     $end_page_num = min($total_page, $page + 2);
-    $base_url = '?tab=history&sfl='.$sfl.'&stx='.urlencode($stx).'&page=';
+    $base_url = '?tab=history&sfl='.urlencode($sfl).'&stx='.urlencode($stx).'&page=';
 
     if ($page > 1) {
         echo '<a href="'.$base_url.'1">&laquo;</a>';

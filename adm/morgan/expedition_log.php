@@ -39,7 +39,7 @@ $total_row = sql_fetch("SELECT COUNT(*) as cnt
                         FROM {$g5['mg_expedition_log_table']} el
                         LEFT JOIN {$g5['member_table']} m ON el.mb_id = m.mb_id
                         WHERE {$where}");
-$total_count = (int)$total_row['cnt'];
+$total_count = (int)($total_row['cnt'] ?? 0);
 $total_pages = max(1, ceil($total_count / $per_page));
 
 // 목록
@@ -67,7 +67,7 @@ while ($ar = sql_fetch_array($area_result)) {
     $area_list[] = $ar;
 }
 
-$g5['title'] = '파견 로그';
+$g5['title'] = '파견 기록';
 require_once __DIR__.'/_head.php';
 ?>
 

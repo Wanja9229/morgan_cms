@@ -14,28 +14,11 @@ include_once(G5_PATH.'/plugin/morgan/morgan.php');
 $si_id = isset($_GET['si_id']) ? (int)$_GET['si_id'] : 0;
 $is_edit = $si_id > 0;
 
-// 상품 타입 목록 (카테고리 대체)
-$item_types = array(
-    'title' => array('name' => '칭호', 'desc' => '닉네임 앞에 표시되는 칭호', 'group' => 'decor'),
-    'badge' => array('name' => '뱃지', 'desc' => '프로필에 표시되는 뱃지', 'group' => 'decor'),
-    'nick_color' => array('name' => '닉네임 색상', 'desc' => '닉네임 색상 변경', 'group' => 'decor'),
-    'nick_effect' => array('name' => '닉네임 효과', 'desc' => '닉네임에 애니메이션 효과', 'group' => 'decor'),
-    'profile_border' => array('name' => '프로필 테두리', 'desc' => '프로필 이미지 테두리', 'group' => 'border'),
-    'equip' => array('name' => '장비', 'desc' => '캐릭터 장착 아이템', 'group' => 'equip'),
-    'material' => array('name' => '재료', 'desc' => '개척 시스템 재료 아이템', 'group' => 'material'),
-    'furniture' => array('name' => '가구', 'desc' => '마이룸 가구', 'group' => 'etc'),
-    'char_slot' => array('name' => '캐릭터 슬롯', 'desc' => '사용 시 캐릭터를 1개 더 생성할 수 있습니다 (영구, 해제 불가)', 'group' => 'etc'),
-    'etc' => array('name' => '기타', 'desc' => '기타 아이템', 'group' => 'etc')
-);
+// 상품 타입 목록 (morgan.php 단일 소스)
+$item_types = mg_get_item_types();
 
-// 카테고리 목록
-$categories = array();
-$cat_result = sql_query("SELECT sc_id, sc_name FROM {$g5['mg_shop_category_table']} WHERE sc_use = 1 ORDER BY sc_order, sc_id");
-if ($cat_result) {
-    while ($cat_row = sql_fetch_array($cat_result)) {
-        $categories[] = $cat_row;
-    }
-}
+// 타입 그룹 (optgroup용)
+$type_groups_form = $mg['shop_type_groups'];
 
 // 기본 상품 정보
 $item = array(
@@ -120,17 +103,26 @@ require_once __DIR__.'/_head.php';
 
                     <div class="mg-form-group">
                         <label class="mg-form-label" for="si_type">아이템 타입 <span style="color:var(--mg-error);">*</span></label>
-                        <?php if ($is_edit && $si_type == 'profile_skin') { ?>
-                        <input type="hidden" name="si_type" value="profile_skin">
-                        <div class="mg-form-input" style="background:var(--mg-bg-primary);cursor:not-allowed;opacity:0.7;">프로필 스킨</div>
-                        <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;">프로필 스킨 타입은 변경할 수 없습니다. 새 스킨은 개발자가 코드 패치로 추가합니다.</div>
+                        <?php if ($is_edit && in_array($si_type, array('profile_skin', 'profile_bg'))) { ?>
+                        <input type="hidden" name="si_type" value="<?php echo $si_type; ?>">
+                        <div class="mg-form-input" style="background:var(--mg-bg-primary);cursor:not-allowed;opacity:0.7;"><?php echo $item_types[$si_type]['name'] ?? $si_type; ?></div>
+                        <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;">이 타입은 변경할 수 없습니다. 개발자가 코드 패치로 추가합니다.</div>
                         <?php } else { ?>
                         <select name="si_type" id="si_type" class="mg-form-select" required onchange="toggleEffectFields();">
-                            <?php foreach ($item_types as $type_key => $type_info) { ?>
-                            <option value="<?php echo $type_key; ?>" <?php echo $si_type == $type_key ? 'selected' : ''; ?>>
-                                <?php echo $type_info['name']; ?>
-                            </option>
-                            <?php } ?>
+                            <?php
+                            // 신규 등록 시 제외할 타입
+                            $hidden_types = $is_edit ? array() : array('profile_skin', 'profile_bg');
+                            foreach ($mg['shop_type_groups'] as $grp_key => $grp) {
+                                echo '<optgroup label="' . htmlspecialchars($grp['label']) . '">';
+                                foreach ($grp['types'] as $t_key) {
+                                    if (in_array($t_key, $hidden_types)) continue;
+                                    if (!isset($item_types[$t_key])) continue;
+                                    $sel = ($si_type == $t_key) ? ' selected' : '';
+                                    echo '<option value="' . $t_key . '"' . $sel . '>' . htmlspecialchars($item_types[$t_key]['name']) . '</option>';
+                                }
+                                echo '</optgroup>';
+                            }
+                            ?>
                         </select>
                         <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;" id="type_desc">
                             <?php echo $type_desc; ?>
@@ -138,17 +130,7 @@ require_once __DIR__.'/_head.php';
                         <?php } ?>
                     </div>
 
-                    <div class="mg-form-group">
-                        <label class="mg-form-label" for="sc_id">카테고리</label>
-                        <select name="sc_id" id="sc_id" class="mg-form-select">
-                            <option value="0">미분류</option>
-                            <?php foreach ($categories as $cat) { ?>
-                            <option value="<?php echo $cat['sc_id']; ?>" <?php echo $sc_id == $cat['sc_id'] ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($cat['sc_name']); ?>
-                            </option>
-                            <?php } ?>
-                        </select>
-                    </div>
+                    <input type="hidden" name="sc_id" value="0">
 
                     <div class="mg-form-group">
                         <label class="mg-form-label" for="si_desc">상품 설명</label>
@@ -316,6 +298,112 @@ require_once __DIR__.'/_head.php';
                         </div>
                     </div>
 
+                    <!-- 인장 프레임 -->
+                    <div class="effect-field" data-type="seal_frame" style="<?php echo $si_type != 'seal_frame' ? 'display:none;' : ''; ?>">
+                        <div class="seal-frame-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                            <div class="mg-form-group">
+                                <label class="mg-form-label">테두리 색상</label>
+                                <input type="color" name="effect[border_color]" id="effect_seal_border_color" value="<?php echo isset($effect['border_color']) ? $effect['border_color'] : '#d4a843'; ?>" style="width:100px;height:38px;">
+                            </div>
+                            <div class="mg-form-group">
+                                <label class="mg-form-label">테두리 스타일</label>
+                                <?php $eff_sf_style = isset($effect['border_style']) ? $effect['border_style'] : 'solid'; ?>
+                                <select name="effect[border_style]" id="effect_seal_border_style" class="mg-form-select">
+                                    <option value="solid" <?php echo $eff_sf_style == 'solid' ? 'selected' : ''; ?>>실선 (solid)</option>
+                                    <option value="double" <?php echo $eff_sf_style == 'double' ? 'selected' : ''; ?>>이중선 (double)</option>
+                                    <option value="dashed" <?php echo $eff_sf_style == 'dashed' ? 'selected' : ''; ?>>점선 (dashed)</option>
+                                    <option value="dotted" <?php echo $eff_sf_style == 'dotted' ? 'selected' : ''; ?>>도트 (dotted)</option>
+                                    <option value="ridge" <?php echo $eff_sf_style == 'ridge' ? 'selected' : ''; ?>>릿지 (ridge)</option>
+                                    <option value="groove" <?php echo $eff_sf_style == 'groove' ? 'selected' : ''; ?>>그루브 (groove)</option>
+                                </select>
+                            </div>
+                            <div class="mg-form-group">
+                                <label class="mg-form-label">테두리 굵기</label>
+                                <?php $eff_sf_width = isset($effect['border_width']) ? $effect['border_width'] : '2px'; ?>
+                                <select name="effect[border_width]" id="effect_seal_border_width" class="mg-form-select">
+                                    <option value="1px" <?php echo $eff_sf_width == '1px' ? 'selected' : ''; ?>>1px (얇은)</option>
+                                    <option value="2px" <?php echo $eff_sf_width == '2px' ? 'selected' : ''; ?>>2px (보통)</option>
+                                    <option value="3px" <?php echo $eff_sf_width == '3px' ? 'selected' : ''; ?>>3px (굵은)</option>
+                                    <option value="4px" <?php echo $eff_sf_width == '4px' ? 'selected' : ''; ?>>4px (아주 굵은)</option>
+                                </select>
+                            </div>
+                            <div class="mg-form-group">
+                                <label class="mg-form-label">둥글기</label>
+                                <?php $eff_sf_radius = isset($effect['border_radius']) ? $effect['border_radius'] : '12px'; ?>
+                                <select name="effect[border_radius]" id="effect_seal_border_radius" class="mg-form-select">
+                                    <option value="0" <?php echo $eff_sf_radius == '0' ? 'selected' : ''; ?>>없음 (0)</option>
+                                    <option value="6px" <?php echo $eff_sf_radius == '6px' ? 'selected' : ''; ?>>약간 (6px)</option>
+                                    <option value="12px" <?php echo $eff_sf_radius == '12px' ? 'selected' : ''; ?>>보통 (12px)</option>
+                                    <option value="16px" <?php echo $eff_sf_radius == '16px' ? 'selected' : ''; ?>>많이 (16px)</option>
+                                    <option value="24px" <?php echo $eff_sf_radius == '24px' ? 'selected' : ''; ?>>크게 (24px)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mg-form-group" style="margin-top:0.75rem;">
+                            <label class="mg-form-label">그림자 효과</label>
+                            <?php $eff_sf_shadow = isset($effect['box_shadow']) ? $effect['box_shadow'] : ''; ?>
+                            <select name="effect[box_shadow]" id="effect_seal_box_shadow" class="mg-form-select">
+                                <option value="" <?php echo !$eff_sf_shadow ? 'selected' : ''; ?>>없음</option>
+                                <option value="0 2px 8px rgba(0,0,0,0.3)" <?php echo $eff_sf_shadow == '0 2px 8px rgba(0,0,0,0.3)' ? 'selected' : ''; ?>>약한 그림자</option>
+                                <option value="0 4px 20px rgba(0,0,0,0.4)" <?php echo $eff_sf_shadow == '0 4px 20px rgba(0,0,0,0.4)' ? 'selected' : ''; ?>>보통 그림자</option>
+                                <option value="0 8px 32px rgba(0,0,0,0.5)" <?php echo $eff_sf_shadow == '0 8px 32px rgba(0,0,0,0.5)' ? 'selected' : ''; ?>>강한 그림자</option>
+                                <option value="0 0 12px rgba(245,159,10,0.4)" <?php echo strpos($eff_sf_shadow, '245,159,10') !== false ? 'selected' : ''; ?>>앰버 글로우</option>
+                                <option value="0 0 12px rgba(59,130,246,0.4)" <?php echo strpos($eff_sf_shadow, '59,130,246') !== false ? 'selected' : ''; ?>>블루 글로우</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 인장 배경 -->
+                    <div class="effect-field" data-type="seal_bg" style="<?php echo $si_type != 'seal_bg' ? 'display:none;' : ''; ?>">
+                        <?php
+                        $seal_bgs = mg_get_seal_bg_list();
+                        $eff_seal_bg_id = isset($effect['bg_id']) ? $effect['bg_id'] : '';
+                        $eff_seal_bg_color = isset($effect['bg_color']) ? $effect['bg_color'] : '#1a1a2e';
+                        ?>
+                        <div class="mg-form-group">
+                            <label class="mg-form-label">배경 효과</label>
+                            <select name="effect[bg_id]" class="mg-form-select">
+                                <option value="">선택</option>
+                                <?php foreach ($seal_bgs as $bg_key => $bg_name) { ?>
+                                <option value="<?php echo $bg_key; ?>" <?php echo $eff_seal_bg_id == $bg_key ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($bg_name); ?>
+                                </option>
+                                <?php } ?>
+                            </select>
+                            <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;">배경 효과 종류는 개발자가 코드 패치로 추가합니다.</div>
+                        </div>
+                        <div class="mg-form-group">
+                            <label class="mg-form-label">기본 배경색</label>
+                            <input type="color" name="effect[bg_color]" value="<?php echo $eff_seal_bg_color; ?>" style="width:100px;height:38px;">
+                            <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;">Vanta.js 효과가 로드되기 전에 보이는 기본 색상</div>
+                        </div>
+                    </div>
+
+                    <!-- 인장 호버 -->
+                    <div class="effect-field" data-type="seal_hover" style="<?php echo $si_type != 'seal_hover' ? 'display:none;' : ''; ?>">
+                        <?php
+                        $hover_presets = mg_get_seal_hover_presets();
+                        $eff_hover_id = isset($effect['hover_id']) ? $effect['hover_id'] : '';
+                        ?>
+                        <div class="mg-form-group">
+                            <label class="mg-form-label">호버 효과</label>
+                            <select name="effect[hover_id]" class="mg-form-select">
+                                <option value="">선택</option>
+                                <?php foreach ($hover_presets as $hk => $hv) { ?>
+                                <option value="<?php echo $hk; ?>" <?php echo $eff_hover_id == $hk ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($hv['name']); ?>
+                                </option>
+                                <?php } ?>
+                            </select>
+                        </div>
+                        <div class="mg-form-group">
+                            <label class="mg-form-label">효과 미리보기</label>
+                            <div style="padding:0.5rem;background:var(--mg-bg-primary);border-radius:6px;font-size:0.8rem;color:var(--mg-text-muted);font-family:monospace;" id="seal_hover_preview">
+                                <?php echo $eff_hover_id && isset($hover_presets[$eff_hover_id]) ? htmlspecialchars($hover_presets[$eff_hover_id]['css']) : '효과를 선택하면 CSS가 표시됩니다'; ?>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- 기타 타입 -->
                     <div class="effect-field" data-type="equip,furniture,etc" style="<?php echo !in_array($si_type, array('equip','furniture','etc')) ? 'display:none;' : ''; ?>">
                         <div class="mg-form-group">
@@ -442,11 +530,23 @@ function toggleBadgeIconInput() {
     document.getElementById('badge_icon_text').style.display = type === 'text' ? '' : 'none';
     document.getElementById('badge_icon_file').style.display = type === 'file' ? '' : 'none';
 }
+
+// 인장 호버 미리보기
+var _hoverPresets = <?php echo json_encode(array_map(function($v) { return $v['css']; }, mg_get_seal_hover_presets())); ?>;
+document.addEventListener('change', function(e) {
+    if (e.target.name === 'effect[hover_id]') {
+        var preview = document.getElementById('seal_hover_preview');
+        preview.textContent = _hoverPresets[e.target.value] || '효과를 선택하면 CSS가 표시됩니다';
+    }
+});
 </script>
 
 <style>
-@media (max-width: 900px) {
+@media (max-width: 768px) {
     form > div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+    }
+    .seal-frame-grid {
         grid-template-columns: 1fr !important;
     }
 }

@@ -40,18 +40,36 @@ $type_labels = $mg['shop_type_labels'];
 
 // 현재 탭 (타입 그룹 키 또는 emoticon)
 $tab = isset($_GET['tab']) ? clean_xss_tags($_GET['tab']) : '';
+$sub_type = isset($_GET['type']) ? clean_xss_tags($_GET['type']) : '';
 
 // 페이지네이션
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $rows = 12;
 
-// 이모티콘 탭 여부
+// 특수 탭 여부
 $is_emoticon_tab = ($tab === 'emoticon');
+$is_title_tab = false;
 
 // 현재 선택된 타입들
 $current_types = array();
 if ($tab && isset($type_groups[$tab])) {
-    $current_types = $type_groups[$tab]['types'];
+    $group_def = $type_groups[$tab];
+    $group_types = $group_def['types'];
+    $sub_groups = isset($group_def['sub_groups']) ? $group_def['sub_groups'] : array();
+
+    if ($sub_type) {
+        // sub_group 키 체크 (예: 'title' → ['title_prefix','title_suffix'])
+        if (isset($sub_groups[$sub_type])) {
+            $current_types = $sub_groups[$sub_type]['types'];
+        } elseif (in_array($sub_type, $group_types)) {
+            $current_types = array($sub_type);
+        } else {
+            $current_types = $group_types;
+            $sub_type = '';
+        }
+    } else {
+        $current_types = $group_types;
+    }
 }
 
 if ($is_emoticon_tab) {

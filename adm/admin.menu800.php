@@ -45,5 +45,5 @@ $menu["menu800"] = array(
     array('801000', '시설 관리', $mg_admin_url . '/pioneer_facility.php', 'mg_pioneer', '개척'),
     array('801100', '재료 관리', $mg_admin_url . '/pioneer_material.php', 'mg_pioneer_material'),
     array('801110', '파견지 관리', $mg_admin_url . '/expedition_area.php', 'mg_expedition'),
-    array('801120', '파견 로그', $mg_admin_url . '/expedition_log.php', 'mg_expedition_log'),
+    array('801120', '파견 기록', $mg_admin_url . '/expedition_log.php', 'mg_expedition_log'),
 );

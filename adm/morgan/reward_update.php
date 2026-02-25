@@ -36,42 +36,51 @@ if ($mode == 'board_reward') {
     if (!in_array($br_mode, array('auto', 'request', 'off'))) $br_mode = 'off';
 
     $br_point = max(0, (int)($_POST['br_point'] ?? 0));
-    $br_bonus_500 = max(0, (int)($_POST['br_bonus_500'] ?? 0));
-    $br_bonus_1000 = max(0, (int)($_POST['br_bonus_1000'] ?? 0));
-    $br_bonus_image = max(0, (int)($_POST['br_bonus_image'] ?? 0));
     $br_material_use = ($_POST['br_material_use'] ?? '0') == '1' ? 1 : 0;
     $br_material_chance = max(0, min(100, (int)($_POST['br_material_chance'] ?? 30)));
-    $br_material_list = isset($_POST['br_material_list']) ? $_POST['br_material_list'] : '[]';
+    // 글 작성 재료 보상 (JSON)
+    $br_material_list = isset($_POST['br_material_list']) ? $_POST['br_material_list'] : '';
+    // 댓글 작성 재료 보상 (JSON)
+    $br_material_comment = isset($_POST['br_material_comment']) ? $_POST['br_material_comment'] : '';
     $br_daily_limit = max(0, (int)($_POST['br_daily_limit'] ?? 0));
     $br_like_use = ($_POST['br_like_use'] ?? '1') == '1' ? 1 : 0;
     $br_dice_use = ($_POST['br_dice_use'] ?? '0') == '1' ? 1 : 0;
     $br_dice_once = ($_POST['br_dice_once'] ?? '1') == '1' ? 1 : 0;
     $br_dice_max = max(1, (int)($_POST['br_dice_max'] ?? 100));
 
-    // JSON 유효성 체크
-    $decoded = json_decode($br_material_list);
-    if (!is_array($decoded)) $br_material_list = '[]';
+    // JSON 유효성 체크 (글 작성 재료)
+    if ($br_material_list) {
+        $decoded = json_decode($br_material_list, true);
+        if (!is_array($decoded)) $br_material_list = '';
+    }
+    // JSON 유효성 체크 (댓글 재료)
+    if ($br_material_comment) {
+        $decoded_c = json_decode($br_material_comment, true);
+        if (!is_array($decoded_c)) $br_material_comment = '';
+    }
 
     $bo_table_esc = sql_real_escape_string($bo_table);
     $br_material_list_esc = sql_real_escape_string($br_material_list);
+    $br_material_comment_esc = sql_real_escape_string($br_material_comment);
 
     $sql = "INSERT INTO {$g5['mg_board_reward_table']}
             (bo_table, br_mode, br_point, br_bonus_500, br_bonus_1000, br_bonus_image,
-             br_material_use, br_material_chance, br_material_list, br_daily_limit, br_like_use,
+             br_material_use, br_material_chance, br_material_list, br_material_comment, br_daily_limit, br_like_use,
              br_dice_use, br_dice_once, br_dice_max)
             VALUES
-            ('{$bo_table_esc}', '{$br_mode}', {$br_point}, {$br_bonus_500}, {$br_bonus_1000}, {$br_bonus_image},
-             {$br_material_use}, {$br_material_chance}, '{$br_material_list_esc}', {$br_daily_limit}, {$br_like_use},
+            ('{$bo_table_esc}', '{$br_mode}', {$br_point}, 0, 0, 0,
+             {$br_material_use}, {$br_material_chance}, '{$br_material_list_esc}', '{$br_material_comment_esc}', {$br_daily_limit}, {$br_like_use},
              {$br_dice_use}, {$br_dice_once}, {$br_dice_max})
             ON DUPLICATE KEY UPDATE
             br_mode = '{$br_mode}',
             br_point = {$br_point},
-            br_bonus_500 = {$br_bonus_500},
-            br_bonus_1000 = {$br_bonus_1000},
-            br_bonus_image = {$br_bonus_image},
+            br_bonus_500 = 0,
+            br_bonus_1000 = 0,
+            br_bonus_image = 0,
             br_material_use = {$br_material_use},
             br_material_chance = {$br_material_chance},
             br_material_list = '{$br_material_list_esc}',
+            br_material_comment = '{$br_material_comment_esc}',
             br_daily_limit = {$br_daily_limit},
             br_like_use = {$br_like_use},
             br_dice_use = {$br_dice_use},
@@ -95,10 +104,6 @@ if ($mode == 'activity') {
         'rp_complete_point',
         'rp_complete_min_mutual',
         'rp_auto_complete_days',
-        'pioneer_write_reward',
-        'pioneer_comment_reward',
-        'pioneer_rp_reward',
-        'pioneer_attendance_reward',
         'like_daily_limit',
         'like_giver_point',
         'like_receiver_point',
@@ -125,7 +130,7 @@ if ($mode == 'revoke_completion') {
     }
 
     $rc = sql_fetch("SELECT * FROM {$g5['mg_rp_completion_table']} WHERE rc_id = {$rc_id}");
-    if (!$rc['rc_id']) {
+    if (!$rc || !$rc['rc_id']) {
         echo json_encode(['success' => false, 'message' => '완결 기록을 찾을 수 없습니다.']);
         exit;
     }
@@ -221,7 +226,18 @@ if ($mode == 'approve_reward') {
         exit;
     }
 
-    $result = mg_approve_reward($rq_id, $member['mb_id']);
+    $options = array();
+    if (isset($_POST['override_rwt_id']) && $_POST['override_rwt_id'] !== '') {
+        $options['rwt_id'] = (int)$_POST['override_rwt_id'];
+    }
+    if (isset($_POST['override_point']) && $_POST['override_point'] !== '') {
+        $options['point'] = (int)$_POST['override_point'];
+    }
+    if (isset($_POST['admin_note']) && trim($_POST['admin_note']) !== '') {
+        $options['note'] = trim($_POST['admin_note']);
+    }
+
+    $result = mg_approve_reward($rq_id, $member['mb_id'], $options);
     echo json_encode($result);
     exit;
 }
@@ -267,7 +283,7 @@ if ($mode == 'batch_approve') {
         }
     }
 
-    echo json_encode(['success' => true, 'message' => "{$approved}건 승인, {$failed}건 실패"]);
+    echo json_encode(['success' => $approved > 0, 'message' => "{$approved}건 승인, {$failed}건 실패"]);
     exit;
 }
 

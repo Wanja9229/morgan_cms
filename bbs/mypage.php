@@ -82,13 +82,9 @@ $streak_row = sql_fetch("SELECT att_streak FROM {$g5['mg_attendance_table']} WHE
 $attendance_streak = $streak_row ? (int)$streak_row['att_streak'] : 0;
 
 // 칭호
-$active_title = '';
-if (function_exists('mg_get_active_items')) {
-    $title_items = mg_get_active_items($mb['mb_id'], 'title');
-    if (!empty($title_items)) {
-        $active_title = $title_items[0]['si_name'];
-    }
-}
+$my_titles = function_exists('mg_get_member_titles') ? mg_get_member_titles($mb['mb_id']) : array();
+$title_setting = function_exists('mg_get_title_setting') ? mg_get_title_setting($mb['mb_id']) : array();
+$active_titles = function_exists('mg_get_active_titles') ? mg_get_active_titles($mb['mb_id'], 0) : array('prefix' => '', 'suffix' => '');
 
 $g5['title'] = '마이 페이지';
 include_once(G5_THEME_PATH.'/head.php');
@@ -111,10 +107,9 @@ $ach_rarity_colors = array(
                 </div>
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-3 mb-1">
-                        <h1 class="text-2xl font-bold text-mg-text-primary"><?php echo get_text($mb['mb_nick']); ?></h1>
-                        <?php if ($active_title) { ?>
-                        <span class="text-sm text-mg-accent bg-mg-accent/10 px-2 py-0.5 rounded-full"><?php echo htmlspecialchars($active_title); ?></span>
-                        <?php } ?>
+                        <h1 class="text-2xl font-bold text-mg-text-primary">
+                            <?php echo mg_render_nickname($mb['mb_id'], $mb['mb_nick']); ?>
+                        </h1>
                     </div>
                     <p class="text-sm text-mg-text-muted mb-3">@<?php echo $mb['mb_id']; ?> · Lv.<?php echo $mb['mb_level']; ?> · <?php echo date('Y.m.d', strtotime($mb['mb_datetime'])); ?> 가입</p>
 
@@ -242,6 +237,106 @@ $ach_rarity_colors = array(
                 <p class="text-sm text-mg-text-muted mb-2">등록된 캐릭터가 없습니다</p>
                 <a href="<?php echo G5_BBS_URL; ?>/character_form.php" class="text-sm text-mg-accent hover:underline">캐릭터 만들기</a>
             </div>
+            <?php } ?>
+        </div>
+    </div>
+
+    <!-- 칭호관리 -->
+    <?php
+    $prefix_titles = array_filter($my_titles, function($t) { return $t['tp_type'] === 'prefix'; });
+    $suffix_titles = array_filter($my_titles, function($t) { return $t['tp_type'] === 'suffix'; });
+    ?>
+    <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden mb-6">
+        <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-mg-text-primary flex items-center gap-2">
+                <?php echo mg_icon('tag', 'w-4 h-4 text-mg-accent'); ?>
+                칭호관리
+            </h2>
+            <a href="<?php echo G5_BBS_URL; ?>/shop.php?tab=decor&type=title" class="text-xs text-mg-accent hover:underline">뽑기 하러가기</a>
+        </div>
+        <div class="p-4">
+            <!-- 프로필 칭호 설정 -->
+            <div class="mb-4">
+                <h3 class="text-sm font-medium text-mg-text-primary mb-2">프로필 칭호 설정</h3>
+                <p class="text-xs text-mg-text-muted mb-3">캐릭터를 선택하지 않고 글을 쓸 때 표시됩니다. 캐릭터별 칭호는 캐릭터 수정에서 설정하세요.</p>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <div class="flex-1">
+                        <label class="text-xs text-mg-text-muted block mb-1">접두칭호</label>
+                        <select id="profilePrefix" class="w-full bg-mg-bg-primary border border-mg-bg-tertiary rounded-lg px-3 py-2 text-mg-text-primary text-sm focus:border-mg-accent focus:outline-none">
+                            <option value="">없음</option>
+                            <?php foreach ($prefix_titles as $pt) { ?>
+                            <option value="<?php echo $pt['tp_id']; ?>" <?php echo ($title_setting['prefix_tp_id'] ?? '') == $pt['tp_id'] ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($pt['tp_name']); ?>
+                            </option>
+                            <?php } ?>
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <label class="text-xs text-mg-text-muted block mb-1">접미칭호</label>
+                        <select id="profileSuffix" class="w-full bg-mg-bg-primary border border-mg-bg-tertiary rounded-lg px-3 py-2 text-mg-text-primary text-sm focus:border-mg-accent focus:outline-none">
+                            <option value="">없음</option>
+                            <?php foreach ($suffix_titles as $st) { ?>
+                            <option value="<?php echo $st['tp_id']; ?>" <?php echo ($title_setting['suffix_tp_id'] ?? '') == $st['tp_id'] ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($st['tp_name']); ?>
+                            </option>
+                            <?php } ?>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="saveProfileTitle()" class="px-4 py-2 bg-mg-accent hover:bg-mg-accent-hover text-white text-sm font-medium rounded-lg transition-colors">저장</button>
+                    </div>
+                </div>
+                <!-- 미리보기 -->
+                <div class="mt-3 p-3 bg-mg-bg-primary rounded-lg text-center">
+                    <span class="text-xs text-mg-text-muted block mb-1">미리보기</span>
+                    <span id="titlePreview" class="text-mg-text-primary">
+                        <?php
+                        $preview_parts = array();
+                        if ($active_titles['prefix']) $preview_parts[] = htmlspecialchars($active_titles['prefix']);
+                        if ($active_titles['suffix']) $preview_parts[] = htmlspecialchars($active_titles['suffix']);
+                        if (!empty($preview_parts)) echo '<span class="mg-title">「'.implode(' ', $preview_parts).'」</span> ';
+                        echo htmlspecialchars($mb['mb_nick']);
+                        ?>
+                    </span>
+                </div>
+            </div>
+
+            <!-- 보유 칭호 -->
+            <?php if (!empty($prefix_titles) || !empty($suffix_titles)) { ?>
+            <div class="border-t border-mg-bg-tertiary pt-4 space-y-3">
+                <?php if (!empty($prefix_titles)) { ?>
+                <div>
+                    <h4 class="text-xs font-medium text-mg-text-muted mb-2">접두칭호 (<?php echo count($prefix_titles); ?>종)</h4>
+                    <div class="flex flex-wrap gap-2">
+                        <?php foreach ($prefix_titles as $pt) { ?>
+                        <div class="inline-flex items-center gap-1 px-3 py-1.5 bg-mg-bg-primary rounded-lg text-sm text-mg-text-primary border border-mg-bg-tertiary">
+                            「<?php echo htmlspecialchars($pt['tp_name']); ?>」
+                            <button onclick="deleteTitle(<?php echo $pt['tp_id']; ?>, '<?php echo htmlspecialchars($pt['tp_name'], ENT_QUOTES); ?>')" class="text-mg-text-muted hover:text-mg-error transition-colors" title="삭제">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                        <?php } ?>
+                    </div>
+                </div>
+                <?php } ?>
+                <?php if (!empty($suffix_titles)) { ?>
+                <div>
+                    <h4 class="text-xs font-medium text-mg-text-muted mb-2">접미칭호 (<?php echo count($suffix_titles); ?>종)</h4>
+                    <div class="flex flex-wrap gap-2">
+                        <?php foreach ($suffix_titles as $st) { ?>
+                        <div class="inline-flex items-center gap-1 px-3 py-1.5 bg-mg-bg-primary rounded-lg text-sm text-mg-text-primary border border-mg-bg-tertiary">
+                            「<?php echo htmlspecialchars($st['tp_name']); ?>」
+                            <button onclick="deleteTitle(<?php echo $st['tp_id']; ?>, '<?php echo htmlspecialchars($st['tp_name'], ENT_QUOTES); ?>')" class="text-mg-text-muted hover:text-mg-error transition-colors" title="삭제">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                        <?php } ?>
+                    </div>
+                </div>
+                <?php } ?>
+            </div>
+            <?php } else { ?>
+            <p class="text-sm text-mg-text-muted text-center py-2">보유한 칭호가 없습니다. <a href="<?php echo G5_BBS_URL; ?>/shop.php?tab=decor&type=title" class="text-mg-accent hover:underline">상점에서 뽑기</a>를 통해 획득하세요.</p>
             <?php } ?>
         </div>
     </div>
@@ -444,6 +539,62 @@ $ach_rarity_colors = array(
 
 
 </div>
+
+<script>
+(function(){
+    var TITLE_API = '<?php echo G5_BBS_URL; ?>/title_api.php';
+    var NICK = <?php echo json_encode(htmlspecialchars($mb['mb_nick'])); ?>;
+
+    window.saveProfileTitle = function() {
+        var prefix = document.getElementById('profilePrefix').value;
+        var suffix = document.getElementById('profileSuffix').value;
+        fetch(TITLE_API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'action=set_profile&prefix_tp_id=' + prefix + '&suffix_tp_id=' + suffix
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                var preview = '';
+                var pfx = document.getElementById('profilePrefix');
+                var sfx = document.getElementById('profileSuffix');
+                var parts = [];
+                if (pfx.value) parts.push(_e(pfx.options[pfx.selectedIndex].text.trim()));
+                if (sfx.value) parts.push(_e(sfx.options[sfx.selectedIndex].text.trim()));
+                if (parts.length > 0) preview += '<span class="mg-title">\u300C' + parts.join(' ') + '\u300D</span> ';
+                preview += NICK;
+                document.getElementById('titlePreview').innerHTML = preview;
+                alert('프로필 칭호가 저장되었습니다.');
+            } else {
+                alert(data.message || '저장에 실패했습니다.');
+            }
+        })
+        .catch(function(e) { console.error(e); alert('오류가 발생했습니다.'); });
+    };
+
+    window.deleteTitle = function(tpId, name) {
+        if (!confirm('\u300C' + name + '\u300D 칭호를 삭제하시겠습니까?\n현재 설정된 곳에서도 해제됩니다.')) return;
+        fetch(TITLE_API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'action=delete&tp_id=' + tpId
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                alert('칭호가 삭제되었습니다.');
+                location.reload();
+            } else {
+                alert(data.message || '삭제에 실패했습니다.');
+            }
+        })
+        .catch(function(e) { console.error(e); alert('오류가 발생했습니다.'); });
+    };
+
+    function _e(s) { var d = document.createElement('div'); d.appendChild(document.createTextNode(s)); return d.innerHTML; }
+})();
+</script>
 
 <?php
 include_once(G5_THEME_PATH.'/tail.php');

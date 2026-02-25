@@ -27,35 +27,55 @@ $view = isset($_GET['view']) ? clean_xss_tags($_GET['view']) : 'list';
 $my_stamina = mg_get_stamina($member['mb_id']);
 $my_materials = mg_get_materials($member['mb_id']);
 
-// 시설 목록 / 상세 / 파견
-if ($view === 'expedition') {
-    // 탐색 파견
-    $g5['title'] = '탐색 파견 - 개척';
-    $skin_file = 'expedition.skin.php';
-} elseif ($fc_id > 0 && $view === 'detail') {
-    // 시설 상세
+// AJAX: 시설 상세 데이터 (랭킹)
+if ($view === 'facility_data' && $fc_id > 0) {
+    header('Content-Type: application/json; charset=utf-8');
+
     $facility = mg_get_facility($fc_id);
     if (!$facility) {
-        alert_close('시설을 찾을 수 없습니다.');
+        echo json_encode(['error' => 'not_found']);
+        exit;
     }
 
-    // 기여 랭킹
     $stamina_ranking = mg_get_facility_ranking($fc_id, 'stamina', 10);
     $material_rankings = [];
     foreach ($facility['materials'] as $mat) {
         $material_rankings[$mat['mt_code']] = mg_get_facility_ranking($fc_id, $mat['mt_code'], 10);
     }
 
-    $g5['title'] = $facility['fc_name'] . ' - 개척';
-    $skin_file = 'detail.skin.php';
+    echo json_encode([
+        'facility' => $facility,
+        'stamina_ranking' => $stamina_ranking,
+        'material_rankings' => $material_rankings,
+        'my_stamina' => $my_stamina,
+        'my_materials' => $my_materials,
+    ]);
+    exit;
+}
+
+// 시설 목록 / 파견
+if ($view === 'expedition') {
+    // 탐색 파견
+    $g5['title'] = '탐색 파견 - 개척';
+    $skin_file = 'expedition.skin.php';
 } else {
-    // 시설 목록
+    // 시설 목록 (fc_id가 있으면 모달 자동 오픈)
+    $auto_open_fc_id = $fc_id;
     $facilities = mg_get_facilities();
     $complete_count = 0;
     $building_count = 0;
     foreach ($facilities as $f) {
         if ($f['fc_status'] === 'complete') $complete_count++;
         if ($f['fc_status'] === 'building') $building_count++;
+    }
+
+    // 뷰 모드: card(기본) / base(거점맵)
+    $pioneer_view_mode = mg_config('pioneer_view_mode', 'card');
+    $pioneer_map_image = mg_config('pioneer_map_image', '');
+
+    // 거점뷰인데 이미지가 없으면 카드뷰로 폴백
+    if ($pioneer_view_mode === 'base' && !$pioneer_map_image) {
+        $pioneer_view_mode = 'card';
     }
 
     $g5['title'] = '개척 현황';

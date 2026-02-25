@@ -179,7 +179,7 @@ function deleteGroup(gr_id, board_count) {
 
 // 모달 외부 클릭 시 닫기
 document.getElementById('edit-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeModal();
+    if (e.target === this && document._mgMdTarget === this) closeModal();
 });
 </script>
 

@@ -151,7 +151,7 @@ if (count($list) > 0) {
                                 <span class="text-xs text-mg-text-secondary truncate"><?php echo htmlspecialchars($row_char['ch_name']); ?></span>
                             </a>
                             <?php } else { ?>
-                            <span class="text-xs text-mg-text-secondary truncate"><?php echo $row['name']; ?></span>
+                            <span class="text-xs text-mg-text-secondary truncate"><?php echo $row['mb_id'] ? mg_render_nickname($row['mb_id'], $row['wr_name']) : htmlspecialchars($row['wr_name']); ?></span>
                             <?php } ?>
                         </div>
                         <div class="flex items-center gap-2 text-xs text-mg-text-muted flex-shrink-0">

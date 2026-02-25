@@ -22,6 +22,64 @@ if ($action === 'set_ui_mode') {
     exit;
 }
 
+// 파견 지도 이미지 업로드
+if ($action === 'upload_map_image') {
+    $upload_dir = G5_DATA_PATH.'/expedition';
+    if (!is_dir($upload_dir)) {
+        @mkdir($upload_dir, 0755, true);
+        @chmod($upload_dir, 0755);
+    }
+
+    if (!isset($_FILES['map_image_file']) || $_FILES['map_image_file']['error'] !== UPLOAD_ERR_OK) {
+        alert('이미지 파일을 선택해주세요.');
+    }
+
+    $file = $_FILES['map_image_file'];
+    $allowed_ext = array('jpg', 'jpeg', 'png', 'gif', 'webp');
+    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+
+    if (!in_array($ext, $allowed_ext)) {
+        alert('허용되지 않는 파일 형식입니다. (JPG, PNG, GIF, WebP)');
+    }
+    if ($file['size'] > 20 * 1024 * 1024) {
+        alert('파일 크기가 20MB를 초과합니다.');
+    }
+
+    // 기존 이미지 삭제
+    $old_map = mg_config('expedition_map_image', '');
+    if ($old_map) {
+        $old_file = G5_PATH . $old_map;
+        if (file_exists($old_file)) @unlink($old_file);
+    }
+
+    $new_filename = 'expedition_map_' . date('Ymd_His') . '.' . $ext;
+    $target_path = $upload_dir . '/' . $new_filename;
+
+    if (move_uploaded_file($file['tmp_name'], $target_path)) {
+        @chmod($target_path, 0644);
+        $new_url = '/data/expedition/' . $new_filename;
+        mg_set_config('expedition_map_image', $new_url);
+        alert('파견 지도 이미지가 등록되었습니다.', G5_ADMIN_URL.'/morgan/expedition_area.php');
+    } else {
+        alert('파일 업로드에 실패했습니다.');
+    }
+    exit; // 안전장치
+}
+
+// 파견 지도 이미지 삭제 (AJAX)
+if ($action === 'delete_map_image') {
+    header('Content-Type: application/json; charset=utf-8');
+    $old_map = mg_config('expedition_map_image', '');
+    if ($old_map) {
+        $old_file = G5_PATH . $old_map;
+        if (file_exists($old_file)) @unlink($old_file);
+    }
+    mg_set_config('expedition_map_image', '');
+    mg_set_config('expedition_ui_mode', 'list');
+    echo json_encode(array('success' => true));
+    exit;
+}
+
 $w = isset($_POST['w']) ? $_POST['w'] : '';
 $ea_id = isset($_POST['ea_id']) ? (int)$_POST['ea_id'] : 0;
 
@@ -51,9 +109,13 @@ $ea_duration = isset($_POST['ea_duration']) ? max(1, (int)$_POST['ea_duration'])
 $ea_status = isset($_POST['ea_status']) ? clean_xss_tags($_POST['ea_status']) : 'active';
 $ea_unlock_facility = isset($_POST['ea_unlock_facility']) ? (int)$_POST['ea_unlock_facility'] : 0;
 $ea_partner_point = isset($_POST['ea_partner_point']) ? max(0, (int)$_POST['ea_partner_point']) : 10;
+$ea_point_min = isset($_POST['ea_point_min']) ? max(0, (int)$_POST['ea_point_min']) : 0;
+$ea_point_max = isset($_POST['ea_point_max']) ? max(0, (int)$_POST['ea_point_max']) : 0;
+if ($ea_point_max < $ea_point_min) $ea_point_max = $ea_point_min;
 $ea_order = isset($_POST['ea_order']) ? (int)$_POST['ea_order'] : 0;
 $ea_map_x = isset($_POST['ea_map_x']) && $_POST['ea_map_x'] !== '' ? (float)$_POST['ea_map_x'] : null;
 $ea_map_y = isset($_POST['ea_map_y']) && $_POST['ea_map_y'] !== '' ? (float)$_POST['ea_map_y'] : null;
+$del_icon = isset($_POST['del_ea_icon']);
 
 if (empty($ea_name)) {
     alert('파견지명을 입력해주세요.');
@@ -61,6 +123,30 @@ if (empty($ea_name)) {
 
 if (!in_array($ea_status, array('active', 'hidden', 'locked'))) {
     $ea_status = 'active';
+}
+
+// 아이콘 처리 (Heroicons명 or 이미지 업로드)
+$old_icon = '';
+if ($w === 'u' && $ea_id > 0) {
+    $old_row = sql_fetch("SELECT ea_icon FROM {$g5['mg_expedition_area_table']} WHERE ea_id = {$ea_id}");
+    $old_icon = $old_row['ea_icon'] ?? '';
+}
+
+if ($del_icon && $old_icon && strpos($old_icon, '/') !== false) {
+    $old_file = G5_PATH . $old_icon;
+    if (file_exists($old_file)) @unlink($old_file);
+    $ea_icon = '';
+}
+
+$icon_uploaded = mg_handle_icon_upload('ea_icon_file', 'expedition', 'ea_icon');
+if ($icon_uploaded) {
+    if ($old_icon && strpos($old_icon, '/') !== false) {
+        $old_file = G5_PATH . $old_icon;
+        if (file_exists($old_file)) @unlink($old_file);
+    }
+    $ea_icon = $icon_uploaded;
+} elseif (!$del_icon && empty($ea_icon) && $old_icon) {
+    $ea_icon = $old_icon;
 }
 
 $ea_name_esc = sql_real_escape_string($ea_name);
@@ -81,15 +167,17 @@ if ($w === 'u' && $ea_id > 0) {
                ea_status = '{$ea_status_esc}',
                ea_unlock_facility = {$ea_unlock_val},
                ea_partner_point = {$ea_partner_point},
+               ea_point_min = {$ea_point_min},
+               ea_point_max = {$ea_point_max},
                ea_order = {$ea_order},
                ea_map_x = {$ea_map_x_val},
                ea_map_y = {$ea_map_y_val}
                WHERE ea_id = {$ea_id}");
 } else {
     sql_query("INSERT INTO {$g5['mg_expedition_area_table']}
-               (ea_name, ea_desc, ea_icon, ea_stamina_cost, ea_duration, ea_status, ea_unlock_facility, ea_partner_point, ea_order, ea_map_x, ea_map_y)
+               (ea_name, ea_desc, ea_icon, ea_stamina_cost, ea_duration, ea_status, ea_unlock_facility, ea_partner_point, ea_point_min, ea_point_max, ea_order, ea_map_x, ea_map_y)
                VALUES ('{$ea_name_esc}', '{$ea_desc_esc}', '{$ea_icon_esc}', {$ea_stamina_cost}, {$ea_duration},
-                       '{$ea_status_esc}', {$ea_unlock_val}, {$ea_partner_point}, {$ea_order}, {$ea_map_x_val}, {$ea_map_y_val})");
+                       '{$ea_status_esc}', {$ea_unlock_val}, {$ea_partner_point}, {$ea_point_min}, {$ea_point_max}, {$ea_order}, {$ea_map_x_val}, {$ea_map_y_val})");
     $ea_id = sql_insert_id();
 }
 

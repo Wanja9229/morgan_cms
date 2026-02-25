@@ -203,6 +203,23 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
         .mg-pf-tags { display: inline-flex; flex-wrap: wrap; gap: 0.25rem; }
         .mg-pf-tag { background: var(--mg-bg-tertiary); color: var(--mg-text-secondary); padding: 0.125rem 0.625rem; border-radius: 9999px; font-size: 0.8125rem; }
         .mg-pf-image { max-width: 100%; max-height: 20rem; border-radius: 0.5rem; object-fit: contain; }
+
+        /* 칭호 스타일 */
+        .mg-title { font-size: 0.75em; opacity: 0.85; }
+
+        /* 닉네임 효과 */
+        .mg-nick-rainbow {
+            background: linear-gradient(90deg, #ff6b6b, #ffa500, #ffd700, #69db7c, #4dabf7, #cc5de8);
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+            background-size: 200% 100%; animation: mg-rainbow 3s linear infinite;
+        }
+        @keyframes mg-rainbow { 0%{background-position:0% 50%} 100%{background-position:200% 50%} }
+        .mg-nick-shake { display: inline-block; animation: mg-shake 0.4s ease-in-out infinite; }
+        @keyframes mg-shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-1px)} 75%{transform:translateX(1px)} }
+        .mg-nick-gradient {
+            background: linear-gradient(135deg, var(--mg-accent), #ec4899);
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+        }
     </style>
 
     <!-- 그누보드 전역 JS 변수 -->

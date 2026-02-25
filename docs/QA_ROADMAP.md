@@ -1,7 +1,7 @@
 # Morgan Edition - QA 로드맵
 
 > 작성일: 2026-02-20
-> 최종 업데이트: 2026-02-23 (인장 개편 + 상점탭 정리 + 미션 용어/UX 수정)
+> 최종 업데이트: 2026-02-25 (개척/파견 시스템 검수 + 포인트 보상 + UI 통일)
 
 ---
 
@@ -35,12 +35,13 @@
 
 ---
 
-### 📍 현재 진행 위치: **콘텐츠 그룹 QA 진행 중**
+### 📍 현재 진행 위치: **개척/파견 그룹 QA (Phase E) 코드 검수 완료 → 사용자 확인 대기**
 
-Phase A(설정) + Phase B(회원/캐릭터/인장) + Phase D(활동: 출석/알림/업적) = 코드 검수 완료.
-Phase C(콘텐츠): 의뢰 E2E 10종 PASS, 미션 용어/UX 수정 완료.
-인장 시스템 개편(16×4 격자, 배경/테두리/호버 아이템), 상점 탭 재정리 완료.
-다음: 미션 E2E 사용자 직접 확인, 또는 Phase D(재화/상점) QA 재개.
+Phase A(설정) + Phase B(회원/캐릭터/인장) + Phase D(활동: 출석/알림/업적) = 완료.
+Phase C(콘텐츠): 의뢰 E2E PASS, 미션/역극 코드 검수 완료, 뷰페이지 리디자인, 댓글 버그 수정.
+Phase D(재화/상점): **코드 분석 완료(02-25)** — Critical 6건 + 일관성 6건 + 함수화 5건. → `docs/QA_SHOP_ISSUES.md`
+Phase E(개척/파견): **코드 검수 완료(02-25)** — DB 테이블 생성, 시드 데이터, UI 통일, 포인트 보상 추가, 마이그레이션 수정.
+다음: 사용자 브라우저 확인 → Phase D(상점) Critical 수정.
 
 ---
 
@@ -366,53 +367,61 @@ Phase C(콘텐츠): 의뢰 E2E 10종 PASS, 미션 용어/UX 수정 완료.
 
 ## 6. 재화/상점 그룹
 
+> **코드 분석 완료 (02-25)**. Critical 6건 + 일관성 6건 + 함수화 5건 식별.
+> 상세: `docs/QA_SHOP_ISSUES.md`
+
 ### 6.1 포인트 관리 (`point_manage.php`)
 
 | 항목 | 상태 | 비고 |
 |------|------|------|
-| 포인트 내역 조회 | [ ] | |
-| 수동 지급/차감 | [ ] | |
+| 포인트 내역 조회 | [C] | 코드 검수 완료 — 검색/필터/페이징 정상 |
+| 수동 지급/차감 | [C] | 🔧 point_manage_update.php $member 미정의 수정 필요 |
+| URL 인코딩 | [C] | 🔧 sfl 파라미터 urlencode 누락 |
 
 ### 6.2 보상 관리 (`reward.php`)
 
 | 항목 | 상태 | 비고 |
 |------|------|------|
-| 게시판별 보상 설정 (5탭) | [ ] | |
-| auto/request 모드 설정 | [ ] | |
-| 정산 대기열 (승인/반려/일괄) | [ ] | |
-| 주사위 설정 (br_dice_use/once/max) | [ ] | |
-| 좋아요 보상 설정 | [ ] | |
+| 게시판별 보상 설정 (5탭) | [C] | 코드 검수 완료 |
+| auto/request 모드 설정 | [C] | 코드 검수 완료 |
+| 정산 대기열 (승인/반려/일괄) | [C] | 🔧 일괄 전체실패 시 success:true 반환 |
+| 주사위 설정 (br_dice_use/once/max) | [C] | 🔧 새 게시판 생성 시 주사위 미저장 (board_form_update.php) |
+| 좋아요 보상 설정 | [C] | 코드 검수 완료 |
+| XSS (reward.php:771) | [C] | 🔧 JS 인라인에 sql_escape 사용 → htmlspecialchars 필요 |
+| PHP 8 (reward_update.php:145) | [C] | 🔧 sql_fetch() false 체크 누락 |
 | 반응형 | [x] | 반려 모달 max-height 추가 |
 
 ### 6.3 상점 관리 (`shop_item_list.php`)
 
 | 항목 | 상태 | 비고 |
 |------|------|------|
-| 카테고리 관리 | [ ] | |
+| 카테고리 관리 | [C] | 코드 검수 완료 |
 | **상점 탭 재정리** | [x] | 프로필(skin/bg/border), 인장(bg/frame/hover) 분리, border/equip 탭 제거 |
-| 상품 CRUD (16종 타입) | [ ] | char_slot 추가됨 |
-| 기간 한정 판매 | [ ] | |
-| 프론트 상점 페이지 | [ ] | |
-| 구매 처리 | [ ] | |
-| 인벤토리/장착 | [ ] | |
-| 선물 보내기/수락/거절 | [ ] | |
+| 상품 CRUD (16종 타입) | [C] | 🔧 form.php 타입 10개 vs morgan.php 17개 불일치 |
+| 기간 한정 판매 | [C] | 코드 검수 완료 |
+| 프론트 상점 페이지 | [C] | 코드 검수 완료 |
+| 구매 처리 | [C] | 코드 검수 완료 — insert_point rel 파라미터 보완 필요 |
+| 인벤토리/장착 | [C] | 🔧 mg_get_inventory() 반환값 조건부 문제 |
+| 선물 보내기/수락/거절 | [C] | 🔧 gf_type NULL vs 'shop' 불일치 |
 | 반응형 | [x] | 테이블 min-width:900px 추가 |
 
 ### 6.4 구매/선물 내역 (`shop_log.php`)
 
 | 항목 | 상태 | 비고 |
 |------|------|------|
-| 구매 로그 조회 | [ ] | |
-| 선물 로그 조회 | [ ] | |
+| 구매 로그 조회 | [C] | 🔧 equip 타입 라벨 누락 |
+| 선물 로그 조회 | [C] | 코드 검수 완료 |
 | 반응형 | [x] | 테이블 min-width:800px 추가 |
 
 ### 6.5 이모티콘 관리 (`emoticon_list.php`)
 
 | 항목 | 상태 | 비고 |
 |------|------|------|
-| 이모티콘 셋 CRUD | [ ] | |
-| 개별 이모티콘 업로드 | [ ] | |
-| 유저 제작 이모티콘 승인 | [ ] | |
+| 이모티콘 셋 CRUD | [C] | 코드 검수 완료 |
+| 개별 이모티콘 업로드 | [C] | 코드 검수 완료 |
+| 유저 제작 이모티콘 승인 | [C] | 🔧 자동생성 코드 중복 재검증 없음 |
+| 수수료 계산 | [C] | 🔧 commission_rate ≥100 시 음수 수익 |
+| 이모티콘 코드 포맷 | [C] | 🔧 `:code:` 포맷 검증 없음 (유저 입력) |
 | 프론트 이모티콘 피커 | [-] | 검수에서 write 4종+RP 적용됨 |
 | 반응형 | [x] | 테이블 min-width:800px 추가 |
 
@@ -424,11 +433,14 @@ Phase C(콘텐츠): 의뢰 E2E 10종 PASS, 미션 용어/UX 수정 완료.
 
 | 항목 | 상태 | 비고 |
 |------|------|------|
-| 시설 CRUD | [ ] | |
-| 재료 비용 설정 | [ ] | |
-| 기능 해금 연동 | [ ] | |
-| 프론트 개척 페이지 | [ ] | |
-| 기여 랭킹 + 명예의 전당 | [ ] | |
+| 시설 CRUD | [C] | 코드 검수 완료 — 추가/수정/삭제/시작/강제완공 |
+| 재료 비용 설정 | [C] | 코드 검수 완료 — 재료 타입별 필요량 |
+| 기능 해금 연동 | [C] | 코드 검수 완료 — 6종 해금 타입(게시판/상점/선물/업적/연대기/분수대) |
+| 프론트 개척 페이지 | [C] | 코드 검수 완료 — 시설+파견 통합, 시설 상세 모달 |
+| 기여 랭킹 + 명예의 전당 | [C] | 코드 검수 완료 — mg_record_facility_honor() |
+| **뷰 모드 토글 통일** | [C] | 🔧 카드뷰/거점뷰 인라인 토글 (파견지와 동일 패턴), AJAX 모드 저장 |
+| **거점 이미지 AJAX** | [C] | 🔧 업로드/삭제 AJAX 분리, 이미지 삭제 시 카드뷰 자동 전환 |
+| 맵 마커 배치 | [C] | 코드 검수 완료 — 맵 클릭 좌표 저장 + 좌표 제거 |
 
 ### 7.2 재료 관리 (`pioneer_material.php`)
 
@@ -441,21 +453,23 @@ Phase C(콘텐츠): 의뢰 E2E 10종 PASS, 미션 용어/UX 수정 완료.
 
 | 항목 | 상태 | 비고 |
 |------|------|------|
-| 파견지 CRUD | [ ] | |
-| 드롭 테이블 설정 | [ ] | |
-| 맵 모드 좌표 설정 | [ ] | 지역 좌표는 지도관리(lore_map)로 이관됨 |
-| 프론트 파견 보내기/수령 | [ ] | |
-| 파트너 선택/보상 보너스 | [ ] | |
-| 맵 모드 UI | [ ] | |
+| 파견지 CRUD | [C] | 🔧 DB 테이블 3개 생성 + 5개 파견지 + 12개 드롭 규칙 시드 |
+| 드롭 테이블 설정 | [C] | 코드 검수 완료 — 재료별 드롭률/수량/레어 |
+| 맵 모드 좌표 설정 | [C] | 코드 검수 완료 — 전용 파견 지도 이미지 (세계관 맵과 분리) |
+| 프론트 파견 보내기/수령 | [C] | 코드 검수 완료 — PHP 레벨 시나리오 검증 (시작→완료→수령) |
+| 파트너 선택/보상 보너스 | [C] | 코드 검수 완료 — 관계 기반, 1일1회 동일파트너 제한, +20% 보너스 |
+| 맵 모드 UI | [C] | 🔧 카드목록/파견지도 토글 실제 전환, 지도 없으면 버튼 disabled |
+| **아이콘 mg_icon_input()** | [C] | 🔧 Heroicons명 텍스트 입력 → mg_icon_input() 교체 (이미지 업로드 지원) |
+| **참가자 포인트 보상** | [C] | 🔧 ea_point_min/ea_point_max 추가, 파견 완료 시 참가자에게 포인트 지급 |
+| **파트너 PT 명확화** | [C] | 🔧 "파트너 보너스PT"로 라벨 변경, 참가자 보상과 분리 표시 |
 | 반응형 | [x] | 모달 max-height:90vh 추가 |
-| **지역 데이터 분리** | [ ] | **맵 지역(mg_map_region) 우선 → 파견지는 지역 참조+보상/시간/상태만 관리** |
-| **mg_expedition_area 리팩토링** | [ ] | **mr_id FK 추가, ea_name/ea_desc/ea_image/ea_map_x/ea_map_y → 지역 참조로 전환** |
+| **지역 데이터 분리** | [ ] | **향후 — 맵 지역(mg_map_region)과 파견지 데이터 분리 검토** |
 
-### 7.4 파견 로그 (`expedition_log.php`)
+### 7.4 파견 기록 (`expedition_log.php`)
 
 | 항목 | 상태 | 비고 |
 |------|------|------|
-| 파견 로그 조회/필터 | [ ] | |
+| 파견 기록 조회/필터 | [C] | 🔧 Warning 수정 (cnt 키), "파견 로그"→"파견 기록" 명칭 변경 |
 
 ---
 
@@ -537,6 +551,19 @@ Phase C(콘텐츠): 의뢰 E2E 10종 PASS, 미션 용어/UX 수정 완료.
 | 02-22 | `plugin/morgan/morgan.php` | mg_unuse_item() char_slot 해제 차단 |
 | 02-22 | `bbs/character.php` | max_characters → mg_get_max_characters() 교체 |
 | 02-22 | `bbs/character_form.php` | max_characters → mg_get_max_characters() 교체 + 상점 안내 |
+| 02-25 | `adm/morgan/pioneer_facility.php` | 뷰 모드 토글 통일 — select 드롭다운 → 인라인 토글 버튼 (파견지와 동일) |
+| 02-25 | `adm/morgan/pioneer_facility_update.php` | AJAX 핸들러 추가 — set_view_mode, delete_base_image |
+| 02-25 | `adm/morgan/expedition_area.php` | 전용 파견 지도 이미지 분리 (세계관 맵 독립), UI 모드 토글 실제 전환 |
+| 02-25 | `adm/morgan/expedition_area.php` | 아이콘 입력 → mg_icon_input() 교체, 보상 포인트 필드 추가, 파트너 보너스PT 라벨 |
+| 02-25 | `adm/morgan/expedition_area_update.php` | 아이콘 업로드 처리 + ea_point_min/ea_point_max 저장 |
+| 02-25 | `adm/morgan/expedition_log.php` | Warning: Undefined array key "cnt" 수정 + "파견 로그"→"파견 기록" 명칭 변경 |
+| 02-25 | `adm/admin.menu800.php` | "파견 로그"→"파견 기록" 메뉴명 변경 |
+| 02-25 | `plugin/morgan/morgan.php` | mg_get_expedition_areas() — unlock_facility_name 항상 초기화 |
+| 02-25 | `plugin/morgan/morgan.php` | mg_claim_expedition() — 참가자 포인트 보상 로직 추가 (ea_point_min~max, 파트너 보너스 +20%) |
+| 02-25 | `theme/morgan/skin/pioneer/expedition.skin.php` | 카드/맵팝업/파견모달/보상모달에 포인트 보상 표시, 이력에 포인트 파싱 |
+| 02-25 | `theme/morgan/skin/pioneer/expedition.skin.php` | "스테미나은"→"스테미나는" 문법 오류 수정 |
+| 02-25 | `db/migrations/` | 3건 수정 — ADD COLUMN IF NOT EXISTS→PREPARE/EXECUTE, DELIMITER 제거 |
+| 02-25 | `db/migrations/20260225_160000_title_gacha_system.sql` | 칭호 뽑기 INSERT IGNORE→NOT EXISTS 패턴 (중복 방지) |
 
 ---
 
@@ -615,6 +642,7 @@ Phase C(콘텐츠): 의뢰 E2E 10종 PASS, 미션 용어/UX 수정 완료.
 | 02-22 | 기능 | 로드비(Lordby) 게시판 스킨 4종 신규 (lb_terminal/lb_intranet/lb_corkboard/lb_default) — 인라인 댓글+모달 글쓰기, 공유 include 3파일 분리. 게시판 그룹 UI 숨김(gr_id 하드코딩 community). write 스킨 이모티콘 피커 제거(4종). 의뢰 탭 1차 수정(등록=전체마켓, 진행=나의 의뢰) — 기획 재정리 필요로 중단 |
 | 02-23 | 기능+QA | 의뢰 시스템 안정성 패치(settle/force_close/auto-expiry/edit flexibility) + 카드 UI 개편(3탭) + E2E 시나리오 테스트 10종 전체 PASS. 버그 2건 수정: 관리자 $items 변수 충돌, write_concierge_result 테이블 접두사 누락 |
 | 02-23 | 기능 | 인장 시스템 개편: 16×6→16×4 격자, 눈금자, 배경색(무료), 테두리 아이템 5종, 호버 아이템 4종, 전 요소 스타일 가능, 프론트 셀 스타일(배경+보더+라운딩). 상점 탭 재정리(프로필/인장 분리). 미션 QA: "우수작"→"선정작", 자유글쓰기 차단, 관리자 목록 컬럼 너비 수정. 트로피 텍스트 제거(아이콘+호버) |
+| 02-25 | QA+기능 | 재화/상점 코드 분석 완료: Critical 6+일관성 6+함수화 5 식별 → QA_SHOP_ISSUES.md. 개척 시설 관리 뷰 모드 토글 통일(카드뷰/거점뷰 인라인, 파견지와 동일 패턴), 거점 이미지 AJAX 분리. 파견 시스템: DB 테이블 3개 생성+시드(5파견지+12드롭), 전용 지도 이미지 분리(세계관 맵 독립), UI 모드 실제 전환 구현, 파견 기록 Warning 수정+명칭 변경, 해금 조건 Warning 수정. 마이그레이션 3건 수정(ADD COLUMN IF NOT EXISTS→PREPARE/EXECUTE, DELIMITER 제거). 칭호 뽑기 아이템 중복 제거. 문법 오류 수정(스테미나은→는). 파견 아이콘 mg_icon_input() 교체. **참가자 포인트 보상 신규**: ea_point_min/ea_point_max 컬럼, 파견 완료 시 참가자 포인트 지급(+파트너 보너스 20%), 보상 모달에 포인트 표시. 파트너PT→파트너 보너스PT 라벨 명확화 |
 
 ---
 

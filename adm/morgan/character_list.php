@@ -338,7 +338,7 @@ function closeRejectModal() {
 }
 
 document.getElementById('rejectModal').addEventListener('click', function(e) {
-    if (e.target === this) closeRejectModal();
+    if (e.target === this && document._mgMdTarget === this) closeRejectModal();
 });
 </script>
 

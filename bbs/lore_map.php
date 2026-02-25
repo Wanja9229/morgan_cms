@@ -1,6 +1,6 @@
 <?php
 /**
- * Morgan Edition - 세계관 맵 페이지
+ * Morgan Edition - 세계관 지도 페이지
  * 맵 지역(mg_map_region) 기반 마커 표시
  */
 
@@ -14,7 +14,7 @@ if (mg_config('lore_use', '1') == '0') {
 
 $map_image = mg_config('expedition_map_image', '');
 if (!$map_image) {
-    alert('세계관 맵이 설정되지 않았습니다.', G5_BBS_URL . '/lore.php');
+    alert('세계관 지도가 설정되지 않았습니다.', G5_BBS_URL . '/lore.php');
 }
 
 // 맵 지역 목록 (사용중 + 좌표 있는 것만)
@@ -32,7 +32,7 @@ foreach ($regions as $r) {
     );
 }
 
-$g5['title'] = '세계관 맵 - 세계관 위키';
+$g5['title'] = '지도 - 세계관 위키';
 include_once(G5_THEME_PATH.'/head.php');
 ?>
 
@@ -45,7 +45,7 @@ include_once(G5_THEME_PATH.'/head.php');
             </svg>
         </div>
         <div>
-            <h1 class="text-2xl font-bold text-mg-text-primary">세계관 맵</h1>
+            <h1 class="text-2xl font-bold text-mg-text-primary">지도</h1>
             <p class="text-sm text-mg-text-muted"><?php echo htmlspecialchars(mg_config('lore_map_desc', '이 세계의 지도를 살펴보세요')); ?></p>
         </div>
     </div>
@@ -68,13 +68,13 @@ include_once(G5_THEME_PATH.'/head.php');
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
             </svg>
-            세계관 맵
+            지도
         </a>
     </div>
 
     <!-- 맵 영역 -->
     <div id="lore-map-container" style="position:relative;overflow:auto;max-height:75vh;border-radius:12px;border:1px solid var(--mg-bg-tertiary);background:var(--mg-bg-secondary);">
-        <img src="<?php echo htmlspecialchars($map_image); ?>" id="lore-map-image" style="display:block;width:100%;" alt="세계관 맵" draggable="false">
+        <img src="<?php echo htmlspecialchars($map_image); ?>" id="lore-map-image" style="display:block;width:100%;" alt="세계관 지도" draggable="false">
         <div id="lore-map-markers"></div>
         <div id="lore-map-popup" style="display:none;position:absolute;z-index:20;"></div>
     </div>

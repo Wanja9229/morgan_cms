@@ -149,6 +149,16 @@ $configs = array(
     'attendance_streak_bonus_days' => isset($_POST['attendance_streak_bonus_days']) ? (int)$_POST['attendance_streak_bonus_days'] : 7,
 );
 
+// 출석 재료 보상 JSON
+if (isset($_POST['attendance_material_reward'])) {
+    $att_mat = trim($_POST['attendance_material_reward']);
+    if ($att_mat) {
+        $decoded = json_decode($att_mat, true);
+        if (!is_array($decoded)) $att_mat = '';
+    }
+    $configs['attendance_material_reward'] = $att_mat;
+}
+
 // 유효성 검사
 if ($configs['dice_bonus_multiplier'] < 1) $configs['dice_bonus_multiplier'] = 1;
 if ($configs['attendance_streak_bonus_days'] < 2) $configs['attendance_streak_bonus_days'] = 2;

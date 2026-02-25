@@ -271,7 +271,7 @@ if ($is_anonymous_board) { ?>
 
     <!-- 작성 모달 (최신 판에서만) -->
     <?php if ($write_href && $is_latest_panel) { ?>
-    <div id="postit_write_form" class="cork-write-overlay hidden" onclick="togglePostitWrite()">
+    <div id="postit_write_form" class="cork-write-overlay hidden" onclick="if(event.target===this && document._mgMdTarget===this)togglePostitWrite()">
         <div class="cork-write-card" onclick="event.stopPropagation()">
             <!-- 압정 -->
             <div class="cork-pin">
@@ -401,7 +401,7 @@ if ($is_anonymous_board) { ?>
                 </div>
 
                 <!-- 모달 -->
-                <div id="postit_modal_<?php echo $row['wr_id']; ?>" class="cork-view-overlay hidden" onclick="closePostit(<?php echo $row['wr_id']; ?>)">
+                <div id="postit_modal_<?php echo $row['wr_id']; ?>" class="cork-view-overlay hidden" onclick="if(event.target===this && document._mgMdTarget===this)closePostit(<?php echo $row['wr_id']; ?>)">
                     <div class="relative w-full max-w-lg max-h-[70vh] flex flex-col rounded-lg shadow-2xl overflow-hidden" style="background:<?php echo $card_color['bg']; ?>;" onclick="event.stopPropagation()">
                         <!-- 압정 -->
                         <div style="position:absolute; top:-4px; left:50%; transform:translateX(-50%); z-index:2;">
@@ -470,7 +470,7 @@ if ($is_anonymous_board) { ?>
     <?php } ?>
 
     <!-- 수정 모달 (공유) -->
-    <div id="postit_edit_modal" class="cork-write-overlay hidden" onclick="closeEditPostit()">
+    <div id="postit_edit_modal" class="cork-write-overlay hidden" onclick="if(event.target===this && document._mgMdTarget===this)closeEditPostit()">
         <div class="cork-write-card" onclick="event.stopPropagation()" style="max-width:400px;">
             <div class="cork-pin">
                 <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="7" fill="#3b82f6" stroke="rgba(0,0,0,0.15)" stroke-width="0.5"/><ellipse cx="9.5" cy="9" rx="2" ry="1.5" fill="rgba(255,255,255,0.35)" transform="rotate(-20 9.5 9)"/></svg>
@@ -957,7 +957,7 @@ document.addEventListener('keydown', function(e) {
                 </div>
 
                 <!-- 모달 -->
-                <div id="postit_modal_<?php echo $row['wr_id']; ?>" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" onclick="closePostit(<?php echo $row['wr_id']; ?>)">
+                <div id="postit_modal_<?php echo $row['wr_id']; ?>" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" onclick="if(event.target===this && document._mgMdTarget===this)closePostit(<?php echo $row['wr_id']; ?>)">
                     <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
                     <div class="relative w-full max-w-2xl max-h-[80vh] flex flex-col <?php echo $postit_bg; ?> rounded-lg shadow-lg overflow-hidden" onclick="event.stopPropagation()">
                         <div class="<?php echo $postit_accent; ?> h-1.5 flex-shrink-0"></div>

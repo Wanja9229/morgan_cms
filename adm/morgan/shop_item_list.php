@@ -17,6 +17,7 @@ $type_labels = $mg['shop_type_labels'];
 
 // 검색 조건
 $type_group = isset($_GET['type_group']) ? clean_xss_tags($_GET['type_group']) : '';
+$si_type_filter = isset($_GET['si_type']) ? clean_xss_tags($_GET['si_type']) : '';
 $sfl = isset($_GET['sfl']) ? clean_xss_tags($_GET['sfl']) : '';
 $stx = isset($_GET['stx']) ? clean_xss_tags($_GET['stx']) : '';
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -26,7 +27,22 @@ $offset = ($page - 1) * $rows;
 // 현재 선택된 타입들
 $current_types = array();
 if ($type_group && isset($type_groups[$type_group])) {
-    $current_types = $type_groups[$type_group]['types'];
+    $group_def = $type_groups[$type_group];
+    $group_types = $group_def['types'];
+    $sub_groups = isset($group_def['sub_groups']) ? $group_def['sub_groups'] : array();
+
+    if ($si_type_filter) {
+        if (isset($sub_groups[$si_type_filter])) {
+            $current_types = $sub_groups[$si_type_filter]['types'];
+        } elseif (in_array($si_type_filter, $group_types)) {
+            $current_types = array($si_type_filter);
+        } else {
+            $current_types = $group_types;
+            $si_type_filter = '';
+        }
+    } else {
+        $current_types = $group_types;
+    }
 }
 
 // 검색 쿼리
@@ -70,8 +86,8 @@ require_once __DIR__.'/_head.php';
     </div>
 </div>
 
-<!-- 타입 탭 -->
-<div class="mg-tabs" style="margin-bottom:1rem;">
+<!-- 1차 카테고리 탭 -->
+<div class="mg-tabs" style="margin-bottom:0.5rem;">
     <a href="./shop_item_list.php" class="mg-tab <?php echo !$type_group ? 'active' : ''; ?>">전체</a>
     <?php foreach ($type_groups as $key => $group) { ?>
     <a href="./shop_item_list.php?type_group=<?php echo $key; ?>" class="mg-tab <?php echo $type_group == $key ? 'active' : ''; ?>">
@@ -81,11 +97,36 @@ require_once __DIR__.'/_head.php';
     <?php } ?>
 </div>
 
+<!-- 2차 타입 서브탭 -->
+<?php if ($type_group && isset($type_groups[$type_group]) && count($type_groups[$type_group]['types']) > 1) {
+    $adm_group_def = $type_groups[$type_group];
+    $adm_sub_groups = isset($adm_group_def['sub_groups']) ? $adm_group_def['sub_groups'] : array();
+    $adm_grouped = array();
+    foreach ($adm_sub_groups as $sg) { foreach ($sg['types'] as $_t) $adm_grouped[] = $_t; }
+?>
+<div class="mg-tabs mg-tabs-sub" style="margin-bottom:1rem;">
+    <a href="./shop_item_list.php?type_group=<?php echo $type_group; ?>" class="mg-tab <?php echo !$si_type_filter ? 'active' : ''; ?>" style="font-size:0.8rem;padding:0.3rem 0.7rem;">전체</a>
+    <?php foreach ($adm_sub_groups as $sg_key => $sg) { ?>
+    <a href="./shop_item_list.php?type_group=<?php echo $type_group; ?>&si_type=<?php echo $sg_key; ?>" class="mg-tab <?php echo $si_type_filter == $sg_key ? 'active' : ''; ?>" style="font-size:0.8rem;padding:0.3rem 0.7rem;">
+        <?php echo htmlspecialchars($sg['label']); ?>
+    </a>
+    <?php } ?>
+    <?php foreach ($adm_group_def['types'] as $t_key) { if (in_array($t_key, $adm_grouped)) continue; ?>
+    <a href="./shop_item_list.php?type_group=<?php echo $type_group; ?>&si_type=<?php echo $t_key; ?>" class="mg-tab <?php echo $si_type_filter == $t_key ? 'active' : ''; ?>" style="font-size:0.8rem;padding:0.3rem 0.7rem;">
+        <?php echo $type_labels[$t_key] ?? $t_key; ?>
+    </a>
+    <?php } ?>
+</div>
+<?php } else { ?>
+<div style="margin-bottom:0.5rem;"></div>
+<?php } ?>
+
 <!-- 검색 -->
 <div class="mg-card" style="margin-bottom:1rem;">
     <div class="mg-card-body" style="padding:1rem;">
         <form name="fsearch" id="fsearch" method="get" style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
             <input type="hidden" name="type_group" value="<?php echo htmlspecialchars($type_group); ?>">
+            <input type="hidden" name="si_type" value="<?php echo htmlspecialchars($si_type_filter); ?>">
             <select name="sfl" class="mg-form-select" style="width:auto;">
                 <option value="si_name" <?php echo $sfl == 'si_name' ? 'selected' : ''; ?>>상품명</option>
                 <option value="si_type" <?php echo $sfl == 'si_type' ? 'selected' : ''; ?>>타입</option>
@@ -104,21 +145,22 @@ require_once __DIR__.'/_head.php';
             <input type="hidden" name="token" value="">
             <input type="hidden" name="page" value="<?php echo $page; ?>">
             <input type="hidden" name="type_group" value="<?php echo htmlspecialchars($type_group); ?>">
+            <input type="hidden" name="si_type" value="<?php echo htmlspecialchars($si_type_filter); ?>">
             <input type="hidden" name="sfl" value="<?php echo $sfl; ?>">
             <input type="hidden" name="stx" value="<?php echo htmlspecialchars($stx); ?>">
 
-            <table class="mg-table" style="min-width:900px;">
+            <table class="mg-table" style="min-width:640px;">
                 <thead>
                     <tr>
                         <th style="width:40px;"><input type="checkbox" onclick="checkAll(this);"></th>
                         <th style="width:60px;">이미지</th>
                         <th>상품명</th>
-                        <th style="width:120px;">타입</th>
-                        <th style="width:100px;">가격</th>
-                        <th style="width:80px;">재고</th>
-                        <th style="width:60px;">노출</th>
-                        <th style="width:60px;">사용</th>
-                        <th style="width:80px;">관리</th>
+                        <th style="width:100px;">타입</th>
+                        <th style="width:80px;">가격</th>
+                        <th style="width:60px;">재고</th>
+                        <th class="mg-hide-mobile" style="width:50px;">노출</th>
+                        <th class="mg-hide-mobile" style="width:50px;">사용</th>
+                        <th style="width:60px;">관리</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -165,14 +207,14 @@ require_once __DIR__.'/_head.php';
                             <span style="color:var(--mg-text-muted);font-size:0.75rem;">(<?php echo $row['si_stock_sold']; ?>)</span>
                             <?php } ?>
                         </td>
-                        <td style="text-align:center;">
+                        <td class="mg-hide-mobile" style="text-align:center;">
                             <?php if ($row['si_display']) { ?>
                             <span style="color:var(--mg-success);">O</span>
                             <?php } else { ?>
                             <span style="color:var(--mg-text-muted);">X</span>
                             <?php } ?>
                         </td>
-                        <td style="text-align:center;">
+                        <td class="mg-hide-mobile" style="text-align:center;">
                             <?php if ($row['si_use']) { ?>
                             <span style="color:var(--mg-success);">O</span>
                             <?php } else { ?>
@@ -209,7 +251,7 @@ require_once __DIR__.'/_head.php';
 <?php if ($total_page > 1) { ?>
 <div class="mg-pagination">
     <?php
-    $query_string = 'type_group='.urlencode($type_group).'&sfl='.$sfl.'&stx='.urlencode($stx);
+    $query_string = 'type_group='.urlencode($type_group).'&si_type='.urlencode($si_type_filter).'&sfl='.$sfl.'&stx='.urlencode($stx);
     $start_page = max(1, $page - 2);
     $end_page = min($total_page, $page + 2);
 
@@ -234,6 +276,16 @@ require_once __DIR__.'/_head.php';
 </div>
 <?php } ?>
 
+<style>
+@media (max-width: 768px) {
+    .mg-hide-mobile { display: none !important; }
+    #fsearch { flex-direction: column; }
+    #fsearch .mg-form-select,
+    #fsearch .mg-form-input,
+    #fsearch .mg-btn { width: 100% !important; max-width: none !important; }
+    #fsearch .mg-btn-success { margin-left: 0 !important; }
+}
+</style>
 <script>
 function checkAll(el) {
     var chks = document.querySelectorAll('input[name="chk[]"]');

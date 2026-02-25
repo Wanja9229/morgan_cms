@@ -5,25 +5,8 @@
 
 if (!defined('_GNUBOARD_')) exit;
 
-// 상품 타입명
-$item_type_names = array(
-    'title' => '칭호',
-    'badge' => '뱃지',
-    'nick_color' => '닉네임 색상',
-    'nick_effect' => '닉네임 효과',
-    'profile_border' => '프로필 테두리',
-    'profile_skin' => '프로필 스킨',
-    'profile_bg' => '프로필 배경',
-    'equip' => '장비',
-    'emoticon_set' => '이모티콘',
-    'emoticon_reg' => '이모티콘 등록권',
-    'furniture' => '가구',
-    'material' => '재료',
-    'seal_bg' => '인장 배경',
-    'seal_frame' => '인장 프레임',
-    'char_slot' => '캐릭터 슬롯',
-    'etc' => '기타'
-);
+// 상품 타입명 (morgan.php 단일 소스)
+$item_type_names = $mg['shop_type_labels'];
 ?>
 
 <div class="mg-inner">
@@ -448,7 +431,7 @@ function closeGiftModal() {
 
 // 모달 외부 클릭 닫기
 document.getElementById('gift-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeGiftModal();
+    if (e.target === this && document._mgMdTarget === this) closeGiftModal();
 });
 
 // 받는 사람 ID 입력 시 닉네임 확인

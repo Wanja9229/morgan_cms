@@ -12,8 +12,116 @@ include_once(G5_PATH.'/plugin/morgan/morgan.php');
 
 $w = isset($_POST['w']) ? $_POST['w'] : '';
 $fc_id = isset($_POST['fc_id']) ? (int)$_POST['fc_id'] : 0;
+$action = isset($_POST['action']) ? $_POST['action'] : '';
 
 $redirect_url = G5_ADMIN_URL.'/morgan/pioneer_facility.php';
+
+// UI 모드 AJAX 전환
+if ($action === 'set_view_mode') {
+    header('Content-Type: application/json; charset=utf-8');
+    $mode = isset($_POST['mode']) ? $_POST['mode'] : 'card';
+    if (!in_array($mode, array('card', 'base'))) $mode = 'card';
+    mg_set_config('pioneer_view_mode', $mode);
+    echo json_encode(array('success' => true, 'mode' => $mode));
+    exit;
+}
+
+// 거점 이미지 삭제 (AJAX)
+if ($action === 'delete_base_image') {
+    header('Content-Type: application/json; charset=utf-8');
+    $old_map = mg_config('pioneer_map_image', '');
+    if ($old_map) {
+        $old_file = str_replace(G5_DATA_URL, G5_DATA_PATH, $old_map);
+        if (file_exists($old_file)) @unlink($old_file);
+    }
+    mg_set_config('pioneer_map_image', '');
+    mg_set_config('pioneer_view_mode', 'card');
+    echo json_encode(array('success' => true));
+    exit;
+}
+
+// 뷰 설정 저장
+if ($w === 'config') {
+    // 뷰 모드
+    $view_mode = isset($_POST['pioneer_view_mode']) ? $_POST['pioneer_view_mode'] : 'card';
+    if (!in_array($view_mode, array('card', 'base'))) $view_mode = 'card';
+    mg_set_config('pioneer_view_mode', $view_mode);
+
+    // 거점 이미지 처리
+    $upload_dir = G5_DATA_PATH.'/morgan';
+    $upload_url = G5_DATA_URL.'/morgan';
+    if (!is_dir($upload_dir)) @mkdir($upload_dir, 0755, true);
+
+    $old_map = mg_config('pioneer_map_image', '');
+
+    if (isset($_POST['pioneer_map_action']) && $_POST['pioneer_map_action'] === '__DELETE__') {
+        if ($old_map) {
+            $old_file = str_replace(G5_DATA_URL, G5_DATA_PATH, $old_map);
+            if (file_exists($old_file)) @unlink($old_file);
+        }
+        mg_set_config('pioneer_map_image', '');
+    }
+    elseif (isset($_FILES['pioneer_map_image_file']) && $_FILES['pioneer_map_image_file']['error'] === UPLOAD_ERR_OK) {
+        $file = $_FILES['pioneer_map_image_file'];
+        $allowed_ext = array('jpg', 'jpeg', 'png', 'gif', 'webp');
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+
+        if (!in_array($ext, $allowed_ext)) {
+            alert('허용되지 않는 파일 형식입니다. (jpg, png, gif, webp만 가능)');
+        }
+
+        // 맵 이미지는 일반 업로드 제한보다 큰 20MB까지 허용
+        $max_map_size = 20 * 1024 * 1024;
+        if ($file['size'] > $max_map_size) {
+            alert('파일 크기가 20MB를 초과합니다.');
+        }
+
+        if ($old_map) {
+            $old_file = str_replace(G5_DATA_URL, G5_DATA_PATH, $old_map);
+            if (file_exists($old_file)) @unlink($old_file);
+        }
+
+        $new_filename = 'pioneer_map_' . date('Ymd_His') . '.' . $ext;
+        $target_path = $upload_dir . '/' . $new_filename;
+
+        if (move_uploaded_file($file['tmp_name'], $target_path)) {
+            @chmod($target_path, 0644);
+            mg_set_config('pioneer_map_image', $upload_url . '/' . $new_filename);
+        } else {
+            alert('파일 업로드에 실패했습니다. 디렉토리 권한을 확인해주세요.');
+        }
+    }
+    elseif (isset($_FILES['pioneer_map_image_file']) && $_FILES['pioneer_map_image_file']['error'] !== UPLOAD_ERR_NO_FILE) {
+        $err_code = $_FILES['pioneer_map_image_file']['error'];
+        $err_msgs = array(
+            UPLOAD_ERR_INI_SIZE   => 'PHP upload_max_filesize 초과',
+            UPLOAD_ERR_FORM_SIZE  => '폼 MAX_FILE_SIZE 초과',
+            UPLOAD_ERR_PARTIAL    => '파일이 부분만 업로드됨',
+            UPLOAD_ERR_NO_TMP_DIR => '임시 폴더 없음',
+            UPLOAD_ERR_CANT_WRITE => '디스크 쓰기 실패',
+        );
+        $err_msg = isset($err_msgs[$err_code]) ? $err_msgs[$err_code] : '알 수 없는 오류('.$err_code.')';
+        alert('이미지 업로드 실패: ' . $err_msg);
+    }
+
+    alert('뷰 설정이 저장되었습니다.', $redirect_url);
+}
+
+// 마커 좌표 저장 (AJAX)
+if ($w === 'marker' && $fc_id > 0) {
+    global $mg;
+
+    $fc_map_x = isset($_POST['fc_map_x']) && $_POST['fc_map_x'] !== '' ? max(0, min(100, (float)$_POST['fc_map_x'])) : null;
+    $fc_map_y = isset($_POST['fc_map_y']) && $_POST['fc_map_y'] !== '' ? max(0, min(100, (float)$_POST['fc_map_y'])) : null;
+
+    $map_x_sql = $fc_map_x !== null ? $fc_map_x : 'NULL';
+    $map_y_sql = $fc_map_y !== null ? $fc_map_y : 'NULL';
+
+    sql_query("UPDATE {$mg['facility_table']} SET fc_map_x = {$map_x_sql}, fc_map_y = {$map_y_sql} WHERE fc_id = {$fc_id}");
+
+    echo 'OK';
+    exit;
+}
 
 // 삭제
 if ($w === 'd' && $fc_id > 0) {
@@ -78,6 +186,8 @@ $fc_order = isset($_POST['fc_order']) ? (int)$_POST['fc_order'] : 0;
 $fc_stamina_cost = isset($_POST['fc_stamina_cost']) ? (int)$_POST['fc_stamina_cost'] : 0;
 $fc_unlock_type = isset($_POST['fc_unlock_type']) ? clean_xss_tags($_POST['fc_unlock_type']) : '';
 $fc_unlock_target = isset($_POST['fc_unlock_target']) ? clean_xss_tags($_POST['fc_unlock_target']) : '';
+$fc_map_x = isset($_POST['fc_map_x']) && $_POST['fc_map_x'] !== '' ? max(0, min(100, (float)$_POST['fc_map_x'])) : null;
+$fc_map_y = isset($_POST['fc_map_y']) && $_POST['fc_map_y'] !== '' ? max(0, min(100, (float)$_POST['fc_map_y'])) : null;
 $mat_costs = isset($_POST['mat_cost']) ? $_POST['mat_cost'] : array();
 $del_icon = isset($_POST['del_icon']) ? true : false;
 
@@ -148,6 +258,9 @@ $fc_unlock_target_esc = sql_real_escape_string($fc_unlock_target);
 
 if ($w === 'u' && $fc_id > 0) {
     // 수정
+    $map_x_sql = $fc_map_x !== null ? $fc_map_x : 'NULL';
+    $map_y_sql = $fc_map_y !== null ? $fc_map_y : 'NULL';
+
     sql_query("UPDATE {$mg['facility_table']} SET
                fc_name = '{$fc_name_esc}',
                fc_icon = '{$fc_icon_esc}',
@@ -155,20 +268,28 @@ if ($w === 'u' && $fc_id > 0) {
                fc_order = {$fc_order},
                fc_stamina_cost = {$fc_stamina_cost},
                fc_unlock_type = '{$fc_unlock_type_esc}',
-               fc_unlock_target = '{$fc_unlock_target_esc}'
+               fc_unlock_target = '{$fc_unlock_target_esc}',
+               fc_map_x = {$map_x_sql},
+               fc_map_y = {$map_y_sql}
                WHERE fc_id = {$fc_id}");
 
-    // 재료 비용 업데이트
-    // 기존 삭제 후 재입력
+    // 재료 비용 업데이트 (기존 투입량 보존)
+    $old_mats = array();
+    $old_result = sql_query("SELECT mt_id, fmc_current FROM {$mg['facility_material_cost_table']} WHERE fc_id = {$fc_id}");
+    while ($om = sql_fetch_array($old_result)) {
+        $old_mats[(int)$om['mt_id']] = (int)$om['fmc_current'];
+    }
+
     sql_query("DELETE FROM {$mg['facility_material_cost_table']} WHERE fc_id = {$fc_id}");
 
     foreach ($mat_costs as $mt_id => $required) {
         $mt_id = (int)$mt_id;
         $required = (int)$required;
         if ($required > 0) {
+            $current = isset($old_mats[$mt_id]) ? min($old_mats[$mt_id], $required) : 0;
             sql_query("INSERT INTO {$mg['facility_material_cost_table']}
                        (fc_id, mt_id, fmc_required, fmc_current)
-                       VALUES ({$fc_id}, {$mt_id}, {$required}, 0)");
+                       VALUES ({$fc_id}, {$mt_id}, {$required}, {$current})");
         }
     }
 
@@ -176,9 +297,12 @@ if ($w === 'u' && $fc_id > 0) {
 
 } else {
     // 추가
+    $map_x_sql = $fc_map_x !== null ? $fc_map_x : 'NULL';
+    $map_y_sql = $fc_map_y !== null ? $fc_map_y : 'NULL';
+
     sql_query("INSERT INTO {$mg['facility_table']}
-               (fc_name, fc_icon, fc_desc, fc_order, fc_status, fc_stamina_cost, fc_stamina_current, fc_unlock_type, fc_unlock_target)
-               VALUES ('{$fc_name_esc}', '{$fc_icon_esc}', '{$fc_desc_esc}', {$fc_order}, 'locked', {$fc_stamina_cost}, 0, '{$fc_unlock_type_esc}', '{$fc_unlock_target_esc}')");
+               (fc_name, fc_icon, fc_desc, fc_order, fc_status, fc_stamina_cost, fc_stamina_current, fc_unlock_type, fc_unlock_target, fc_map_x, fc_map_y)
+               VALUES ('{$fc_name_esc}', '{$fc_icon_esc}', '{$fc_desc_esc}', {$fc_order}, 'locked', {$fc_stamina_cost}, 0, '{$fc_unlock_type_esc}', '{$fc_unlock_target_esc}', {$map_x_sql}, {$map_y_sql})");
 
     $fc_id = sql_insert_id();
 
