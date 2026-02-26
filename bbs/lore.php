@@ -73,46 +73,37 @@ include_once(G5_THEME_PATH.'/head.php');
         <?php } ?>
     </div>
 
-    <!-- 문서 그리드 -->
+    <!-- 문서 리스트 -->
     <?php if (!empty($articles)) { ?>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="space-y-2">
         <?php foreach ($articles as $article) { ?>
-        <a href="<?php echo G5_BBS_URL; ?>/lore_view.php?la_id=<?php echo $article['la_id']; ?>" class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden hover:border-mg-accent/50 transition-colors group block">
-            <!-- 썸네일 -->
-            <div class="aspect-video bg-mg-bg-tertiary relative overflow-hidden">
+        <a href="<?php echo G5_BBS_URL; ?>/lore_view.php?la_id=<?php echo $article['la_id']; ?>" class="flex items-center gap-4 bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary p-3 hover:border-mg-accent/50 transition-colors group">
+            <!-- 정사각형 썸네일 -->
+            <div class="w-14 h-14 rounded-lg bg-mg-bg-tertiary overflow-hidden flex-shrink-0">
                 <?php if (!empty($article['la_thumbnail'])) { ?>
-                <img src="<?php echo htmlspecialchars($article['la_thumbnail']); ?>" alt="<?php echo htmlspecialchars($article['la_title']); ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                <img src="<?php echo htmlspecialchars($article['la_thumbnail']); ?>" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                 <?php } else { ?>
                 <div class="w-full h-full flex items-center justify-center text-mg-text-muted">
-                    <svg class="w-12 h-12 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-6 h-6 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
                 </div>
                 <?php } ?>
-                <?php if (!empty($article['lc_name'])) { ?>
-                <div class="absolute top-2 left-2">
-                    <span class="bg-mg-bg-secondary/80 backdrop-blur text-mg-text-secondary text-xs px-2 py-0.5 rounded-full"><?php echo htmlspecialchars($article['lc_name']); ?></span>
-                </div>
-                <?php } ?>
             </div>
-
-            <!-- 정보 -->
-            <div class="p-4">
-                <h3 class="font-bold text-mg-text-primary text-base truncate group-hover:text-mg-accent transition-colors"><?php echo htmlspecialchars($article['la_title']); ?></h3>
-                <?php if (!empty($article['la_subtitle'])) { ?>
-                <p class="text-sm text-mg-text-muted mt-1 line-clamp-2"><?php echo htmlspecialchars($article['la_subtitle']); ?></p>
-                <?php } ?>
-                <div class="flex items-center gap-3 mt-3 text-xs text-mg-text-muted">
-                    <span class="flex items-center gap-1">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                        </svg>
-                        <?php echo number_format((int)$article['la_hit']); ?>
-                    </span>
-                    <span><?php echo date('Y.m.d', strtotime($article['la_created'])); ?></span>
+            <!-- 문서 정보 -->
+            <div class="flex-1 min-w-0">
+                <h3 class="font-bold text-mg-text-primary text-sm truncate group-hover:text-mg-accent transition-colors"><?php echo htmlspecialchars($article['la_title']); ?></h3>
+                <div class="flex items-center gap-2 mt-1">
+                    <?php if (!empty($article['lc_name'])) { ?>
+                    <span class="text-xs text-mg-accent bg-mg-accent/10 px-2 py-0.5 rounded-full"><?php echo htmlspecialchars($article['lc_name']); ?></span>
+                    <?php } ?>
+                    <span class="text-xs text-mg-text-muted"><?php echo number_format((int)$article['la_hit']); ?>회</span>
                 </div>
             </div>
+            <!-- 화살표 -->
+            <svg class="w-4 h-4 text-mg-text-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
         </a>
         <?php } ?>
     </div>

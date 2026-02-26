@@ -120,7 +120,7 @@ $update_url = G5_ADMIN_URL . '/morgan/lore_article_update.php';
                     <div style="flex:1;">
                         <input type="hidden" name="la_thumbnail" id="la_thumbnail" value="<?php echo $is_edit ? htmlspecialchars($article['la_thumbnail']) : ''; ?>">
                         <input type="file" id="thumb-file" accept="image/*" class="mg-form-input" style="margin-bottom:0.5rem;" onchange="uploadThumbnail(this)">
-                        <div style="font-size:0.75rem;color:var(--mg-text-muted);">권장: 정사각형, 최소 200x200px (jpg, png, webp)</div>
+                        <div style="font-size:0.75rem;color:var(--mg-text-muted);">권장: 정사각형 1:1 비율, 최소 120x120px (jpg, png, webp)</div>
                         <?php if ($is_edit && $article['la_thumbnail']) { ?>
                         <button type="button" class="mg-btn mg-btn-danger mg-btn-sm" style="margin-top:0.5rem;" onclick="removeThumbnail()">썸네일 제거</button>
                         <?php } ?>
@@ -212,7 +212,7 @@ $update_url = G5_ADMIN_URL . '/morgan/lore_article_update.php';
                         <input type="hidden" name="sections[<?php echo $idx; ?>][image]" class="section-image-url" value="<?php echo htmlspecialchars($sec['ls_image']); ?>">
                         <input type="hidden" name="sections[<?php echo $idx; ?>][existing_image]" class="section-existing-image" value="<?php echo htmlspecialchars($sec['ls_image']); ?>">
                         <div style="display:flex;gap:1rem;align-items:flex-start;">
-                            <div class="section-image-preview" style="width:160px;height:100px;border:1px dashed var(--mg-bg-tertiary);border-radius:4px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
+                            <div class="section-image-preview" style="width:120px;height:120px;border:1px dashed var(--mg-bg-tertiary);border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
                                 <?php if ($sec['ls_image']) { ?>
                                 <img src="<?php echo htmlspecialchars($sec['ls_image']); ?>" style="width:100%;height:100%;object-fit:cover;">
                                 <?php } else { ?>
@@ -323,7 +323,7 @@ $update_url = G5_ADMIN_URL . '/morgan/lore_article_update.php';
                 <input type="hidden" class="section-image-url" value="">
                 <input type="hidden" class="section-existing-image" value="">
                 <div style="display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap;">
-                    <div class="section-image-preview" style="width:160px;height:100px;border:1px dashed var(--mg-bg-tertiary);border-radius:4px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
+                    <div class="section-image-preview" style="width:120px;height:120px;border:1px dashed var(--mg-bg-tertiary);border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
                         <span style="color:var(--mg-text-muted);font-size:0.7rem;">미리보기</span>
                     </div>
                     <div style="flex:1;">
