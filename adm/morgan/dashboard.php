@@ -74,11 +74,11 @@ $result = sql_query("SELECT bn.bo_table, bn.wr_id, bn.bn_datetime, b.bo_subject
 while ($row = sql_fetch_array($result)) {
     $write_table = $g5['write_prefix'] . $row['bo_table'];
     $write = sql_fetch("SELECT wr_subject, mb_id FROM {$write_table} WHERE wr_id = {$row['wr_id']}");
-    if (isset($write['wr_subject']) && $write['wr_subject']) {
+    if ($write && !empty($write['wr_subject'])) {
         $row['wr_subject'] = $write['wr_subject'];
-        $row['mb_id'] = $write['mb_id'];
-        $nick_row = sql_fetch("SELECT mb_nick FROM {$g5['member_table']} WHERE mb_id = '{$write['mb_id']}'");
-        $row['mb_nick'] = isset($nick_row['mb_nick']) ? $nick_row['mb_nick'] : $write['mb_id'];
+        $row['mb_id'] = $write['mb_id'] ?? '';
+        $nick_row = sql_fetch("SELECT mb_nick FROM {$g5['member_table']} WHERE mb_id = '".sql_real_escape_string($write['mb_id'])."'");
+        $row['mb_nick'] = ($nick_row && $nick_row['mb_nick']) ? $nick_row['mb_nick'] : ($write['mb_id'] ?? '-');
         $recent_posts[] = $row;
     }
 }
@@ -125,7 +125,7 @@ $stat_achievement_today = $_r ? $_r['cnt'] : 0;
 
 // ─── 최근 업적 달성 ───
 $recent_achievements = array();
-$result = sql_query("SELECT ua.ua_id, ua.mb_id, ua.ua_tier, ua.ua_granted_by, ua.ua_datetime,
+$result = sql_query("SELECT ua.ua_id, ua.ac_id, ua.mb_id, ua.ua_tier, ua.ua_granted_by, ua.ua_datetime,
         a.ac_name, a.ac_category, a.ac_type, a.ac_rarity, m.mb_nick
     FROM {$g5['mg_user_achievement_table']} ua
     LEFT JOIN {$g5['mg_achievement_table']} a ON ua.ac_id = a.ac_id
@@ -134,11 +134,11 @@ $result = sql_query("SELECT ua.ua_id, ua.mb_id, ua.ua_tier, ua.ua_granted_by, ua
     ORDER BY ua.ua_datetime DESC LIMIT 5");
 while ($row = sql_fetch_array($result)) {
     // 단계형이면 단계 이름 조회
-    if ($row['ac_type'] == 'progressive' && $row['ua_tier'] > 0) {
+    if (($row['ac_type'] ?? '') === 'progressive' && (int)$row['ua_tier'] > 0) {
         $tier = sql_fetch("SELECT at_name FROM {$g5['mg_achievement_tier_table']}
-            WHERE ac_id = (SELECT ac_id FROM {$g5['mg_user_achievement_table']} WHERE ua_id = {$row['ua_id']})
-            AND at_level = {$row['ua_tier']}");
-        if ($tier) $row['tier_name'] = $tier['at_name'];
+            WHERE ac_id = ".(int)$row['ac_id']."
+            AND at_level = ".(int)$row['ua_tier']);
+        if ($tier && $tier['at_name']) $row['tier_name'] = $tier['at_name'];
     }
     $recent_achievements[] = $row;
 }
@@ -518,7 +518,7 @@ require_once __DIR__.'/_head.php';
                         <span class="wl-main">
                             <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=<?php echo $post['bo_table']; ?>&wr_id=<?php echo $post['wr_id']; ?>" target="_blank"><?php echo htmlspecialchars(mb_strimwidth($post['wr_subject'], 0, 40, '...')); ?></a>
                         </span>
-                        <span class="wl-nick"><?php echo htmlspecialchars($post['mb_nick']); ?></span>
+                        <span class="wl-nick"><?php echo htmlspecialchars($post['mb_nick'] ?? $post['mb_id'] ?? '-'); ?></span>
                         <span class="wl-sub"><?php echo mg_time_ago($post['bn_datetime']); ?></span>
                     </li>
                     <?php } ?>

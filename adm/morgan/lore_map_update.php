@@ -201,10 +201,7 @@ if ($mode == 'region_set_coords') {
         exit;
     }
 
-    $mr_marker_style = isset($_POST['mr_marker_style']) ? trim($_POST['mr_marker_style']) : 'pin';
-    if (!in_array($mr_marker_style, array('pin', 'circle', 'diamond', 'flag'))) {
-        $mr_marker_style = 'pin';
-    }
+    $mr_marker_style = mg_config('map_marker_style', 'pin');
     $mr_marker_style_esc = sql_real_escape_string($mr_marker_style);
 
     sql_query("UPDATE {$g5['mg_map_region_table']} SET mr_map_x = {$mr_map_x}, mr_map_y = {$mr_map_y}, mr_marker_style = '{$mr_marker_style_esc}' WHERE mr_id = {$mr_id}");

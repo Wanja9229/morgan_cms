@@ -1,7 +1,7 @@
 # Morgan Edition - QA 로드맵
 
 > 작성일: 2026-02-20
-> 최종 업데이트: 2026-02-25 (개척/파견 시스템 검수 + 포인트 보상 + UI 통일)
+> 최종 업데이트: 2026-02-26 (상점/재화 Critical+High 전건 수정 검증 완료)
 
 ---
 
@@ -35,13 +35,13 @@
 
 ---
 
-### 📍 현재 진행 위치: **개척/파견 그룹 QA (Phase E) 코드 검수 완료 → 사용자 확인 대기**
+### 📍 현재 진행 위치: **Phase F(전체 통합) 코드 검수 완료**
 
 Phase A(설정) + Phase B(회원/캐릭터/인장) + Phase D(활동: 출석/알림/업적) = 완료.
 Phase C(콘텐츠): 의뢰 E2E PASS, 미션/역극 코드 검수 완료, 뷰페이지 리디자인, 댓글 버그 수정.
-Phase D(재화/상점): **코드 분석 완료(02-25)** — Critical 6건 + 일관성 6건 + 함수화 5건. → `docs/QA_SHOP_ISSUES.md`
-Phase E(개척/파견): **코드 검수 완료(02-25)** — DB 테이블 생성, 시드 데이터, UI 통일, 포인트 보상 추가, 마이그레이션 수정.
-다음: 사용자 브라우저 확인 → Phase D(상점) Critical 수정.
+Phase D(재화/상점): **전건 수정 완료(02-26 검증)** — Critical 6 + High 6 + Refactor 5 + Low 5 = 22건. → `docs/QA_SHOP_ISSUES.md`
+Phase E(개척/파견): **전건 검수 완료(02-26)** — 시설/재료/파견지/파견기록 전부 코드 검수 완료. 맵 마커 UI 3페이지 통일 + 드래그 지원 + 반응형 확인. + 파견 이벤트 시스템 구현.
+Phase F(전체 통합): **코드 검수 완료(02-26)** — 대시보드 PHP 8 수정 5건, SPA 라우터 매핑 보완, 뷰 테이블 overflow 수정.
 
 ---
 
@@ -367,7 +367,7 @@ Phase E(개척/파견): **코드 검수 완료(02-25)** — DB 테이블 생성,
 
 ## 6. 재화/상점 그룹
 
-> **코드 분석 완료 (02-25)**. Critical 6건 + 일관성 6건 + 함수화 5건 식별.
+> **전건 수정 완료 (02-26 검증)**. Critical 6 + High 6 + Refactor 5 + Low 5 = 22건.
 > 상세: `docs/QA_SHOP_ISSUES.md`
 
 ### 6.1 포인트 관리 (`point_manage.php`)
@@ -375,8 +375,8 @@ Phase E(개척/파견): **코드 검수 완료(02-25)** — DB 테이블 생성,
 | 항목 | 상태 | 비고 |
 |------|------|------|
 | 포인트 내역 조회 | [C] | 코드 검수 완료 — 검색/필터/페이징 정상 |
-| 수동 지급/차감 | [C] | 🔧 point_manage_update.php $member 미정의 수정 필요 |
-| URL 인코딩 | [C] | 🔧 sfl 파라미터 urlencode 누락 |
+| 수동 지급/차감 | [C] | ✅ $member → $_SESSION fallback 적용 |
+| URL 인코딩 | [C] | ✅ urlencode($sfl) 적용 |
 
 ### 6.2 보상 관리 (`reward.php`)
 
@@ -384,11 +384,11 @@ Phase E(개척/파견): **코드 검수 완료(02-25)** — DB 테이블 생성,
 |------|------|------|
 | 게시판별 보상 설정 (5탭) | [C] | 코드 검수 완료 |
 | auto/request 모드 설정 | [C] | 코드 검수 완료 |
-| 정산 대기열 (승인/반려/일괄) | [C] | 🔧 일괄 전체실패 시 success:true 반환 |
-| 주사위 설정 (br_dice_use/once/max) | [C] | 🔧 새 게시판 생성 시 주사위 미저장 (board_form_update.php) |
+| 정산 대기열 (승인/반려/일괄) | [C] | ✅ success → $approved > 0 수정 |
+| 주사위 설정 (br_dice_use/once/max) | [C] | ✅ 추가 모드에도 ON DUPLICATE KEY UPDATE 적용 |
 | 좋아요 보상 설정 | [C] | 코드 검수 완료 |
-| XSS (reward.php:771) | [C] | 🔧 JS 인라인에 sql_escape 사용 → htmlspecialchars 필요 |
-| PHP 8 (reward_update.php:145) | [C] | 🔧 sql_fetch() false 체크 누락 |
+| XSS (reward.php:877) | [C] | ✅ htmlspecialchars() 적용 |
+| PHP 8 (reward_update.php:132) | [C] | ✅ if (!$rc || !$rc['rc_id']) 가드 적용 |
 | 반응형 | [x] | 반려 모달 max-height 추가 |
 
 ### 6.3 상점 관리 (`shop_item_list.php`)
@@ -397,19 +397,19 @@ Phase E(개척/파견): **코드 검수 완료(02-25)** — DB 테이블 생성,
 |------|------|------|
 | 카테고리 관리 | [C] | 코드 검수 완료 |
 | **상점 탭 재정리** | [x] | 프로필(skin/bg/border), 인장(bg/frame/hover) 분리, border/equip 탭 제거 |
-| 상품 CRUD (16종 타입) | [C] | 🔧 form.php 타입 10개 vs morgan.php 17개 불일치 |
+| 상품 CRUD (16종 타입) | [C] | ✅ mg_get_item_types() 단일 소스 통합 |
 | 기간 한정 판매 | [C] | 코드 검수 완료 |
 | 프론트 상점 페이지 | [C] | 코드 검수 완료 |
-| 구매 처리 | [C] | 코드 검수 완료 — insert_point rel 파라미터 보완 필요 |
-| 인벤토리/장착 | [C] | 🔧 mg_get_inventory() 반환값 조건부 문제 |
-| 선물 보내기/수락/거절 | [C] | 🔧 gf_type NULL vs 'shop' 불일치 |
+| 구매 처리 | [C] | ✅ insert_point 6개 인자 전달 (이모티콘 포함) |
+| 인벤토리/장착 | [C] | ✅ mg_get_inventory() 항상 {items, total} 반환 |
+| 선물 보내기/수락/거절 | [C] | ✅ gf_type='shop' 명시 |
 | 반응형 | [x] | 테이블 min-width:900px 추가 |
 
 ### 6.4 구매/선물 내역 (`shop_log.php`)
 
 | 항목 | 상태 | 비고 |
 |------|------|------|
-| 구매 로그 조회 | [C] | 🔧 equip 타입 라벨 누락 |
+| 구매 로그 조회 | [C] | ✅ mg_get_item_types() 통합으로 라벨 일치 |
 | 선물 로그 조회 | [C] | 코드 검수 완료 |
 | 반응형 | [x] | 테이블 min-width:800px 추가 |
 
@@ -419,9 +419,10 @@ Phase E(개척/파견): **코드 검수 완료(02-25)** — DB 테이블 생성,
 |------|------|------|
 | 이모티콘 셋 CRUD | [C] | 코드 검수 완료 |
 | 개별 이모티콘 업로드 | [C] | 코드 검수 완료 |
-| 유저 제작 이모티콘 승인 | [C] | 🔧 자동생성 코드 중복 재검증 없음 |
-| 수수료 계산 | [C] | 🔧 commission_rate ≥100 시 음수 수익 |
-| 이모티콘 코드 포맷 | [C] | 🔧 `:code:` 포맷 검증 없음 (유저 입력) |
+| 유저 제작 이모티콘 승인 | [C] | ✅ do...while 루프로 코드 중복 해결 |
+| 수수료 계산 | [C] | ✅ min(99, max(0, ...)) 범위 제한 |
+| 이모티콘 코드 포맷 | [C] | ✅ mg_validate_emoticon_code() 공통 검증 |
+| 파일 크기 제한 | [C] | ✅ 관리자도 mg_upload_max_icon() 통일 |
 | 프론트 이모티콘 피커 | [-] | 검수에서 write 4종+RP 적용됨 |
 | 반응형 | [x] | 테이블 min-width:800px 추가 |
 
@@ -446,8 +447,9 @@ Phase E(개척/파견): **코드 검수 완료(02-25)** — DB 테이블 생성,
 
 | 항목 | 상태 | 비고 |
 |------|------|------|
-| 재료 타입 CRUD | [ ] | |
-| 활동 보상 재료 드롭 확인 | [ ] | |
+| 재료 타입 CRUD | [C] | 코드 검수 완료 — 추가/수정/삭제(cascade), 코드 regex 검증, 중복 체크 |
+| 수동 지급 (재료+스테미나) | [C] | 코드 검수 완료 — 회원 존재 확인, mg_add_material(), 스테미나 상한 초과 가능 |
+| 활동 보상 재료 드롭 확인 | [C] | 코드 검수 완료 — mg_reward_material() 트리거 기반 (보상 시스템에서 처리) |
 
 ### 7.3 파견지 관리 (`expedition_area.php`)
 
@@ -564,6 +566,10 @@ Phase E(개척/파견): **코드 검수 완료(02-25)** — DB 테이블 생성,
 | 02-25 | `theme/morgan/skin/pioneer/expedition.skin.php` | "스테미나은"→"스테미나는" 문법 오류 수정 |
 | 02-25 | `db/migrations/` | 3건 수정 — ADD COLUMN IF NOT EXISTS→PREPARE/EXECUTE, DELIMITER 제거 |
 | 02-25 | `db/migrations/20260225_160000_title_gacha_system.sql` | 칭호 뽑기 INSERT IGNORE→NOT EXISTS 패턴 (중복 방지) |
+| 02-26 | `plugin/morgan/morgan.php` | mg_get_inventory() 항상 {items, total} 반환으로 통일 (조건부 반환 제거) |
+| 02-26 | `bbs/inventory.php` | mg_get_inventory() 반환값 변경에 맞춰 $inv_data['items'] 언팩 |
+| 02-26 | `plugin/morgan/morgan.php` | 이모티콘 구매/판매 insert_point() 4인자→6인자 확장 (rel_table/id/action 추가) |
+| 02-26 | `adm/morgan/emoticon_form_update.php` | 미리보기 파일크기 1MB 하드코딩→mg_upload_max_icon() 통일 |
 
 ---
 
@@ -617,10 +623,10 @@ Phase E(개척/파견): **코드 검수 완료(02-25)** — DB 테이블 생성,
 22. 개척 — 시설/재료/노동력/기여
 23. 파견 — 파견지/드롭/파트너/맵모드
 
-### Phase F: 전체 통합
-24. 반응형 레이아웃 (375px / 768px / 1200px)
-25. SPA 라우터 전체 페이지 네비게이션
-26. 대시보드 위젯 전체 + 통계 카드 정확성
+### Phase F: 전체 통합 (코드 검수 완료 02-26)
+24. 반응형 레이아웃 (375px / 768px / 1200px) [C] — 뷰 테이블 overflow 수정, 주요 10개 페이지 3뷰포트 확인
+25. SPA 라우터 전체 페이지 네비게이션 [C] — attendance/mypage/inventory 매핑 추가, 404 리소스 없음
+26. 대시보드 위젯 전체 + 통계 카드 정확성 [C] — PHP 8 호환 5건 수정, 링크 8종 정상, collapsible 정상
 
 ---
 
@@ -643,6 +649,7 @@ Phase E(개척/파견): **코드 검수 완료(02-25)** — DB 테이블 생성,
 | 02-23 | 기능+QA | 의뢰 시스템 안정성 패치(settle/force_close/auto-expiry/edit flexibility) + 카드 UI 개편(3탭) + E2E 시나리오 테스트 10종 전체 PASS. 버그 2건 수정: 관리자 $items 변수 충돌, write_concierge_result 테이블 접두사 누락 |
 | 02-23 | 기능 | 인장 시스템 개편: 16×6→16×4 격자, 눈금자, 배경색(무료), 테두리 아이템 5종, 호버 아이템 4종, 전 요소 스타일 가능, 프론트 셀 스타일(배경+보더+라운딩). 상점 탭 재정리(프로필/인장 분리). 미션 QA: "우수작"→"선정작", 자유글쓰기 차단, 관리자 목록 컬럼 너비 수정. 트로피 텍스트 제거(아이콘+호버) |
 | 02-25 | QA+기능 | 재화/상점 코드 분석 완료: Critical 6+일관성 6+함수화 5 식별 → QA_SHOP_ISSUES.md. 개척 시설 관리 뷰 모드 토글 통일(카드뷰/거점뷰 인라인, 파견지와 동일 패턴), 거점 이미지 AJAX 분리. 파견 시스템: DB 테이블 3개 생성+시드(5파견지+12드롭), 전용 지도 이미지 분리(세계관 맵 독립), UI 모드 실제 전환 구현, 파견 기록 Warning 수정+명칭 변경, 해금 조건 Warning 수정. 마이그레이션 3건 수정(ADD COLUMN IF NOT EXISTS→PREPARE/EXECUTE, DELIMITER 제거). 칭호 뽑기 아이템 중복 제거. 문법 오류 수정(스테미나은→는). 파견 아이콘 mg_icon_input() 교체. **참가자 포인트 보상 신규**: ea_point_min/ea_point_max 컬럼, 파견 완료 시 참가자 포인트 지급(+파트너 보너스 20%), 보상 모달에 포인트 표시. 파트너PT→파트너 보너스PT 라벨 명확화 |
+| 02-26 | QA 검증 | Phase D(재화/상점) Critical C1-C6 + High H1-H6 실제 코드 검증 완료. 기수정 확인 17건 + 금일 수정 3건: H1 mg_get_inventory() 항상 {items,total} 반환, H4 이모티콘 insert_point() 6인자 확장, H5 관리자 이모티콘 파일크기 mg_upload_max_icon() 통일. QA_SHOP_ISSUES.md 전 항목 [완료] 마커 추가 |
 
 ---
 

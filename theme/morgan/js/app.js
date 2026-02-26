@@ -424,7 +424,11 @@
                     } else if (script === 'shop.php') {
                         activeId = 'shop';
                     } else if (script === 'inventory.php') {
-                        activeId = 'inventory';
+                        activeId = 'shop';
+                    } else if (script === 'attendance.php' || script === 'attendance_play.php') {
+                        activeId = 'attendance';
+                    } else if (script === 'mypage.php' || script === 'seal_edit.php') {
+                        activeId = 'home';
                     } else if (script === 'notification.php') {
                         activeId = 'notification';
                     } else if (script === 'lore.php' || script === 'lore_view.php' || script === 'lore_timeline.php' || script === 'lore_map.php') {

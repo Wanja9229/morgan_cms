@@ -42,7 +42,8 @@ if ($is_emoticon_tab) {
     $active_si_ids = array();
 } else {
     // 일반 인벤토리
-    $inventory = mg_get_inventory($member['mb_id'], $sc_id);
+    $inv_data = mg_get_inventory($member['mb_id'], $sc_id);
+    $inventory = $inv_data['items'];
     $active_items = mg_get_active_items($member['mb_id']);
     $active_si_ids = array_column($active_items, 'si_id');
     $my_emoticon_sets = array();

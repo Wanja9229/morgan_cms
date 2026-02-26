@@ -26,6 +26,27 @@ if ($action === 'set_view_mode') {
     exit;
 }
 
+// 좌표만 업데이트 (AJAX — 맵에서 기존 시설 배치)
+if ($action === 'set_coords') {
+    header('Content-Type: application/json; charset=utf-8');
+    global $mg;
+    $fc_id = isset($_POST['fc_id']) ? (int)$_POST['fc_id'] : 0;
+    $fc_map_x = isset($_POST['fc_map_x']) && $_POST['fc_map_x'] !== '' ? (float)$_POST['fc_map_x'] : null;
+    $fc_map_y = isset($_POST['fc_map_y']) && $_POST['fc_map_y'] !== '' ? (float)$_POST['fc_map_y'] : null;
+
+    if (!$fc_id) {
+        echo json_encode(array('success' => false, 'message' => '시설을 선택해주세요.'));
+        exit;
+    }
+
+    $x_val = $fc_map_x !== null ? $fc_map_x : 'NULL';
+    $y_val = $fc_map_y !== null ? $fc_map_y : 'NULL';
+    sql_query("UPDATE {$mg['facility_table']} SET fc_map_x = {$x_val}, fc_map_y = {$y_val} WHERE fc_id = {$fc_id}");
+
+    echo json_encode(array('success' => true));
+    exit;
+}
+
 // 거점 이미지 삭제 (AJAX)
 if ($action === 'delete_base_image') {
     header('Content-Type: application/json; charset=utf-8');

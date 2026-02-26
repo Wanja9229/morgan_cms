@@ -80,6 +80,28 @@ if ($action === 'delete_map_image') {
     exit;
 }
 
+// 좌표만 업데이트 (AJAX — 맵에서 기존 파견지 배치)
+if ($action === 'set_coords') {
+    header('Content-Type: application/json; charset=utf-8');
+    $ea_id = isset($_POST['ea_id']) ? (int)$_POST['ea_id'] : 0;
+    $ea_map_x = isset($_POST['ea_map_x']) && $_POST['ea_map_x'] !== '' ? (float)$_POST['ea_map_x'] : null;
+    $ea_map_y = isset($_POST['ea_map_y']) && $_POST['ea_map_y'] !== '' ? (float)$_POST['ea_map_y'] : null;
+
+    if (!$ea_id) {
+        echo json_encode(array('success' => false, 'message' => '파견지를 선택해주세요.'));
+        exit;
+    }
+
+    $x_val = $ea_map_x !== null ? $ea_map_x : 'NULL';
+    $y_val = $ea_map_y !== null ? $ea_map_y : 'NULL';
+    sql_query("UPDATE {$g5['mg_expedition_area_table']} SET ea_map_x = {$x_val}, ea_map_y = {$y_val} WHERE ea_id = {$ea_id}");
+
+    // 업데이트된 데이터 반환
+    $row = sql_fetch("SELECT ea_id, ea_name, ea_status, ea_map_x, ea_map_y FROM {$g5['mg_expedition_area_table']} WHERE ea_id = {$ea_id}");
+    echo json_encode(array('success' => true, 'area' => $row));
+    exit;
+}
+
 $w = isset($_POST['w']) ? $_POST['w'] : '';
 $ea_id = isset($_POST['ea_id']) ? (int)$_POST['ea_id'] : 0;
 
@@ -96,6 +118,7 @@ if ($w === 'd' && $ea_id > 0) {
         if (file_exists($del_file)) @unlink($del_file);
     }
     sql_query("DELETE FROM {$g5['mg_expedition_drop_table']} WHERE ea_id = {$ea_id}");
+    sql_query("DELETE FROM {$g5['mg_expedition_event_area_table']} WHERE ea_id = {$ea_id}");
     sql_query("DELETE FROM {$g5['mg_expedition_area_table']} WHERE ea_id = {$ea_id}");
     alert('삭제되었습니다.', $redirect_url);
 }
@@ -249,6 +272,23 @@ foreach ($drop_mt_ids as $i => $mt_id) {
     sql_query("INSERT INTO {$g5['mg_expedition_drop_table']}
                (ea_id, mt_id, ed_min, ed_max, ed_chance, ed_is_rare)
                VALUES ({$ea_id}, {$mt_id}, {$min}, {$max}, {$chance}, {$rare})");
+}
+
+// 이벤트 매칭: 기존 삭제 후 재삽입
+sql_query("DELETE FROM {$g5['mg_expedition_event_area_table']} WHERE ea_id = {$ea_id}");
+
+$evt_ee_ids = isset($_POST['evt_ee_id']) ? $_POST['evt_ee_id'] : array();
+$evt_chances = isset($_POST['evt_chance']) ? $_POST['evt_chance'] : array();
+
+foreach ($evt_ee_ids as $i => $evt_ee_id) {
+    $evt_ee_id = (int)$evt_ee_id;
+    if ($evt_ee_id < 1) continue;
+
+    $evt_chance = max(1, min(100, (int)($evt_chances[$i] ?? 10)));
+
+    sql_query("INSERT INTO {$g5['mg_expedition_event_area_table']}
+               (ea_id, ee_id, eea_chance)
+               VALUES ({$ea_id}, {$evt_ee_id}, {$evt_chance})");
 }
 
 alert(($w === 'u' ? '수정' : '등록').'되었습니다.', $redirect_url);

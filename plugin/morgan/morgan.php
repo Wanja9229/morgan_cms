@@ -85,6 +85,8 @@ $g5['mg_map_region_table'] = 'mg_map_region';
 $g5['mg_expedition_area_table'] = 'mg_expedition_area';
 $g5['mg_expedition_drop_table'] = 'mg_expedition_drop';
 $g5['mg_expedition_log_table'] = 'mg_expedition_log';
+$g5['mg_expedition_event_table'] = 'mg_expedition_event';
+$g5['mg_expedition_event_area_table'] = 'mg_expedition_event_area';
 $g5['mg_concierge_table'] = 'mg_concierge';
 $g5['mg_concierge_apply_table'] = 'mg_concierge_apply';
 $g5['mg_concierge_result_table'] = 'mg_concierge_result';
@@ -189,6 +191,8 @@ $mg['map_region_table'] = $g5['mg_map_region_table'];
 $mg['expedition_area_table'] = $g5['mg_expedition_area_table'];
 $mg['expedition_drop_table'] = $g5['mg_expedition_drop_table'];
 $mg['expedition_log_table'] = $g5['mg_expedition_log_table'];
+$mg['expedition_event_table'] = $g5['mg_expedition_event_table'];
+$mg['expedition_event_area_table'] = $g5['mg_expedition_event_area_table'];
 // 의뢰 매칭 시스템
 $mg['concierge_table'] = $g5['mg_concierge_table'];
 $mg['concierge_apply_table'] = $g5['mg_concierge_apply_table'];
@@ -1549,12 +1553,12 @@ function mg_get_inventory($mb_id, $sc_id = 0, $page = 0, $limit = 0) {
         $items[] = $row;
     }
 
-    // 페이지네이션 사용 시 배열로 반환
-    if ($page > 0 && $limit > 0) {
-        return array('items' => $items, 'total' => $total);
+    // 페이지네이션 없을 때는 전체 결과 수
+    if (!($page > 0 && $limit > 0)) {
+        $total = count($items);
     }
 
-    return $items;
+    return array('items' => $items, 'total' => $total);
 }
 
 /**
@@ -3241,7 +3245,7 @@ function mg_buy_emoticon_set($mb_id, $es_id) {
         }
 
         // 구매자 포인트 차감
-        insert_point($mb_id, -$price, '이모티콘 구매: '.$set['es_name']);
+        insert_point($mb_id, -$price, '이모티콘 구매: '.$set['es_name'], 'mg_emoticon_set', $es_id, '구매');
 
         // 크리에이터가 있으면 수수료 처리
         if ($set['es_creator_id']) {
@@ -3250,7 +3254,7 @@ function mg_buy_emoticon_set($mb_id, $es_id) {
             $creator_revenue = $price - $commission;
 
             if ($creator_revenue > 0) {
-                insert_point($set['es_creator_id'], $creator_revenue, '이모티콘 판매 수익: '.$set['es_name']);
+                insert_point($set['es_creator_id'], $creator_revenue, '이모티콘 판매 수익: '.$set['es_name'], 'mg_emoticon_set', $es_id, '판매수익');
             }
         }
     }
@@ -4618,10 +4622,9 @@ function mg_claim_expedition($mb_id, $el_id) {
     }
     $drop_result['point'] = $earned_point;
 
-    // 상태 업데이트 + 보상 기록
-    $rewards_json = sql_real_escape_string(json_encode($drop_result, JSON_UNESCAPED_UNICODE));
+    // 상태를 claimed로 변경 (보상 JSON은 이벤트 처리 후 갱신)
     sql_query("UPDATE {$g5['mg_expedition_log_table']}
-               SET el_status = 'claimed', el_rewards = '{$rewards_json}'
+               SET el_status = 'claimed'
                WHERE el_id = {$el_id}");
 
     // 파트너 보상
@@ -4641,6 +4644,126 @@ function mg_claim_expedition($mb_id, $el_id) {
         }
     }
 
+    // === 파견 이벤트 발동 ===
+    $triggered_events = array();
+    $ea_id = (int)$log['ea_id'];
+    $event_links = array();
+    $eea_res = sql_query("SELECT eea.*, e.ee_name, e.ee_desc, e.ee_icon, e.ee_effect_type, e.ee_effect
+                          FROM {$g5['mg_expedition_event_area_table']} eea
+                          LEFT JOIN {$g5['mg_expedition_event_table']} e ON eea.ee_id = e.ee_id
+                          WHERE eea.ea_id = {$ea_id}");
+    if ($eea_res) {
+        while ($eea_row = sql_fetch_array($eea_res)) {
+            $event_links[] = $eea_row;
+        }
+    }
+
+    foreach ($event_links as $elink) {
+        $roll = mt_rand(1, 100);
+        if ($roll > (int)$elink['eea_chance']) continue;
+
+        $effect = json_decode($elink['ee_effect'], true) ?: array();
+        $evt_result = array(
+            'ee_id'   => (int)$elink['ee_id'],
+            'name'    => $elink['ee_name'],
+            'desc'    => $elink['ee_desc'] ?? '',
+            'icon'    => $elink['ee_icon'] ?? '',
+            'type'    => $elink['ee_effect_type'],
+            'detail'  => '',
+        );
+
+        switch ($elink['ee_effect_type']) {
+            case 'point_bonus':
+                $amt = (int)($effect['amount'] ?? 0);
+                if ($amt > 0) {
+                    insert_point($mb_id, $amt,
+                        '파견 이벤트: ' . $elink['ee_name'],
+                        'mg_expedition_log', $el_id, '파견이벤트');
+                    $earned_point += $amt;
+                    $drop_result['point'] = $earned_point;
+                    $evt_result['detail'] = '+' . number_format($amt) . 'P';
+                }
+                break;
+
+            case 'point_penalty':
+                $amt = (int)($effect['amount'] ?? 0);
+                if ($amt > 0) {
+                    insert_point($mb_id, -$amt,
+                        '파견 이벤트: ' . $elink['ee_name'],
+                        'mg_expedition_log', $el_id, '파견이벤트');
+                    $earned_point -= $amt;
+                    $drop_result['point'] = $earned_point;
+                    $evt_result['detail'] = '-' . number_format($amt) . 'P';
+                }
+                break;
+
+            case 'material_bonus':
+                $mt_id = (int)($effect['mt_id'] ?? 0);
+                $cnt = (int)($effect['count'] ?? 0);
+                if ($mt_id > 0 && $cnt > 0) {
+                    mg_add_material($mb_id, $mt_id, $cnt);
+                    $mt_info = sql_fetch("SELECT mt_name FROM {$g5['mg_material_type_table']} WHERE mt_id = {$mt_id}");
+                    $mt_name = $mt_info ? $mt_info['mt_name'] : '재료';
+                    $drop_result['items'][] = array('mt_id' => $mt_id, 'mt_name' => $mt_name, 'amount' => $cnt, 'is_rare' => false);
+                    $evt_result['detail'] = $mt_name . ' x' . $cnt;
+                }
+                break;
+
+            case 'material_penalty':
+                $loss_cnt = (int)($effect['count'] ?? 0);
+                if ($loss_cnt > 0 && !empty($drop_result['items'])) {
+                    $removable = array();
+                    foreach ($drop_result['items'] as $idx => $itm) {
+                        $removable[] = $idx;
+                    }
+                    shuffle($removable);
+                    $removed_names = array();
+                    for ($ri = 0; $ri < min($loss_cnt, count($removable)); $ri++) {
+                        $ridx = $removable[$ri];
+                        $ritm = $drop_result['items'][$ridx];
+                        mg_add_material($mb_id, $ritm['mt_id'], -$ritm['amount']);
+                        $removed_names[] = $ritm['mt_name'] . ' x' . $ritm['amount'];
+                        unset($drop_result['items'][$ridx]);
+                    }
+                    $drop_result['items'] = array_values($drop_result['items']);
+                    $evt_result['detail'] = implode(', ', $removed_names) . ' 손실';
+                }
+                break;
+
+            case 'reward_loss':
+                $pt_loss = (int)($effect['point_loss'] ?? 0);
+                $mat_pct = (int)($effect['material_loss_pct'] ?? 0);
+                $parts = array();
+                if ($pt_loss > 0 && $earned_point > 0) {
+                    $actual_loss = min($pt_loss, $earned_point);
+                    insert_point($mb_id, -$actual_loss,
+                        '파견 이벤트: ' . $elink['ee_name'],
+                        'mg_expedition_log', $el_id, '파견이벤트');
+                    $earned_point -= $actual_loss;
+                    $drop_result['point'] = $earned_point;
+                    $parts[] = '-' . number_format($actual_loss) . 'P';
+                }
+                if ($mat_pct > 0 && !empty($drop_result['items'])) {
+                    foreach ($drop_result['items'] as &$itm) {
+                        $loss = (int)ceil($itm['amount'] * $mat_pct / 100);
+                        if ($loss > 0) {
+                            mg_add_material($mb_id, $itm['mt_id'], -$loss);
+                            $itm['amount'] -= $loss;
+                            $parts[] = $itm['mt_name'] . ' -' . $loss;
+                        }
+                    }
+                    unset($itm);
+                    $drop_result['items'] = array_filter($drop_result['items'], function($i) { return $i['amount'] > 0; });
+                    $drop_result['items'] = array_values($drop_result['items']);
+                }
+                $evt_result['detail'] = implode(', ', $parts) ?: '-';
+                break;
+        }
+
+        $triggered_events[] = $evt_result;
+    }
+    $drop_result['events'] = $triggered_events;
+
     // 업적 트리거
     if (function_exists('mg_trigger_achievement')) {
         mg_trigger_achievement($mb_id, 'expedition_claim_count');
@@ -4648,6 +4771,12 @@ function mg_claim_expedition($mb_id, $el_id) {
             mg_trigger_achievement($mb_id, 'expedition_rare_drop_count');
         }
     }
+
+    // 보상 기록 업데이트 (이벤트 포함)
+    $rewards_json = sql_real_escape_string(json_encode($drop_result, JSON_UNESCAPED_UNICODE));
+    sql_query("UPDATE {$g5['mg_expedition_log_table']}
+               SET el_rewards = '{$rewards_json}'
+               WHERE el_id = {$el_id}");
 
     return array(
         'success' => true,

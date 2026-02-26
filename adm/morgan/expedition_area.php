@@ -23,6 +23,29 @@ while ($fc_row = sql_fetch_array($fc_result)) {
     $facility_list[] = $fc_row;
 }
 
+// 이벤트 목록 (이벤트 매칭용)
+$events = array();
+$ev_result = sql_query("SELECT * FROM {$g5['mg_expedition_event_table']} ORDER BY ee_order, ee_id");
+while ($ev_row = sql_fetch_array($ev_result)) {
+    $events[] = $ev_row;
+}
+
+// 파견지별 이벤트 매칭 데이터 로딩
+$event_links = array();
+$eea_result = sql_query("SELECT eea.*, e.ee_name, e.ee_effect_type FROM {$g5['mg_expedition_event_area_table']} eea
+    LEFT JOIN {$g5['mg_expedition_event_table']} e ON eea.ee_id = e.ee_id
+    ORDER BY eea.ea_id, eea.eea_id");
+while ($eea_row = sql_fetch_array($eea_result)) {
+    $ea_id_key = (int)$eea_row['ea_id'];
+    if (!isset($event_links[$ea_id_key])) $event_links[$ea_id_key] = array();
+    $event_links[$ea_id_key][] = $eea_row;
+}
+// areas 배열에 이벤트 매칭 추가
+foreach ($areas as &$_a) {
+    $_a['event_links'] = isset($event_links[(int)$_a['ea_id']]) ? $event_links[(int)$_a['ea_id']] : array();
+}
+unset($_a);
+
 // 맵 관련 설정
 $ui_mode = mg_config('expedition_ui_mode', 'list');
 $map_image = mg_config('expedition_map_image', '');
@@ -337,6 +360,18 @@ require_once __DIR__.'/_head.php';
                     </div>
                     <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="addDropRow()" style="margin-top:8px;">+ 드롭 추가</button>
                 </div>
+
+                <!-- 이벤트 매칭 -->
+                <?php if (!empty($events)) { ?>
+                <div class="mg-form-group">
+                    <label class="mg-form-label">파견 이벤트</label>
+                    <p style="font-size:0.75rem;color:var(--mg-text-muted);margin-bottom:6px;">파견 완료 시 확률적으로 발동되는 이벤트를 매칭합니다.</p>
+                    <div id="event-link-table">
+                        <!-- JS로 동적 추가 -->
+                    </div>
+                    <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="addEventLinkRow()" style="margin-top:8px;">+ 이벤트 추가</button>
+                </div>
+                <?php } ?>
             </div>
 
             <div class="mg-modal-footer">
@@ -347,16 +382,35 @@ require_once __DIR__.'/_head.php';
     </div>
 </div>
 
+<!-- 맵 클릭 시 파견지 선택 팝업 -->
+<div id="map-place-popup" style="display:none; position:fixed; z-index:100; background:var(--mg-bg-secondary); border:1px solid var(--mg-bg-tertiary); border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,0.5); min-width:220px; max-width:280px; overflow:hidden;">
+    <div style="padding:8px 12px; border-bottom:1px solid var(--mg-bg-tertiary); font-size:0.8rem; color:var(--mg-text-muted); display:flex; justify-content:space-between; align-items:center;">
+        <span>파견지 배치</span>
+        <button type="button" onclick="closePlacePopup()" style="background:none; border:none; color:var(--mg-text-muted); cursor:pointer; font-size:1rem; line-height:1; padding:0 2px;">&times;</button>
+    </div>
+    <div id="map-place-list" style="max-height:240px; overflow-y:auto;">
+        <!-- JS로 채움 -->
+    </div>
+    <div style="padding:6px 8px; border-top:1px solid var(--mg-bg-tertiary);">
+        <button type="button" id="map-place-new-btn" class="mg-btn mg-btn-primary mg-btn-sm" style="width:100%; font-size:0.8rem;">+ 새 파견지 추가</button>
+    </div>
+</div>
+
 <style>
-.adm-map-marker { position:absolute; cursor:pointer; transition:transform 0.15s; z-index:5; }
-.adm-map-marker:hover { transform:scale(1.2); z-index:10; }
+.adm-map-marker { position:absolute; cursor:grab; z-index:5; user-select:none; }
+.adm-map-marker:hover { z-index:10; }
 .adm-map-marker svg { filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
 .adm-map-marker .marker-label { position:absolute; top:100%; left:50%; transform:translateX(-50%); white-space:nowrap; font-size:11px; color:var(--mg-text-primary); background:rgba(0,0,0,0.7); padding:1px 6px; border-radius:4px; margin-top:2px; pointer-events:none; }
+#map-place-popup .place-item { padding:8px 12px; cursor:pointer; font-size:0.85rem; color:var(--mg-text-primary); display:flex; align-items:center; gap:8px; transition:background 0.1s; }
+#map-place-popup .place-item:hover { background:var(--mg-bg-tertiary); }
+#map-place-popup .place-item .place-status { font-size:0.7rem; padding:1px 6px; border-radius:4px; }
+#map-place-popup .place-empty { padding:12px; text-align:center; font-size:0.8rem; color:var(--mg-text-muted); }
 </style>
 
 <script>
 var areas = <?php echo json_encode($areas); ?>;
 var materialTypes = <?php echo json_encode($material_types); ?>;
+var expeditionEvents = <?php echo json_encode($events); ?>;
 var MARKER_STYLE = '<?php echo $marker_style; ?>';
 var UPDATE_URL = '<?php echo G5_ADMIN_URL; ?>/morgan/expedition_area_update.php';
 
@@ -376,14 +430,74 @@ function getMarkerSVG(style, color, inner) {
     }
 }
 
+// === 마커 드래그+클릭 인터랙션 ===
+function setupMarkerInteraction(marker, area) {
+    var isDragging = false, hasMoved = false;
+    var startX, startY, origLeft, origTop;
+
+    function startDrag(cx, cy, e) {
+        e.preventDefault(); e.stopPropagation();
+        isDragging = true; hasMoved = false;
+        marker.style.zIndex = '20';
+        startX = cx; startY = cy;
+        origLeft = parseFloat(marker.style.left);
+        origTop = parseFloat(marker.style.top);
+    }
+    function moveDrag(cx, cy) {
+        if (!isDragging) return;
+        var img = document.getElementById('map-editor-img');
+        var rect = img.getBoundingClientRect();
+        var dx = (cx - startX) / rect.width * 100;
+        var dy = (cy - startY) / rect.height * 100;
+        if (Math.abs(cx - startX) > 3 || Math.abs(cy - startY) > 3) hasMoved = true;
+        marker.style.left = Math.max(0, Math.min(100, origLeft + dx)) + '%';
+        marker.style.top = Math.max(0, Math.min(100, origTop + dy)) + '%';
+    }
+    function endDrag() {
+        isDragging = false;
+        marker.style.cursor = 'grab';
+        marker.style.zIndex = '5';
+        if (hasMoved) {
+            var newX = parseFloat(marker.style.left);
+            var newY = parseFloat(marker.style.top);
+            var fd = new FormData();
+            fd.append('action', 'set_coords');
+            fd.append('ea_id', area.ea_id);
+            fd.append('ea_map_x', newX.toFixed(2));
+            fd.append('ea_map_y', newY.toFixed(2));
+            fetch(UPDATE_URL, { method: 'POST', body: fd })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) { area.ea_map_x = newX; area.ea_map_y = newY; }
+                });
+        } else {
+            editArea(area.ea_id);
+        }
+    }
+
+    marker.addEventListener('mousedown', function(e) {
+        if (e.button !== 0) return;
+        startDrag(e.clientX, e.clientY, e);
+        marker.style.cursor = 'grabbing';
+        function onMove(ev) { moveDrag(ev.clientX, ev.clientY); }
+        function onUp() { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); endDrag(); }
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+    });
+    marker.addEventListener('touchstart', function(e) { var t = e.touches[0]; startDrag(t.clientX, t.clientY, e); }, { passive: false });
+    marker.addEventListener('touchmove', function(e) { if (!isDragging) return; e.preventDefault(); var t = e.touches[0]; moveDrag(t.clientX, t.clientY); }, { passive: false });
+    marker.addEventListener('touchend', function() { if (!isDragging) return; endDrag(); });
+}
+
 // === 맵 에디터 초기화 ===
 <?php if ($map_image) { ?>
+var renderMapMarkers;
 (function() {
     var mapEditor = document.getElementById('map-editor');
     var mapImg = document.getElementById('map-editor-img');
     var markersEl = document.getElementById('map-editor-markers');
 
-    function renderMapMarkers() {
+    renderMapMarkers = function() {
         markersEl.innerHTML = '';
         areas.forEach(function(area) {
             if (area.ea_map_x == null || area.ea_map_y == null) return;
@@ -397,7 +511,6 @@ function getMarkerSVG(style, color, inner) {
             marker.style.left = area.ea_map_x + '%';
             marker.style.top = area.ea_map_y + '%';
 
-            // 마커 크기에 따른 오프셋
             var sz = MARKER_STYLE === 'circle' ? 28 : 24;
             var szH = MARKER_STYLE === 'circle' ? 28 : (MARKER_STYLE === 'diamond' ? 32 : 36);
             marker.style.width = sz + 'px';
@@ -408,26 +521,22 @@ function getMarkerSVG(style, color, inner) {
             marker.innerHTML = getMarkerSVG(MARKER_STYLE, color, inner) +
                 '<div class="marker-label">' + escHtml(area.ea_name) + '</div>';
 
-            marker.onclick = function(e) {
-                e.stopPropagation();
-                editArea(area.ea_id);
-            };
+            setupMarkerInteraction(marker, area);
 
             markersEl.appendChild(marker);
         });
     }
 
-    // 맵 클릭 → 새 마커 배치
+    // 맵 클릭 → 파견지 선택 팝업 표시
     mapImg.addEventListener('click', function(e) {
         var rect = mapImg.getBoundingClientRect();
         var x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
         var y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
 
-        // 범위 체크
         x = Math.max(0, Math.min(100, parseFloat(x)));
         y = Math.max(0, Math.min(100, parseFloat(y)));
 
-        openAreaModal(x, y);
+        showPlacePopup(e.clientX, e.clientY, x, y);
     });
 
     renderMapMarkers();
@@ -454,6 +563,28 @@ function addDropRow(data) {
         '<input type="number" name="drop_chance[]" class="mg-form-input" style="width:65px;" min="1" max="100" value="' + (data ? data.ed_chance : 100) + '" placeholder="%">' +
         '<span style="font-size:0.75rem;color:var(--mg-text-muted);">%</span>' +
         '<label style="font-size:0.8rem;display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" name="drop_rare[' + idx + ']" value="1"' + (data && data.ed_is_rare == 1 ? ' checked' : '') + '> 레어</label>' +
+        '<button type="button" class="mg-btn mg-btn-danger mg-btn-sm" onclick="this.parentElement.remove()" style="padding:2px 8px;">✕</button>';
+    container.appendChild(row);
+}
+
+// === 이벤트 매칭 행 추가 ===
+function addEventLinkRow(data) {
+    var container = document.getElementById('event-link-table');
+    if (!container) return;
+    var ee_options = '<option value="">이벤트 선택</option>';
+    var type_labels = { point_bonus:'포인트+', point_penalty:'포인트-', material_bonus:'재료+', material_penalty:'재료-', reward_loss:'보상감소' };
+    expeditionEvents.forEach(function(ev) {
+        var selected = (data && data.ee_id == ev.ee_id) ? ' selected' : '';
+        var label = ev.ee_name + ' (' + (type_labels[ev.ee_effect_type] || ev.ee_effect_type) + ')';
+        ee_options += '<option value="' + ev.ee_id + '"' + selected + '>' + escHtml(label) + '</option>';
+    });
+
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap;';
+    row.innerHTML =
+        '<select name="evt_ee_id[]" class="mg-form-input" style="flex:1;min-width:150px;">' + ee_options + '</select>' +
+        '<input type="number" name="evt_chance[]" class="mg-form-input" style="width:70px;" min="1" max="100" value="' + (data ? data.eea_chance : 10) + '" placeholder="%">' +
+        '<span style="font-size:0.75rem;color:var(--mg-text-muted);">%</span>' +
         '<button type="button" class="mg-btn mg-btn-danger mg-btn-sm" onclick="this.parentElement.remove()" style="padding:2px 8px;">✕</button>';
     container.appendChild(row);
 }
@@ -510,6 +641,10 @@ function openAreaModal(mapX, mapY) {
     document.getElementById('ea_point_min').value = 0;
     document.getElementById('ea_point_max').value = 0;
 
+    // 이벤트 매칭 초기화
+    var evtContainer = document.getElementById('event-link-table');
+    if (evtContainer) evtContainer.innerHTML = '';
+
     if (mapX !== undefined && mapY !== undefined) {
         document.getElementById('ea_map_x').value = mapX;
         document.getElementById('ea_map_y').value = mapY;
@@ -563,6 +698,15 @@ function editArea(ea_id) {
     document.getElementById('drop-table').innerHTML = '';
     if (area.drops) {
         area.drops.forEach(function(drop) { addDropRow(drop); });
+    }
+
+    // 이벤트 매칭
+    var evtContainer = document.getElementById('event-link-table');
+    if (evtContainer) {
+        evtContainer.innerHTML = '';
+        if (area.event_links) {
+            area.event_links.forEach(function(link) { addEventLinkRow(link); });
+        }
     }
 
     document.getElementById('area-modal').style.display = 'flex';
@@ -636,6 +780,97 @@ function closeModal() {
 
 document.getElementById('area-modal').addEventListener('click', function(e) {
     if (e.target === this && document._mgMdTarget === this) closeModal();
+});
+
+// === 맵 클릭 → 파견지 선택 팝업 ===
+var _placePopupCoords = { x: 0, y: 0 };
+
+function showPlacePopup(clientX, clientY, mapX, mapY) {
+    _placePopupCoords = { x: mapX, y: mapY };
+
+    var popup = document.getElementById('map-place-popup');
+    var listEl = document.getElementById('map-place-list');
+
+    // 좌표 미배치된 기존 파견지 목록
+    var unplaced = areas.filter(function(a) {
+        return a.ea_map_x == null || a.ea_map_y == null || a.ea_map_x === '' || a.ea_map_y === '';
+    });
+
+    listEl.innerHTML = '';
+    if (unplaced.length === 0) {
+        listEl.innerHTML = '<div class="place-empty">배치 가능한 파견지가 없습니다</div>';
+    } else {
+        unplaced.forEach(function(area) {
+            var statusColors = { active: '#22c55e', hidden: '#6b7280', locked: '#ef4444' };
+            var statusLabels = { active: '활성', hidden: '숨김', locked: '잠김' };
+            var item = document.createElement('div');
+            item.className = 'place-item';
+            item.innerHTML = '<span style="flex:1;">' + escHtml(area.ea_name) + '</span>' +
+                '<span class="place-status" style="background:' + (statusColors[area.ea_status] || '#6b7280') + '22; color:' + (statusColors[area.ea_status] || '#6b7280') + ';">' + (statusLabels[area.ea_status] || area.ea_status) + '</span>';
+            item.onclick = function() { placeExistingArea(area.ea_id, mapX, mapY); };
+            listEl.appendChild(item);
+        });
+    }
+
+    // "새 파견지 추가" 버튼 핸들러
+    document.getElementById('map-place-new-btn').onclick = function() {
+        closePlacePopup();
+        openAreaModal(mapX, mapY);
+    };
+
+    // 팝업 위치 (클릭 좌표 기준, 뷰포트 안에 들어오도록)
+    popup.style.display = 'block';
+    var pw = popup.offsetWidth;
+    var ph = popup.offsetHeight;
+    var left = clientX + 12;
+    var top = clientY - 20;
+    if (left + pw > window.innerWidth - 10) left = clientX - pw - 12;
+    if (top + ph > window.innerHeight - 10) top = window.innerHeight - ph - 10;
+    if (top < 10) top = 10;
+    popup.style.left = left + 'px';
+    popup.style.top = top + 'px';
+}
+
+function closePlacePopup() {
+    document.getElementById('map-place-popup').style.display = 'none';
+}
+
+function placeExistingArea(ea_id, mapX, mapY) {
+    closePlacePopup();
+
+    var fd = new FormData();
+    fd.append('action', 'set_coords');
+    fd.append('ea_id', ea_id);
+    fd.append('ea_map_x', mapX);
+    fd.append('ea_map_y', mapY);
+
+    fetch(UPDATE_URL, { method: 'POST', credentials: 'same-origin', body: fd })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                // areas 배열 갱신
+                var area = areas.find(function(a) { return a.ea_id == ea_id; });
+                if (area) {
+                    area.ea_map_x = mapX;
+                    area.ea_map_y = mapY;
+                }
+                // 마커 다시 렌더링
+                if (typeof renderMapMarkers === 'function') renderMapMarkers();
+            } else {
+                alert(data.message || '좌표 저장 실패');
+            }
+        })
+        .catch(function() { alert('서버 요청 실패'); });
+}
+
+// 팝업 외부 클릭 시 닫기 (맵 이미지 클릭은 showPlacePopup이 갱신하므로 제외)
+document.addEventListener('mousedown', function(e) {
+    var popup = document.getElementById('map-place-popup');
+    if (popup.style.display !== 'block') return;
+    if (popup.contains(e.target)) return;
+    var mapImg = document.getElementById('map-editor-img');
+    if (mapImg && mapImg.contains(e.target)) return; // 맵 클릭은 새 팝업으로 대체됨
+    closePlacePopup();
 });
 
 function escHtml(str) {

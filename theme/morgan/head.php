@@ -98,12 +98,26 @@ $_connect_count = 0;
 $_connect_members = array();
 $_connect_guest_count = 0;
 if ($_show_connect == '1') {
-    $_connect_row = sql_fetch("SELECT count(*) as cnt FROM {$g5['login_table']}");
+    // 현재 사용자 접속 기록 즉시 갱신 (그누보드 run()은 페이지 끝에 실행되므로)
+    $_my_ip = $_SERVER['REMOTE_ADDR'];
+    $_my_mb_id = isset($member['mb_id']) ? $member['mb_id'] : '';
+    $_lo_exists = sql_fetch("SELECT count(*) as cnt FROM {$g5['login_table']} WHERE lo_ip = '{$_my_ip}'");
+    if ($_lo_exists['cnt']) {
+        sql_query("UPDATE {$g5['login_table']} SET mb_id = '".sql_real_escape_string($_my_mb_id)."', lo_datetime = '".G5_TIME_YMDHIS."' WHERE lo_ip = '{$_my_ip}'", false);
+    } else {
+        sql_query("INSERT INTO {$g5['login_table']} (lo_ip, mb_id, lo_datetime, lo_location, lo_url) VALUES ('{$_my_ip}', '".sql_real_escape_string($_my_mb_id)."', '".G5_TIME_YMDHIS."', '', '')", false);
+    }
+
+    // cf_login_minutes 기준으로 활동 중인 접속자만 카운트 (그누보드 설정 연동)
+    $_connect_minutes = isset($config['cf_login_minutes']) ? max(1, (int)$config['cf_login_minutes']) : 10;
+    $_connect_cutoff = date('Y-m-d H:i:s', G5_SERVER_TIME - (60 * $_connect_minutes));
+    $_connect_row = sql_fetch("SELECT count(*) as cnt FROM {$g5['login_table']} WHERE lo_datetime >= '{$_connect_cutoff}'");
     $_connect_count = (int)$_connect_row['cnt'];
     if ($_connect_count > 0) {
         $sql_conn = "SELECT l.mb_id, l.lo_datetime, COALESCE(m.mb_nick, '') as mb_nick
                      FROM {$g5['login_table']} l
                      LEFT JOIN {$g5['member_table']} m ON l.mb_id = m.mb_id
+                     WHERE l.lo_datetime >= '{$_connect_cutoff}'
                      ORDER BY l.lo_datetime DESC";
         $result_conn = sql_query($sql_conn);
         while ($row_conn = sql_fetch_array($result_conn)) {

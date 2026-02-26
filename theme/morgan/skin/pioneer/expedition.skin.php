@@ -755,6 +755,27 @@ $relation_url = G5_BBS_URL . '/relation.php';
             });
         }
 
+        // 이벤트 결과
+        if (rewards && rewards.events && rewards.events.length > 0) {
+            hasReward = true;
+            container.innerHTML += '<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--mg-bg-tertiary);">' +
+                '<div class="text-xs font-semibold text-mg-text-muted mb-2">파견 이벤트</div></div>';
+            rewards.events.forEach(function(evt) {
+                var isPositive = (evt.type === 'point_bonus' || evt.type === 'material_bonus');
+                var borderColor = isPositive ? 'border-green-500/30' : 'border-red-500/30';
+                var bgColor = isPositive ? 'bg-green-500/5' : 'bg-red-500/5';
+                var textColor = isPositive ? 'color:#10b981;' : 'color:#ef4444;';
+                container.innerHTML +=
+                    '<div class="p-3 rounded-lg border ' + borderColor + ' ' + bgColor + '" style="margin-bottom:4px;">' +
+                        '<div class="flex items-center justify-between">' +
+                            '<span class="text-sm font-semibold text-mg-text-primary">' + escHtml(evt.name) + '</span>' +
+                            '<span class="text-sm font-bold" style="' + textColor + '">' + escHtml(evt.detail) + '</span>' +
+                        '</div>' +
+                        (evt.desc ? '<div class="text-xs text-mg-text-muted mt-1">' + escHtml(evt.desc) + '</div>' : '') +
+                    '</div>';
+            });
+        }
+
         if (!hasReward) {
             container.innerHTML = '<div class="text-center text-mg-text-muted py-2">획득한 보상이 없습니다.</div>';
         }

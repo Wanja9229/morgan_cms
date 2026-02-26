@@ -20,15 +20,40 @@ if (isset($is_ajax_request) && $is_ajax_request) {
     <aside id="widget-sidebar" class="hidden lg:block w-72 bg-mg-bg-secondary fixed right-0 top-12 bottom-0 p-4 border-l border-mg-bg-tertiary overflow-y-auto">
 
         <?php if ($is_member) { ?>
-        <!-- 로그인 상태: 회원 정보 -->
+        <!-- 로그인 상태: 회원 정보 + 대표 캐릭터 통합 -->
+        <?php
+        $_show_main_char = function_exists('mg_config') ? mg_config('show_main_character', '1') : '1';
+        $main_char = null;
+        if ($_show_main_char == '1' && function_exists('mg_get_main_character')) {
+            $main_char = mg_get_main_character($member['mb_id']);
+        }
+        ?>
         <div class="card mb-4">
             <div class="flex items-center gap-3 mb-3">
-                <div class="w-12 h-12 rounded-full bg-mg-bg-tertiary flex items-center justify-center text-mg-accent font-bold text-lg">
+                <?php if ($main_char && !empty($main_char['ch_thumb'])) { ?>
+                <a href="<?php echo G5_BBS_URL; ?>/character_view.php?ch_id=<?php echo $main_char['ch_id']; ?>" class="flex-shrink-0">
+                    <div class="w-12 h-12 rounded-full bg-mg-bg-tertiary overflow-hidden ring-2 ring-mg-accent/30 hover:ring-mg-accent transition-all">
+                        <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.$main_char['ch_thumb']; ?>" alt="" class="w-full h-full object-cover">
+                    </div>
+                </a>
+                <?php } else { ?>
+                <div class="w-12 h-12 rounded-full bg-mg-bg-tertiary flex items-center justify-center text-mg-accent font-bold text-lg flex-shrink-0">
                     <?php echo mb_substr($member['mb_nick'], 0, 1); ?>
                 </div>
-                <div>
-                    <p class="font-semibold text-mg-text-primary"><?php echo get_text($member['mb_nick']); ?></p>
+                <?php } ?>
+                <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-mg-text-primary truncate"><?php echo get_text($member['mb_nick']); ?></p>
+                    <?php if ($main_char) { ?>
+                    <p class="text-xs text-mg-text-muted truncate"><?php echo htmlspecialchars($main_char['ch_name']); ?><?php if (!empty($main_char['ch_side'])) echo ' · '.htmlspecialchars($main_char['ch_side']); ?></p>
+                    <?php } else { ?>
+                    <p class="text-xs text-mg-text-muted">대표 캐릭터 없음</p>
+                    <?php } ?>
                 </div>
+                <a href="<?php echo G5_BBS_URL; ?>/character.php" class="flex-shrink-0 p-1.5 rounded-md hover:bg-mg-bg-tertiary text-mg-text-muted hover:text-mg-accent transition-colors" title="캐릭터 관리">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                </a>
             </div>
 
             <!-- 포인트 -->
@@ -61,61 +86,6 @@ if (isset($is_ajax_request) && $is_ajax_request) {
                 로그아웃
             </a>
         </div>
-
-        <!-- 대표 캐릭터 -->
-        <?php
-        $_show_main_char = function_exists('mg_config') ? mg_config('show_main_character', '1') : '1';
-        $main_char = null;
-        if ($_show_main_char == '1' && function_exists('mg_get_main_character')) {
-            $main_char = mg_get_main_character($member['mb_id']);
-        }
-        ?>
-        <?php if ($_show_main_char == '1') { ?>
-        <div class="card mb-4">
-            <div class="flex items-center justify-between mb-3">
-                <h3 class="text-sm font-semibold text-mg-text-primary flex items-center gap-2">
-                    <svg class="w-4 h-4 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                    </svg>
-                    대표 캐릭터
-                </h3>
-                <a href="<?php echo G5_BBS_URL; ?>/character.php" class="text-xs text-mg-accent hover:text-mg-accent-hover">관리</a>
-            </div>
-            <?php if ($main_char) { ?>
-            <a href="<?php echo G5_BBS_URL; ?>/character_view.php?ch_id=<?php echo $main_char['ch_id']; ?>" class="block group">
-                <div class="flex items-center gap-3">
-                    <div class="w-14 h-14 rounded-lg bg-mg-bg-tertiary flex-shrink-0 overflow-hidden">
-                        <?php if (!empty($main_char['ch_thumb'])) { ?>
-                        <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.$main_char['ch_thumb']; ?>" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
-                        <?php } else { ?>
-                        <div class="w-full h-full flex items-center justify-center">
-                            <svg class="w-6 h-6 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                            </svg>
-                        </div>
-                        <?php } ?>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="font-medium text-mg-text-primary truncate group-hover:text-mg-accent transition-colors"><?php echo htmlspecialchars($main_char['ch_name']); ?></p>
-                        <?php if (!empty($main_char['ch_side'])) { ?>
-                        <p class="text-xs text-mg-text-muted truncate"><?php echo htmlspecialchars($main_char['ch_side']); ?></p>
-                        <?php } ?>
-                    </div>
-                </div>
-            </a>
-            <?php } else { ?>
-            <div class="text-center py-4">
-                <div class="w-14 h-14 rounded-lg bg-mg-bg-tertiary mx-auto mb-2 flex items-center justify-center">
-                    <svg class="w-6 h-6 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                </div>
-                <p class="text-xs text-mg-text-muted mb-2">캐릭터를 등록해주세요</p>
-                <a href="<?php echo G5_BBS_URL; ?>/character_form.php" class="text-xs text-mg-accent hover:text-mg-accent-hover">캐릭터 만들기</a>
-            </div>
-            <?php } ?>
-        </div>
-        <?php } ?>
 
         <!-- 인벤토리 미니 -->
         <?php

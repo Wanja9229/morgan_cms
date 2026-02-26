@@ -50,7 +50,7 @@ $_mg_comment_cnt = isset($view['wr_comment']) ? (int)$view['wr_comment'] : 0;
 }
 .mg-view-body ul, .mg-view-body ol { padding-left: 1.5rem; margin-bottom: 1rem; }
 .mg-view-body li { margin-bottom: 0.25rem; }
-.mg-view-body table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+.mg-view-body table { width: 100%; border-collapse: collapse; margin: 1rem 0; display: block; overflow-x: auto; }
 .mg-view-body th, .mg-view-body td {
     border: 1px solid var(--mg-bg-tertiary);
     padding: 0.5rem 0.75rem; text-align: left;

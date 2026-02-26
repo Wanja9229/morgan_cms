@@ -30,7 +30,11 @@ require_once __DIR__.'/_head.php';
 ?>
 
 <!-- 통계 -->
-<?php $_pvm = mg_config('pioneer_view_mode', 'card'); $_pmi = mg_config('pioneer_map_image', ''); ?>
+<?php
+$_pvm = mg_config('pioneer_view_mode', 'card');
+$_pmi = mg_config('pioneer_map_image', '');
+$_marker_style = mg_config('map_marker_style', 'pin');
+?>
 <div class="mg-stats-grid">
     <div class="mg-stat-card">
         <div class="mg-stat-label">전체 시설</div>
@@ -97,41 +101,12 @@ require_once __DIR__.'/_head.php';
     <div class="mg-card" style="margin-bottom:1rem;">
         <div class="mg-card-header">
             <h3>마커 배치</h3>
-            <span style="font-size:0.8rem;color:var(--mg-text-muted);">시설 선택 후 맵 클릭으로 좌표 지정 · 기존 마커 클릭 시 수정</span>
+            <span style="font-size:0.8rem;color:var(--mg-text-muted);">맵 클릭으로 시설 배치 · 기존 마커 클릭 시 수정</span>
         </div>
         <div class="mg-card-body">
-            <div style="display:flex;gap:1rem;margin-bottom:0.75rem;flex-wrap:wrap;align-items:center;">
-                <label style="font-size:0.85rem;color:var(--mg-text-secondary);">배치할 시설:</label>
-                <select id="marker-target-fc" class="mg-form-input" style="width:auto;min-width:200px;">
-                    <option value="">-- 시설 선택 --</option>
-                    <?php foreach ($facilities as $fc): ?>
-                    <option value="<?php echo $fc['fc_id']; ?>"
-                            data-x="<?php echo $fc['fc_map_x'] ?? ''; ?>"
-                            data-y="<?php echo $fc['fc_map_y'] ?? ''; ?>">
-                        <?php echo htmlspecialchars($fc['fc_name']); ?>
-                        <?php if ($fc['fc_map_x'] !== null): ?>(<?php echo round($fc['fc_map_x'],1); ?>%, <?php echo round($fc['fc_map_y'],1); ?>%)<?php endif; ?>
-                    </option>
-                    <?php endforeach; ?>
-                </select>
-                <button type="button" class="mg-btn mg-btn-sm mg-btn-secondary" onclick="removeMarkerCoord()" title="선택 시설의 좌표 제거">좌표 제거</button>
-                <span id="marker-status" style="font-size:0.8rem;color:var(--mg-accent);"></span>
-            </div>
             <div id="map-marker-container" style="position:relative;display:inline-block;max-width:100%;cursor:crosshair;border:2px solid var(--mg-bg-tertiary);border-radius:6px;overflow:hidden;">
-                <img id="map-marker-img" src="<?php echo htmlspecialchars($_pmi); ?>" alt="거점 맵"
-                     style="display:block;max-width:100%;height:auto;"
-                     onclick="placeMarker(event)">
-                <?php foreach ($facilities as $fc):
-                    if ($fc['fc_map_x'] === null || $fc['fc_map_y'] === null) continue;
-                ?>
-                <div class="map-admin-marker"
-                     data-fc-id="<?php echo $fc['fc_id']; ?>"
-                     style="position:absolute;left:<?php echo $fc['fc_map_x']; ?>%;top:<?php echo $fc['fc_map_y']; ?>%;transform:translate(-50%,-50%);z-index:10;">
-                    <div style="width:14px;height:14px;border-radius:50%;background:var(--mg-accent);border:2px solid #fff;box-shadow:0 0 6px rgba(0,0,0,0.5);"></div>
-                    <div style="position:absolute;top:-22px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:0.7rem;color:#fff;background:rgba(0,0,0,0.75);padding:1px 6px;border-radius:3px;pointer-events:none;">
-                        <?php echo htmlspecialchars($fc['fc_name']); ?>
-                    </div>
-                </div>
-                <?php endforeach; ?>
+                <img id="map-marker-img" src="<?php echo htmlspecialchars($_pmi); ?>" alt="거점 맵" style="display:block;max-width:100%;height:auto;">
+                <div id="map-editor-markers"></div>
             </div>
         </div>
     </div>
@@ -253,6 +228,29 @@ require_once __DIR__.'/_head.php';
     </div>
 </div>
 
+<!-- 맵 클릭 시 시설 선택 팝업 -->
+<div id="map-place-popup" style="display:none; position:fixed; z-index:100; background:var(--mg-bg-secondary); border:1px solid var(--mg-bg-tertiary); border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,0.5); min-width:220px; max-width:280px; overflow:hidden;">
+    <div style="padding:8px 12px; border-bottom:1px solid var(--mg-bg-tertiary); font-size:0.8rem; color:var(--mg-text-muted); display:flex; justify-content:space-between; align-items:center;">
+        <span>시설 배치</span>
+        <button type="button" onclick="closePlacePopup()" style="background:none; border:none; color:var(--mg-text-muted); cursor:pointer; font-size:1rem; line-height:1; padding:0 2px;">&times;</button>
+    </div>
+    <div id="map-place-list" style="max-height:240px; overflow-y:auto;"></div>
+    <div style="padding:6px 8px; border-top:1px solid var(--mg-bg-tertiary);">
+        <button type="button" id="map-place-new-btn" class="mg-btn mg-btn-primary mg-btn-sm" style="width:100%; font-size:0.8rem;">+ 새 시설 추가</button>
+    </div>
+</div>
+
+<style>
+.adm-map-marker { position:absolute; cursor:grab; z-index:5; user-select:none; }
+.adm-map-marker:hover { z-index:10; }
+.adm-map-marker svg { filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
+.adm-map-marker .marker-label { position:absolute; top:100%; left:50%; transform:translateX(-50%); white-space:nowrap; font-size:11px; color:var(--mg-text-primary); background:rgba(0,0,0,0.7); padding:1px 6px; border-radius:4px; margin-top:2px; pointer-events:none; }
+#map-place-popup .place-item { padding:8px 12px; cursor:pointer; font-size:0.85rem; color:var(--mg-text-primary); display:flex; align-items:center; gap:8px; transition:background 0.1s; }
+#map-place-popup .place-item:hover { background:var(--mg-bg-tertiary); }
+#map-place-popup .place-item .place-status { font-size:0.7rem; padding:1px 6px; border-radius:4px; }
+#map-place-popup .place-empty { padding:12px; text-align:center; font-size:0.8rem; color:var(--mg-text-muted); }
+</style>
+
 <!-- 시설 모달 -->
 <div id="facility-modal" class="mg-modal" style="display:none;">
     <div class="mg-modal-content" style="max-width:700px;">
@@ -370,6 +368,8 @@ require_once __DIR__.'/_head.php';
 <script>
 var facilities = <?php echo json_encode($facilities); ?>;
 var pioneerViewMode = '<?php echo mg_config('pioneer_view_mode', 'card'); ?>';
+var MARKER_STYLE = '<?php echo $_marker_style; ?>';
+var UPDATE_URL = '<?php echo G5_ADMIN_URL; ?>/morgan/pioneer_facility_update.php';
 
 // UI 모드 전환 (AJAX)
 function setViewMode(mode) {
@@ -470,7 +470,7 @@ function syncUnlockTarget() {
     }
 }
 
-function openFacilityModal() {
+function openFacilityModal(mapX, mapY) {
     document.getElementById('modal-title').textContent = '시설 추가';
     document.getElementById('form_w').value = '';
     document.getElementById('form_fc_id').value = '';
@@ -479,8 +479,13 @@ function openFacilityModal() {
     document.getElementById('fc_unlock_target_board').value = '';
     document.getElementById('fc_unlock_target_text').value = '';
     mgIconReset('fc_icon');
-    document.getElementById('fc_map_x').value = '';
-    document.getElementById('fc_map_y').value = '';
+    if (mapX !== undefined && mapY !== undefined) {
+        document.getElementById('fc_map_x').value = mapX;
+        document.getElementById('fc_map_y').value = mapY;
+    } else {
+        document.getElementById('fc_map_x').value = '';
+        document.getElementById('fc_map_y').value = '';
+    }
     toggleUnlockTarget();
     updateMapCoordSection();
     document.getElementById('facility-modal').style.display = 'flex';
@@ -574,107 +579,224 @@ document.getElementById('facility-modal').addEventListener('click', function(e) 
     if (e.target === this && document._mgMdTarget === this) closeModal();
 });
 
-// === 맵 마커 배치 ===
-function placeMarker(e) {
-    var select = document.getElementById('marker-target-fc');
-    if (!select) return;
-    var fcId = select.value;
-    if (!fcId) {
-        document.getElementById('marker-status').textContent = '먼저 시설을 선택하세요';
-        setTimeout(function(){ document.getElementById('marker-status').textContent = ''; }, 2000);
-        return;
+// === 마커 SVG 생성 (파견지와 동일) ===
+function getMarkerSVG(style, color, inner) {
+    color = color || 'var(--mg-accent)';
+    inner = inner || 'var(--mg-bg-primary)';
+    switch (style) {
+        case 'circle':
+            return '<svg viewBox="0 0 28 28" width="28" height="28"><circle cx="14" cy="14" r="12" fill="'+color+'" stroke="'+inner+'" stroke-width="2.5"/><circle cx="14" cy="14" r="4" fill="'+inner+'"/></svg>';
+        case 'diamond':
+            return '<svg viewBox="0 0 24 32" width="24" height="32"><path d="M12 1 L23 16 L12 31 L1 16 Z" fill="'+color+'" stroke="'+inner+'" stroke-width="1.5"/><circle cx="12" cy="16" r="3.5" fill="'+inner+'"/></svg>';
+        case 'flag':
+            return '<svg viewBox="0 0 24 36" width="24" height="36"><rect x="10" y="6" width="2.5" height="26" rx="1" fill="'+color+'"/><path d="M12.5 6 L23 11 L12.5 16 Z" fill="'+color+'"/><circle cx="11.25" cy="4.5" r="2.5" fill="'+color+'"/></svg>';
+        default: // pin
+            return '<svg viewBox="0 0 24 36" width="24" height="36"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0z" fill="'+color+'"/><circle cx="12" cy="12" r="5" fill="'+inner+'"/></svg>';
+    }
+}
+
+function escHtml(str) {
+    if (!str) return '';
+    var d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+}
+
+// === 마커 드래그+클릭 인터랙션 ===
+function setupMarkerInteraction(marker, fc) {
+    var isDragging = false, hasMoved = false;
+    var startX, startY, origLeft, origTop;
+
+    function startDrag(cx, cy, e) {
+        e.preventDefault(); e.stopPropagation();
+        isDragging = true; hasMoved = false;
+        marker.style.zIndex = '20';
+        startX = cx; startY = cy;
+        origLeft = parseFloat(marker.style.left);
+        origTop = parseFloat(marker.style.top);
+    }
+    function moveDrag(cx, cy) {
+        if (!isDragging) return;
+        var img = document.getElementById('map-marker-img');
+        var rect = img.getBoundingClientRect();
+        var dx = (cx - startX) / rect.width * 100;
+        var dy = (cy - startY) / rect.height * 100;
+        if (Math.abs(cx - startX) > 3 || Math.abs(cy - startY) > 3) hasMoved = true;
+        marker.style.left = Math.max(0, Math.min(100, origLeft + dx)) + '%';
+        marker.style.top = Math.max(0, Math.min(100, origTop + dy)) + '%';
+    }
+    function endDrag() {
+        isDragging = false;
+        marker.style.cursor = 'grab';
+        marker.style.zIndex = '5';
+        if (hasMoved) {
+            var newX = parseFloat(marker.style.left);
+            var newY = parseFloat(marker.style.top);
+            var fd = new FormData();
+            fd.append('action', 'set_coords');
+            fd.append('fc_id', fc.fc_id);
+            fd.append('fc_map_x', newX.toFixed(2));
+            fd.append('fc_map_y', newY.toFixed(2));
+            fetch('<?php echo G5_ADMIN_URL; ?>/morgan/pioneer_facility_update.php', { method: 'POST', body: fd })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) { fc.fc_map_x = newX; fc.fc_map_y = newY; }
+                });
+        } else {
+            editFacility(fc.fc_id);
+        }
     }
 
-    var img = document.getElementById('map-marker-img');
-    var rect = img.getBoundingClientRect();
-    var x = ((e.clientX - rect.left) / rect.width * 100).toFixed(2);
-    var y = ((e.clientY - rect.top) / rect.height * 100).toFixed(2);
-
-    // AJAX로 좌표 저장
-    saveMarkerCoord(fcId, x, y);
-}
-
-function saveMarkerCoord(fcId, x, y) {
-    var formData = new FormData();
-    formData.append('w', 'marker');
-    formData.append('fc_id', fcId);
-    formData.append('fc_map_x', x);
-    formData.append('fc_map_y', y);
-
-    fetch('<?php echo G5_ADMIN_URL; ?>/morgan/pioneer_facility_update.php', {
-        method: 'POST',
-        body: formData
-    }).then(function(res){ return res.text(); }).then(function(html) {
-        // 마커 갱신
-        updateMarkerOnMap(fcId, x, y);
-        updateSelectOption(fcId, x, y);
-        document.getElementById('marker-status').textContent = '좌표 저장됨 (' + x + '%, ' + y + '%)';
-        setTimeout(function(){ document.getElementById('marker-status').textContent = ''; }, 3000);
-    }).catch(function(err) {
-        alert('좌표 저장 실패: ' + err);
+    marker.addEventListener('mousedown', function(e) {
+        if (e.button !== 0) return;
+        startDrag(e.clientX, e.clientY, e);
+        marker.style.cursor = 'grabbing';
+        function onMove(ev) { moveDrag(ev.clientX, ev.clientY); }
+        function onUp() { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); endDrag(); }
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
     });
+    marker.addEventListener('touchstart', function(e) { var t = e.touches[0]; startDrag(t.clientX, t.clientY, e); }, { passive: false });
+    marker.addEventListener('touchmove', function(e) { if (!isDragging) return; e.preventDefault(); var t = e.touches[0]; moveDrag(t.clientX, t.clientY); }, { passive: false });
+    marker.addEventListener('touchend', function() { if (!isDragging) return; endDrag(); });
 }
 
-function removeMarkerCoord() {
-    var select = document.getElementById('marker-target-fc');
-    if (!select || !select.value) return;
-    var fcId = select.value;
+// === 맵 에디터 (마커 렌더링 + 클릭 팝업) ===
+var renderMapMarkers;
+<?php if ($_pmi) { ?>
+(function() {
+    var mapImg = document.getElementById('map-marker-img');
+    var markersEl = document.getElementById('map-editor-markers');
+    if (!mapImg || !markersEl) return;
 
-    var formData = new FormData();
-    formData.append('w', 'marker');
-    formData.append('fc_id', fcId);
-    formData.append('fc_map_x', '');
-    formData.append('fc_map_y', '');
+    renderMapMarkers = function() {
+        markersEl.innerHTML = '';
+        facilities.forEach(function(fc) {
+            if (fc.fc_map_x == null || fc.fc_map_y == null) return;
 
-    fetch('<?php echo G5_ADMIN_URL; ?>/morgan/pioneer_facility_update.php', {
-        method: 'POST',
-        body: formData
-    }).then(function(res){ return res.text(); }).then(function() {
-        // 맵에서 마커 제거
-        var existing = document.querySelector('.map-admin-marker[data-fc-id="' + fcId + '"]');
-        if (existing) existing.remove();
-        updateSelectOption(fcId, '', '');
-        document.getElementById('marker-status').textContent = '좌표가 제거되었습니다';
-        setTimeout(function(){ document.getElementById('marker-status').textContent = ''; }, 3000);
+            var statusColors = { locked: '#6b7280', building: '#f59f0a', complete: '#10b981' };
+            var color = statusColors[fc.fc_status] || 'var(--mg-accent)';
+            var inner = fc.fc_status === 'locked' ? '#4b5563' : 'var(--mg-bg-primary)';
+
+            var marker = document.createElement('div');
+            marker.className = 'adm-map-marker';
+            marker.style.left = fc.fc_map_x + '%';
+            marker.style.top = fc.fc_map_y + '%';
+
+            var sz = MARKER_STYLE === 'circle' ? 28 : 24;
+            var szH = MARKER_STYLE === 'circle' ? 28 : (MARKER_STYLE === 'diamond' ? 32 : 36);
+            marker.style.width = sz + 'px';
+            marker.style.height = szH + 'px';
+            marker.style.marginLeft = (-sz/2) + 'px';
+            marker.style.marginTop = (-szH) + 'px';
+
+            marker.innerHTML = getMarkerSVG(MARKER_STYLE, color, inner) +
+                '<div class="marker-label">' + escHtml(fc.fc_name) + '</div>';
+
+            setupMarkerInteraction(marker, fc);
+
+            markersEl.appendChild(marker);
+        });
+    };
+
+    // 맵 클릭 → 시설 선택 팝업
+    mapImg.addEventListener('click', function(e) {
+        var rect = mapImg.getBoundingClientRect();
+        var x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+        var y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+        x = Math.max(0, Math.min(100, parseFloat(x)));
+        y = Math.max(0, Math.min(100, parseFloat(y)));
+        showPlacePopup(e.clientX, e.clientY, x, y);
     });
+
+    renderMapMarkers();
+})();
+<?php } ?>
+
+// === 맵 클릭 → 시설 선택 팝업 ===
+function showPlacePopup(clientX, clientY, mapX, mapY) {
+    var popup = document.getElementById('map-place-popup');
+    var listEl = document.getElementById('map-place-list');
+
+    var unplaced = facilities.filter(function(fc) {
+        return fc.fc_map_x == null || fc.fc_map_y == null || fc.fc_map_x === '' || fc.fc_map_y === '';
+    });
+
+    listEl.innerHTML = '';
+    if (unplaced.length === 0) {
+        listEl.innerHTML = '<div class="place-empty">배치 가능한 시설이 없습니다</div>';
+    } else {
+        var statusColors = { locked: '#6b7280', building: '#f59f0a', complete: '#10b981' };
+        var statusLabels = { locked: '잠김', building: '건설중', complete: '완공' };
+        unplaced.forEach(function(fc) {
+            var item = document.createElement('div');
+            item.className = 'place-item';
+            item.innerHTML = '<span style="flex:1;">' + escHtml(fc.fc_name) + '</span>' +
+                '<span class="place-status" style="background:' + (statusColors[fc.fc_status] || '#6b7280') + '22; color:' + (statusColors[fc.fc_status] || '#6b7280') + ';">' + (statusLabels[fc.fc_status] || fc.fc_status) + '</span>';
+            item.onclick = function() { placeExistingFacility(fc.fc_id, mapX, mapY); };
+            listEl.appendChild(item);
+        });
+    }
+
+    document.getElementById('map-place-new-btn').onclick = function() {
+        closePlacePopup();
+        openFacilityModal(mapX, mapY);
+    };
+
+    popup.style.display = 'block';
+    var pw = popup.offsetWidth, ph = popup.offsetHeight;
+    var left = clientX + 12, top = clientY - 20;
+    if (left + pw > window.innerWidth - 10) left = clientX - pw - 12;
+    if (top + ph > window.innerHeight - 10) top = window.innerHeight - ph - 10;
+    if (top < 10) top = 10;
+    popup.style.left = left + 'px';
+    popup.style.top = top + 'px';
 }
 
-function updateMarkerOnMap(fcId, x, y) {
-    var container = document.getElementById('map-marker-container');
-    if (!container) return;
-
-    // 기존 마커 제거
-    var existing = container.querySelector('.map-admin-marker[data-fc-id="' + fcId + '"]');
-    if (existing) existing.remove();
-
-    // 시설명 가져오기
-    var select = document.getElementById('marker-target-fc');
-    var option = select.querySelector('option[value="' + fcId + '"]');
-    var name = option ? option.textContent.split('(')[0].trim() : '';
-
-    // 새 마커 추가
-    var marker = document.createElement('div');
-    marker.className = 'map-admin-marker';
-    marker.setAttribute('data-fc-id', fcId);
-    marker.style.cssText = 'position:absolute;left:' + x + '%;top:' + y + '%;transform:translate(-50%,-50%);z-index:10;';
-    marker.innerHTML =
-        '<div style="width:14px;height:14px;border-radius:50%;background:var(--mg-accent);border:2px solid #fff;box-shadow:0 0 6px rgba(0,0,0,0.5);"></div>' +
-        '<div style="position:absolute;top:-22px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:0.7rem;color:#fff;background:rgba(0,0,0,0.75);padding:1px 6px;border-radius:3px;pointer-events:none;">' + name + '</div>';
-    container.appendChild(marker);
+function closePlacePopup() {
+    document.getElementById('map-place-popup').style.display = 'none';
 }
+
+function placeExistingFacility(fc_id, mapX, mapY) {
+    closePlacePopup();
+
+    var fd = new FormData();
+    fd.append('action', 'set_coords');
+    fd.append('fc_id', fc_id);
+    fd.append('fc_map_x', mapX);
+    fd.append('fc_map_y', mapY);
+
+    fetch(UPDATE_URL, { method: 'POST', credentials: 'same-origin', body: fd })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                var fc = facilities.find(function(f) { return f.fc_id == fc_id; });
+                if (fc) { fc.fc_map_x = mapX; fc.fc_map_y = mapY; }
+                if (typeof renderMapMarkers === 'function') renderMapMarkers();
+            } else {
+                alert(data.message || '좌표 저장 실패');
+            }
+        })
+        .catch(function() { alert('서버 요청 실패'); });
+}
+
+// 팝업 외부 클릭 시 닫기
+document.addEventListener('mousedown', function(e) {
+    var popup = document.getElementById('map-place-popup');
+    if (popup.style.display !== 'block') return;
+    if (popup.contains(e.target)) return;
+    var mapImg = document.getElementById('map-marker-img');
+    if (mapImg && mapImg.contains(e.target)) return;
+    closePlacePopup();
+});
 
 function updateSelectOption(fcId, x, y) {
-    var select = document.getElementById('marker-target-fc');
-    var option = select.querySelector('option[value="' + fcId + '"]');
-    if (!option) return;
-    var name = option.textContent.split('(')[0].trim();
-    if (x && y) {
-        option.textContent = name + ' (' + parseFloat(x).toFixed(1) + '%, ' + parseFloat(y).toFixed(1) + '%)';
-    } else {
-        option.textContent = name;
-    }
-    option.setAttribute('data-x', x);
-    option.setAttribute('data-y', y);
+    // facilities 배열 갱신 + 마커 리렌더
+    var fc = facilities.find(function(f) { return f.fc_id == fcId; });
+    if (!fc) return;
+    if (x && y) { fc.fc_map_x = x; fc.fc_map_y = y; }
+    else { fc.fc_map_x = null; fc.fc_map_y = null; }
+    if (typeof renderMapMarkers === 'function') renderMapMarkers();
 }
 </script>
 

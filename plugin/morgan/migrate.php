@@ -64,30 +64,35 @@ function mg_run_migrations() {
             if (!trim($sql_content)) continue;
 
             $success = true;
+            $errors = array();
             $link = $g5['connect_db'];
 
             if (@mysqli_multi_query($link, $sql_content)) {
                 // 모든 결과 세트를 소비해야 다음 쿼리가 정상 동작
+                $stmt_idx = 0;
                 do {
                     if ($r = mysqli_store_result($link)) {
                         mysqli_free_result($r);
                     }
+                    // 각 구문별 에러 체크
+                    if (mysqli_errno($link)) {
+                        $errors[] = "stmt[{$stmt_idx}]: " . mysqli_error($link);
+                    }
+                    $stmt_idx++;
                 } while (mysqli_more_results($link) && mysqli_next_result($link));
-
-                // 마지막 에러 확인
-                if (mysqli_errno($link)) {
-                    $success = false;
-                    error_log("[Morgan Migration] FAILED: {$filename} — " . mysqli_error($link));
-                }
             } else {
                 $success = false;
                 error_log("[Morgan Migration] FAILED: {$filename} — " . mysqli_error($link));
             }
+
+            if ($errors) {
+                error_log("[Morgan Migration] PARTIAL ERRORS in {$filename}: " . implode(' | ', $errors));
+            }
         }
 
-        if ($success) {
-            $filename_esc = sql_real_escape_string($filename);
-            sql_query("INSERT INTO `{$table}` (mig_file) VALUES ('{$filename_esc}')");
-        }
+        // 항상 기록 — 부분 실패 시에도 재실행으로 인한 중복 데이터 방지
+        // (모든 SQL 구문은 멱등성을 보장해야 함: INSERT IGNORE, IF NOT EXISTS 등)
+        $filename_esc = sql_real_escape_string($filename);
+        sql_query("INSERT IGNORE INTO `{$table}` (mig_file) VALUES ('{$filename_esc}')");
     }
 }

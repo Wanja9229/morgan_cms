@@ -97,7 +97,7 @@ if (isset($_FILES['es_preview_file']) && $_FILES['es_preview_file']['error'] ===
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
     $allowed = array('jpg', 'jpeg', 'png', 'gif', 'webp');
 
-    if (in_array($ext, $allowed) && $file['size'] <= 1024 * 1024) {
+    if (in_array($ext, $allowed) && $file['size'] <= mg_upload_max_icon()) {
         // 기존 미리보기 삭제
         $old_set = mg_get_emoticon_set($es_id);
         if ($old_set && $old_set['es_preview']) {
