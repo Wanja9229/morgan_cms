@@ -160,7 +160,9 @@ $vanta_name = strtoupper($profile_bg_id);
 <?php if ($profile_bg_id === 'waves'): ?>
 #vanta-bg { opacity: 0.35; }
 <?php elseif (!empty($profile_bg_image)): ?>
-#vanta-bg { opacity: 0.5; }
+#vanta-bg { opacity: 0.45; }
+<?php else: ?>
+#vanta-bg { opacity: 0.6; }
 <?php endif; ?>
 </style>
 

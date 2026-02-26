@@ -432,30 +432,76 @@ document.getElementById('fattendance').addEventListener('submit', function(e) {
 
 <!-- 등장 확률 설정 -->
 <div class="mg-card" style="margin-top:1.5rem;">
-    <div class="mg-card-header">별점별 등장 확률</div>
+    <div class="mg-card-header">별점별 등장 확률 (%)</div>
     <div class="mg-card-body">
-        <form method="post" action="./attendance_update.php">
+        <form method="post" action="./attendance_update.php" id="fortune-weight-form">
             <input type="hidden" name="mode" value="fortune_weights">
             <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:end;">
                 <?php
                 $w_colors = [1=>'#6b7280', 2=>'#22c55e', 3=>'#3b82f6', 4=>'#a855f7', 5=>'#f59f0a'];
-                $w_defaults = [1=>5, 2=>4, 3=>3, 4=>2, 5=>1];
+                $w_defaults = [1=>40, 2=>25, 3=>20, 4=>10, 5=>5];
                 for ($s = 1; $s <= 5; $s++) {
                     $w_val = (int)mg_get_config('fortune_weight_' . $s, $w_defaults[$s]);
                 ?>
-                <div style="text-align:center;min-width:60px;">
+                <div style="text-align:center;min-width:70px;">
                     <div style="color:<?php echo $w_colors[$s]; ?>;font-size:0.85rem;margin-bottom:0.25rem;"><?php echo str_repeat('★', $s); ?></div>
-                    <input type="number" name="fortune_weight_<?php echo $s; ?>" value="<?php echo $w_val; ?>" class="mg-form-input" style="width:60px;text-align:center;" min="0" max="99">
+                    <div style="display:flex;align-items:center;gap:2px;">
+                        <input type="number" name="fortune_weight_<?php echo $s; ?>" value="<?php echo $w_val; ?>" class="mg-form-input fw-input" style="width:55px;text-align:center;" min="0" max="100">
+                        <span style="color:var(--mg-text-muted);font-size:0.8rem;">%</span>
+                    </div>
                 </div>
                 <?php } ?>
+                <div style="display:flex;flex-direction:column;align-items:center;min-width:60px;">
+                    <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-bottom:0.25rem;">합계</div>
+                    <div id="fw-total" style="font-size:1rem;font-weight:600;color:var(--mg-accent);line-height:2.25rem;">0%</div>
+                </div>
                 <button type="submit" class="mg-btn mg-btn-primary" style="padding:0.4rem 0.75rem;font-size:0.8rem;">저장</button>
             </div>
+            <div id="fw-error" style="font-size:0.75rem;color:#ef4444;margin-top:0.5rem;display:none;">
+                합계가 100%를 초과할 수 없습니다.
+            </div>
             <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.5rem;">
-                숫자가 클수록 자주 등장합니다. 0으로 설정하면 해당 별점은 등장하지 않습니다.
+                각 별점이 등장할 확률(%)입니다. 합계가 100% 이하여야 합니다. 0%이면 등장하지 않습니다.
             </div>
         </form>
     </div>
 </div>
+<script>
+(function() {
+    var inputs = document.querySelectorAll('.fw-input');
+    var totalEl = document.getElementById('fw-total');
+    var errorEl = document.getElementById('fw-error');
+    var form = document.getElementById('fortune-weight-form');
+
+    function updateTotal() {
+        var sum = 0;
+        inputs.forEach(function(inp) { sum += Math.max(0, parseInt(inp.value) || 0); });
+        totalEl.textContent = sum + '%';
+        var over = sum > 100;
+        totalEl.style.color = over ? '#ef4444' : 'var(--mg-accent)';
+        errorEl.style.display = over ? 'block' : 'none';
+        return !over;
+    }
+
+    inputs.forEach(function(inp) {
+        inp.addEventListener('input', updateTotal);
+        inp.addEventListener('change', function() {
+            var v = Math.max(0, Math.min(100, parseInt(this.value) || 0));
+            this.value = v;
+            updateTotal();
+        });
+    });
+
+    form.addEventListener('submit', function(e) {
+        if (!updateTotal()) {
+            e.preventDefault();
+            alert('별점 확률의 합계가 100%를 초과합니다. 조정해주세요.');
+        }
+    });
+
+    updateTotal();
+})();
+</script>
 
 <!-- 추가/수정 모달 -->
 <div id="fortune-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;">

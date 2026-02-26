@@ -48,8 +48,17 @@ if ($mode === 'fortune_add') {
     goto_url('./attendance.php?tab=fortune');
 
 } elseif ($mode === 'fortune_weights') {
+    $total = 0;
+    $weights = [];
     for ($s = 1; $s <= 5; $s++) {
-        $w = isset($_POST['fortune_weight_' . $s]) ? max(0, min(99, (int)$_POST['fortune_weight_' . $s])) : 1;
+        $w = isset($_POST['fortune_weight_' . $s]) ? max(0, min(100, (int)$_POST['fortune_weight_' . $s])) : 0;
+        $weights[$s] = $w;
+        $total += $w;
+    }
+    if ($total > 100) {
+        alert('확률 합계가 100%를 초과합니다.');
+    }
+    foreach ($weights as $s => $w) {
         mg_set_config('fortune_weight_' . $s, $w);
     }
     goto_url('./attendance.php?tab=fortune');

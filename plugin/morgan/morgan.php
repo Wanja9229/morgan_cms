@@ -451,12 +451,12 @@ $mg['shop_type_groups'] = array(
     'profile' => array(
         'label' => '프로필',
         'icon' => 'user',
-        'types' => array('profile_border', 'profile_skin', 'profile_bg')
+        'types' => array('profile_border', 'profile_skin', 'profile_bg', 'profile_effect')
     ),
     'seal' => array(
         'label' => '인장',
         'icon' => 'stamp',
-        'types' => array('seal_frame', 'seal_bg', 'seal_hover')
+        'types' => array('seal_frame', 'seal_bg', 'seal_effect', 'seal_hover')
     ),
     'system' => array(
         'label' => '이용권',
@@ -495,10 +495,12 @@ function mg_get_item_types() {
         // 프로필
         'profile_border' => array('name' => '프로필 테두리', 'desc' => '프로필 이미지 테두리', 'group' => 'profile'),
         'profile_skin' => array('name' => '프로필 스킨', 'desc' => '프로필 레이아웃 스킨 (개발자 등록)', 'group' => 'profile'),
-        'profile_bg' => array('name' => '프로필 배경', 'desc' => '프로필 배경 효과 (개발자 등록)', 'group' => 'profile'),
+        'profile_bg' => array('name' => '프로필 배경', 'desc' => '프로필 배경 색상', 'group' => 'profile'),
+        'profile_effect' => array('name' => '프로필 이펙트', 'desc' => '프로필 배경 효과 (Vanta.js)', 'group' => 'profile'),
         // 인장
         'seal_frame' => array('name' => '인장 프레임', 'desc' => '인장 테두리 프레임', 'group' => 'seal'),
-        'seal_bg' => array('name' => '인장 배경', 'desc' => '인장 배경 효과', 'group' => 'seal'),
+        'seal_bg' => array('name' => '인장 배경', 'desc' => '인장 배경 색상', 'group' => 'seal'),
+        'seal_effect' => array('name' => '인장 이펙트', 'desc' => '인장 배경 효과 (CSS 애니메이션)', 'group' => 'seal'),
         'seal_hover' => array('name' => '인장 호버', 'desc' => '인장 호버 효과', 'group' => 'seal'),
         // 이용권
         'char_slot' => array('name' => '캐릭터 슬롯', 'desc' => '사용 시 캐릭터를 1개 더 생성할 수 있습니다 (영구, 해제 불가)', 'group' => 'system'),
@@ -516,7 +518,7 @@ function mg_get_item_types() {
  * 동시에 하나만 활성화 가능한 아이템 타입 목록
  */
 function mg_get_exclusive_types() {
-    return array('nick_color', 'nick_effect', 'seal_bg', 'seal_frame', 'seal_hover', 'profile_skin', 'profile_bg');
+    return array('nick_color', 'nick_effect', 'seal_bg', 'seal_effect', 'seal_frame', 'seal_hover', 'profile_skin', 'profile_bg', 'profile_effect');
 }
 
 // 타입별 라벨 (mg_get_item_types에서 자동 추출)
@@ -1503,7 +1505,7 @@ function mg_get_inventory_count($mb_id, $si_id) {
  * @param int $sc_id 카테고리 ID (0=전체)
  * @return array
  */
-function mg_get_inventory($mb_id, $sc_id = 0, $page = 0, $limit = 0) {
+function mg_get_inventory($mb_id, $sc_id = 0, $page = 0, $limit = 0, $types = array()) {
     global $mg;
 
     $mb_id = sql_real_escape_string($mb_id);
@@ -1512,7 +1514,10 @@ function mg_get_inventory($mb_id, $sc_id = 0, $page = 0, $limit = 0) {
     $limit = (int)$limit;
 
     $where = "WHERE iv.mb_id = '{$mb_id}'";
-    if ($sc_id > 0) {
+    if (!empty($types)) {
+        $type_in = implode("','", array_map('sql_real_escape_string', $types));
+        $where .= " AND i.si_type IN ('{$type_in}')";
+    } elseif ($sc_id > 0) {
         $where .= " AND i.sc_id = {$sc_id}";
     }
 
@@ -1743,9 +1748,9 @@ function mg_get_profile_skin_id($mb_id) {
 }
 
 /**
- * 프로필 배경 효과 목록 (Vanta.js 기반 14종)
+ * 프로필 이펙트 목록 (Vanta.js 기반 14종)
  */
-function mg_get_profile_bg_list() {
+function mg_get_profile_effect_list() {
     return array(
         'birds'     => '새 떼',
         'fog'       => '안개',
@@ -1762,8 +1767,10 @@ function mg_get_profile_bg_list() {
         'halo'      => '빛 번짐',
     );
 }
+// 하위호환
+function mg_get_profile_bg_list() { return mg_get_profile_effect_list(); }
 
-function mg_get_seal_bg_list() {
+function mg_get_seal_effect_list() {
     return array(
         'fog'    => '안개',
         'waves'  => '물결',
@@ -1772,6 +1779,8 @@ function mg_get_seal_bg_list() {
         'ripple' => '파문',
     );
 }
+// 하위호환
+function mg_get_seal_bg_list() { return mg_get_seal_effect_list(); }
 
 function mg_get_seal_hover_presets() {
     return array(
@@ -1787,26 +1796,61 @@ function mg_get_seal_hover_presets() {
 }
 
 /**
- * 회원의 활성 프로필 배경 효과 ID 반환 (없으면 null)
+ * 회원의 활성 프로필 이펙트 ID 반환 (없으면 null)
  */
-function mg_get_profile_bg_id($mb_id) {
-    $items = mg_get_active_items($mb_id, 'profile_bg');
+function mg_get_profile_effect_id($mb_id) {
+    $items = mg_get_active_items($mb_id, 'profile_effect');
     if (empty($items)) return null;
     $effect = $items[0]['si_effect'];
     return $effect['bg_id'] ?? null;
 }
+// 하위호환
+function mg_get_profile_bg_id($mb_id) { return mg_get_profile_effect_id($mb_id); }
 
 /**
- * 회원이 커스텀 배경 이미지 업로드 권한을 보유하는지 확인
+ * 회원의 활성 프로필 배경색 반환 (아이템 기반, 없으면 null)
  */
-function mg_has_bg_custom_perm($mb_id) {
-    global $g5;
-    $sql = "SELECT iv.iv_id FROM {$g5['mg_inventory_table']} iv
-            JOIN {$g5['mg_shop_item_table']} si ON iv.si_id = si.si_id
-            WHERE iv.mb_id = '".sql_real_escape_string($mb_id)."' AND iv.iv_count > 0
-            AND si.si_effect LIKE '%bg_custom_upload%'";
-    $row = sql_fetch($sql);
-    return !empty($row['iv_id']);
+function mg_get_profile_bg_color($mb_id) {
+    $bg = mg_get_profile_bg_style($mb_id);
+    return $bg['color'] ?? null;
+}
+
+/**
+ * 회원의 활성 인장 배경색 반환 (아이템 기반, 없으면 null)
+ */
+function mg_get_seal_bg_color($mb_id) {
+    $bg = mg_get_seal_bg_style($mb_id);
+    return $bg['color'] ?? null;
+}
+
+/**
+ * 회원의 활성 인장 배경 스타일 반환 (색상 또는 이미지)
+ * @return array ['color' => string|null, 'image' => string|null]
+ */
+function mg_get_seal_bg_style($mb_id) {
+    $items = mg_get_active_items($mb_id, 'seal_bg');
+    if (empty($items)) return array('color' => null, 'image' => null);
+    $effect = $items[0]['si_effect'];
+    $effect = is_string($effect) ? json_decode($effect, true) : $effect;
+    return array(
+        'color' => $effect['color'] ?? null,
+        'image' => $effect['image'] ?? null,
+    );
+}
+
+/**
+ * 회원의 활성 프로필 배경 스타일 반환 (색상 또는 이미지)
+ * @return array ['color' => string|null, 'image' => string|null]
+ */
+function mg_get_profile_bg_style($mb_id) {
+    $items = mg_get_active_items($mb_id, 'profile_bg');
+    if (empty($items)) return array('color' => null, 'image' => null);
+    $effect = $items[0]['si_effect'];
+    $effect = is_string($effect) ? json_decode($effect, true) : $effect;
+    return array(
+        'color' => $effect['color'] ?? null,
+        'image' => $effect['image'] ?? null,
+    );
 }
 
 /**
@@ -5088,12 +5132,22 @@ function mg_create_concierge($mb_id, $data) {
         return array('success' => false, 'message' => '사용할 수 없는 캐릭터입니다.');
     }
 
-    // 동시 등록 제한
+    // 동시 등록 제한 (기본 슬롯 + 추가 의뢰권)
     $max_slots = (int)mg_config('concierge_max_slots', 1);
+    $extra_slots = mg_get_concierge_extra_slots($mb_id);
+    $total_slots = $max_slots + $extra_slots;
     $active_row = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_concierge_table']}
                               WHERE mb_id = '{$mb_id_esc}' AND cc_status IN ('recruiting', 'matched')");
-    if ((int)$active_row['cnt'] >= $max_slots) {
-        return array('success' => false, 'message' => "동시 등록 가능한 의뢰 수({$max_slots}개)를 초과했습니다.");
+    $active_cnt = (int)$active_row['cnt'];
+    if ($active_cnt >= $total_slots) {
+        return array('success' => false, 'message' => "동시 등록 가능한 의뢰 수({$total_slots}개)를 초과했습니다. 상점에서 추가 의뢰권을 구매할 수 있습니다.");
+    }
+    // 기본 슬롯 초과 시 추가 의뢰권 1개 소비
+    if ($active_cnt >= $max_slots) {
+        $consumed = mg_consume_concierge_extra($mb_id);
+        if (!$consumed) {
+            return array('success' => false, 'message' => "기본 의뢰 슬롯({$max_slots}개)을 모두 사용 중입니다. 상점에서 추가 의뢰권을 구매해주세요.");
+        }
     }
 
     $title = sql_real_escape_string(clean_xss_tags($data['cc_title']));
@@ -5716,6 +5770,39 @@ function mg_update_concierge($mb_id, $cc_id, $data) {
         WHERE cc_id = {$cc_id}");
 
     return array('success' => true, 'message' => '의뢰가 수정되었습니다.');
+}
+
+/**
+ * 추가 의뢰권 보유 수량 조회
+ */
+function mg_get_concierge_extra_slots($mb_id) {
+    global $g5;
+    $mb_id_esc = sql_real_escape_string($mb_id);
+    $row = sql_fetch("SELECT COALESCE(SUM(v.iv_count), 0) as cnt
+                      FROM {$g5['mg_inventory_table']} v
+                      JOIN {$g5['mg_shop_item_table']} i ON v.si_id = i.si_id
+                      WHERE v.mb_id = '{$mb_id_esc}' AND i.si_type = 'concierge_extra' AND v.iv_count > 0");
+    return (int)($row['cnt'] ?? 0);
+}
+
+/**
+ * 추가 의뢰권 1개 소비
+ */
+function mg_consume_concierge_extra($mb_id) {
+    global $g5;
+    $mb_id_esc = sql_real_escape_string($mb_id);
+    // 가장 먼저 구매한 의뢰권부터 소비
+    $row = sql_fetch("SELECT v.si_id FROM {$g5['mg_inventory_table']} v
+                      JOIN {$g5['mg_shop_item_table']} i ON v.si_id = i.si_id
+                      WHERE v.mb_id = '{$mb_id_esc}' AND i.si_type = 'concierge_extra' AND v.iv_count > 0
+                      ORDER BY v.iv_datetime ASC LIMIT 1");
+    if (!$row || !$row['si_id']) return false;
+    $si_id = (int)$row['si_id'];
+    sql_query("UPDATE {$g5['mg_inventory_table']} SET iv_count = iv_count - 1
+               WHERE mb_id = '{$mb_id_esc}' AND si_id = {$si_id}");
+    sql_query("DELETE FROM {$g5['mg_inventory_table']}
+               WHERE mb_id = '{$mb_id_esc}' AND si_id = {$si_id} AND iv_count <= 0");
+    return true;
 }
 
 /**
@@ -6771,8 +6858,8 @@ function mg_get_seal($mb_id)
     $seal['title_item'] = !empty($title_items) ? $title_items[0] : null;
 
     // 배경/프레임/호버 스킨
-    $seal_bg = mg_get_active_items($mb_id, 'seal_bg');
-    $seal['bg_item'] = !empty($seal_bg) ? $seal_bg[0] : null;
+    $seal_effect_items = mg_get_active_items($mb_id, 'seal_effect');
+    $seal['effect_item'] = !empty($seal_effect_items) ? $seal_effect_items[0] : null;
     $seal_frame = mg_get_active_items($mb_id, 'seal_frame');
     $seal['frame_item'] = !empty($seal_frame) ? $seal_frame[0] : null;
     $seal_hover = mg_get_active_items($mb_id, 'seal_hover');
@@ -6794,6 +6881,55 @@ function mg_get_seal($mb_id)
  * @param string $mode 'full' 또는 'compact'
  * @return string HTML
  */
+function mg_seal_bg_effect_css($effect_id, $color, $mb_id) {
+    $uid = 'seal-fx-' . preg_replace('/[^a-z0-9_-]/i', '', $mb_id);
+    $c = htmlspecialchars($color);
+
+    // 공통: ::before 오버레이 (투명 배경 위에 효과만)
+    $base = "
+        .{$uid} { position:relative; }
+        .{$uid} > * { position:relative; z-index:1; }
+        .{$uid}::before {
+            content:''; position:absolute; inset:0; border-radius:inherit;
+            pointer-events:none; z-index:0;";
+
+    $effects = array(
+        'fog' => "
+            @keyframes {$uid}-drift { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+            {$base}
+            background:linear-gradient(135deg,{$c}66 0%,transparent 35%,{$c}44 65%,transparent 100%);
+            background-size:300% 300%; animation:{$uid}-drift 8s ease infinite; }",
+        'waves' => "
+            @keyframes {$uid}-wave { 0%{background-position:0% 0%} 100%{background-position:200% 200%} }
+            {$base}
+            background:repeating-linear-gradient(135deg,{$c}33 0px,transparent 8px,{$c}18 16px),
+                repeating-linear-gradient(45deg,{$c}22 0px,transparent 12px,{$c}11 24px);
+            background-size:200% 200%; animation:{$uid}-wave 6s linear infinite; }",
+        'cells' => "
+            @keyframes {$uid}-pulse { 0%,100%{background-size:120% 120%} 50%{background-size:180% 180%} }
+            {$base}
+            background:radial-gradient(circle at 20% 30%,{$c}66 0%,transparent 45%),
+                radial-gradient(circle at 75% 25%,{$c}44 0%,transparent 40%),
+                radial-gradient(circle at 50% 80%,{$c}55 0%,transparent 50%),
+                radial-gradient(circle at 90% 70%,{$c}33 0%,transparent 35%);
+            animation:{$uid}-pulse 10s ease infinite; }",
+        'net' => "
+            @keyframes {$uid}-flicker { 0%,100%{opacity:0.4} 50%{opacity:0.8} }
+            {$base}
+            background:radial-gradient(circle,{$c}88 1px,transparent 1px) 0 0/14px 14px,
+                radial-gradient(circle,{$c}55 1px,transparent 1px) 7px 7px/14px 14px;
+            animation:{$uid}-flicker 4s ease infinite; }",
+        'ripple' => "
+            @keyframes {$uid}-rpl { 0%,100%{background-size:100% 100%} 50%{background-size:160% 160%} }
+            {$base}
+            background:radial-gradient(ellipse at center,{$c}55 0%,transparent 60%),
+                radial-gradient(ellipse at 30% 70%,{$c}33 0%,transparent 50%);
+            animation:{$uid}-rpl 5s ease infinite; }",
+    );
+    if (!isset($effects[$effect_id])) return '';
+    return '<style>' . $effects[$effect_id] . '</style>';
+}
+
 function mg_render_seal($mb_id, $mode = 'full')
 {
     // 캐싱 (같은 페이지 내 동일 유저)
@@ -6808,16 +6944,24 @@ function mg_render_seal($mb_id, $mode = 'full')
     }
 
     // 배경/프레임/호버 스타일
-    $seal_bg_color = !empty($seal['seal_bg_color']) ? htmlspecialchars($seal['seal_bg_color']) : '#2b2d31';
-    $bg_style = 'background:' . $seal_bg_color . ';';
+    // 배경색: 아이템 기반 (seal_bg 타입)
+    $seal_bg = mg_get_seal_bg_style($mb_id);
+    $seal_bg_color = $seal_bg['color'] ?: '#2b2d31';
+    if (!empty($seal_bg['image'])) {
+        $bg_style = 'background:url(' . htmlspecialchars($seal_bg['image']) . ') center/cover no-repeat,' . htmlspecialchars($seal_bg_color) . ';';
+    } else {
+        $bg_style = 'background:' . htmlspecialchars($seal_bg_color) . ';';
+    }
     $border_style = 'border:1px solid #3f4147;border-radius:12px;';
     $hover_css = '';
-    if ($seal['bg_item']) {
-        $effect = is_string($seal['bg_item']['si_effect']) ? json_decode($seal['bg_item']['si_effect'], true) : $seal['bg_item']['si_effect'];
-        if (!empty($effect['bg_image'])) {
-            $bg_style = "background:url('" . htmlspecialchars($effect['bg_image']) . "') center/cover no-repeat;";
-        } elseif (!empty($effect['bg_color'])) {
-            $bg_style = "background:" . htmlspecialchars($effect['bg_color']) . ";";
+    $seal_effect_css = '';
+    // 이펙트: seal_effect 타입
+    if ($seal['effect_item']) {
+        $effect = is_string($seal['effect_item']['si_effect']) ? json_decode($seal['effect_item']['si_effect'], true) : $seal['effect_item']['si_effect'];
+        if (!empty($effect['bg_id'])) {
+            $eid = htmlspecialchars($effect['bg_id']);
+            $ec = !empty($effect['bg_color']) ? htmlspecialchars($effect['bg_color']) : $seal_bg_color;
+            $seal_effect_css = mg_seal_bg_effect_css($eid, $ec, $mb_id);
         }
     }
     if ($seal['frame_item']) {
@@ -6915,6 +7059,11 @@ function mg_render_seal($mb_id, $mode = 'full')
             $text_color_style = !empty($seal['seal_text_color']) ? 'color:' . htmlspecialchars($seal['seal_text_color']) . ';' : '';
             $seal_class = 'mg-seal mg-seal-grid';
             $seal_uid = 'mg-seal-' . preg_replace('/[^a-z0-9_-]/i', '', $mb_id);
+            // 배경 효과 CSS
+            if ($seal_effect_css) {
+                $html .= $seal_effect_css;
+                $seal_class .= ' seal-fx-' . preg_replace('/[^a-z0-9_-]/i', '', $mb_id);
+            }
             // 호버 효과
             if ($hover_css) {
                 $html .= '<style>.' . $seal_uid . ' > div:hover{' . $hover_css . '}</style>';

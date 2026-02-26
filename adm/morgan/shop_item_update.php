@@ -86,10 +86,57 @@ if ($mode == 'add' || $mode == 'edit') {
             }
             break;
         case 'profile_bg':
-            $valid_bgs = mg_get_profile_bg_list();
+        case 'seal_bg':
+            $bg_mode = $effect['bg_mode'] ?? 'color';
+            if ($bg_mode === 'image') {
+                // 이미지 업로드 처리
+                $bg_image = '';
+                $current_image = $effect['image_current'] ?? '';
+                if (isset($_FILES['bg_image_file']) && $_FILES['bg_image_file']['error'] == 0) {
+                    $upload_dir = G5_DATA_PATH . '/shop/bg';
+                    if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
+                    $ext = strtolower(pathinfo($_FILES['bg_image_file']['name'], PATHINFO_EXTENSION));
+                    $allowed = array('jpg', 'jpeg', 'png', 'gif', 'webp');
+                    if (in_array($ext, $allowed) && $_FILES['bg_image_file']['size'] <= 512000) {
+                        $fname = $si_type . '_' . time() . '_' . mt_rand(1000,9999) . '.' . $ext;
+                        if (move_uploaded_file($_FILES['bg_image_file']['tmp_name'], $upload_dir . '/' . $fname)) {
+                            if ($current_image) {
+                                $old = G5_DATA_PATH . '/shop/bg/' . basename($current_image);
+                                if (file_exists($old)) unlink($old);
+                            }
+                            $bg_image = G5_DATA_URL . '/shop/bg/' . $fname;
+                        }
+                    }
+                } elseif ($current_image) {
+                    $bg_image = $current_image;
+                }
+                if ($bg_image) {
+                    $effect_data['image'] = $bg_image;
+                }
+            } else {
+                if (!empty($effect['color']) && preg_match('/^#[0-9a-fA-F]{6}$/', $effect['color'])) {
+                    $effect_data['color'] = $effect['color'];
+                }
+            }
+            break;
+        case 'profile_effect':
+            $valid_effects = mg_get_profile_effect_list();
             $bg_id = $effect['bg_id'] ?? '';
-            if (isset($valid_bgs[$bg_id])) {
+            if ($bg_id && isset($valid_effects[$bg_id])) {
                 $effect_data['bg_id'] = $bg_id;
+            }
+            if (!empty($effect['bg_color'])) {
+                $effect_data['bg_color'] = $effect['bg_color'];
+            }
+            break;
+        case 'seal_effect':
+            $valid_effects = mg_get_seal_effect_list();
+            $bg_id = $effect['bg_id'] ?? '';
+            if ($bg_id && isset($valid_effects[$bg_id])) {
+                $effect_data['bg_id'] = $bg_id;
+            }
+            if (!empty($effect['bg_color'])) {
+                $effect_data['bg_color'] = $effect['bg_color'];
             }
             break;
         case 'seal_frame':
@@ -111,16 +158,6 @@ if ($mode == 'add' || $mode == 'edit') {
             $shadow_val = $effect['box_shadow'] ?? '';
             if ($shadow_val && in_array($shadow_val, $valid_shadows)) {
                 $effect_data['box_shadow'] = $shadow_val;
-            }
-            break;
-        case 'seal_bg':
-            $valid_bgs = mg_get_seal_bg_list();
-            $bg_id = $effect['bg_id'] ?? '';
-            if ($bg_id && isset($valid_bgs[$bg_id])) {
-                $effect_data['bg_id'] = $bg_id;
-            }
-            if (!empty($effect['bg_color'])) {
-                $effect_data['bg_color'] = $effect['bg_color'];
             }
             break;
         case 'seal_hover':

@@ -26,27 +26,82 @@ $item_type_names = $mg['shop_type_labels'];
         </a>
     </div>
 
-    <!-- 카테고리 탭 -->
+    <!-- 카테고리 탭 (상점과 동일 구조) -->
     <div class="mb-6 overflow-x-auto">
         <div class="flex gap-2 min-w-max">
-            <a href="<?php echo G5_BBS_URL; ?>/inventory.php" class="px-4 py-2 rounded-lg font-medium transition-colors <?php echo (!$is_emoticon_tab && $sc_id == 0) ? 'bg-mg-accent text-white' : 'bg-mg-bg-secondary text-mg-text-secondary hover:bg-mg-bg-tertiary'; ?>">
+            <a href="<?php echo G5_BBS_URL; ?>/inventory.php" class="px-4 py-2 rounded-lg font-medium transition-colors <?php echo (!$is_emoticon_tab && !$is_material_tab && empty($tab)) ? 'bg-mg-accent text-white' : 'bg-mg-bg-secondary text-mg-text-secondary hover:bg-mg-bg-tertiary'; ?>">
                 전체
             </a>
-            <?php foreach ($categories as $cat) { ?>
-            <a href="<?php echo G5_BBS_URL; ?>/inventory.php?sc_id=<?php echo $cat['sc_id']; ?>" class="px-4 py-2 rounded-lg font-medium transition-colors <?php echo (!$is_emoticon_tab && $sc_id == $cat['sc_id']) ? 'bg-mg-accent text-white' : 'bg-mg-bg-secondary text-mg-text-secondary hover:bg-mg-bg-tertiary'; ?>">
-                <?php echo htmlspecialchars($cat['sc_name']); ?>
+            <?php foreach ($type_groups as $group_key => $group) {
+                if ($group_key === 'material') continue; // 재료는 별도 특수 탭
+            ?>
+            <a href="<?php echo G5_BBS_URL; ?>/inventory.php?tab=<?php echo $group_key; ?>" class="px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1 <?php echo (!$is_emoticon_tab && !$is_material_tab && $tab === $group_key) ? 'bg-mg-accent text-white' : 'bg-mg-bg-secondary text-mg-text-secondary hover:bg-mg-bg-tertiary'; ?>">
+                <?php echo mg_icon($group['icon'], 'w-4 h-4'); ?>
+                <?php echo htmlspecialchars($group['label']); ?>
             </a>
             <?php } ?>
+            <a href="<?php echo G5_BBS_URL; ?>/inventory.php?tab=material" class="px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1 <?php echo $is_material_tab ? 'bg-mg-accent text-white' : 'bg-mg-bg-secondary text-mg-text-secondary hover:bg-mg-bg-tertiary'; ?>">
+                <?php echo mg_icon('cube', 'w-4 h-4'); ?>
+                재료
+            </a>
             <?php if ($emoticon_use == '1') { ?>
             <a href="<?php echo G5_BBS_URL; ?>/inventory.php?tab=emoticon" class="px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1 <?php echo $is_emoticon_tab ? 'bg-mg-accent text-white' : 'bg-mg-bg-secondary text-mg-text-secondary hover:bg-mg-bg-tertiary'; ?>">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="1.5"/><path stroke-linecap="round" stroke-width="1.5" d="M8 14s1.5 2 4 2 4-2 4-2"/><circle cx="9" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1" fill="currentColor" stroke="none"/></svg>
+                <?php echo mg_icon('face-smile', 'w-4 h-4'); ?>
                 이모티콘
             </a>
             <?php } ?>
         </div>
     </div>
 
-    <?php if ($is_emoticon_tab) { ?>
+    <?php if ($is_material_tab) { ?>
+    <!-- ========== 재료 탭 콘텐츠 ========== -->
+    <div class="card mb-4">
+        <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-mg-accent flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div class="text-sm text-mg-text-secondary">
+                <p>파견, 게시판 활동 등으로 획득한 재료입니다. 개척 시설 건설에 사용됩니다.</p>
+            </div>
+        </div>
+    </div>
+
+    <?php if (!empty($my_materials)) { ?>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        <?php foreach ($my_materials as $mat) {
+            $count = (int)($mat['um_count'] ?? 0);
+            $icon = $mat['mt_icon'] ?? '';
+            $name = htmlspecialchars($mat['mt_name'] ?? '');
+            $desc = htmlspecialchars($mat['mt_desc'] ?? '');
+        ?>
+        <div class="card p-4 text-center">
+            <div class="w-14 h-14 mx-auto mb-3 rounded-xl bg-mg-bg-tertiary flex items-center justify-center text-2xl">
+                <?php echo $icon ?: '📦'; ?>
+            </div>
+            <h3 class="font-medium text-mg-text-primary mb-1"><?php echo $name; ?></h3>
+            <p class="text-2xl font-bold text-mg-accent mb-1"><?php echo number_format($count); ?></p>
+            <?php if ($desc) { ?>
+            <p class="text-xs text-mg-text-muted"><?php echo $desc; ?></p>
+            <?php } ?>
+        </div>
+        <?php } ?>
+    </div>
+    <?php } else { ?>
+    <div class="card py-16 text-center">
+        <svg class="w-16 h-16 mx-auto text-mg-text-muted mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+        </svg>
+        <p class="text-mg-text-muted mb-4">보유한 재료가 없습니다.</p>
+        <a href="<?php echo G5_BBS_URL; ?>/shop.php?tab=material" class="inline-flex items-center gap-1 text-mg-accent hover:underline">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+            </svg>
+            상점에서 구매하기
+        </a>
+    </div>
+    <?php } ?>
+
+    <?php } elseif ($is_emoticon_tab) { ?>
     <!-- ========== 이모티콘 탭 콘텐츠 ========== -->
 
     <!-- 안내 -->
@@ -210,7 +265,7 @@ $item_type_names = $mg['shop_type_labels'];
         <?php foreach ($inventory as $inv) {
             $item = $inv;
             $is_active = in_array($item['si_id'], $active_si_ids);
-            $is_usable = in_array($item['si_type'], ['title', 'badge', 'nick_color', 'nick_effect', 'profile_border', 'profile_skin', 'profile_bg', 'char_slot']);
+            $is_usable = in_array($item['si_type'], ['title', 'badge', 'nick_color', 'nick_effect', 'profile_border', 'profile_skin', 'profile_bg', 'profile_effect', 'seal_bg', 'seal_effect', 'seal_frame', 'seal_hover', 'char_slot']);
         ?>
         <div class="card p-0 overflow-hidden <?php echo $is_active ? 'ring-2 ring-mg-accent' : ''; ?>">
             <!-- 이미지 -->
@@ -265,6 +320,14 @@ $item_type_names = $mg['shop_type_labels'];
                         </button>
                     </div>
                     <?php } ?>
+                <?php } elseif ($item['si_type'] === 'emoticon_reg') { ?>
+                <div style="display:flex;gap:0.25rem;align-items:center;">
+                    <a href="<?php echo G5_BBS_URL; ?>/emoticon_create.php" class="text-xs text-mg-accent hover:underline" style="flex:1;text-align:center;">이모티콘 등록하기</a>
+                </div>
+                <?php } elseif ($item['si_type'] === 'concierge_extra') { ?>
+                <div style="display:flex;gap:0.25rem;align-items:center;">
+                    <span class="text-xs text-mg-text-muted" style="flex:1;text-align:center;">의뢰 등록 시 자동 사용</span>
+                </div>
                 <?php } else { ?>
                 <div style="display:flex;gap:0.25rem;align-items:center;">
                     <span class="text-xs text-mg-text-muted" style="flex:1;text-align:center;">사용 불가</span>
@@ -287,7 +350,7 @@ $item_type_names = $mg['shop_type_labels'];
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
         </svg>
         <p class="text-mg-text-muted mb-4">
-            <?php echo $sc_id ? '해당 카테고리에 보유한 아이템이 없습니다.' : '보유한 아이템이 없습니다.'; ?>
+            <?php echo $tab ? '해당 카테고리에 보유한 아이템이 없습니다.' : '보유한 아이템이 없습니다.'; ?>
         </p>
         <a href="<?php echo G5_BBS_URL; ?>/shop.php" class="inline-flex items-center gap-1 text-mg-accent hover:underline">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

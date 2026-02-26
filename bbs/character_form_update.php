@@ -282,7 +282,14 @@ if ($is_edit) {
     $log_action = $btn_submit ? 'submit' : 'edit';
     sql_query("INSERT INTO {$g5['mg_character_log_table']} (ch_id, log_action) VALUES ({$ch_id}, '{$log_action}')");
 } else {
-    // 신규 생성
+    // 신규 생성: 슬롯 제한 검증
+    $cnt_row = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_character_table']}
+                          WHERE mb_id = '{$member['mb_id']}' AND ch_state != 'deleted'");
+    $max_chars = mg_get_max_characters($member['mb_id']);
+    if ((int)$cnt_row['cnt'] >= $max_chars) {
+        alert("최대 캐릭터 수({$max_chars}개)에 도달하여 더 이상 생성할 수 없습니다.");
+    }
+
     $sql = "INSERT INTO {$g5['mg_character_table']} SET
             mb_id = '{$member['mb_id']}',
             ch_name = '".sql_real_escape_string($ch_name)."',

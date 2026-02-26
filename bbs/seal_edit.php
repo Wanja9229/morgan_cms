@@ -47,16 +47,18 @@ while ($rch = sql_fetch_array($res_ch)) {
 
 // 보유 인장 스킨 (인벤토리)
 $seal_bg_items = array();
+$seal_effect_items = array();
 $seal_frame_items = array();
 $seal_hover_items = array();
 $inv_result = sql_query("SELECT i.si_id, i.si_name, i.si_image, i.si_type, i.si_effect
     FROM {$g5['mg_inventory_table']} v
     JOIN {$g5['mg_shop_item_table']} i ON v.si_id = i.si_id
     WHERE v.mb_id = '".sql_real_escape_string($mb_id)."'
-    AND i.si_type IN ('seal_bg', 'seal_frame', 'seal_hover')");
+    AND i.si_type IN ('seal_bg', 'seal_effect', 'seal_frame', 'seal_hover')");
 while ($row = sql_fetch_array($inv_result)) {
     $row['si_effect'] = json_decode($row['si_effect'], true);
     if ($row['si_type'] === 'seal_bg') $seal_bg_items[] = $row;
+    elseif ($row['si_type'] === 'seal_effect') $seal_effect_items[] = $row;
     elseif ($row['si_type'] === 'seal_frame') $seal_frame_items[] = $row;
     else $seal_hover_items[] = $row;
 }
@@ -64,6 +66,8 @@ while ($row = sql_fetch_array($inv_result)) {
 // 현재 적용 중인 스킨
 $active_bg = mg_get_active_items($mb_id, 'seal_bg');
 $active_bg = !empty($active_bg) ? $active_bg[0] : null;
+$active_effect = mg_get_active_items($mb_id, 'seal_effect');
+$active_effect = !empty($active_effect) ? $active_effect[0] : null;
 $active_frame = mg_get_active_items($mb_id, 'seal_frame');
 $active_frame = !empty($active_frame) ? $active_frame[0] : null;
 $active_hover = mg_get_active_items($mb_id, 'seal_hover');
@@ -86,19 +90,26 @@ $trophy_slots = (int)mg_config('seal_trophy_slots', 3);
 // 기존 레이아웃 로드
 $seal_layout_json = $seal['seal_layout'] ?? '';
 
-// 인장 배경색 (무료)
-$seal_bg_color = $seal['seal_bg_color'] ?? '';
+// 배경: 아이템 기반 (seal_bg 타입 — 색상 또는 이미지)
+$seal_bg_data = mg_get_seal_bg_style($mb_id);
+$seal_bg_color = $seal_bg_data['color'] ?: '#2b2d31';
+$seal_bg_image = $seal_bg_data['image'] ?? '';
 
 // 미리보기용 배경/프레임 스타일
-$preview_bg_style = 'background:' . ($seal_bg_color ?: '#2b2d31') . ';';
+if ($seal_bg_image) {
+    $preview_bg_style = 'background:url(' . htmlspecialchars($seal_bg_image) . ') center/cover no-repeat,' . htmlspecialchars($seal_bg_color) . ';';
+} else {
+    $preview_bg_style = 'background:' . htmlspecialchars($seal_bg_color) . ';';
+}
 $preview_border_style = 'border:1px solid #3f4147;border-radius:12px;';
 $preview_hover_css = '';
-if ($active_bg) {
-    $eff = is_string($active_bg['si_effect']) ? json_decode($active_bg['si_effect'], true) : ($active_bg['si_effect'] ?? array());
-    if (!empty($eff['bg_image'])) {
-        $preview_bg_style = "background:url('" . htmlspecialchars($eff['bg_image']) . "') center/cover no-repeat;";
-    } elseif (!empty($eff['bg_color'])) {
-        $preview_bg_style = "background:" . htmlspecialchars($eff['bg_color']) . ";";
+$init_bg_effect_id = '';
+$init_bg_effect_color = '';
+if ($active_effect) {
+    $eff = is_string($active_effect['si_effect']) ? json_decode($active_effect['si_effect'], true) : ($active_effect['si_effect'] ?? array());
+    if (!empty($eff['bg_id'])) {
+        $init_bg_effect_id = $eff['bg_id'];
+        $init_bg_effect_color = $eff['bg_color'] ?? '#f59f0a';
     }
 }
 if ($active_frame) {
@@ -291,7 +302,6 @@ include_once(G5_THEME_PATH.'/head.php');
         <input type="hidden" name="seal_tagline" id="f_tagline" value="<?php echo htmlspecialchars($seal['seal_tagline']); ?>">
         <input type="hidden" name="seal_content" id="f_content" value="<?php echo htmlspecialchars($seal['seal_content']); ?>">
         <input type="hidden" name="seal_text_color" id="f_text_color" value="<?php echo htmlspecialchars($seal['seal_text_color'] ?? ''); ?>">
-        <input type="hidden" name="seal_bg_color" id="f_bg_color" value="<?php echo htmlspecialchars($seal_bg_color); ?>">
         <?php if ($link_allow) { ?>
         <input type="hidden" name="seal_link" id="f_link" value="<?php echo htmlspecialchars($seal['seal_link']); ?>">
         <input type="hidden" name="seal_link_text" id="f_link_text" value="<?php echo htmlspecialchars($seal['seal_link_text']); ?>">
@@ -619,53 +629,53 @@ include_once(G5_THEME_PATH.'/head.php');
                 <h2 class="font-medium text-mg-text-primary">인장 배경</h2>
             </div>
             <div class="p-4 space-y-4">
-                <!-- 무료 배경색 -->
-                <div>
-                    <p class="text-xs font-medium text-mg-text-secondary mb-2">배경 색상</p>
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <?php
-                        $bg_colors = array(
-                            '' => '기본', '#2b2d31' => '다크', '#1a1a2e' => '네이비', '#0a192f' => '딥블루',
-                            '#1e1e2e' => '퍼플', '#0d1117' => '블랙', '#1a1d23' => '차콜', '#2d1b2e' => '와인',
-                            '#1b2d1b' => '포레스트', '#2d2b1b' => '올리브', '#1b1b2d' => '인디고'
-                        );
-                        foreach ($bg_colors as $hex => $name) {
-                            $active = $seal_bg_color === $hex ? 'ring-2 ring-mg-accent' : '';
-                        ?>
-                        <button type="button" data-bgcolor="<?php echo $hex; ?>"
-                                class="seal-bgcolor-btn w-7 h-7 rounded-full border border-mg-bg-tertiary flex items-center justify-center <?php echo $active; ?>"
-                                style="<?php echo $hex ? 'background:'.$hex : 'background:linear-gradient(135deg,#2b2d31 50%,#313338 50%);'; ?>"
-                                title="<?php echo $name; ?>">
-                            <?php if (!$hex) { ?><span class="text-[9px] text-mg-text-muted">X</span><?php } ?>
-                        </button>
-                        <?php } ?>
-                        <label class="flex items-center gap-1 text-xs text-mg-text-muted">
-                            <input type="color" id="seal-bg-custom-color" value="<?php echo $seal_bg_color ?: '#2b2d31'; ?>" class="w-7 h-7 rounded border border-mg-bg-tertiary cursor-pointer" style="padding:1px;">
-                            커스텀
-                        </label>
-                    </div>
-                </div>
-
                 <?php if (!empty($seal_bg_items)) { ?>
-                <!-- 보유 배경 효과 (상점 아이템) -->
-                <div class="border-t border-mg-bg-tertiary pt-3">
-                    <p class="text-xs font-medium text-mg-text-secondary mb-2">배경 효과 <span class="text-mg-text-muted font-normal">(상점 아이템)</span></p>
+                <!-- 배경 색상 (상점 아이템) -->
+                <div>
+                    <p class="text-xs font-medium text-mg-text-secondary mb-2">배경 색상 <span class="text-mg-text-muted font-normal">(상점 아이템)</span></p>
                     <div class="flex flex-wrap gap-2">
                         <button type="button" class="seal-item-card seal-bg-item-btn <?php echo !$active_bg ? 'is-active' : ''; ?>" data-si-id="0">
+                            <div class="item-preview" style="background:var(--mg-bg-tertiary);">
+                                <span class="text-[10px] text-mg-text-muted">기본</span>
+                            </div>
+                            <span class="text-xs text-mg-text-secondary">기본 색상</span>
+                        </button>
+                        <?php foreach ($seal_bg_items as $bi) {
+                            $is_active = ($active_bg && (int)$active_bg['si_id'] === (int)$bi['si_id']);
+                            $bgc = $bi['si_effect']['color'] ?? '#2b2d31';
+                            $bgi = $bi['si_effect']['image'] ?? '';
+                            $preview_css = $bgi ? 'background:url('.htmlspecialchars($bgi).') center/cover no-repeat;' : 'background:'.htmlspecialchars($bgc).';';
+                        ?>
+                        <button type="button" class="seal-item-card seal-bg-item-btn <?php echo $is_active ? 'is-active' : ''; ?>" data-si-id="<?php echo $bi['si_id']; ?>" data-color="<?php echo htmlspecialchars($bgc); ?>" data-image="<?php echo htmlspecialchars($bgi); ?>">
+                            <div class="item-preview" style="<?php echo $preview_css; ?>"></div>
+                            <span class="text-xs text-mg-text-secondary"><?php echo htmlspecialchars($bi['si_name']); ?></span>
+                        </button>
+                        <?php } ?>
+                    </div>
+                </div>
+                <?php } ?>
+
+                <?php if (!empty($seal_effect_items)) { ?>
+                <!-- 배경 이펙트 (상점 아이템) -->
+                <div class="<?php echo !empty($seal_bg_items) ? 'border-t border-mg-bg-tertiary pt-3' : ''; ?>">
+                    <p class="text-xs font-medium text-mg-text-secondary mb-2">배경 이펙트 <span class="text-mg-text-muted font-normal">(상점 아이템)</span></p>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" class="seal-item-card seal-effect-item-btn <?php echo !$active_effect ? 'is-active' : ''; ?>" data-si-id="0">
                             <div class="item-preview" style="background:var(--mg-bg-tertiary);">
                                 <span class="text-[10px] text-mg-text-muted">없음</span>
                             </div>
                             <span class="text-xs text-mg-text-secondary">효과 해제</span>
                         </button>
-                        <?php foreach ($seal_bg_items as $bi) {
-                            $is_active = ($active_bg && (int)$active_bg['si_id'] === (int)$bi['si_id']);
-                            $bgc = $bi['si_effect']['bg_color'] ?? '#1a1a2e';
+                        <?php foreach ($seal_effect_items as $ei) {
+                            $is_active = ($active_effect && (int)$active_effect['si_id'] === (int)$ei['si_id']);
+                            $ec = $ei['si_effect']['bg_color'] ?? '#1a1a2e';
+                            $eff_json = is_array($ei['si_effect']) ? json_encode($ei['si_effect']) : ($ei['si_effect'] ?? '{}');
                         ?>
-                        <button type="button" class="seal-item-card seal-bg-item-btn <?php echo $is_active ? 'is-active' : ''; ?>" data-si-id="<?php echo $bi['si_id']; ?>">
-                            <div class="item-preview" style="background:<?php echo htmlspecialchars($bgc); ?>;">
-                                <span class="text-[10px] text-mg-text-muted"><?php echo htmlspecialchars($bi['si_effect']['bg_id'] ?? ''); ?></span>
+                        <button type="button" class="seal-item-card seal-effect-item-btn <?php echo $is_active ? 'is-active' : ''; ?>" data-si-id="<?php echo $ei['si_id']; ?>" data-effect="<?php echo htmlspecialchars($eff_json); ?>">
+                            <div class="item-preview" style="background:<?php echo htmlspecialchars($ec); ?>;">
+                                <span class="text-[10px] text-mg-text-muted"><?php echo htmlspecialchars($ei['si_effect']['bg_id'] ?? ''); ?></span>
                             </div>
-                            <span class="text-xs text-mg-text-secondary"><?php echo htmlspecialchars($bi['si_name']); ?></span>
+                            <span class="text-xs text-mg-text-secondary"><?php echo htmlspecialchars($ei['si_name']); ?></span>
                         </button>
                         <?php } ?>
                     </div>
@@ -798,10 +808,58 @@ var TROPHY_SLOTS = <?php echo $trophy_slots; ?>;
 var BG_STYLE = <?php echo json_encode($preview_bg_style); ?>;
 var BORDER_STYLE = <?php echo json_encode($preview_border_style); ?>;
 var HOVER_CSS = <?php echo json_encode($preview_hover_css); ?>;
-var BG_COLOR = <?php echo json_encode($seal_bg_color); ?>;
+var BG_COLOR = <?php echo json_encode($seal_bg_color ?: '#2b2d31'); ?>;
+var BG_IMAGE = <?php echo json_encode($seal_bg_image); ?>;
 var LINK_ALLOW = <?php echo $link_allow ? 'true' : 'false'; ?>;
 
+// 배경 효과 CSS 동적 생성 (::before 오버레이)
+var _sealEffectActive = false;
+var _sealEffectStyleEl = null;
+
+function buildEffectCSS(effectId, color) {
+    var uid = 'seal-fx-preview';
+    var c = color || '#f59f0a';
+    var base = '.' + uid + '{position:relative;}.' + uid + '>*{position:relative;z-index:1;}.' + uid + '::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:0;';
+    var map = {
+        fog: '@keyframes ' + uid + '-drift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}' +
+            base + 'background:linear-gradient(135deg,' + c + '66 0%,transparent 35%,' + c + '44 65%,transparent 100%);background-size:300% 300%;animation:' + uid + '-drift 8s ease infinite;}',
+        waves: '@keyframes ' + uid + '-wave{0%{background-position:0% 0%}100%{background-position:200% 200%}}' +
+            base + 'background:repeating-linear-gradient(135deg,' + c + '33 0px,transparent 8px,' + c + '18 16px),repeating-linear-gradient(45deg,' + c + '22 0px,transparent 12px,' + c + '11 24px);background-size:200% 200%;animation:' + uid + '-wave 6s linear infinite;}',
+        cells: '@keyframes ' + uid + '-pulse{0%,100%{background-size:120% 120%}50%{background-size:180% 180%}}' +
+            base + 'background:radial-gradient(circle at 20% 30%,' + c + '66 0%,transparent 45%),radial-gradient(circle at 75% 25%,' + c + '44 0%,transparent 40%),radial-gradient(circle at 50% 80%,' + c + '55 0%,transparent 50%),radial-gradient(circle at 90% 70%,' + c + '33 0%,transparent 35%);animation:' + uid + '-pulse 10s ease infinite;}',
+        net: '@keyframes ' + uid + '-flicker{0%,100%{opacity:0.4}50%{opacity:0.8}}' +
+            base + 'background:radial-gradient(circle,' + c + '88 1px,transparent 1px) 0 0/14px 14px,radial-gradient(circle,' + c + '55 1px,transparent 1px) 7px 7px/14px 14px;animation:' + uid + '-flicker 4s ease infinite;}',
+        ripple: '@keyframes ' + uid + '-rpl{0%,100%{background-size:100% 100%}50%{background-size:160% 160%}}' +
+            base + 'background:radial-gradient(ellipse at center,' + c + '55 0%,transparent 60%),radial-gradient(ellipse at 30% 70%,' + c + '33 0%,transparent 50%);animation:' + uid + '-rpl 5s ease infinite;}'
+    };
+    return map[effectId] || '';
+}
+
+function injectSealEffectCSS(effectId, color) {
+    removeSealEffectCSS();
+    var css = buildEffectCSS(effectId, color);
+    if (!css) return;
+    _sealEffectStyleEl = document.createElement('style');
+    _sealEffectStyleEl.id = 'seal-effect-preview-style';
+    _sealEffectStyleEl.textContent = css;
+    document.head.appendChild(_sealEffectStyleEl);
+    _sealEffectActive = true;
+}
+
+function removeSealEffectCSS() {
+    if (_sealEffectStyleEl) {
+        _sealEffectStyleEl.remove();
+        _sealEffectStyleEl = null;
+    }
+    _sealEffectActive = false;
+}
+
 var RARITY_COLORS = {common:'#949ba4',uncommon:'#22c55e',rare:'#3b82f6',epic:'#a855f7',legendary:'#f59e0b'};
+
+// 초기 로드 시 활성 배경 효과 주입
+<?php if ($init_bg_effect_id) { ?>
+injectSealEffectCSS(<?php echo json_encode($init_bg_effect_id); ?>, <?php echo json_encode($init_bg_effect_color); ?>);
+<?php } ?>
 
 var GRID_COLS = 16;
 var GRID_ROWS = 4;
@@ -1422,17 +1480,15 @@ function updatePreview() {
     var tc = $('f_text_color').value;
     var textStyle = tc ? 'color:'+tc+';' : '';
 
-    var curBgColor = $('f_bg_color') ? $('f_bg_color').value : '';
-    var bgStyle = BG_STYLE;
-    // 배경 아이템이 없으면 배경색 사용
-    if (!document.querySelector('.seal-bg-item-btn.is-active[data-si-id]:not([data-si-id="0"])')) {
-        bgStyle = 'background:' + (curBgColor || '#2b2d31') + ';';
-    }
+    var bgStyle = BG_IMAGE
+        ? 'background:url(' + BG_IMAGE + ') center/cover no-repeat,' + (BG_COLOR || '#2b2d31') + ';'
+        : 'background:' + (BG_COLOR || '#2b2d31') + ';';
+    var fxClass = _sealEffectActive ? ' seal-fx-preview' : '';
     var html = '';
     if (HOVER_CSS) {
         html += '<style>.seal-preview-hover .mg-seal-grid > div:hover{'+HOVER_CSS+'}</style>';
     }
-    html += '<div class="seal-preview-hover"><div class="mg-seal mg-seal-grid" style="display:grid;grid-template-columns:repeat('+GRID_COLS+',1fr);grid-template-rows:repeat('+GRID_ROWS+',1fr);aspect-ratio:'+GRID_COLS+'/'+GRID_ROWS+';'+bgStyle+BORDER_STYLE+textStyle+'overflow:hidden;padding:6px;gap:3px;">';
+    html += '<div class="seal-preview-hover"><div class="mg-seal mg-seal-grid'+fxClass+'" style="display:grid;grid-template-columns:repeat('+GRID_COLS+',1fr);grid-template-rows:repeat('+GRID_ROWS+',1fr);aspect-ratio:'+GRID_COLS+'/'+GRID_ROWS+';'+bgStyle+BORDER_STYLE+textStyle+'overflow:hidden;padding:6px;gap:3px;">';
     items.forEach(function(it) {
         var gc = (it.x+1)+'/span '+it.w;
         var gr = (it.y+1)+'/span '+it.h;
@@ -1519,28 +1575,7 @@ function getLayout() {
 // ============================
 updatePreview();
 
-// ============================
-// 배경색 팔레트
-// ============================
-document.querySelectorAll('.seal-bgcolor-btn').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-        var hex = this.dataset.bgcolor;
-        $('f_bg_color').value = hex;
-        document.querySelectorAll('.seal-bgcolor-btn').forEach(function(b) { b.classList.remove('ring-2','ring-mg-accent'); });
-        this.classList.add('ring-2','ring-mg-accent');
-        BG_COLOR = hex;
-        updatePreview();
-    });
-});
-var bgCustom = $('seal-bg-custom-color');
-if (bgCustom) {
-    bgCustom.addEventListener('input', function() {
-        $('f_bg_color').value = this.value;
-        document.querySelectorAll('.seal-bgcolor-btn').forEach(function(b) { b.classList.remove('ring-2','ring-mg-accent'); });
-        BG_COLOR = this.value;
-        updatePreview();
-    });
-}
+// (배경색은 아이템 구매제로 전환 — 무료 팔레트 제거됨)
 
 // ============================
 // 아이템 사용/해제 (배경, 테두리, 호버)
@@ -1576,12 +1611,22 @@ function toggleSealItem(type, siId, btnClass) {
                 } else if (type === 'hover') {
                     HOVER_CSS = (siId == 0) ? '' : (newActive ? (newActive.dataset.css||'') : '');
                 } else if (type === 'bg') {
+                    // 배경 아이템: 색상 또는 이미지
                     if (siId == 0) {
-                        BG_STYLE = 'background:' + (BG_COLOR || '#2b2d31') + ';';
-                    } else {
-                        // seal_bg 아이템은 bg_color를 사용
-                        var bgBtn = document.querySelector('.seal-bg-item-btn.is-active[data-si-id]:not([data-si-id="0"])');
-                        // 페이지 리로드로 정확한 bg 반영
+                        BG_COLOR = '#2b2d31';
+                        BG_IMAGE = '';
+                    } else if (newActive) {
+                        BG_COLOR = newActive.dataset.color || '#2b2d31';
+                        BG_IMAGE = newActive.dataset.image || '';
+                    }
+                } else if (type === 'effect') {
+                    // 배경 이펙트: CSS 애니메이션 오버레이
+                    removeSealEffectCSS();
+                    if (siId != 0 && newActive) {
+                        var eff = JSON.parse(newActive.dataset.effect || '{}');
+                        if (eff.bg_id) {
+                            injectSealEffectCSS(eff.bg_id, eff.bg_color || '#f59f0a');
+                        }
                     }
                 }
                 updatePreview();
@@ -1599,6 +1644,9 @@ document.querySelectorAll('.seal-hover-item-btn').forEach(function(btn) {
 });
 document.querySelectorAll('.seal-bg-item-btn').forEach(function(btn) {
     btn.addEventListener('click', function() { toggleSealItem('bg', this.dataset.siId, 'seal-bg-item-btn'); });
+});
+document.querySelectorAll('.seal-effect-item-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() { toggleSealItem('effect', this.dataset.siId, 'seal-effect-item-btn'); });
 });
 
 // ============================

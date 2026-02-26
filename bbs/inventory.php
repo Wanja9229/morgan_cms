@@ -21,15 +21,19 @@ include_once(G5_PLUGIN_PATH.'/morgan/morgan.php');
 $g5['title'] = '인벤토리';
 include_once(G5_THEME_PATH.'/head.php');
 
-// 카테고리 목록
-$categories = mg_get_shop_categories(false);
+// 타입 그룹 (상점과 동일 구조)
+$type_groups = $mg['shop_type_groups'];
 
 // 현재 탭
 $tab = isset($_GET['tab']) ? $_GET['tab'] : '';
 $is_emoticon_tab = ($tab === 'emoticon');
+$is_material_tab = ($tab === 'material');
 
-// 현재 카테고리
-$sc_id = isset($_GET['sc_id']) ? (int)$_GET['sc_id'] : 0;
+// 타입 그룹 기반 필터링
+$filter_types = array();
+if (!$is_emoticon_tab && !$is_material_tab && $tab && isset($type_groups[$tab])) {
+    $filter_types = $type_groups[$tab]['types'];
+}
 
 if ($is_emoticon_tab) {
     // 이모티콘 탭: 보유 셋 + 크리에이터 정보
@@ -40,9 +44,20 @@ if ($is_emoticon_tab) {
     $inventory = array();
     $active_items = array();
     $active_si_ids = array();
+    $my_materials = array();
+} elseif ($is_material_tab) {
+    // 재료 탭: mg_user_material + mg_material_type
+    $my_materials = mg_get_materials($member['mb_id']);
+    $inventory = array();
+    $active_items = array();
+    $active_si_ids = array();
+    $my_emoticon_sets = array();
+    $creator_sets = array();
+    $creator_enabled = false;
+    $reg_check = array('can' => false, 'count' => 0);
 } else {
-    // 일반 인벤토리
-    $inv_data = mg_get_inventory($member['mb_id'], $sc_id);
+    // 일반 인벤토리 (타입 그룹 필터)
+    $inv_data = mg_get_inventory($member['mb_id'], 0, 0, 0, $filter_types);
     $inventory = $inv_data['items'];
     $active_items = mg_get_active_items($member['mb_id']);
     $active_si_ids = array_column($active_items, 'si_id');
@@ -50,6 +65,7 @@ if ($is_emoticon_tab) {
     $creator_sets = array();
     $creator_enabled = false;
     $reg_check = array('can' => false, 'count' => 0);
+    $my_materials = array();
 }
 
 // 이모티콘 기능 사용 여부

@@ -254,23 +254,81 @@ require_once __DIR__.'/_head.php';
                         </div>
                     </div>
 
-                    <!-- 프로필 배경 -->
+                    <!-- 프로필 배경 (색상 또는 이미지) -->
                     <div class="effect-field" data-type="profile_bg" style="<?php echo $si_type != 'profile_bg' ? 'display:none;' : ''; ?>">
                         <?php
-                        $profile_bgs = mg_get_profile_bg_list();
-                        $eff_bg_id = isset($effect['bg_id']) ? $effect['bg_id'] : '';
+                        $eff_pbg_mode = !empty($effect['image']) ? 'image' : 'color';
+                        $eff_pbg_color = $effect['color'] ?? '#1e1f22';
+                        $eff_pbg_image = $effect['image'] ?? '';
                         ?>
                         <div class="mg-form-group">
-                            <label class="mg-form-label">배경 효과</label>
+                            <label class="mg-form-label">배경 유형</label>
+                            <select name="effect[bg_mode]" id="profile_bg_mode" class="mg-form-select" onchange="toggleBgMode('profile_bg', this.value)">
+                                <option value="color" <?php echo $eff_pbg_mode === 'color' ? 'selected' : ''; ?>>색상</option>
+                                <option value="image" <?php echo $eff_pbg_mode === 'image' ? 'selected' : ''; ?>>이미지</option>
+                            </select>
+                        </div>
+                        <div class="mg-form-group profile_bg-color-field" style="<?php echo $eff_pbg_mode !== 'color' ? 'display:none;' : ''; ?>">
+                            <label class="mg-form-label">배경 색상</label>
+                            <div style="display:flex;align-items:center;gap:0.75rem;">
+                                <input type="color" name="effect[color]" id="eff_profile_bg_color" value="<?php echo htmlspecialchars($eff_pbg_color); ?>" style="width:100px;height:38px;">
+                                <span id="eff_profile_bg_color_hex" style="font-size:0.8rem;color:var(--mg-text-muted);"><?php echo htmlspecialchars($eff_pbg_color); ?></span>
+                            </div>
+                        </div>
+                        <div class="mg-form-group profile_bg-image-field" style="<?php echo $eff_pbg_mode !== 'image' ? 'display:none;' : ''; ?>">
+                            <label class="mg-form-label">배경 이미지</label>
+                            <?php if ($eff_pbg_image) { ?>
+                            <div style="margin-bottom:0.5rem;">
+                                <img src="<?php echo htmlspecialchars($eff_pbg_image); ?>" style="max-width:200px;max-height:80px;border-radius:6px;border:1px solid var(--mg-bg-tertiary);">
+                                <input type="hidden" name="effect[image_current]" value="<?php echo htmlspecialchars($eff_pbg_image); ?>">
+                            </div>
+                            <?php } ?>
+                            <input type="file" name="bg_image_file" accept="image/*" class="mg-form-input">
+                            <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;">권장: 800x200 이하, 500KB 이하. 투명 PNG 가능.</div>
+                        </div>
+                    </div>
+
+                    <!-- 프로필 이펙트 (Vanta.js 효과) -->
+                    <div class="effect-field" data-type="profile_effect" style="<?php echo $si_type != 'profile_effect' ? 'display:none;' : ''; ?>">
+                        <?php
+                        $profile_effects = mg_get_profile_effect_list();
+                        $eff_pe_id = $effect['bg_id'] ?? '';
+                        $eff_pe_color = $effect['bg_color'] ?? '#f59f0a';
+                        ?>
+                        <div class="mg-form-group">
+                            <label class="mg-form-label">이펙트 효과</label>
                             <select name="effect[bg_id]" class="mg-form-select">
                                 <option value="">선택</option>
-                                <?php foreach ($profile_bgs as $bg_key => $bg_name) { ?>
-                                <option value="<?php echo $bg_key; ?>" <?php echo $eff_bg_id == $bg_key ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($bg_name); ?>
-                                </option>
+                                <?php foreach ($profile_effects as $pe_key => $pe_name) { ?>
+                                <option value="<?php echo $pe_key; ?>" <?php echo $eff_pe_id == $pe_key ? 'selected' : ''; ?>><?php echo htmlspecialchars($pe_name); ?></option>
                                 <?php } ?>
                             </select>
-                            <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;">배경 효과 종류는 개발자가 코드 패치로 관리합니다.</div>
+                        </div>
+                        <div class="mg-form-group">
+                            <label class="mg-form-label">효과 기본 색상</label>
+                            <input type="color" name="effect[bg_color]" value="<?php echo htmlspecialchars($eff_pe_color); ?>" style="width:100px;height:38px;">
+                        </div>
+                    </div>
+
+                    <!-- 인장 이펙트 (CSS 애니메이션) -->
+                    <div class="effect-field" data-type="seal_effect" style="<?php echo $si_type != 'seal_effect' ? 'display:none;' : ''; ?>">
+                        <?php
+                        $seal_effects = mg_get_seal_effect_list();
+                        $eff_se_id = $effect['bg_id'] ?? '';
+                        $eff_se_color = $effect['bg_color'] ?? '#f59f0a';
+                        ?>
+                        <div class="mg-form-group">
+                            <label class="mg-form-label">이펙트 효과</label>
+                            <select name="effect[bg_id]" class="mg-form-select">
+                                <option value="">선택</option>
+                                <?php foreach ($seal_effects as $se_key => $se_name) { ?>
+                                <option value="<?php echo $se_key; ?>" <?php echo $eff_se_id == $se_key ? 'selected' : ''; ?>><?php echo htmlspecialchars($se_name); ?></option>
+                                <?php } ?>
+                            </select>
+                        </div>
+                        <div class="mg-form-group">
+                            <label class="mg-form-label">효과 기본 색상</label>
+                            <input type="color" name="effect[bg_color]" value="<?php echo htmlspecialchars($eff_se_color); ?>" style="width:100px;height:38px;">
                         </div>
                     </div>
 
@@ -353,29 +411,37 @@ require_once __DIR__.'/_head.php';
                         </div>
                     </div>
 
-                    <!-- 인장 배경 -->
+                    <!-- 인장 배경 (색상 또는 이미지) -->
                     <div class="effect-field" data-type="seal_bg" style="<?php echo $si_type != 'seal_bg' ? 'display:none;' : ''; ?>">
                         <?php
-                        $seal_bgs = mg_get_seal_bg_list();
-                        $eff_seal_bg_id = isset($effect['bg_id']) ? $effect['bg_id'] : '';
-                        $eff_seal_bg_color = isset($effect['bg_color']) ? $effect['bg_color'] : '#1a1a2e';
+                        $eff_sbg_mode = !empty($effect['image']) ? 'image' : 'color';
+                        $eff_sbg_color = $effect['color'] ?? '#2b2d31';
+                        $eff_sbg_image = $effect['image'] ?? '';
                         ?>
                         <div class="mg-form-group">
-                            <label class="mg-form-label">배경 효과</label>
-                            <select name="effect[bg_id]" class="mg-form-select">
-                                <option value="">선택</option>
-                                <?php foreach ($seal_bgs as $bg_key => $bg_name) { ?>
-                                <option value="<?php echo $bg_key; ?>" <?php echo $eff_seal_bg_id == $bg_key ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($bg_name); ?>
-                                </option>
-                                <?php } ?>
+                            <label class="mg-form-label">배경 유형</label>
+                            <select name="effect[bg_mode]" id="seal_bg_mode" class="mg-form-select" onchange="toggleBgMode('seal_bg', this.value)">
+                                <option value="color" <?php echo $eff_sbg_mode === 'color' ? 'selected' : ''; ?>>색상</option>
+                                <option value="image" <?php echo $eff_sbg_mode === 'image' ? 'selected' : ''; ?>>이미지</option>
                             </select>
-                            <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;">배경 효과 종류는 개발자가 코드 패치로 추가합니다.</div>
                         </div>
-                        <div class="mg-form-group">
-                            <label class="mg-form-label">기본 배경색</label>
-                            <input type="color" name="effect[bg_color]" value="<?php echo $eff_seal_bg_color; ?>" style="width:100px;height:38px;">
-                            <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;">Vanta.js 효과가 로드되기 전에 보이는 기본 색상</div>
+                        <div class="mg-form-group seal_bg-color-field" style="<?php echo $eff_sbg_mode !== 'color' ? 'display:none;' : ''; ?>">
+                            <label class="mg-form-label">배경 색상</label>
+                            <div style="display:flex;align-items:center;gap:0.75rem;">
+                                <input type="color" name="effect[color]" id="eff_seal_bg_color" value="<?php echo htmlspecialchars($eff_sbg_color); ?>" style="width:100px;height:38px;">
+                                <span id="eff_seal_bg_color_hex" style="font-size:0.8rem;color:var(--mg-text-muted);"><?php echo htmlspecialchars($eff_sbg_color); ?></span>
+                            </div>
+                        </div>
+                        <div class="mg-form-group seal_bg-image-field" style="<?php echo $eff_sbg_mode !== 'image' ? 'display:none;' : ''; ?>">
+                            <label class="mg-form-label">배경 이미지</label>
+                            <?php if ($eff_sbg_image) { ?>
+                            <div style="margin-bottom:0.5rem;">
+                                <img src="<?php echo htmlspecialchars($eff_sbg_image); ?>" style="max-width:200px;max-height:80px;border-radius:6px;border:1px solid var(--mg-bg-tertiary);">
+                                <input type="hidden" name="effect[image_current]" value="<?php echo htmlspecialchars($eff_sbg_image); ?>">
+                            </div>
+                            <?php } ?>
+                            <input type="file" name="bg_image_file" accept="image/*" class="mg-form-input">
+                            <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;">권장: 800x200 이하, 500KB 이하. 투명 PNG 가능.</div>
                         </div>
                     </div>
 
@@ -529,6 +595,14 @@ function toggleBadgeIconInput() {
     var type = document.querySelector('input[name="badge_icon_type"]:checked').value;
     document.getElementById('badge_icon_text').style.display = type === 'text' ? '' : 'none';
     document.getElementById('badge_icon_file').style.display = type === 'file' ? '' : 'none';
+}
+
+// 배경 유형 (색상/이미지) 토글
+function toggleBgMode(prefix, mode) {
+    var colorFields = document.querySelectorAll('.' + prefix + '-color-field');
+    var imageFields = document.querySelectorAll('.' + prefix + '-image-field');
+    colorFields.forEach(function(el) { el.style.display = mode === 'color' ? '' : 'none'; });
+    imageFields.forEach(function(el) { el.style.display = mode === 'image' ? '' : 'none'; });
 }
 
 // 인장 호버 미리보기

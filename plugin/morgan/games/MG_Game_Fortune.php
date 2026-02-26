@@ -15,13 +15,13 @@ class MG_Game_Fortune extends MG_Game_Base {
     private $bonusMultiplier;
     private $streakBonusDays;
 
-    // 별점별 가중치 기본값 (관리자 설정으로 덮어씀)
+    // 별점별 확률 기본값 (%, 합계 100 이하)
     private static $DEFAULT_WEIGHTS = [
-        1 => 5,
-        2 => 4,
-        3 => 3,
-        4 => 2,
-        5 => 1,
+        1 => 40,
+        2 => 25,
+        3 => 20,
+        4 => 10,
+        5 => 5,
     ];
 
     private $starWeights = [];
@@ -115,22 +115,51 @@ class MG_Game_Fortune extends MG_Game_Base {
     }
 
     /**
-     * 별점 가중치 기반 랜덤 선택
+     * 별점 확률(%) 기반 랜덤 선택
+     *
+     * 각 별점의 확률(%)에 따라 먼저 별점을 결정한 뒤,
+     * 해당 별점 내에서 균등 랜덤으로 운세를 선택한다.
      */
     private function weightedRandom(array $fortunes): array {
-        $weighted = [];
+        // 별점별 운세 그룹화
+        $byStars = [];
         foreach ($fortunes as $f) {
-            $star = (int)$f['gf_star'];
-            $w = $this->starWeights[$star] ?? 1;
-            for ($i = 0; $i < $w; $i++) {
-                $weighted[] = $f;
+            $byStars[(int)$f['gf_star']][] = $f;
+        }
+
+        // 확률이 0보다 큰 별점만 후보
+        $candidates = [];
+        foreach ($byStars as $star => $items) {
+            $pct = $this->starWeights[$star] ?? 0;
+            if ($pct > 0) {
+                $candidates[] = ['star' => $star, 'pct' => $pct, 'items' => $items];
             }
         }
-        // 모든 가중치가 0이면 균등 랜덤 폴백
-        if (empty($weighted)) {
+
+        // 모든 확률이 0이면 균등 랜덤 폴백
+        if (empty($candidates)) {
             return $fortunes[array_rand($fortunes)];
         }
-        return $weighted[array_rand($weighted)];
+
+        // 누적 확률로 별점 선택 (0.01% 단위 정밀도)
+        $total = 0;
+        foreach ($candidates as $c) {
+            $total += $c['pct'];
+        }
+        $roll = mt_rand(1, $total * 100) / 100; // 0.01 ~ total
+
+        $cumulative = 0;
+        $chosen = $candidates[0];
+        foreach ($candidates as $c) {
+            $cumulative += $c['pct'];
+            if ($roll <= $cumulative) {
+                $chosen = $c;
+                break;
+            }
+        }
+
+        // 선택된 별점 내 균등 랜덤
+        return $chosen['items'][array_rand($chosen['items'])];
     }
 
     /**

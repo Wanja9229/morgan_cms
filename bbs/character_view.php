@@ -90,9 +90,12 @@ $g5['title'] = $char['ch_name'].' - 캐릭터 프로필';
 
 // 프로필 스킨 확인 (캐릭터 데이터 우선, 없으면 회원 활성 아이템 폴백)
 $profile_skin_id = ($char['ch_profile_skin'] ?? '') ?: mg_get_profile_skin_id($char['mb_id']);
-// 프로필 배경 효과 확인
-$profile_bg_id = ($char['ch_profile_bg'] ?? '') ?: mg_get_profile_bg_id($char['mb_id']);
-$profile_bg_color = ($char['ch_profile_bg_color'] ?? '') ?: '#f59f0a';
+// 프로필 이펙트 확인 (캐릭터 개별 설정 우선, 없으면 활성 아이템 폴백)
+$profile_bg_id = ($char['ch_profile_bg'] ?? '') ?: mg_get_profile_effect_id($char['mb_id']);
+// 프로필 배경 (아이템 기반 — 색상 또는 이미지)
+$profile_bg_style = mg_get_profile_bg_style($char['mb_id']);
+$profile_bg_color = $profile_bg_style['color'] ?: '#f59f0a';
+$profile_bg_image = $profile_bg_style['image'] ?? '';
 $skin_template = G5_THEME_PATH.'/skin/profile/default.php';
 
 if ($profile_skin_id && $profile_skin_id !== 'default') {
@@ -129,24 +132,33 @@ if (!empty($profile_bg_color) && $profile_bg_color !== '#f59f0a') {
 // 프로필 템플릿 렌더링
 include($skin_template);
 
-// 프로필 커스텀 배경 이미지 렌더링 (Vanta보다 뒤쪽 레이어)
-$profile_bg_image = $char['ch_profile_bg_image'] ?? '';
-if ($profile_bg_image) {
-    $bg_image_url = MG_CHAR_IMAGE_URL.'/'.htmlspecialchars($profile_bg_image);
+// 프로필 배경 레이어 (가장 뒤쪽, Vanta/이펙트 아래)
+if (!empty($profile_bg_image)) {
     echo '<style>
-#profile-bg-image {
-    position: fixed; top: 48px; left: 0; right: 0; bottom: 0; z-index: -2;
-    pointer-events: none; background: url(\'' . $bg_image_url . '\') center/cover no-repeat;
+#profile-bg-color {
+    position: fixed; top: 48px; left: 0; right: 0; bottom: 0; z-index: -3;
+    pointer-events: none; background: url(' . htmlspecialchars($profile_bg_image) . ') center/cover no-repeat;
     opacity: 0.3;
 }
-@media (min-width: 1024px) { #profile-bg-image { left: 56px; } }
+@media (min-width: 1024px) { #profile-bg-color { left: 56px; } }
 </style>
-<div id="profile-bg-image"></div>';
+<div id="profile-bg-color"></div>';
+} elseif (!empty($profile_bg_color) && $profile_bg_color !== '#f59f0a') {
+    echo '<style>
+#profile-bg-color {
+    position: fixed; top: 48px; left: 0; right: 0; bottom: 0; z-index: -3;
+    pointer-events: none; background: radial-gradient(ellipse at 30% 20%, ' . htmlspecialchars($profile_bg_color) . '55 0%, transparent 60%),
+        radial-gradient(ellipse at 70% 80%, ' . htmlspecialchars($profile_bg_color) . '44 0%, transparent 50%),
+        linear-gradient(135deg, ' . htmlspecialchars($profile_bg_color) . '33 0%, transparent 60%);
+}
+@media (min-width: 1024px) { #profile-bg-color { left: 56px; } }
+</style>
+<div id="profile-bg-color"></div>';
 }
 
-// 프로필 배경 효과 렌더링 (Vanta - 이미지 위 레이어)
+// 프로필 이펙트 렌더링 (Vanta.js)
 if ($profile_bg_id) {
-    $valid_bgs = mg_get_profile_bg_list();
+    $valid_bgs = mg_get_profile_effect_list();
     if (isset($valid_bgs[$profile_bg_id])) {
         include(G5_THEME_PATH.'/skin/profile/bg_effects.php');
     }

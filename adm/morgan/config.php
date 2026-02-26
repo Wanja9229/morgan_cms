@@ -107,8 +107,8 @@ function _cfg_radio($name, $configs, $default = '1', $labels = array('사용', '
                 </div>
                 <div class="mg-form-group">
                     <label class="mg-form-label" for="max_characters">최대 캐릭터 수</label>
-                    <input type="number" name="max_characters" id="max_characters" value="<?php echo isset($mg_configs['max_characters']) ? $mg_configs['max_characters'] : '10'; ?>" class="mg-form-input">
-                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">회원당 보유 가능한 최대 캐릭터 수</small>
+                    <input type="number" name="max_characters" id="max_characters" value="<?php echo isset($mg_configs['max_characters']) ? $mg_configs['max_characters'] : '1'; ?>" class="mg-form-input" min="1" max="50">
+                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">회원당 기본 캐릭터 수 (상점에서 캐릭터 슬롯 구매 시 추가)</small>
                 </div>
             </div>
 
