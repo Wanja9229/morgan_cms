@@ -183,6 +183,8 @@ include(G5_THEME_PATH.'/skin/emoticon/picker.skin.php');
 - **2차-D**: 마이룸 (아이소메트릭 2D 방 꾸미기) → `docs/MODULES.md`
 - **2차-E**: VN Engine (비주얼 노벨) → `docs/plans/VN_ENGINE.md`
 - **2차-F**: SRPG (그리드 Co-op PvE) → `docs/plans/morgan_srpg_system_plan.md`
+- **2차-G**: 스킨 SDK — 배경 레이어 분리 + 파일 기반 커스텀 스킨 시스템
+- **2차-H**: 레이아웃 시스템 — 헤더/사이드바/위젯 교체형 멀티 레이아웃 (Discord/TopNav/Classic 3종)
 
 ## 상세 문서
 
