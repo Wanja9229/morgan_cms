@@ -4,10 +4,11 @@ include_once('./_common.php');
 if (!$member['mb_id'])
     alert_close('회원만 이용하실 수 있습니다.');
 
+// mb_id 파라미터 없으면 자기 자신의 프로필
+$mb_id = isset($mb_id) && $mb_id ? $mb_id : $member['mb_id'];
+
 if (!$member['mb_open'] && $is_admin != 'super' && $member['mb_id'] != $mb_id)
     alert_close('자신의 정보를 공개하지 않으면 다른분의 정보를 조회할 수 없습니다.\\n\\n정보공개 설정은 회원정보수정에서 하실 수 있습니다.');
-
-$mb_id = isset($mb_id) ? $mb_id : '';
 
 $mb = get_member($mb_id);
 
