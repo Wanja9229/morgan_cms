@@ -1,0 +1,398 @@
+"""모건 빌더 가이드 PDF 생성 — HTML 빌드 + Playwright PDF 변환"""
+import os
+from playwright.sync_api import sync_playwright
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+IMG = "pdf_images"  # relative path for HTML
+HTML_PATH = os.path.join(SCRIPT_DIR, "guide_source.html")
+PDF_PATH = os.path.join(SCRIPT_DIR, "모건빌더_베타테스터_가이드.pdf")
+
+def img(name):
+    return f'{IMG}/{name}.png'
+
+HTML = f'''<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;900&display=swap');
+  @page {{ size: A4; margin: 18mm 14mm 20mm 14mm; }}
+  * {{ margin:0; padding:0; box-sizing:border-box; }}
+  body {{ font-family:'Noto Sans KR','Malgun Gothic',sans-serif; color:#222; line-height:1.75; font-size:13px; }}
+
+  /* 표지 */
+  .cover {{ display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; text-align:center; background:linear-gradient(160deg,#1e1f22 0%,#2b2d31 100%); color:#f2f3f5; page-break-after:always; }}
+  .cover h1 {{ font-size:38px; font-weight:900; color:#f59f0a; margin-bottom:8px; }}
+  .cover .sub {{ font-size:20px; color:#b5bac1; margin-bottom:40px; }}
+  .cover .ver {{ font-size:13px; color:#949ba4; }}
+
+  /* 공통 */
+  h1 {{ font-size:22px; color:#d97706; margin:32px 0 10px; padding-bottom:6px; border-bottom:2px solid #f59f0a; }}
+  h2 {{ font-size:17px; color:#333; margin:24px 0 6px; }}
+  h3 {{ font-size:14px; color:#555; margin:16px 0 4px; }}
+  p {{ margin-bottom:10px; }}
+  ul {{ margin:6px 0 12px 20px; }}
+  li {{ margin-bottom:4px; }}
+
+  .page-break {{ page-break-before:always; }}
+
+  /* 스크린샷 */
+  .shot {{ text-align:center; margin:14px 0; }}
+  .shot img {{ max-width:100%; border:1px solid #ddd; border-radius:6px; box-shadow:0 1px 6px rgba(0,0,0,0.08); }}
+  .shot.large img {{ width:100%; }}
+  .caption {{ text-align:center; font-size:11px; color:#888; margin-top:4px; margin-bottom:16px; font-style:italic; }}
+
+  /* 튜토리얼 스텝 */
+  .tut-box {{ background:#fffbeb; border:1px solid #fbbf24; border-radius:8px; padding:14px 18px; margin:16px 0; }}
+  .tut-box h3 {{ color:#92400e; margin:0 0 8px; font-size:15px; }}
+  .step {{ display:flex; gap:12px; margin:10px 0; align-items:flex-start; }}
+  .step-num {{ flex-shrink:0; width:28px; height:28px; background:#f59f0a; color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; }}
+  .step-text {{ flex:1; }}
+  .step-text strong {{ color:#92400e; }}
+
+  /* P7 확장 — 포인트 흐름도 */
+  .flow-box {{ background:#f0f9ff; border:1px solid #7dd3fc; border-radius:8px; padding:14px 18px; margin:14px 0; }}
+  .flow-box h4 {{ color:#0369a1; margin-bottom:6px; font-size:13px; }}
+  .flow-row {{ display:flex; align-items:center; gap:6px; margin:4px 0; font-size:12px; }}
+  .flow-arrow {{ color:#0ea5e9; font-weight:700; }}
+  .flow-tag {{ background:#0ea5e9; color:#fff; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:600; }}
+  .flow-tag.amber {{ background:#f59e0b; }}
+  .flow-tag.green {{ background:#22c55e; }}
+  .flow-tag.purple {{ background:#a855f7; }}
+
+  /* 하이라이트 */
+  .hl {{ color:#d97706; font-weight:700; }}
+  .warn {{ background:#fef3c7; border:1px solid #f59f0a; border-radius:8px; padding:12px 16px; margin:14px 0; }}
+  .warn h3 {{ color:#92400e; margin-bottom:6px; }}
+  .note {{ background:#f0fdf4; border-left:4px solid #22c55e; padding:8px 14px; margin:8px 0; font-size:12px; color:#166534; border-radius:0 6px 6px 0; }}
+  .divider {{ border:none; border-top:1px solid #e5e7eb; margin:30px 0; }}
+
+  /* 표 */
+  table {{ width:100%; border-collapse:collapse; margin:10px 0; font-size:12px; }}
+  th {{ background:#f59f0a; color:#fff; padding:6px 10px; text-align:left; font-size:11px; }}
+  td {{ padding:6px 10px; border-bottom:1px solid #e5e7eb; }}
+  tr:nth-child(even) td {{ background:#fafafa; }}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ 표지 ═══════════════ -->
+<div class="cover">
+  <h1>모건 빌더</h1>
+  <div class="sub">베타 테스터 가이드</div>
+  <div class="ver">Morgan Edition CMS &mdash; 2026.02</div>
+</div>
+
+<!-- ═══════════════ 소개 ═══════════════ -->
+<h1>모건 빌더란?</h1>
+<p>모건 빌더는 <strong>비개발자도 코딩 없이</strong> 사용 가능한 자캐 커뮤니티 전용 웹사이트 빌더입니다.</p>
+<p>캐릭터 등록/승인, 역극(RP), 상점/인벤토리, 업적, 인장(시그니처 카드), 개척, 파견 등 자캐 커뮤니티에서 필요한 시스템이 기본 내장되어 있으며, 관리자 설정만으로 바로 운영을 시작할 수 있습니다.</p>
+<p>디스코드 스타일의 다크 테마를 기본으로 제공하며, 사이드바 네비게이션과 SPA 방식의 페이지 이동으로 쾌적한 사용 경험을 제공합니다.</p>
+
+<div class="shot large"><img src="{img('f_home')}" alt="메인 페이지"></div>
+<div class="caption">메인 페이지 &mdash; 위젯 기반 드래그앤드롭 레이아웃</div>
+
+<hr class="divider">
+
+<!-- ═══════════════ 기본 시스템 ═══════════════ -->
+<h1 class="page-break">기본 시스템</h1>
+
+<h2>캐릭터 시스템</h2>
+<p>1계정 다캐릭터를 지원합니다. 관리자가 프로필 양식을 자유롭게 커스터마이징할 수 있으며, 캐릭터 등록 후 <span class="hl">승인/반려 플로우</span>를 거칩니다. 소속(진영, 종족 등)과 유형(클래스, 직업 등)을 관리자가 정의합니다.</p>
+<div class="shot large"><img src="{img('f_character')}" alt="캐릭터 목록"></div>
+<div class="caption">캐릭터 목록 &mdash; 프로필 카드 뷰</div>
+
+<!-- 튜토리얼: 캐릭터 승인 -->
+<div class="tut-box">
+  <h3>튜토리얼: 캐릭터 승인 플로우</h3>
+  <p style="font-size:12px;color:#78716c;margin-bottom:10px;">회원이 캐릭터를 등록하면 관리자가 검토 후 승인/반려합니다.</p>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-text"><strong>관리자 &rarr; 회원/캐릭터 &rarr; 캐릭터 관리</strong>로 이동합니다. 상단 카드에서 <strong>승인 대기</strong> 수를 확인하고, 상태 필터를 사용하여 대기 중인 캐릭터를 조회합니다.</div>
+  </div>
+  <div class="shot large"><img src="{img('tut_char_01_list')}" alt="캐릭터 목록"></div>
+  <div class="caption">관리자 캐릭터 목록 &mdash; 주황 테두리: 상태 필터 / 캐릭터 선택 영역</div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-text"><strong>수정</strong> 버튼을 클릭하여 캐릭터 상세 페이지로 이동합니다. 프로필 내용을 검토한 뒤, <strong>상태</strong> 드롭다운에서 <span class="hl">승인</span> 또는 <span class="hl">반려</span>를 선택하고 저장합니다.</div>
+  </div>
+  <div class="shot large"><img src="{img('tut_char_02_form')}" alt="캐릭터 상세"></div>
+  <div class="caption">캐릭터 상세 폼 &mdash; 주황 테두리: 상태 변경 / 저장 영역</div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-text">승인 시 해당 회원에게 <strong>자동 알림</strong>이 발송됩니다. 반려 시 사유를 입력하면 알림에 포함됩니다. 하단의 <strong>선택 승인/선택 반려</strong> 버튼으로 일괄 처리도 가능합니다.</div>
+  </div>
+</div>
+
+<h2>게시판</h2>
+<p>기본형, 갤러리형, 방명록형, 포스트잇형, 미션 전용, 의뢰 수행 전용 등 6종의 스킨을 제공합니다. 게시판별로 보상, 주사위, 이모티콘 사용 여부를 개별 설정할 수 있습니다.</p>
+
+<h2>세계관 위키</h2>
+<p>문서/섹션 구조로 세계관 정보를 관리합니다. 상호 링크, 타임라인 연표, 세계관 맵을 지원합니다.</p>
+<div class="shot large"><img src="{img('f_lore')}" alt="세계관 위키"></div>
+<div class="caption">세계관 위키 &mdash; 문서 목록 (리스트형)</div>
+
+<div class="shot large"><img src="{img('f_lore_timeline')}" alt="타임라인"></div>
+<div class="caption">타임라인 연표 &mdash; 시대(Era)별 이벤트 시각화</div>
+
+<hr class="divider">
+
+<!-- ═══════════════ P7: 활동 / 보상 (확장) ═══════════════ -->
+<h1 class="page-break">활동 / 보상 시스템</h1>
+<p>모건 빌더의 핵심 경제 시스템입니다. <strong>거의 모든 콘텐츠</strong>가 이 보상 시스템을 통해 연결되며, 포인트와 재료의 흐름이 커뮤니티 활동의 동기를 부여합니다.</p>
+
+<!-- 포인트 흐름도 -->
+<div class="flow-box">
+  <h4>포인트/재료 흐름도</h4>
+  <div class="flow-row"><span class="flow-tag amber">게시글 작성</span> <span class="flow-arrow">&rarr;</span> 포인트 + 재료 자동 지급</div>
+  <div class="flow-row"><span class="flow-tag amber">역극(RP) 완결</span> <span class="flow-arrow">&rarr;</span> 참여자 전원 포인트/재료 지급</div>
+  <div class="flow-row"><span class="flow-tag amber">출석 체크</span> <span class="flow-arrow">&rarr;</span> 기본 포인트 + 미니게임 보너스</div>
+  <div class="flow-row"><span class="flow-tag amber">미션 완료</span> <span class="flow-arrow">&rarr;</span> 검수 후 포인트/재료 지급</div>
+  <div class="flow-row"><span class="flow-tag amber">좋아요 수신</span> <span class="flow-arrow">&rarr;</span> 수신자에게 포인트 지급</div>
+  <div class="flow-row"><span class="flow-tag amber">댓글 주사위</span> <span class="flow-arrow">&rarr;</span> 주사위 결과에 따라 보너스 포인트</div>
+  <div class="flow-row"><span class="flow-tag amber">파견 완료</span> <span class="flow-arrow">&rarr;</span> 확률 기반 재료/아이템 드롭</div>
+  <div style="margin-top:8px;border-top:1px dashed #7dd3fc;padding-top:6px;">
+  <div class="flow-row"><span class="flow-tag green">포인트 소비</span> <span class="flow-arrow">&rarr;</span> 상점 구매 (닉색, 이모티콘, 인장 꾸미기, 프로필 스킨 등)</div>
+  <div class="flow-row"><span class="flow-tag green">재료 소비</span> <span class="flow-arrow">&rarr;</span> 개척 시설 건설, 특수 아이템 제작</div>
+  <div class="flow-row"><span class="flow-tag purple">업적 트리거</span> <span class="flow-arrow">&rarr;</span> 조건 달성 시 자동 뱃지 부여 (포인트 누적, 글 수, 출석 연속 등)</div>
+  </div>
+</div>
+
+<h2>출석체크 + 미니게임</h2>
+<p>일일 출석체크와 미니게임(얏지 주사위, 운세, 뽑기)을 제공합니다. <strong>연속 출석 보너스</strong>를 관리자가 설정할 수 있으며, 미니게임의 보상 범위도 조절 가능합니다.</p>
+<div class="shot large"><img src="{img('f_attendance')}" alt="출석체크"></div>
+<div class="caption">출석체크 페이지 &mdash; 주사위 미니게임 + 출석 캘린더</div>
+
+<table>
+  <tr><th>설정 항목</th><th>설명</th><th>위치</th></tr>
+  <tr><td>출석 보상 포인트</td><td>기본 출석 시 지급 포인트</td><td>관리자 &rarr; 설정</td></tr>
+  <tr><td>연속 출석 보너스</td><td>N일 연속 시 추가 포인트</td><td>관리자 &rarr; 설정</td></tr>
+  <tr><td>미니게임 보상 범위</td><td>주사위 결과별 보상 배율</td><td>관리자 &rarr; 설정</td></tr>
+</table>
+
+<h2>보상 시스템 (게시판별)</h2>
+<p>각 게시판마다 보상 모드를 개별 설정합니다. <strong>자동 지급</strong>과 <strong>수동(요청) 지급</strong>을 선택할 수 있고, 포인트/재료/일일제한/좋아요 연동을 게시판별로 다르게 구성합니다.</p>
+
+<table>
+  <tr><th>보상 모드</th><th>동작</th><th>적합한 게시판</th></tr>
+  <tr><td>자동</td><td>글 작성 시 즉시 포인트 지급</td><td>자유 게시판, 방명록</td></tr>
+  <tr><td>수동(요청)</td><td>작성 후 "보상 요청" → 관리자 검수 → 지급</td><td>미션, RP, 갤러리</td></tr>
+  <tr><td>댓글 주사위</td><td>댓글 시 주사위 결과에 따른 보상</td><td>이벤트, 모집 게시판</td></tr>
+</table>
+
+<!-- 튜토리얼: 보상 설정 -->
+<div class="tut-box">
+  <h3>튜토리얼: 보상 설정 플로우</h3>
+  <p style="font-size:12px;color:#78716c;margin-bottom:10px;">보상 관리 페이지에서 게시판별 보상, 활동 보상, 역극 보상, 좋아요 보상, 정산을 관리합니다.</p>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-text"><strong>관리자 &rarr; 활동 &rarr; 보상 관리</strong>로 이동합니다. 상단 탭에서 <span class="hl">게시판별 보상</span> / <span class="hl">활동 보상 설정</span> / <span class="hl">역극 보상</span> / <span class="hl">좋아요 보상</span> / <span class="hl">정산 대기열</span>을 선택합니다.</div>
+  </div>
+  <div class="shot large"><img src="{img('tut_reward_01_board')}" alt="보상 관리 게시판"></div>
+  <div class="caption">보상 관리 &mdash; 게시판별 보상 탭 (모드, 기본P, 재료, 일일제한, 좋아요 설정)</div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-text">각 게시판 행의 <strong>편집</strong> 버튼을 클릭하여 해당 게시판의 보상을 설정합니다. 보상 모드(자동/수동), 기본 포인트, 재료 드롭 확률, 일일 보상 제한 횟수, 좋아요 연동 여부를 설정합니다.</div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-text"><span class="hl">활동 보상 설정</span> 탭에서는 RP 완결 보상, 좋아요 수신 보상, 댓글 작성 보상 등 게시판 외적인 활동의 보상을 설정합니다.</div>
+  </div>
+  <div class="shot large"><img src="{img('tut_reward_02_activity')}" alt="활동 보상"></div>
+  <div class="caption">활동 보상 설정 탭</div>
+
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-text"><span class="hl">정산 대기열</span> 탭에서는 수동 모드 게시판의 보상 요청을 일괄 승인/반려할 수 있습니다.</div>
+  </div>
+</div>
+
+<h2>업적 시스템</h2>
+<p>조건 달성 시 <strong>자동 부여</strong>되는 업적 시스템입니다. 5단계 희귀도(일반/비범/희귀/전설/에픽)를 지원하며, 달성한 업적은 프로필과 인장에 쇼케이스로 전시할 수 있습니다.</p>
+
+<div class="shot large"><img src="{img('f_achievement')}" alt="업적"></div>
+<div class="caption">업적 페이지 &mdash; 달성 현황 + 희귀도별 분류</div>
+
+<table>
+  <tr><th>트리거 유형</th><th>예시</th><th>자동/수동</th></tr>
+  <tr><td>글 수 기반</td><td>게시글 10/50/100회 작성</td><td>자동</td></tr>
+  <tr><td>출석 기반</td><td>30일 연속 출석</td><td>자동</td></tr>
+  <tr><td>포인트 누적</td><td>총 포인트 10,000 달성</td><td>자동</td></tr>
+  <tr><td>RP 완결</td><td>역극 5회 완결</td><td>자동</td></tr>
+  <tr><td>관리자 수여</td><td>이벤트 우승, 특별 공헌</td><td>수동</td></tr>
+</table>
+
+<h2>댓글 주사위</h2>
+<p>서버사이드 랜덤으로 댓글 작성 시 주사위를 굴립니다. 모집이나 이벤트 판정에 사용하며, <strong>게시판별 ON/OFF</strong>가 가능합니다.</p>
+<div class="note">관리자 &rarr; 보상 관리 &rarr; 해당 게시판 편집에서 "주사위 사용"을 활성화합니다. 주사위 최대값, 1회 제한 여부도 설정 가능합니다.</div>
+
+<h2>인장 (시그니처 카드)</h2>
+<p>유저 명함 기능입니다. 16&times;4 격자에 캐릭터 이미지, 닉네임, 한마디, 텍스트, 트로피를 자유롭게 배치합니다. 상점에서 구매한 아이템으로 <strong>배경색, 배경 이펙트, 테두리, 호버 효과</strong>를 꾸밀 수 있습니다. 게시글과 역극 하단에 자동 표시됩니다.</p>
+<div class="shot large"><img src="{img('f_seal_edit')}" alt="인장 편집"></div>
+<div class="caption">인장 편집기 &mdash; GridStack 기반 드래그앤드롭 + 실시간 미리보기</div>
+
+<h2>알림 시스템</h2>
+<p>벨 아이콘 + 토스트 팝업으로 홈페이지 내 대부분의 행동(캐릭터 승인, 좋아요, 댓글, RP 이음, 보상 지급, 업적 달성 등)을 실시간으로 알려줍니다.</p>
+<div class="shot large"><img src="{img('f_notification')}" alt="알림"></div>
+<div class="caption">알림 목록</div>
+
+<hr class="divider">
+
+<!-- ═══════════════ 커뮤니티 콘텐츠 ═══════════════ -->
+<h1 class="page-break">커뮤니티 콘텐츠</h1>
+
+<h2>역극(RP) 시스템</h2>
+<p>판 세우기 &rarr; 이음(답글) &rarr; 완결 플로우를 지원합니다. 캐릭터를 연결하여 상호 역극을 진행하며, 완결 시 참여자 전원에게 보상이 지급됩니다. 이모티콘 삽입과 캐릭터 선택을 지원합니다.</p>
+<div class="shot large"><img src="{img('f_rp')}" alt="역극"></div>
+<div class="caption">역극 페이지 &mdash; 판 목록과 이음</div>
+
+<h2>상점 / 인벤토리</h2>
+<p>포인트로 구매 가능한 아이템: 닉네임 색상/효과, 프로필/인장 꾸미기, 이모티콘 셋, 칭호, 선물 등. 관리자가 카테고리와 아이템을 자유롭게 추가합니다.</p>
+<div class="shot large"><img src="{img('f_shop')}" alt="상점"></div>
+<div class="caption">상점 &mdash; 카테고리별 상품 목록</div>
+<div class="shot large"><img src="{img('f_inventory')}" alt="인벤토리"></div>
+<div class="caption">인벤토리 &mdash; 보유 아이템 + 사용/선물</div>
+
+<h2>개척 시스템</h2>
+<p>유저가 공동으로 자원(스태미나/재료)을 투입하여 커뮤니티 시설을 건설합니다. 기여 랭킹과 명예의 전당을 제공합니다.</p>
+<div class="shot large"><img src="{img('f_pioneer')}" alt="개척"></div>
+<div class="caption">개척 현황 &mdash; 거점 맵 뷰</div>
+
+<h2>탐색 파견</h2>
+<p>스태미나를 소모하여 파견지에 캐릭터를 보내면 확률 보상을 획득합니다. 관계가 맺어진 캐릭터 중 파트너를 선택하면 보너스가 적용되며, 세계관 맵과 연동됩니다.</p>
+<div class="shot large"><img src="{img('f_expedition')}" alt="파견"></div>
+<div class="caption">탐색 파견 &mdash; 파견지 맵</div>
+
+<!-- 튜토리얼: 파견지 세팅 -->
+<div class="tut-box">
+  <h3>튜토리얼: 파견지 세팅 플로우</h3>
+  <p style="font-size:12px;color:#78716c;margin-bottom:10px;">관리자가 파견지를 생성하고, 드롭 아이템과 이벤트를 설정합니다.</p>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-text"><strong>관리자 &rarr; 개척 &rarr; 파견지 관리</strong>로 이동합니다. 상단에서 파견 맵 이미지를 설정하고, 하단 목록에서 기존 파견지를 확인합니다.</div>
+  </div>
+  <div class="shot large"><img src="{img('tut_exped_01_list')}" alt="파견지 목록"></div>
+  <div class="caption">파견지 관리 &mdash; 맵 이미지 + 파견지 목록 (드롭 아이템/시간/비용 설정)</div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-text"><strong>수정</strong> 버튼을 클릭하여 파견지 상세를 설정합니다. 파견지 이름, 설명, 소요 시간, 스태미나 비용, 드롭 테이블(아이템별 확률/수량)을 입력합니다.</div>
+  </div>
+  <div class="shot large"><img src="{img('tut_exped_02_form')}" alt="파견지 수정"></div>
+  <div class="caption">파견지 상세 설정 폼 &mdash; 기본 정보 + 드롭 테이블</div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-text"><strong>파견 이벤트</strong> 메뉴에서 기간 한정 이벤트를 등록합니다. 이벤트 기간 중 특정 파견지의 드롭률 상승이나 특별 보상을 설정할 수 있습니다.</div>
+  </div>
+  <div class="shot large"><img src="{img('tut_exped_03_event')}" alt="파견 이벤트"></div>
+  <div class="caption">파견 이벤트 관리</div>
+</div>
+
+<h2>기타 콘텐츠</h2>
+<ul>
+  <li><strong>이모티콘 시스템</strong> &mdash; 셋 관리, 구매, 댓글/게시글/역극 삽입. 유저 직접 제작 및 판매 가능.</li>
+  <li><strong>캐릭터 관계</strong> &mdash; 신청/승인 방식 관계 맺기. vis.js 기반 관계도 시각화.</li>
+  <li><strong>의뢰 매칭</strong> &mdash; 의뢰 등록, 지원/추첨, 전용 게시판 결과물 제출.</li>
+  <li><strong>미션</strong> &mdash; 주간/월간 미션 출제, 자동 보상 또는 검수 모드.</li>
+  <li><strong>마이페이지</strong> &mdash; 보유 캐릭터, 활동 이력, 인장, 업적을 한 곳에서 관리.</li>
+</ul>
+
+<div class="shot large"><img src="{img('f_mypage')}" alt="마이페이지"></div>
+<div class="caption">마이페이지</div>
+
+<hr class="divider">
+
+<!-- ═══════════════ 관리자 설정 개요 ═══════════════ -->
+<h1 class="page-break">관리자 설정 개요</h1>
+<p>모건 빌더의 관리자 페이지에서 대부분의 설정을 코딩 없이 변경할 수 있습니다.</p>
+
+<div class="shot large"><img src="{img('adm_config')}" alt="관리자 설정"></div>
+<div class="caption">관리자 설정 &mdash; 시스템 전반 설정</div>
+
+<table>
+  <tr><th>메뉴</th><th>기능</th></tr>
+  <tr><td>설정</td><td>사이트명, 포인트 단위, 출석 보상, 인장/관계 활성화, 주사위 설정</td></tr>
+  <tr><td>게시판 관리</td><td>게시판 추가/수정, 스킨 선택, 보상/주사위 개별 설정</td></tr>
+  <tr><td>캐릭터 관리</td><td>승인/반려, 프로필 필드 커스텀, 소속/유형 관리</td></tr>
+  <tr><td>보상 관리</td><td>게시판별/활동별 보상, 정산 대기열</td></tr>
+  <tr><td>상점 관리</td><td>카테고리/아이템 추가, 가격/효과 설정</td></tr>
+  <tr><td>파견지 관리</td><td>파견지 추가, 드롭 테이블, 이벤트</td></tr>
+  <tr><td>세계관 관리</td><td>위키 문서, 타임라인, 맵</td></tr>
+  <tr><td>업적 관리</td><td>업적 추가, 트리거 조건, 희귀도</td></tr>
+  <tr><td>이모티콘 관리</td><td>이모티콘 셋 추가/승인</td></tr>
+</table>
+
+<div class="shot large"><img src="{img('adm_board_list')}" alt="게시판 관리"></div>
+<div class="caption">게시판 관리 목록</div>
+
+<div class="shot large"><img src="{img('adm_shop_list')}" alt="상점 관리"></div>
+<div class="caption">상점 아이템 관리</div>
+
+<hr class="divider">
+
+<!-- ═══════════════ 준비 중 ═══════════════ -->
+<h1 class="page-break">준비 중인 콘텐츠</h1>
+<p>핵심 시스템이 1차 완성되어 있으며, 베타 테스트를 진행하며 안정화 후 아래 콘텐츠가 추가됩니다. 개발 우선순위는 테스터 피드백이 반영됩니다.</p>
+
+<table>
+  <tr><th>콘텐츠</th><th>설명</th></tr>
+  <tr><td>실시간 채팅</td><td>캐입/유저 이입 구분, supabase 연동</td></tr>
+  <tr><td>공동 연구 트리</td><td>재화 공동 투입으로 커뮤니티 영구 버프 해금</td></tr>
+  <tr><td>마이룸</td><td>아이소메트릭 뷰 개인 공간, 가구/테마 배치</td></tr>
+  <tr><td>비주얼 노벨 엔진</td><td>역극 내용을 VN 형식으로 컨버팅/플레이</td></tr>
+  <tr><td>세미 턴제 RPG</td><td>스탯/장비/스킬, 던전 탐사, 다이스 전투</td></tr>
+  <tr><td>SRPG</td><td>타일 기반 맵 파티 Co-op PvE</td></tr>
+  <tr><td>진영 대립</td><td>진영 게시판, 카드 배틀, 시즌제 점령전</td></tr>
+</table>
+
+<hr class="divider">
+
+<!-- ═══════════════ 기술 + 데모 ═══════════════ -->
+<h1>기술 환경</h1>
+<ul>
+  <li>PHP 8 / MySQL 8 / Nginx</li>
+  <li>Tailwind CSS v4 (다크 테마 기본)</li>
+  <li>Gnuboard5 기반 자체 확장 CMS</li>
+  <li>Docker 컨테이너 (개발) / Cafe24 호스팅 (운영)</li>
+</ul>
+
+<h1>예시 사이트</h1>
+<p style="font-size:18px;"><strong style="color:#d97706;">moonveil.org</strong></p>
+<p><strong>admin / test1234</strong> &nbsp;(관리자) &nbsp;&nbsp; <strong>test / test1234</strong> &nbsp;(회원)</p>
+<div class="warn">
+  <h3>주의</h3>
+  <p style="margin:0;">모든 계정정보가 공개되어 있으므로 유실되면 안 되는 개인 데이터의 입력은 지양해주세요. 수시로 변경/초기화될 수 있습니다.</p>
+</div>
+
+</body>
+</html>'''
+
+# ─── 파일 생성 + PDF 변환 ───
+print("Building HTML...")
+with open(HTML_PATH, 'w', encoding='utf-8') as f:
+    f.write(HTML)
+print(f"  -> {HTML_PATH}")
+
+print("Converting to PDF...")
+with sync_playwright() as p:
+    browser = p.chromium.launch(headless=True)
+    page = browser.new_page()
+    page.goto("file:///" + HTML_PATH.replace("\\", "/"))
+    page.wait_for_timeout(3000)  # 웹폰트 로딩 대기
+    page.pdf(
+        path=PDF_PATH,
+        format="A4",
+        print_background=True,
+        margin={"top": "18mm", "bottom": "20mm", "left": "14mm", "right": "14mm"}
+    )
+    browser.close()
+
+print(f"Done! PDF saved: {PDF_PATH}")
