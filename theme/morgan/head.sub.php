@@ -80,6 +80,7 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
     <title><?php echo $g5_head_title; ?></title>
 
     <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="<?php echo G5_THEME_URL; ?>/img/favicon.svg">
     <link rel="icon" type="image/x-icon" href="<?php echo G5_THEME_URL; ?>/img/favicon.ico">
 
     <!-- Google Fonts (사이트 폰트) -->
