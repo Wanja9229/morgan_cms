@@ -90,9 +90,10 @@ $trophy_slots = (int)mg_config('seal_trophy_slots', 3);
 // 기존 레이아웃 로드
 $seal_layout_json = $seal['seal_layout'] ?? '';
 
-// 배경: 아이템 기반 (seal_bg 타입 — 색상 또는 이미지)
+// 배경: 우선순위 — seal_bg 아이템 > seal_bg_color(무료) > 기본
 $seal_bg_data = mg_get_seal_bg_style($mb_id);
-$seal_bg_color = $seal_bg_data['color'] ?: '#2b2d31';
+$user_bg_color = $seal['seal_bg_color'] ?? '';
+$seal_bg_color = $seal_bg_data['color'] ?: ($user_bg_color ?: '#2b2d31');
 $seal_bg_image = $seal_bg_data['image'] ?? '';
 
 // 미리보기용 배경/프레임 스타일
@@ -302,6 +303,7 @@ include_once(G5_THEME_PATH.'/head.php');
         <input type="hidden" name="seal_tagline" id="f_tagline" value="<?php echo htmlspecialchars($seal['seal_tagline']); ?>">
         <input type="hidden" name="seal_content" id="f_content" value="<?php echo htmlspecialchars($seal['seal_content']); ?>">
         <input type="hidden" name="seal_text_color" id="f_text_color" value="<?php echo htmlspecialchars($seal['seal_text_color'] ?? ''); ?>">
+        <input type="hidden" name="seal_bg_color" id="f_bg_color" value="<?php echo htmlspecialchars($user_bg_color); ?>">
         <?php if ($link_allow) { ?>
         <input type="hidden" name="seal_link" id="f_link" value="<?php echo htmlspecialchars($seal['seal_link']); ?>">
         <input type="hidden" name="seal_link_text" id="f_link_text" value="<?php echo htmlspecialchars($seal['seal_link_text']); ?>">
@@ -629,9 +631,40 @@ include_once(G5_THEME_PATH.'/head.php');
                 <h2 class="font-medium text-mg-text-primary">인장 배경</h2>
             </div>
             <div class="p-4 space-y-4">
+                <!-- 무료 배경색 팔레트 -->
+                <div>
+                    <p class="text-xs font-medium text-mg-text-secondary mb-2">배경색 <span class="text-mg-text-muted font-normal">(무료)</span></p>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <?php
+                        $bg_colors = array(
+                            '' => '기본',
+                            '#1e1f22' => '차콜', '#2b2d31' => '다크', '#0d1117' => '깊은밤',
+                            '#1a1a2e' => '네이비', '#16213e' => '미드나잇', '#0f3460' => '딥블루',
+                            '#1b1a2b' => '퍼플', '#2d1b2e' => '와인', '#1a2e1a' => '포레스트',
+                            '#2e2a1b' => '웜브라운',
+                        );
+                        $has_bg_item = !empty($seal_bg_data['color']) || !empty($seal_bg_data['image']);
+                        foreach ($bg_colors as $bhex => $bname) {
+                            $active_class = (!$has_bg_item && $user_bg_color === $bhex) ? 'ring-2 ring-mg-accent' : '';
+                        ?>
+                        <button type="button" data-bg-color="<?php echo $bhex; ?>"
+                                class="seal-bgc-btn w-7 h-7 rounded-full border border-mg-bg-tertiary flex items-center justify-center <?php echo $active_class; ?>"
+                                style="<?php echo $bhex ? 'background:'.$bhex : 'background:var(--mg-bg-secondary,#2b2d31);'; ?>"
+                                title="<?php echo $bname; ?>">
+                            <?php if (!$bhex) { ?><span class="text-[10px] text-mg-text-muted">&#8635;</span><?php } ?>
+                        </button>
+                        <?php } ?>
+                        <label class="flex items-center gap-1">
+                            <input type="color" id="seal-bgc-custom" value="<?php echo $user_bg_color ?: '#2b2d31'; ?>" class="w-7 h-7 rounded-full border border-mg-bg-tertiary cursor-pointer" style="padding:1px;">
+                            <span class="text-[10px] text-mg-text-muted">커스텀</span>
+                        </label>
+                    </div>
+                    <p class="text-[11px] text-mg-text-muted mt-2">상점 배경 아이템 적용 시 무료 배경색보다 우선됩니다.</p>
+                </div>
+
                 <?php if (!empty($seal_bg_items)) { ?>
                 <!-- 배경 색상 (상점 아이템) -->
-                <div>
+                <div class="border-t border-mg-bg-tertiary pt-3">
                     <p class="text-xs font-medium text-mg-text-secondary mb-2">배경 색상 <span class="text-mg-text-muted font-normal">(상점 아이템)</span></p>
                     <div class="flex flex-wrap gap-2">
                         <button type="button" class="seal-item-card seal-bg-item-btn <?php echo !$active_bg ? 'is-active' : ''; ?>" data-si-id="0">
@@ -811,6 +844,7 @@ var HOVER_CSS = <?php echo json_encode($preview_hover_css); ?>;
 var BG_COLOR = <?php echo json_encode($seal_bg_color ?: '#2b2d31'); ?>;
 var BG_IMAGE = <?php echo json_encode($seal_bg_image); ?>;
 var LINK_ALLOW = <?php echo $link_allow ? 'true' : 'false'; ?>;
+var USER_BG_COLOR = <?php echo json_encode($user_bg_color); ?>;
 
 // 배경 효과 CSS 동적 생성 (::before 오버레이)
 var _sealEffectActive = false;
@@ -1575,7 +1609,37 @@ function getLayout() {
 // ============================
 updatePreview();
 
-// (배경색은 아이템 구매제로 전환 — 무료 팔레트 제거됨)
+// 무료 배경색 팔레트
+document.querySelectorAll('.seal-bgc-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        var hex = this.dataset.bgColor;
+        $('f_bg_color').value = hex;
+        USER_BG_COLOR = hex;
+        document.querySelectorAll('.seal-bgc-btn').forEach(function(b) { b.classList.remove('ring-2','ring-mg-accent'); });
+        this.classList.add('ring-2','ring-mg-accent');
+        // 아이템 배경이 없을 때만 미리보기에 즉시 반영
+        var hasItemBg = document.querySelector('.seal-bg-item-btn.is-active[data-si-id]:not([data-si-id="0"])');
+        if (!hasItemBg) {
+            BG_COLOR = hex || '#2b2d31';
+            BG_IMAGE = '';
+        }
+        updatePreview();
+    });
+});
+var bgcCustom = $('seal-bgc-custom');
+if (bgcCustom) {
+    bgcCustom.addEventListener('input', function() {
+        $('f_bg_color').value = this.value;
+        USER_BG_COLOR = this.value;
+        document.querySelectorAll('.seal-bgc-btn').forEach(function(b) { b.classList.remove('ring-2','ring-mg-accent'); });
+        var hasItemBg = document.querySelector('.seal-bg-item-btn.is-active[data-si-id]:not([data-si-id="0"])');
+        if (!hasItemBg) {
+            BG_COLOR = this.value;
+            BG_IMAGE = '';
+        }
+        updatePreview();
+    });
+}
 
 // ============================
 // 아이템 사용/해제 (배경, 테두리, 호버)
@@ -1611,9 +1675,9 @@ function toggleSealItem(type, siId, btnClass) {
                 } else if (type === 'hover') {
                     HOVER_CSS = (siId == 0) ? '' : (newActive ? (newActive.dataset.css||'') : '');
                 } else if (type === 'bg') {
-                    // 배경 아이템: 색상 또는 이미지
+                    // 배경 아이템: 색상 또는 이미지 (해제 시 무료 배경색 폴백)
                     if (siId == 0) {
-                        BG_COLOR = '#2b2d31';
+                        BG_COLOR = USER_BG_COLOR || '#2b2d31';
                         BG_IMAGE = '';
                     } else if (newActive) {
                         BG_COLOR = newActive.dataset.color || '#2b2d31';

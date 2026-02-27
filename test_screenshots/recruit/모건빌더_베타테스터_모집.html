@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>모건 빌더 베타 테스터 모집</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Noto Sans KR', '맑은 고딕', sans-serif; background: #fff; color: #222; line-height: 1.8; padding: 40px; max-width: 800px; margin: 0 auto; font-size: 15px; }
+  h1 { font-size: 28px; color: #d97706; margin: 48px 0 12px; padding-bottom: 8px; border-bottom: 2px solid #f59f0a; }
+  h1:first-of-type { margin-top: 0; }
+  h2 { font-size: 20px; color: #333; margin: 32px 0 8px; }
+  p { margin-bottom: 12px; }
+  .title-block { text-align: center; margin-bottom: 48px; padding: 32px 0; }
+  .title-block h1 { font-size: 36px; border: none; margin: 0 0 8px; color: #d97706; }
+  .title-block .subtitle { font-size: 20px; color: #555; }
+  ul { margin: 8px 0 16px 24px; }
+  li { margin-bottom: 6px; }
+  .screenshot { text-align: center; margin: 20px 0; }
+  .screenshot img { max-width: 100%; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .caption { text-align: center; font-size: 13px; color: #888; margin-top: 6px; margin-bottom: 24px; font-style: italic; }
+  .gif-note { background: #fff7ed; border-left: 4px solid #f59f0a; padding: 8px 14px; margin: 8px 0 20px; font-size: 13px; color: #92400e; border-radius: 0 6px 6px 0; }
+  .gif-note::before { content: '[GIF 권장] '; font-weight: 700; color: #d97706; }
+  .highlight { color: #d97706; font-weight: 700; }
+  .warn-box { background: #fef3c7; border: 1px solid #f59f0a; border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
+  .warn-box h3 { color: #92400e; font-size: 16px; margin-bottom: 8px; }
+  .section-divider { border: none; border-top: 1px solid #e5e7eb; margin: 40px 0; }
+  .bold { font-weight: 700; }
+  .link { color: #d97706; text-decoration: underline; }
+  .center { text-align: center; }
+  .end-block { text-align: center; margin-top: 48px; padding: 24px 0; }
+  .end-block p:first-child { font-size: 18px; font-weight: 700; }
+  .feature-title { font-weight: 700; margin-top: 16px; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<!-- ═══ 타이틀 ═══ -->
+<div class="title-block">
+  <h1>자캐 커뮤니티 빌더 '모건 에디션'</h1>
+  <div class="subtitle">베타 테스터를 모십니다.</div>
+</div>
+
+<!-- ═══ 인사 ═══ -->
+<p>안녕하세요. 이 바닥에서 10년을 구른 글쟁이이자 현직 개발자인 Morgan이라고 합니다.</p>
+<p>제가 제작중인 새로운 커뮤니티 빌더의 테스터 분들을 모시기 위해 찾아왔습니다.</p>
+<p>이런저런 자캐 커뮤니티를 뛰며 제가 상상했던 커뮤니티 활동을 구현한 새로운 자캐 커뮤니티용 웹사이트 빌더, 모건 빌더를 제작중에 있습니다. 모건 빌더는 비개발자도 코딩 없이 사용 가능한 홈페이지형 자캐 커뮤니티 빌더를 지향하고 있으며, 별도의 커스텀 없이 세팅만 완료하여 바로 오픈할 수 있는, 시스템 위에 세계관을 얹어서 쓸 수 있는 디스코드나 네이버 밴드 같은 툴로 만들기 위해 노력중입니다.</p>
+<p>현재 1차 배포를 위한 핵심 기능 구현은 마무리되었으나 지속적으로 세부적인 안정화와 최적화 작업을 진행중인 단계입니다. 이 지점에서 실제 운영 환경에서의 피드백을 주실 첫 번째 베타 테스터 분들을 모시고자 합니다.</p>
+
+<!-- ═══ 모집 대상 ═══ -->
+<h1>모집 대상</h1>
+<ul>
+  <li>2026년 기준 성인이신 분</li>
+  <li>자캐 커뮤니티 러닝 또는 운영 경험이 1회 이상 있으신 분</li>
+  <li>모건 빌더를 활용해 실제 커뮤니티를 제작하고 운영해주실 분</li>
+  <li>적극적인 피드백 가능하신 분</li>
+</ul>
+<p>모집 인원이 예상보다 많이 모일 경우 아래의 조건에 해당하는 분들을 우대합니다.</p>
+<ul>
+  <li>커뮤니티 운영 경험</li>
+  <li>홈페이지형 커뮤니티(아보카도 에디션 등) 사용/운영 경험</li>
+</ul>
+
+<!-- ═══ 테스터 지원 ═══ -->
+<h1>테스터 지원</h1>
+
+<p class="feature-title">초기 세팅 지원</p>
+<p>기능이 많으며 이전에 없던 새로운 빌더인만큼 적응이 필요할 수 있습니다. 바로 운영이 가능한 상태가 되도록 초기 세팅을 지원해드립니다.</p>
+
+<p class="feature-title">운영 가이드</p>
+<p>운영 중 발생하는 문제나 개선 사항에 대해 지원해드립니다.</p>
+
+<p class="feature-title">서버 호스팅 무상 지원</p>
+<p>개인 호스팅이 어려우신 분들께는 제가 사용 중인 30GB 서버를 분할 제공해 드립니다. 해당 서버 호스팅은 2026년 12월 만료 예정이니 신청에 참고 부탁드립니다.</p>
+<p>호스팅 만료 전후의 백업이나 호스팅 이전, 트래픽/호스팅 용량에 부담이 클 경우의 독립 호스팅 이전이 필요할 수 있으며, 데이터나 세팅의 유실 없이 구매하신 호스팅으로 모두 이전을 도와드립니다.</p>
+<p>제가 보유한 서버 호스팅의 용량이 크지 않은 관계로 1~3분 정도만 모시게 될 것 같습니다.</p>
+
+<p class="feature-title">아이디어 반영</p>
+<p>현재 많은 부분이 제 상상과 판단으로만 만들어지고 있습니다. 이전의 홈페이지 커뮤니티에서 사용하셨던 기능이나, 불편했던 부분, 만들고 싶은 기능에 대해 제안해주시면 구현 난이도와 가능성을 판단하여 베타 기간 중 피드백이 반영됩니다.</p>
+
+<!-- ═══ 주의사항 ═══ -->
+<h1>주의사항</h1>
+<div class="warn-box">
+  <ul>
+    <li>베타 테스트인 만큼 안정성이 낮을 수 있습니다. 버그나 오류가 있을 수 있고, 예기치 못한 구조 변경이나 이에 따른 재세팅이 필요할 수 있습니다.</li>
+    <li>빌더의 기획과 구현 상당 부분에 AI가 사용되었습니다. 지원을 하시기 전에 이 부분에 대한 명확한 인지를 부탁드립니다.</li>
+    <li>개인의 취미 프로젝트이다 보니 작업 속도가 일정치 않으며, 완성까지 시간이 오래 걸릴 수 있습니다. 또한 빌더의 완벽한 완성을 100% 보장해드리긴 어렵습니다.</li>
+  </ul>
+</div>
+<p>이러한 사항을 이해해주시고, 그래도 "같이 만들어보자"는 마음으로 참여해주실 분을 찾고 있습니다. 평소 열고 싶었던 커뮤니티나 만들고 싶은 컨텐츠가 있는 분들, 커뮤니티 운영을 경험해보고 싶으신 분들, 자캐 커뮤니티를 만드는 데에 있어 개발이나 코딩과 관련된 질문이나 자문이 필요한 분들, 빌더를 구경해보시고 생기는 디자인이나 UI/UX 피드백. 모두 적극 환영합니다.</p>
+
+<p>신청이나 문의, 사용 피드백은 카페의 1:1채팅이나, 아래의 구글폼 작성 부탁드립니다.</p>
+<p><a class="link" href="https://forms.gle/Ca4L43A75BtSE1BA9">https://forms.gle/Ca4L43A75BtSE1BA9</a></p>
+<p>1:1 채팅은 확인이나 답변이 늦을 수 있습니다.</p>
+
+<hr class="section-divider">
+
+<!-- ═══════════════════════════════════════ -->
+<!--           기능 로드맵 + 스크린샷           -->
+<!-- ═══════════════════════════════════════ -->
+
+<div class="title-block" style="margin-top:24px;">
+  <h1 style="font-size:32px;">기능 로드맵</h1>
+</div>
+
+<!-- ─── 기본 시스템 ─── -->
+<h1>기본 시스템</h1>
+
+<h2>메인 페이지 빌더</h2>
+<p>관리자가 위젯을 드래그앤드롭으로 배치하여 메인 페이지를 구성합니다. 실시간 미리보기를 지원합니다.</p>
+<div class="screenshot"><img src="01_home.png" alt="메인 페이지"></div>
+<div class="caption">메인 페이지 - 위젯 기반 레이아웃</div>
+<div class="gif-note">위젯 드래그앤드롭 배치 과정</div>
+
+<h2>회원 시스템</h2>
+<p>가입, 로그인, 닉네임 변경 주기 제한, 레벨에 따른 회원 기능 제한을 지원합니다.</p>
+
+<h2>캐릭터 시스템</h2>
+<p>1계정 다캐릭터를 지원합니다. 관리자가 프로필 양식을 자유롭게 커스터마이징할 수 있으며, 캐릭터 등록 후 승인/반려 플로우를 거칩니다.</p>
+<div class="screenshot"><img src="02_character_list.png" alt="캐릭터 목록"></div>
+<div class="caption">캐릭터 목록 - 프로필 카드 뷰</div>
+<div class="screenshot"><img src="15_character_view.png" alt="캐릭터 상세"></div>
+<div class="caption">캐릭터 상세 프로필 - 배경 이펙트 + 인장</div>
+
+<h2>소속/유형 시스템</h2>
+<p>클래스, 종족, 진영, 직업 등을 관리자가 자유롭게 설정할 수 있습니다.</p>
+
+<h2>게시판</h2>
+<p>기본형, 갤러리형, 방명록형, 포스트잇형, 미션 전용, 의뢰 수행 전용 스킨을 제공합니다. 추후 스킨으로 기능 및 디자인이 추가될 예정입니다.</p>
+
+<hr class="section-divider">
+
+<!-- ─── 세계관/미션 ─── -->
+<h1>세계관 / 미션</h1>
+
+<h2>세계관 위키</h2>
+<p>문서/섹션 구조로 세계관 정보를 관리합니다. 상호 링크, 타임라인 연표, 세계관 맵을 지원합니다.</p>
+<div class="screenshot"><img src="03_lore_wiki.png" alt="세계관 위키"></div>
+<div class="caption">세계관 위키 - 문서 목록</div>
+
+<h2>타임라인</h2>
+<p>세계관의 연대기를 시대(Era)와 이벤트로 시각화합니다.</p>
+<div class="screenshot"><img src="04_lore_timeline.png" alt="타임라인"></div>
+<div class="caption">타임라인 - 연대기 뷰</div>
+<div class="gif-note">타임라인 스크롤 + 시대 접기/펼치기 인터랙션</div>
+
+<h2>미션</h2>
+<p>주간/월간 미션을 출제하고, 자동 보상 또는 검수 모드로 운영합니다. 우수작 선정 기능을 지원합니다.</p>
+
+<hr class="section-divider">
+
+<!-- ─── 활동/보상 ─── -->
+<h1>활동 / 보상</h1>
+
+<h2>출석체크 + 미니게임</h2>
+<p>일일 출석체크와 미니게임(얏지 주사위, 운세, 뽑기)을 제공합니다. 연속 출석 보너스를 설정할 수 있습니다.</p>
+<div class="screenshot"><img src="07_attendance.png" alt="출석체크"></div>
+<div class="caption">출석체크 - 주사위 미니게임</div>
+<div class="gif-note">주사위 굴리기 애니메이션 + 콤보 판정 결과</div>
+
+<h2>보상 시스템</h2>
+<p>게시판별 자동/요청 보상, 좋아요 재화 연동, 역극 보상, 정산 관리를 지원합니다.</p>
+
+<h2>업적 시스템</h2>
+<p>조건 달성 시 자동 부여되는 업적, 희귀도 5단계, 프로필 쇼케이스를 제공합니다.</p>
+<div class="screenshot"><img src="10_achievement.png" alt="업적"></div>
+<div class="caption">업적 - 달성 현황</div>
+
+<h2>댓글 주사위</h2>
+<p>서버사이드 랜덤으로 모집이나 이벤트 판정에 사용합니다. 게시판별 ON/OFF가 가능합니다.</p>
+<div class="gif-note">댓글 작성 시 주사위 굴림 → 결과 표시 과정</div>
+
+<h2>인장 (시그니처 카드)</h2>
+<p>유저 명함 기능입니다. 상점에서 아이템을 구매하여 배경, 효과, 테두리를 꾸밀 수 있습니다. 게시글과 역극 하단에 자동 표시됩니다.</p>
+<div class="screenshot"><img src="12_seal_edit.png" alt="인장 편집"></div>
+<div class="caption">인장 편집기 - 실시간 미리보기</div>
+<div class="gif-note">인장 배경/효과 아이템 적용 시 실시간 미리보기 변경</div>
+
+<h2>알림 시스템</h2>
+<p>벨 아이콘, 토스트 알림으로 홈페이지 내 대부분의 행동을 알림으로 받을 수 있습니다.</p>
+<div class="screenshot"><img src="11_notification.png" alt="알림"></div>
+<div class="caption">알림 목록</div>
+
+<hr class="section-divider">
+
+<!-- ─── 커뮤니티 콘텐츠 ─── -->
+<h1>커뮤니티 콘텐츠</h1>
+
+<h2>역극(RP) 시스템</h2>
+<p>판 세우기, 이음(답글), 완결 플로우를 지원합니다. 캐릭터를 연결하여 상호 역극을 진행하며, 완결 시 보상이 지급됩니다. 네이버 카페 메모 게시판과 비슷한 기능입니다.</p>
+<div class="screenshot"><img src="14_rp.png" alt="역극"></div>
+<div class="caption">역극 - 판 목록과 이음</div>
+<div class="gif-note">역극 이음 작성 → 캐릭터 선택 → 이모티콘 삽입 과정</div>
+
+<h2>이모티콘 시스템</h2>
+<p>이모티콘 셋 관리, 구매, 댓글/게시글/역극 삽입을 지원합니다. 유저가 직접 이모티콘 셋을 제작하여 판매할 수 있습니다.</p>
+<div class="gif-note">이모티콘 피커 열기 → 셋 선택 → 이모티콘 삽입</div>
+
+<h2>상점 / 인벤토리</h2>
+<p>재료, 닉네임 색상/효과, 프로필/인장 꾸미기 아이템, 선물 기능 등을 제공합니다.</p>
+<div class="screenshot"><img src="05_shop.png" alt="상점"></div>
+<div class="caption">상점 - 카테고리별 상품 목록</div>
+<div class="screenshot"><img src="06_inventory.png" alt="인벤토리"></div>
+<div class="caption">인벤토리 - 보유 아이템</div>
+
+<h2>개척 시스템</h2>
+<p>유저 공동 자원(스태미나/재료) 투입으로 커뮤니티 기능을 해금합니다. 기여 랭킹과 명예의 전당을 제공합니다.</p>
+<div class="screenshot"><img src="08_pioneer.png" alt="개척"></div>
+<div class="caption">개척 현황 - 거점 맵 뷰</div>
+
+<h2>탐색 파견</h2>
+<p>스태미나를 소모하여 파견지에 캐릭터를 보내면 확률 보상을 획득합니다. 관계가 맺어진 캐릭터 중 파트너를 선택할 수 있으며, 세계관 맵과 연동됩니다.</p>
+<div class="screenshot"><img src="09_expedition.png" alt="파견"></div>
+<div class="caption">탐색 파견 - 파견지 맵</div>
+<div class="gif-note">파견 캐릭터 선택 → 파트너 선택 → 파견 출발 → 완료 보상 수령</div>
+
+<h2>캐릭터 관계</h2>
+<p>신청/승인 방식으로 캐릭터 간 관계를 맺습니다. vis.js 기반 관계도로 시각화되며, 아이콘과 색상을 커스텀할 수 있습니다.</p>
+<div class="gif-note">관계도 그래프 드래그 + 노드 클릭 시 상세 정보 팝업</div>
+
+<h2>의뢰 매칭</h2>
+<p>의뢰 등록, 지원/추첨, 전용 게시판 결과물 제출, 미이행 페널티까지 유저 모집 로그를 시스템화합니다.</p>
+
+<hr class="section-divider">
+
+<!-- ─── 준비중 ─── -->
+<h1>준비 중인 콘텐츠</h1>
+<p>이상의 기본 시스템이 1차적으로 완성되어 있으며, 베타 테스트를 진행하며 안정화가 된 이후로 아래의 콘텐츠가 추가 개발될 예정입니다.</p>
+<p>아래 내용간의 개발 우선도나 별도 콘텐츠에 대해서는 테스터 분들의 피드백이 반영됩니다.</p>
+
+<p class="feature-title">실시간 채팅</p>
+<p>캐입, 유저 이입을 구분하여 제한적으로 사용할 수 있는 실시간 채팅 기능 (supabase 연동 필요)</p>
+
+<p class="feature-title">공동 연구 트리</p>
+<p>재화를 공동 투입하여 커뮤니티 전체에 영구 버프를 해금하는 시스템. 개척 시스템의 확장, 시설 건설의 전제 조건으로 연동. ex) 인벤토리 개수, 특정 능력치 스탯 추가(RPG), 특정 카드 해금(진영 대립)</p>
+
+<p class="feature-title">마이룸</p>
+<p>아이소메트릭 뷰로 구현된 유저 개인의 공간. 상점에서 가구/테마 등을 구매하여 배치가 가능하며, 다른 유저의 마이룸에 방문하거나 캐릭터 배치 가능. 인장 시스템의 확장 개념.</p>
+
+<p class="feature-title">비주얼 노벨 엔진</p>
+<p>역극 내용을 비주얼 노벨의 형식으로 컨버팅하여 플레이 및 저장. BGM, 캐릭터 위치, 배경, 선택지 등을 직접 커스텀 가능. 직접 제작도 가능.</p>
+
+<p class="feature-title">세미 실시간 턴제 RPG</p>
+<p>캐릭터 스탯/장비/스킬 연동, 던전 탐사, 다이스 판정 기반 전투 시스템. 보상은 개척/상점 시스템과 연동. 간단한 스탯과 직업, 어그로 개념으로 직업별 특화 롤플레잉 경험 제공.</p>
+
+<p class="feature-title">세미 실시간 SRPG</p>
+<p>타일 기반 맵에서 유저 파티로 보스 몬스터와 전투. 이동, 공격, 스킬 커맨드를 선택하는 SRPG 스타일.</p>
+
+<p class="feature-title">진영 대립 콘텐츠</p>
+<p>진영별 게시판, 카드 배틀, 점령전으로 구성된 전략/정치 콘텐츠. 시즌제 점령도 경쟁.</p>
+
+<hr class="section-divider">
+
+<!-- ─── 기술 환경 ─── -->
+<h1>사용된 언어 및 환경</h1>
+<ul>
+  <li>PHP 8 / MySQL 8 / Nginx</li>
+  <li>Tailwind CSS v4 (기본 다크 테마)</li>
+  <li>Gnuboard5 기반 자체 확장 CMS (추후 의존성을 줄여나갈 예정)</li>
+  <li>Docker 컨테이너 환경 (개발), Cafe24 호스팅 (운영)</li>
+</ul>
+<p>비개발자 분들 대상의 배포와 세팅 편이성을 위해 그누보드 환경 위에 콘텐츠 영역을 통신하는 SPA like 방식으로 구현되었습니다. 알림 등의 기능은 풀링으로 제한적으로 구현되어 있으며, 실시간 통신이 필요한 부분은 supabase 연동으로 설정 가능하도록 개발될 예정입니다.</p>
+<p>베타 테스트를 진행하며 그누보드 의존성은 차차 제거하여 독립된 CMS 빌더로서의 완성을 생각하고 있습니다.</p>
+
+<hr class="section-divider">
+
+<!-- ─── 데모 ─── -->
+<h1>예시 사이트</h1>
+<p>로드맵에서 현재 제작 완료로 표시된 기능은 모건 빌더로 세팅된 아래의 예시 사이트에서 확인 가능합니다.</p>
+<p><span class="highlight" style="font-size:18px;">moonveil.org</span></p>
+<p>현재 작업중인 홈페이지이며, 수시로 변경되거나 초기화되는 부분이 있을 수 있습니다.</p>
+<br>
+<p><span class="bold">admin / test1234</span> &nbsp;(관리자 기능 테스트)</p>
+<p><span class="bold">test / test1234</span> &nbsp;(회원 기능 테스트)</p>
+<br>
+<p>모든 계정정보가 공개되어 있으므로 공개/유실되어선 안 되는 데이터의 입력은 지양해주시길 바랍니다.</p>
+
+<div class="end-block">
+  <p>많은 지원 기다리겠습니다.</p>
+  <p>긴 글 읽어주셔서 감사드립니다.</p>
+</div>
+
+</body>
+</html>

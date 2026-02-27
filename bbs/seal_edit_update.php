@@ -46,6 +46,11 @@ if ($seal_text_color && !preg_match('/^#[0-9a-fA-F]{6}$/', $seal_text_color)) {
     $seal_text_color = '';
 }
 
+$seal_bg_color = trim($_POST['seal_bg_color'] ?? '');
+if ($seal_bg_color && !preg_match('/^#[0-9a-fA-F]{6}$/', $seal_bg_color)) {
+    $seal_bg_color = '';
+}
+
 // 레이아웃 JSON 검증
 $seal_layout = '';
 $raw_layout = trim($_POST['seal_layout'] ?? '');
@@ -96,7 +101,7 @@ if ($raw_layout) {
 
 // 저장 (INSERT ... ON DUPLICATE KEY UPDATE)
 $sql = "INSERT INTO {$g5['mg_seal_table']}
-    (mb_id, seal_use, seal_tagline, seal_content, seal_link, seal_link_text, seal_text_color, seal_layout, seal_update)
+    (mb_id, seal_use, seal_tagline, seal_content, seal_link, seal_link_text, seal_text_color, seal_bg_color, seal_layout, seal_update)
     VALUES (
         '{$mb_esc}',
         {$seal_use},
@@ -105,6 +110,7 @@ $sql = "INSERT INTO {$g5['mg_seal_table']}
         '".sql_real_escape_string($seal_link)."',
         '".sql_real_escape_string($seal_link_text)."',
         '".sql_real_escape_string($seal_text_color)."',
+        '".sql_real_escape_string($seal_bg_color)."',
         '".sql_real_escape_string($seal_layout)."',
         NOW()
     )
@@ -115,6 +121,7 @@ $sql = "INSERT INTO {$g5['mg_seal_table']}
         seal_link = '".sql_real_escape_string($seal_link)."',
         seal_link_text = '".sql_real_escape_string($seal_link_text)."',
         seal_text_color = '".sql_real_escape_string($seal_text_color)."',
+        seal_bg_color = '".sql_real_escape_string($seal_bg_color)."',
         seal_layout = '".sql_real_escape_string($seal_layout)."',
         seal_update = NOW()";
 

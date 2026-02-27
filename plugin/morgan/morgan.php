@@ -6944,9 +6944,10 @@ function mg_render_seal($mb_id, $mode = 'full')
     }
 
     // 배경/프레임/호버 스타일
-    // 배경색: 아이템 기반 (seal_bg 타입)
+    // 배경 우선순위: seal_bg 아이템 > seal_bg_color(무료) > 기본(#2b2d31)
     $seal_bg = mg_get_seal_bg_style($mb_id);
-    $seal_bg_color = $seal_bg['color'] ?: '#2b2d31';
+    $user_bg_color = !empty($seal['seal_bg_color']) ? $seal['seal_bg_color'] : '';
+    $seal_bg_color = $seal_bg['color'] ?: ($user_bg_color ?: '#2b2d31');
     if (!empty($seal_bg['image'])) {
         $bg_style = 'background:url(' . htmlspecialchars($seal_bg['image']) . ') center/cover no-repeat,' . htmlspecialchars($seal_bg_color) . ';';
     } else {
