@@ -15,8 +15,9 @@ if (!defined('_GNUBOARD_')) exit;
             회원정보를 수정하려면 비밀번호를 입력해주세요.
         </p>
 
-        <form name="fmember_confirm" action="<?php echo $confirm_action_url; ?>" method="post" onsubmit="return fmember_confirm_submit(this);">
-            <input type="hidden" name="url" value="<?php echo $url; ?>">
+        <form name="fmember_confirm" action="<?php echo $url; ?>" method="post" onsubmit="return fmember_confirm_submit(this);">
+            <input type="hidden" name="mb_id" value="<?php echo $member['mb_id']; ?>">
+            <input type="hidden" name="w" value="u">
 
             <!-- 비밀번호 -->
             <div class="mb-6">

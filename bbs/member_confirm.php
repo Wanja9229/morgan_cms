@@ -15,6 +15,10 @@ if( function_exists('social_member_comfirm_redirect') && (! $url || $url === 're
     social_member_comfirm_redirect();
 }
 
+if (!$url) {
+    $url = 'register_form.php';
+}
+
 $url = run_replace('member_confirm_next_url', $url);
 
 $g5['title'] = '회원 비밀번호 확인';
