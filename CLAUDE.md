@@ -186,6 +186,14 @@ include(G5_THEME_PATH.'/skin/emoticon/picker.skin.php');
 - **2차-G**: 스킨 SDK — 배경 레이어 분리 + 파일 기반 커스텀 스킨 시스템
 - **2차-H**: 레이아웃 시스템 — 헤더/사이드바/위젯 교체형 멀티 레이아웃 (Discord/TopNav/Classic 3종)
 
+### 멀티테넌트 + R2 (SaaS 전환) → `docs/ROADMAP_MULTITENANT.md`
+- **MT-0**: 테넌트 라우터 (서브도메인 식별, DB 동적 교체)
+- **MT-1**: DB 격리 (캐시/세션/경로 테넌트 분리)
+- **MT-2**: 스토리지 추상화 (Cloudflare R2 드라이버, 15개 업로드 포인트 전환)
+- **MT-3**: 프로비저닝 (슈퍼 관리자, 테넌트 자동 생성)
+- **MT-4**: 보안 & 격리 (파일/세션/리소스 제한)
+- **MT-5**: 베타 배포 인프라 (VPS, 온보딩, 모니터링, 백업)
+
 ## 상세 문서
 
 | 문서 | 경로 |
@@ -193,6 +201,7 @@ include(G5_THEME_PATH.'/skin/emoticon/picker.skin.php');
 | 핵심 참조 (DB, 파일, 헬퍼) | `docs/CORE.md` |
 | 전체 로드맵 | `docs/ROADMAP.md` |
 | 2차 로드맵 | `docs/ROADMAP_PHASE2.md` |
+| 멀티테넌트 + R2 로드맵 | `docs/ROADMAP_MULTITENANT.md` |
 | 2차 모듈 전략 | `docs/MODULES.md` |
 | 환경 세팅 | `docs/SETUP.md` |
 | UI 디자인 시스템 | `docs/plans/UI.md` |
