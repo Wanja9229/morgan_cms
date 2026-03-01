@@ -13,6 +13,7 @@ $menu["menu800"] = array(
     // 설정
     array('800050', '대시보드', $mg_admin_url . '/dashboard.php', 'mg_dashboard', '설정'),
     array('800100', '기본 설정', $mg_admin_url . '/config.php', 'mg_config'),
+    array('800102', '스토리지 설정', $mg_admin_url . '/storage_config.php', 'mg_storage'),
     array('800060', '스태프 관리', $mg_admin_url . '/staff.php', 'mg_staff'),
     array('800150', '디자인 관리', $mg_admin_url . '/design.php', 'mg_main_builder'),
     // 세계관

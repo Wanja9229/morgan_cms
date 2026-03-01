@@ -374,36 +374,45 @@ function mg_upload_character_image($file, $mb_id, $type = 'thumb') {
         return $result;
     }
 
-    // 저장 디렉토리
-    $upload_dir = MG_CHAR_IMAGE_PATH.'/'.$mb_id;
-    if (!is_dir($upload_dir)) {
-        mkdir($upload_dir, 0755, true);
-    }
+    $storage = mg_storage();
+
+    // 디렉토리 확보
+    $storage->ensureDir('character/' . $mb_id);
 
     // 파일명 생성
     $type_prefixes = array('thumb' => 'head_', 'header' => 'banner_', 'image' => 'body_', 'bg' => 'bg_', 'profile' => 'pf_');
     $prefix = isset($type_prefixes[$type]) ? $type_prefixes[$type] : 'file_';
     $basename = $prefix . uniqid() . '.' . $ext;
     $filename = $mb_id . '/' . $basename;
-    $full_path = MG_CHAR_IMAGE_PATH . '/' . $filename;
+    $storagePath = 'character/' . $filename;
+
+    // 썸네일 먼저 생성 (원본 이동 전, 드라이버 무관하게 안전)
+    $tmpThumb = null;
+    if ($type == 'thumb') {
+        $thumb_basename = 'th_' . $basename;
+        $tmpThumb = sys_get_temp_dir() . '/' . $thumb_basename;
+        if (!mg_create_thumbnail($file['tmp_name'], $tmpThumb, MG_THUMB_SIZE)) {
+            $tmpThumb = null;
+        }
+    }
 
     // 원본 저장
-    if (!move_uploaded_file($file['tmp_name'], $full_path)) {
+    if (!$storage->put($storagePath, $file['tmp_name'], ['is_upload' => true])) {
+        if ($tmpThumb) @unlink($tmpThumb);
         return $result;
     }
 
     $result['success'] = true;
     $result['filename'] = $filename;
 
-    // 썸네일 생성 (두상 이미지인 경우)
-    if ($type == 'thumb') {
-        $thumb_basename = 'th_' . $basename;
+    // 썸네일 저장
+    if ($tmpThumb) {
         $thumb_filename = $mb_id . '/' . $thumb_basename;
-        $thumb_path = MG_CHAR_IMAGE_PATH . '/' . $thumb_filename;
-
-        if (mg_create_thumbnail($full_path, $thumb_path, MG_THUMB_SIZE)) {
+        $thumbStoragePath = 'character/' . $thumb_filename;
+        if ($storage->put($thumbStoragePath, $tmpThumb)) {
             $result['thumb'] = $thumb_filename;
         }
+        @unlink($tmpThumb);
     }
 
     return $result;
@@ -567,6 +576,45 @@ function mg_config_set($key, $value, $desc = '') {
             VALUES ('{$key}', '{$value}', '{$desc}')
             ON DUPLICATE KEY UPDATE cf_value = '{$value}'";
     sql_query($sql);
+}
+
+// ======================================
+// 스토리지 추상화
+// ======================================
+
+/**
+ * 스토리지 드라이버 인스턴스 반환
+ *
+ * @return MG_StorageInterface
+ */
+function mg_storage() {
+    require_once(MG_PLUGIN_PATH . '/storage/MG_Storage.php');
+    return MG_Storage::getInstance();
+}
+
+/**
+ * data/ 이하 상대경로를 공개 URL로 변환
+ *
+ * 이미 절대 URL이면 그대로 반환.
+ * 상대경로(character/admin/head_xxx.jpg)면 스토리지 드라이버 URL로 변환.
+ *
+ * @param string $path 상대경로 또는 절대 URL
+ * @return string 공개 URL
+ */
+function mg_file_url($path) {
+    if (empty($path)) return '';
+
+    // 이미 절대 URL이면 그대로
+    if (strpos($path, 'http://') === 0 || strpos($path, 'https://') === 0) {
+        return $path;
+    }
+
+    // /data/로 시작하면 data/ 이하 상대경로로 변환
+    if (strpos($path, '/data/') === 0) {
+        $path = substr($path, 6); // '/data/' 제거
+    }
+
+    return mg_storage()->url($path);
 }
 
 // ======================================
@@ -2458,17 +2506,17 @@ function mg_handle_icon_upload($file_key, $subdir, $filename_prefix = 'icon') {
         return null;
     }
 
-    $upload_dir = G5_DATA_PATH . '/' . $subdir;
-    if (!is_dir($upload_dir)) @mkdir($upload_dir, 0755, true);
-
     $ext = strtolower(pathinfo($_FILES[$file_key]['name'], PATHINFO_EXTENSION));
     $allowed = array('jpg', 'jpeg', 'png', 'gif', 'svg', 'webp');
     if (!in_array($ext, $allowed)) return null;
 
-    $filename = $filename_prefix . '_' . time() . '_' . uniqid() . '.' . $ext;
-    $target = $upload_dir . '/' . $filename;
+    $storage = mg_storage();
+    $storage->ensureDir($subdir);
 
-    if (move_uploaded_file($_FILES[$file_key]['tmp_name'], $target)) {
+    $filename = $filename_prefix . '_' . time() . '_' . uniqid() . '.' . $ext;
+    $storagePath = $subdir . '/' . $filename;
+
+    if ($storage->put($storagePath, $_FILES[$file_key]['tmp_name'], ['is_upload' => true])) {
         return '/data/' . $subdir . '/' . $filename;
     }
 
@@ -7189,22 +7237,28 @@ function mg_upload_seal_image($file, $mb_id)
         return array('success' => false, 'message' => '허용되지 않는 파일 형식입니다.');
     }
 
-    $dir = MG_SEAL_IMAGE_PATH . '/' . $mb_id;
-    if (!is_dir($dir)) {
-        @mkdir($dir, 0755, true);
-    }
+    $storage = mg_storage();
+    $storage->ensureDir('seal/' . $mb_id);
 
     $filename = 'seal_' . uniqid() . '.' . $ext;
-    $filepath = $dir . '/' . $filename;
+    $storagePath = 'seal/' . $mb_id . '/' . $filename;
 
-    if (!move_uploaded_file($file['tmp_name'], $filepath)) {
-        return array('success' => false, 'message' => '파일 저장에 실패했습니다.');
-    }
-
-    // 리사이즈 (600x200 초과 시)
-    $img_info = @getimagesize($filepath);
+    // 리사이즈 (600x200 초과 시) — tmp에서 처리 후 업로드
+    $tmpResized = sys_get_temp_dir() . '/' . $filename;
+    $img_info = @getimagesize($file['tmp_name']);
     if ($img_info && ($img_info[0] > 600 || $img_info[1] > 200)) {
-        mg_resize_image($filepath, $filepath, 600, 200);
+        mg_resize_image($file['tmp_name'], $tmpResized, 600, 200);
+        // 리사이즈된 파일을 업로드
+        if (!$storage->put($storagePath, $tmpResized)) {
+            @unlink($tmpResized);
+            return array('success' => false, 'message' => '파일 저장에 실패했습니다.');
+        }
+        @unlink($tmpResized);
+    } else {
+        // 리사이즈 불필요 — 원본 그대로 업로드
+        if (!$storage->put($storagePath, $file['tmp_name'], ['is_upload' => true])) {
+            return array('success' => false, 'message' => '파일 저장에 실패했습니다.');
+        }
     }
 
     return array('success' => true, 'filename' => $mb_id . '/' . $filename);
@@ -7435,22 +7489,17 @@ function mg_upload_lore_image($file, $type = 'article', $id = 0)
         return array('success' => false, 'message' => '파일 크기 초과');
     }
 
-    // 저장 디렉토리
-    $dir = MG_LORE_IMAGE_PATH . '/' . $type;
-    if (!is_dir($dir)) {
-        @mkdir($dir, 0755, true);
-        @chmod($dir, 0755);
-    }
+    $storage = mg_storage();
+    $storage->ensureDir('lore/' . $type);
 
     $filename = $type . '_' . $id . '_' . date('YmdHis') . '_' . mt_rand(100, 999) . '.' . $ext;
-    $filepath = $dir . '/' . $filename;
+    $storagePath = 'lore/' . $type . '/' . $filename;
 
-    if (!move_uploaded_file($file['tmp_name'], $filepath)) {
+    if (!$storage->put($storagePath, $file['tmp_name'], ['is_upload' => true])) {
         return array('success' => false, 'message' => '파일 저장 실패');
     }
 
-    @chmod($filepath, 0644);
-    $url = MG_LORE_IMAGE_URL . '/' . $type . '/' . $filename;
+    $url = $storage->url($storagePath);
 
     return array('success' => true, 'url' => $url, 'filename' => $filename);
 }
@@ -7781,21 +7830,17 @@ function mg_upload_prompt_banner($file, $pm_id = 0)
         return array('success' => false, 'message' => '파일 크기 초과');
     }
 
-    $dir = MG_PROMPT_IMAGE_PATH;
-    if (!is_dir($dir)) {
-        @mkdir($dir, 0755, true);
-        @chmod($dir, 0755);
-    }
+    $storage = mg_storage();
+    $storage->ensureDir('prompt');
 
     $filename = 'banner_' . $pm_id . '_' . date('YmdHis') . '_' . mt_rand(100, 999) . '.' . $ext;
-    $filepath = $dir . '/' . $filename;
+    $storagePath = 'prompt/' . $filename;
 
-    if (!move_uploaded_file($file['tmp_name'], $filepath)) {
+    if (!$storage->put($storagePath, $file['tmp_name'], ['is_upload' => true])) {
         return array('success' => false, 'message' => '파일 저장 실패');
     }
 
-    @chmod($filepath, 0644);
-    $url = MG_PROMPT_IMAGE_URL . '/' . $filename;
+    $url = $storage->url($storagePath);
 
     return array('success' => true, 'url' => $url, 'filename' => $filename);
 }
