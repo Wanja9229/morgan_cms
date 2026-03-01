@@ -28,6 +28,7 @@ _backup/
 
 # Gnuboard data (민감 정보)
 data/dbconfig.php
+data/dbconfig_master.php
 data/session/
 data/cache/
 data/file/

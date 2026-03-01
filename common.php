@@ -151,6 +151,13 @@ $g5_object = new G5_object_cache();
 //==============================================================================
 // 공통
 //------------------------------------------------------------------------------
+// [MT-0] 멀티테넌트 부트스트랩 — dbconfig 로드 전에 테넌트 DB 상수를 선행 정의
+$_mg_tenant_bootstrap = G5_PLUGIN_PATH.'/morgan/tenant/tenant_bootstrap.php';
+if (file_exists($_mg_tenant_bootstrap)) {
+    include_once($_mg_tenant_bootstrap);
+}
+unset($_mg_tenant_bootstrap);
+
 $dbconfig_file = G5_DATA_PATH.'/'.G5_DBCONFIG_FILE;
 if (file_exists($dbconfig_file)) {
     include_once($dbconfig_file);
@@ -256,6 +263,11 @@ function chrome_domain_session_name(){
 }
 
 chrome_domain_session_name();
+
+// [MT-0] 멀티테넌트 세션 이름 강제 적용
+if (defined('MG_MULTITENANT_ENABLED') && MG_MULTITENANT_ENABLED && defined('G5_SESSION_NAME')) {
+    @session_name(G5_SESSION_NAME);
+}
 
 if( ! class_exists('XenoPostToForm') ){
     class XenoPostToForm

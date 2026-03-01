@@ -1,0 +1,37 @@
+<?php
+/**
+ * 마스터 DB 연결 정보 (멀티테넌트 활성화 트리거)
+ *
+ * 이 파일을 data/dbconfig_master.php로 복사하면 멀티테넌트 모드가 활성화됩니다.
+ * 파일이 없으면 기존 단일 테넌트 모드로 동작합니다.
+ */
+
+if (!defined('_GNUBOARD_')) exit;
+
+// 마스터 DB 연결
+define('MG_MASTER_DB_HOST', 'mysql');           // Docker: 'mysql', 프로덕션: '127.0.0.1'
+define('MG_MASTER_DB_USER', 'morgan_user');
+define('MG_MASTER_DB_PASS', 'morgan_pass');
+define('MG_MASTER_DB_NAME', 'mg_master');
+
+// 테넌트 베이스 도메인 (서브도메인을 추출할 기준 도메인)
+define('MG_TENANT_BASE_DOMAIN', 'morgan.site');
+
+// (선택) 기본 테넌트 서브도메인 — bare domain 접속 시 이 테넌트로 라우팅
+// define('MG_DEFAULT_TENANT_SUBDOMAIN', 'main');
+
+/**
+ * [중요] 멀티테넌트 활성화 시 data/dbconfig.php도 수정 필요:
+ *
+ * 기존:
+ *   define('G5_MYSQL_HOST', 'mysql');
+ *
+ * 변경:
+ *   if (!defined('G5_MYSQL_HOST'))     define('G5_MYSQL_HOST', 'mysql');
+ *   if (!defined('G5_MYSQL_USER'))     define('G5_MYSQL_USER', 'morgan_user');
+ *   if (!defined('G5_MYSQL_PASSWORD')) define('G5_MYSQL_PASSWORD', 'morgan_pass');
+ *   if (!defined('G5_MYSQL_DB'))       define('G5_MYSQL_DB', 'morgan_db');
+ *   if (!defined('G5_MYSQL_SET_MODE')) define('G5_MYSQL_SET_MODE', true);
+ *
+ * 이 가드가 없으면 테넌트 부트스트랩이 선행 정의한 상수가 덮어씌워집니다.
+ */
