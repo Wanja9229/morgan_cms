@@ -21,8 +21,16 @@ CREATE TABLE IF NOT EXISTS `mg_character` (
     `class_id` int DEFAULT NULL COMMENT '종족 ID',
     `ch_thumb` varchar(500) DEFAULT NULL COMMENT '두상 이미지',
     `ch_image` varchar(500) DEFAULT NULL COMMENT '전신 이미지',
+    `ch_header` varchar(500) DEFAULT '' COMMENT '헤더/배너 이미지',
+    `ch_profile_skin` varchar(50) DEFAULT '' COMMENT '프로필 스킨',
+    `ch_profile_bg` varchar(50) DEFAULT '' COMMENT '프로필 배경 이펙트',
+    `ch_profile_bg_color` varchar(7) NOT NULL DEFAULT '#f59f0a' COMMENT '프로필 배경색',
+    `ch_profile_bg_image` varchar(255) NOT NULL DEFAULT '' COMMENT '커스텀 배경 이미지',
     `ch_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '등록일',
     `ch_update` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일',
+    `ch_graph_layout` text COMMENT '관계도 레이아웃 (JSON)',
+    `ch_title_prefix_id` int DEFAULT NULL COMMENT '접두칭호 ID',
+    `ch_title_suffix_id` int DEFAULT NULL COMMENT '접미칭호 ID',
     PRIMARY KEY (`ch_id`),
     INDEX `idx_mb_id` (`mb_id`),
     INDEX `idx_state` (`ch_state`),
@@ -84,6 +92,7 @@ CREATE TABLE IF NOT EXISTS `mg_side` (
 CREATE TABLE IF NOT EXISTS `mg_class` (
     `class_id` int NOT NULL AUTO_INCREMENT,
     `class_name` varchar(100) NOT NULL COMMENT '종족명',
+    `side_id` int DEFAULT 0 COMMENT '소속 진영 (0=공용)',
     `class_desc` text COMMENT '설명',
     `class_image` varchar(500) DEFAULT NULL COMMENT '이미지',
     `class_order` int NOT NULL DEFAULT 0 COMMENT '정렬 순서',
@@ -164,6 +173,10 @@ CREATE TABLE IF NOT EXISTS `mg_main_widget` (
     `widget_cols` int NOT NULL DEFAULT 12 COMMENT '컬럼 너비 (1-12)',
     `widget_config` text COMMENT '위젯 설정 (JSON)',
     `widget_use` tinyint(1) NOT NULL DEFAULT 1 COMMENT '사용 여부',
+    `widget_x` int NOT NULL DEFAULT 0 COMMENT '가로 시작 위치 (0~)',
+    `widget_y` int NOT NULL DEFAULT 0 COMMENT '세로 시작 위치 (0~)',
+    `widget_w` int NOT NULL DEFAULT 6 COMMENT '가로 칸 수 (1~12)',
+    `widget_h` int NOT NULL DEFAULT 2 COMMENT '세로 칸 수 (1~)',
     PRIMARY KEY (`widget_id`),
     INDEX `idx_row_id` (`row_id`),
     CONSTRAINT `fk_widget_row` FOREIGN KEY (`row_id`) REFERENCES `mg_main_row`(`row_id`) ON DELETE CASCADE
@@ -172,11 +185,8 @@ CREATE TABLE IF NOT EXISTS `mg_main_widget` (
 -- 2.7 메인 페이지 시드 데이터
 INSERT INTO `mg_main_row` (`row_order`, `row_use`) VALUES (1, 1);
 
-INSERT INTO `mg_main_widget` (`row_id`, `widget_type`, `widget_order`, `widget_cols`, `widget_config`, `widget_use`) VALUES
-(1, 'image', 1, 8, '{"image_url":"","alt_text":"메인 이미지","max_width":"100%","border_radius":"none","align":"center"}', 1),
-(1, 'image', 0, 4, '{"image_url":"","alt_text":"","max_width":"100%","border_radius":"none","align":"center"}', 1),
-(1, 'text', 2, 3, '{"content":"환영합니다.","font_size":"base","font_weight":"normal","text_align":"left","padding":"normal","text_color":"#f2f3f5","bg_color":"#2b2d31"}', 1),
-(1, 'slider', 3, 12, '{}', 1);
+INSERT INTO `mg_main_widget` (`row_id`, `widget_type`, `widget_order`, `widget_cols`, `widget_x`, `widget_y`, `widget_w`, `widget_h`, `widget_config`, `widget_use`) VALUES
+(1, 'text', 0, 12, 0, 0, 12, 2, '{"content":"환영합니다.","font_size":"base","font_weight":"normal","text_align":"center","padding":"normal","text_color":"#f2f3f5","bg_color":"#2b2d31"}', 1);
 
 -- ======================================
 -- 3. 상점 관련 테이블
@@ -201,7 +211,7 @@ CREATE TABLE IF NOT EXISTS `mg_shop_item` (
     `si_desc` text COMMENT '설명',
     `si_image` varchar(500) DEFAULT NULL COMMENT '이미지',
     `si_price` int NOT NULL COMMENT '가격',
-    `si_type` enum('title','badge','nick_color','nick_effect','profile_border','equip','emoticon_set','emoticon_reg','furniture','material','seal_bg','seal_frame','profile_skin','profile_bg','char_slot','etc') NOT NULL DEFAULT 'etc' COMMENT '타입',
+    `si_type` enum('title','badge','nick_color','nick_effect','profile_border','equip','emoticon_set','emoticon_reg','furniture','material','seal_bg','seal_frame','seal_hover','seal_effect','profile_skin','profile_bg','profile_effect','char_slot','concierge_extra','title_prefix','title_suffix','etc') NOT NULL DEFAULT 'etc' COMMENT '타입',
     `si_effect` text COMMENT '효과 데이터 (JSON)',
     `si_stock` int NOT NULL DEFAULT -1 COMMENT '재고 (-1=무제한)',
     `si_stock_sold` int NOT NULL DEFAULT 0 COMMENT '판매 수량',
@@ -1529,12 +1539,7 @@ INSERT INTO `g5_board` SET
     `bo_6` = '', `bo_7` = '', `bo_8` = '', `bo_9` = '', `bo_10` = ''
 ON DUPLICATE KEY UPDATE `bo_subject` = VALUES(`bo_subject`);
 
--- ======================================
--- 8. 상점 아이템 타입 확장 (이모티콘 등록권)
--- ======================================
-ALTER TABLE `mg_shop_item` MODIFY `si_type`
-    enum('title','badge','nick_color','nick_effect','profile_border','equip','emoticon_set','emoticon_reg','furniture','material','etc')
-    NOT NULL DEFAULT 'etc' COMMENT '타입';
+-- 8. (상점 아이템 타입은 CREATE TABLE에서 전체 ENUM 정의됨)
 
 -- ======================================
 -- 9. 개척 시스템 (Pioneer System)
@@ -1870,10 +1875,7 @@ CREATE TABLE IF NOT EXISTS `mg_seal` (
     UNIQUE KEY `idx_mb_id` (`mb_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='인장 (시그니처 카드)';
 
--- 상점 아이템 타입 확장 (인장 배경/프레임)
-ALTER TABLE `mg_shop_item` MODIFY `si_type`
-    enum('title','badge','nick_color','nick_effect','profile_border','equip','emoticon_set','emoticon_reg','furniture','material','seal_bg','seal_frame','etc')
-    NOT NULL DEFAULT 'etc' COMMENT '타입';
+-- (상점 아이템 타입은 CREATE TABLE에서 전체 ENUM 정의됨)
 
 -- ======================================
 -- 13. 세계관 위키 (Lore Wiki)
@@ -1925,6 +1927,7 @@ CREATE TABLE IF NOT EXISTS `mg_lore_era` (
     `le_id` int NOT NULL AUTO_INCREMENT,
     `le_name` varchar(200) NOT NULL COMMENT '시대명',
     `le_period` varchar(100) DEFAULT NULL COMMENT '기간 표기',
+    `le_desc` text DEFAULT NULL COMMENT '시대 설명',
     `le_order` int NOT NULL DEFAULT 0 COMMENT '정렬 순서',
     `le_use` tinyint NOT NULL DEFAULT 1 COMMENT '사용 여부',
     PRIMARY KEY (`le_id`)
@@ -1934,6 +1937,7 @@ CREATE TABLE IF NOT EXISTS `mg_lore_era` (
 CREATE TABLE IF NOT EXISTS `mg_lore_event` (
     `lv_id` int NOT NULL AUTO_INCREMENT,
     `le_id` int NOT NULL COMMENT '시대 ID',
+    `la_id` int DEFAULT 0 COMMENT '연결 문서 ID',
     `lv_year` varchar(50) DEFAULT NULL COMMENT '연도 표기',
     `lv_title` varchar(200) NOT NULL COMMENT '이벤트 제목',
     `lv_content` text DEFAULT NULL COMMENT '이벤트 설명',
@@ -2097,7 +2101,7 @@ CREATE TABLE IF NOT EXISTS `mg_relation` (
     `ch_id_a` int NOT NULL COMMENT '캐릭터A (항상 작은쪽 ID)',
     `ch_id_b` int NOT NULL COMMENT '캐릭터B (항상 큰쪽 ID)',
     `ch_id_from` int NOT NULL COMMENT '신청자 캐릭터 ID',
-    `ri_id` int NOT NULL COMMENT '아이콘 ID',
+    `ri_id` int DEFAULT 0 COMMENT '아이콘 ID',
     `cr_label_a` varchar(50) NOT NULL COMMENT 'A쪽 관계명',
     `cr_label_b` varchar(50) DEFAULT NULL COMMENT 'B쪽 관계명 (NULL이면 A와 동일)',
     `cr_icon_a` varchar(20) DEFAULT NULL COMMENT 'A쪽 개별 아이콘',
@@ -2129,6 +2133,8 @@ CREATE TABLE IF NOT EXISTS `mg_expedition_area` (
     `ea_status` enum('active','hidden','locked') NOT NULL DEFAULT 'active' COMMENT '상태',
     `ea_unlock_facility` int(11) DEFAULT NULL COMMENT '해금 조건 시설 ID',
     `ea_partner_point` int(11) NOT NULL DEFAULT 10 COMMENT '파트너 보상 포인트',
+    `ea_map_x` float DEFAULT NULL COMMENT '맵 X좌표 퍼센트',
+    `ea_map_y` float DEFAULT NULL COMMENT '맵 Y좌표 퍼센트',
     `ea_order` int(11) NOT NULL DEFAULT 0 COMMENT '정렬 순서',
     PRIMARY KEY (`ea_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='파견지 정의';
@@ -2216,5 +2222,183 @@ CREATE TABLE IF NOT EXISTS `mg_concierge_result` (
     INDEX `idx_result_cc` (`cc_id`),
     INDEX `idx_result_post` (`bo_table`, `wr_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='의뢰 완료 연결';
+
+-- ======================================
+-- 18. 마이그레이션 이력
+-- ======================================
+
+CREATE TABLE IF NOT EXISTS `mg_migrations` (
+    `mig_id` int NOT NULL AUTO_INCREMENT,
+    `mig_file` varchar(200) NOT NULL,
+    `mig_applied_at` datetime DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`mig_id`),
+    UNIQUE KEY `idx_mig_file` (`mig_file`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='마이그레이션 이력';
+
+-- ======================================
+-- 19. 스태프 권한 시스템
+-- ======================================
+
+CREATE TABLE IF NOT EXISTS `mg_staff_role` (
+    `sr_id` int NOT NULL AUTO_INCREMENT,
+    `sr_name` varchar(100) NOT NULL,
+    `sr_description` text,
+    `sr_permissions` text NOT NULL COMMENT 'JSON: {"mg_lore":"r,w,d",...}',
+    `sr_color` varchar(7) DEFAULT '#f59f0a' COMMENT '뱃지 색상',
+    `sr_sort` int DEFAULT 0,
+    `sr_created` datetime DEFAULT CURRENT_TIMESTAMP,
+    `sr_updated` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`sr_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='스태프 역할';
+
+CREATE TABLE IF NOT EXISTS `mg_staff_member` (
+    `sm_id` int NOT NULL AUTO_INCREMENT,
+    `mb_id` varchar(20) NOT NULL,
+    `sr_id` int NOT NULL,
+    `sm_created` datetime DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`sm_id`),
+    UNIQUE KEY `uk_mb_role` (`mb_id`, `sr_id`),
+    INDEX `idx_mb` (`mb_id`),
+    INDEX `idx_role` (`sr_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='스태프 멤버';
+
+-- ======================================
+-- 20. 미니게임 시스템
+-- ======================================
+
+-- 20.1 운세뽑기
+CREATE TABLE IF NOT EXISTS `mg_game_fortune` (
+    `gf_id` int NOT NULL AUTO_INCREMENT,
+    `gf_star` tinyint NOT NULL DEFAULT 1 COMMENT '별 개수 1~5',
+    `gf_text` varchar(255) NOT NULL COMMENT '운세 텍스트',
+    `gf_point` int NOT NULL DEFAULT 10 COMMENT '획득 포인트',
+    `gf_use` tinyint(1) NOT NULL DEFAULT 1 COMMENT '사용 여부',
+    `gf_sort` int NOT NULL DEFAULT 0,
+    PRIMARY KEY (`gf_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='운세뽑기';
+
+INSERT IGNORE INTO `mg_game_fortune` (`gf_star`, `gf_text`, `gf_point`, `gf_use`, `gf_sort`) VALUES
+(1, '오늘은 조용히 쉬는 게 좋겠어요', 10, 1, 1),
+(2, '작은 행운이 찾아올 수 있어요', 25, 1, 2),
+(3, '좋은 소식이 들려올 조짐이에요', 50, 1, 3),
+(4, '하는 일마다 술술 풀리겠어요', 100, 1, 4),
+(5, '모든 일이 완벽하게 맞아떨어져요', 200, 1, 5);
+
+-- 20.2 종이뽑기
+CREATE TABLE IF NOT EXISTS `mg_game_lottery_prize` (
+    `glp_id` int NOT NULL AUTO_INCREMENT,
+    `glp_rank` tinyint NOT NULL DEFAULT 1 COMMENT '등수 1~5',
+    `glp_name` varchar(50) NOT NULL DEFAULT '' COMMENT '상 이름',
+    `glp_count` int NOT NULL DEFAULT 1 COMMENT '한 판당 개수',
+    `glp_point` int NOT NULL DEFAULT 10 COMMENT '포인트 보상',
+    `glp_item_id` int DEFAULT NULL COMMENT '상점 아이템 ID',
+    `glp_use` tinyint(1) NOT NULL DEFAULT 1 COMMENT '사용 여부',
+    PRIMARY KEY (`glp_id`),
+    INDEX `idx_rank` (`glp_rank`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='종이뽑기 등수';
+
+CREATE TABLE IF NOT EXISTS `mg_game_lottery_board` (
+    `glb_id` int NOT NULL AUTO_INCREMENT,
+    `glb_size` int NOT NULL DEFAULT 100 COMMENT '판 크기',
+    `glb_bonus_point` int NOT NULL DEFAULT 500 COMMENT '판 완성 보너스',
+    `glb_bonus_item_id` int DEFAULT NULL COMMENT '완성 보너스 아이템',
+    `glb_use` tinyint(1) NOT NULL DEFAULT 1 COMMENT '사용 여부',
+    PRIMARY KEY (`glb_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='종이뽑기 판';
+
+CREATE TABLE IF NOT EXISTS `mg_game_lottery_user` (
+    `glu_id` int NOT NULL AUTO_INCREMENT,
+    `mb_id` varchar(20) NOT NULL COMMENT '회원 ID',
+    `glb_id` int NOT NULL DEFAULT 1 COMMENT '현재 판 ID',
+    `glu_picked` text COMMENT '뽑은 번호 JSON',
+    `glu_count` int NOT NULL DEFAULT 0 COMMENT '뽑은 개수',
+    `glu_completed_count` int NOT NULL DEFAULT 0 COMMENT '완료한 판 수',
+    PRIMARY KEY (`glu_id`),
+    UNIQUE KEY `idx_mb_id` (`mb_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='종이뽑기 사용자';
+
+INSERT IGNORE INTO `mg_game_lottery_board` (`glb_id`, `glb_size`, `glb_bonus_point`, `glb_use`) VALUES (1, 100, 500, 1);
+
+INSERT IGNORE INTO `mg_game_lottery_prize` (`glp_rank`, `glp_name`, `glp_count`, `glp_point`, `glp_use`) VALUES
+(1, '1등', 1, 500, 1),
+(2, '2등', 3, 200, 1),
+(3, '3등', 6, 100, 1),
+(4, '4등', 15, 50, 1),
+(5, '5등', 75, 10, 1);
+
+-- ======================================
+-- 21. 세계관 맵 지역
+-- ======================================
+
+CREATE TABLE IF NOT EXISTS `mg_map_region` (
+    `mr_id` int NOT NULL AUTO_INCREMENT,
+    `mr_name` varchar(100) NOT NULL COMMENT '지역명',
+    `mr_desc` text COMMENT '지역 설명',
+    `mr_image` varchar(500) DEFAULT NULL COMMENT '지역 이미지 URL',
+    `mr_map_x` float DEFAULT NULL COMMENT '맵 X좌표 (%)',
+    `mr_map_y` float DEFAULT NULL COMMENT '맵 Y좌표 (%)',
+    `mr_marker_style` varchar(20) DEFAULT 'pin' COMMENT '마커 스타일 (pin/circle/diamond/flag)',
+    `mr_order` int DEFAULT 0 COMMENT '정렬 순서',
+    `mr_use` tinyint(1) DEFAULT 1 COMMENT '사용 여부',
+    `mr_created` datetime DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`mr_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='세계관 맵 지역';
+
+-- ======================================
+-- 22. 칭호 뽑기 시스템
+-- ======================================
+
+CREATE TABLE IF NOT EXISTS `mg_title_pool` (
+    `tp_id` int NOT NULL AUTO_INCREMENT,
+    `tp_type` enum('prefix','suffix') NOT NULL COMMENT '접두/접미',
+    `tp_name` varchar(50) NOT NULL COMMENT '칭호 이름',
+    `tp_use` tinyint(1) NOT NULL DEFAULT 1 COMMENT '사용 여부',
+    `tp_order` int NOT NULL DEFAULT 0 COMMENT '정렬',
+    PRIMARY KEY (`tp_id`),
+    INDEX `idx_type_use` (`tp_type`, `tp_use`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='칭호 풀';
+
+CREATE TABLE IF NOT EXISTS `mg_member_title` (
+    `mt_id` int NOT NULL AUTO_INCREMENT,
+    `mb_id` varchar(20) NOT NULL COMMENT '회원 ID',
+    `tp_id` int NOT NULL COMMENT '칭호 풀 ID',
+    `mt_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '획득일',
+    PRIMARY KEY (`mt_id`),
+    UNIQUE KEY `uk_mb_tp` (`mb_id`, `tp_id`),
+    INDEX `idx_mb_id` (`mb_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='유저 보유 칭호';
+
+CREATE TABLE IF NOT EXISTS `mg_title_setting` (
+    `mb_id` varchar(20) NOT NULL COMMENT '회원 ID',
+    `prefix_tp_id` int DEFAULT NULL COMMENT '접두칭호 ID',
+    `suffix_tp_id` int DEFAULT NULL COMMENT '접미칭호 ID',
+    PRIMARY KEY (`mb_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='프로필 칭호 설정';
+
+-- ======================================
+-- 23. 파견 이벤트 시스템
+-- ======================================
+
+CREATE TABLE IF NOT EXISTS `mg_expedition_event` (
+    `ee_id` int NOT NULL AUTO_INCREMENT,
+    `ee_name` varchar(100) NOT NULL DEFAULT '',
+    `ee_desc` text,
+    `ee_icon` varchar(255) NOT NULL DEFAULT '',
+    `ee_effect_type` enum('point_bonus','point_penalty','material_bonus','material_penalty','reward_loss') NOT NULL DEFAULT 'point_bonus',
+    `ee_effect` JSON,
+    `ee_order` int NOT NULL DEFAULT 0,
+    `ee_created` datetime DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`ee_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='파견 이벤트';
+
+CREATE TABLE IF NOT EXISTS `mg_expedition_event_area` (
+    `eea_id` int NOT NULL AUTO_INCREMENT,
+    `ea_id` int NOT NULL DEFAULT 0,
+    `ee_id` int NOT NULL DEFAULT 0,
+    `eea_chance` int NOT NULL DEFAULT 10,
+    PRIMARY KEY (`eea_id`),
+    INDEX `idx_ea_id` (`ea_id`),
+    INDEX `idx_ee_id` (`ee_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='파견 이벤트-지역 매핑';
 
 SET FOREIGN_KEY_CHECKS = 1;

@@ -1939,6 +1939,15 @@ function mg_get_profile_bg_style($mb_id) {
 }
 
 /**
+ * 회원이 프로필 배경 커스텀 이미지 업로드 권한을 보유하는지 확인
+ * (profile_bg 아이템을 보유하고 있으면 true)
+ */
+function mg_has_bg_custom_perm($mb_id) {
+    $items = mg_get_active_items($mb_id, 'profile_bg');
+    return !empty($items);
+}
+
+/**
  * 선물 공통 검증 (자기 자신 체크 + 받는 사람 존재 확인)
  *
  * @param string $mb_id_from 보내는 사람

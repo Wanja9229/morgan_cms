@@ -113,8 +113,14 @@ $GLOBALS['mg_tenant'] = $_mg_tenant;
 $_mg_session_suffix = strtoupper(preg_replace('/[^a-z0-9]/i', '', $_mg_tenant['subdomain']));
 define('G5_SESSION_NAME', 'MG_' . $_mg_session_suffix);
 
-// 쿠키 도메인 격리
-define('G5_COOKIE_DOMAIN', '.' . $_mg_tenant['subdomain'] . '.' . MG_TENANT_BASE_DOMAIN);
+// 쿠키 도메인 격리 (localhost/IP 환경에서는 빈 값 → 브라우저 기본 동작)
+$_mg_host = isset($_SERVER['HTTP_HOST']) ? preg_replace('/:[0-9]+$/', '', $_SERVER['HTTP_HOST']) : '';
+if ($_mg_host === 'localhost' || preg_match('/^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/', $_mg_host)) {
+    define('G5_COOKIE_DOMAIN', '');
+} else {
+    define('G5_COOKIE_DOMAIN', '.' . $_mg_tenant['subdomain'] . '.' . MG_TENANT_BASE_DOMAIN);
+}
+unset($_mg_host);
 
 // 정리
 unset($_mg_subdomain, $_mg_tenant, $_mg_db_host, $_mg_session_suffix);
