@@ -105,9 +105,19 @@ $g5['mg_title_setting_table'] = 'mg_title_setting';
 // 마이그레이션
 $g5['mg_migrations_table'] = 'mg_migrations';
 
+// [MT-1] 멀티테넌트 파일 경로 분기
+if (defined('MG_MULTITENANT_ENABLED') && MG_MULTITENANT_ENABLED
+    && defined('MG_TENANT_ID') && MG_TENANT_ID > 0) {
+    $_mg_data_base_path = G5_DATA_PATH . '/tenants/' . MG_TENANT_ID;
+    $_mg_data_base_url  = G5_DATA_URL  . '/tenants/' . MG_TENANT_ID;
+} else {
+    $_mg_data_base_path = G5_DATA_PATH;
+    $_mg_data_base_url  = G5_DATA_URL;
+}
+
 // 캐릭터 이미지 저장 경로
-define('MG_CHAR_IMAGE_PATH', G5_DATA_PATH.'/character');
-define('MG_CHAR_IMAGE_URL', G5_DATA_URL.'/character');
+define('MG_CHAR_IMAGE_PATH', $_mg_data_base_path.'/character');
+define('MG_CHAR_IMAGE_URL', $_mg_data_base_url.'/character');
 
 // UTF-8mb4 설정 (이모지 지원)
 sql_query("SET NAMES utf8mb4");
@@ -201,24 +211,51 @@ $mg['concierge_result_table'] = $g5['mg_concierge_result_table'];
 $mg['migrations_table'] = $g5['mg_migrations_table'];
 
 // 상점 이미지 저장 경로
-define('MG_SHOP_IMAGE_PATH', G5_DATA_PATH.'/shop');
-define('MG_SHOP_IMAGE_URL', G5_DATA_URL.'/shop');
+define('MG_SHOP_IMAGE_PATH', $_mg_data_base_path.'/shop');
+define('MG_SHOP_IMAGE_URL', $_mg_data_base_url.'/shop');
 
 // 이모티콘 이미지 저장 경로
-define('MG_EMOTICON_PATH', G5_DATA_PATH.'/emoticon');
-define('MG_EMOTICON_URL', G5_DATA_URL.'/emoticon');
+define('MG_EMOTICON_PATH', $_mg_data_base_path.'/emoticon');
+define('MG_EMOTICON_URL', $_mg_data_base_url.'/emoticon');
 
 // 인장 이미지 저장 경로
-define('MG_SEAL_IMAGE_PATH', G5_DATA_PATH.'/seal');
-define('MG_SEAL_IMAGE_URL', G5_DATA_URL.'/seal');
+define('MG_SEAL_IMAGE_PATH', $_mg_data_base_path.'/seal');
+define('MG_SEAL_IMAGE_URL', $_mg_data_base_url.'/seal');
 
 // 위키 이미지 저장 경로
-define('MG_LORE_IMAGE_PATH', G5_DATA_PATH.'/lore');
-define('MG_LORE_IMAGE_URL', G5_DATA_URL.'/lore');
+define('MG_LORE_IMAGE_PATH', $_mg_data_base_path.'/lore');
+define('MG_LORE_IMAGE_URL', $_mg_data_base_url.'/lore');
 
 // 미션 배너 이미지 저장 경로
-define('MG_PROMPT_IMAGE_PATH', G5_DATA_PATH.'/prompt');
-define('MG_PROMPT_IMAGE_URL', G5_DATA_URL.'/prompt');
+define('MG_PROMPT_IMAGE_PATH', $_mg_data_base_path.'/prompt');
+define('MG_PROMPT_IMAGE_URL', $_mg_data_base_url.'/prompt');
+
+// 기타 데이터 경로 (기존 하드코딩 → 상수화)
+define('MG_MORGAN_DATA_PATH', $_mg_data_base_path.'/morgan');
+define('MG_MORGAN_DATA_URL',  $_mg_data_base_url.'/morgan');
+define('MG_RP_DATA_PATH',     $_mg_data_base_path.'/rp');
+define('MG_RP_DATA_URL',      $_mg_data_base_url.'/rp');
+define('MG_EXPEDITION_DATA_PATH', $_mg_data_base_path.'/expedition');
+define('MG_EXPEDITION_DATA_URL',  $_mg_data_base_url.'/expedition');
+define('MG_WIDGET_DATA_PATH', $_mg_data_base_path.'/widget');
+define('MG_WIDGET_DATA_URL',  $_mg_data_base_url.'/widget');
+
+unset($_mg_data_base_path, $_mg_data_base_url);
+
+// [MT-1] 멀티테넌트: 테넌트 데이터 디렉토리 자동 생성
+if (defined('MG_MULTITENANT_ENABLED') && MG_MULTITENANT_ENABLED
+    && defined('MG_TENANT_ID') && MG_TENANT_ID > 0) {
+    $_mg_dirs = array(
+        MG_CHAR_IMAGE_PATH, MG_SHOP_IMAGE_PATH, MG_EMOTICON_PATH,
+        MG_SEAL_IMAGE_PATH, MG_LORE_IMAGE_PATH, MG_PROMPT_IMAGE_PATH,
+        MG_MORGAN_DATA_PATH, MG_RP_DATA_PATH, MG_EXPEDITION_DATA_PATH,
+        MG_WIDGET_DATA_PATH,
+    );
+    foreach ($_mg_dirs as $_d) {
+        if (!is_dir($_d)) @mkdir($_d, 0755, true);
+    }
+    unset($_mg_dirs, $_d);
+}
 
 // DB 마이그레이션 자동 실행 (세션당 1회)
 if (!defined('MG_MIGRATION_CHECKED')) {

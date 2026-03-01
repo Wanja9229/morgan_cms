@@ -17,8 +17,19 @@ class MG_LocalStorage implements MG_StorageInterface
 
     public function __construct()
     {
-        $this->basePath = G5_DATA_PATH;
-        $this->baseUrl  = G5_DATA_URL;
+        // [MT-1] 멀티테넌트: 테넌트별 데이터 경로 분기
+        if (defined('MG_MULTITENANT_ENABLED') && MG_MULTITENANT_ENABLED
+            && defined('MG_TENANT_ID') && MG_TENANT_ID > 0) {
+            $this->basePath = G5_DATA_PATH . '/tenants/' . MG_TENANT_ID;
+            $this->baseUrl  = G5_DATA_URL  . '/tenants/' . MG_TENANT_ID;
+        } else {
+            $this->basePath = G5_DATA_PATH;
+            $this->baseUrl  = G5_DATA_URL;
+        }
+
+        if (!is_dir($this->basePath)) {
+            @mkdir($this->basePath, 0755, true);
+        }
     }
 
     /**

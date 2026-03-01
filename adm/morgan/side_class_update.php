@@ -41,8 +41,8 @@ if ($type === 'side') {
     $icon_field = 'side_image';
     $order_field = 'side_order';
     $use_field = 'side_use';
-    $upload_dir = G5_DATA_PATH . '/morgan/side_icons';
-    $upload_url = G5_DATA_URL . '/morgan/side_icons';
+    $upload_dir = MG_MORGAN_DATA_PATH . '/side_icons';
+    $upload_url = MG_MORGAN_DATA_URL . '/side_icons';
 } elseif ($type === 'class') {
     $table = $g5['mg_class_table'];
     $id_field = 'class_id';
@@ -50,8 +50,8 @@ if ($type === 'side') {
     $icon_field = 'class_image';
     $order_field = 'class_order';
     $use_field = 'class_use';
-    $upload_dir = G5_DATA_PATH . '/morgan/class_icons';
-    $upload_url = G5_DATA_URL . '/morgan/class_icons';
+    $upload_dir = MG_MORGAN_DATA_PATH . '/class_icons';
+    $upload_url = MG_MORGAN_DATA_URL . '/class_icons';
 } else {
     alert('잘못된 접근입니다.', $redirect_url);
 }

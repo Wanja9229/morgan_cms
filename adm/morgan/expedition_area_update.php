@@ -24,7 +24,7 @@ if ($action === 'set_ui_mode') {
 
 // 파견 지도 이미지 업로드
 if ($action === 'upload_map_image') {
-    $upload_dir = G5_DATA_PATH.'/expedition';
+    $upload_dir = MG_EXPEDITION_DATA_PATH;
     if (!is_dir($upload_dir)) {
         @mkdir($upload_dir, 0755, true);
         @chmod($upload_dir, 0755);
@@ -205,7 +205,7 @@ if ($w === 'u' && $ea_id > 0) {
 }
 
 // --- 파견지 이미지 처리 ---
-$upload_dir = G5_DATA_PATH.'/expedition';
+$upload_dir = MG_EXPEDITION_DATA_PATH;
 if (!is_dir($upload_dir)) {
     @mkdir($upload_dir, 0755, true);
     @chmod($upload_dir, 0755);

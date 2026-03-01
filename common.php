@@ -158,6 +158,9 @@ if (file_exists($_mg_tenant_bootstrap)) {
 }
 unset($_mg_tenant_bootstrap);
 
+// G5_COOKIE_DOMAIN — 부트스트랩이 정의하지 않았으면 빈 값(단일 테넌트 기본)
+if (!defined('G5_COOKIE_DOMAIN')) define('G5_COOKIE_DOMAIN', '');
+
 $dbconfig_file = G5_DATA_PATH.'/'.G5_DBCONFIG_FILE;
 if (file_exists($dbconfig_file)) {
     include_once($dbconfig_file);

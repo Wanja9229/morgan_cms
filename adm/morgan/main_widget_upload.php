@@ -12,8 +12,8 @@ if ($is_admin != 'super') {
 }
 
 // 업로드 디렉토리
-$upload_dir = G5_DATA_PATH.'/widget';
-$upload_url = G5_DATA_URL.'/widget';
+$upload_dir = MG_WIDGET_DATA_PATH;
+$upload_url = MG_WIDGET_DATA_URL;
 
 // 디렉토리 생성
 if (!is_dir($upload_dir)) {

@@ -108,8 +108,8 @@ if (!preg_match('/^[a-z_]+$/', $mt_code)) {
 }
 
 // 아이콘 이미지 업로드 처리
-$icon_upload_path = G5_DATA_PATH.'/morgan/material';
-$icon_upload_url = G5_DATA_URL.'/morgan/material';
+$icon_upload_path = MG_MORGAN_DATA_PATH.'/material';
+$icon_upload_url = MG_MORGAN_DATA_URL.'/material';
 
 // 업로드 디렉토리 생성
 if (!is_dir($icon_upload_path)) {

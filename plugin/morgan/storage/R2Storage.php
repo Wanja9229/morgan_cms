@@ -17,6 +17,7 @@ class MG_R2Storage implements MG_StorageInterface
     private $bucket;
     private $publicUrl;
     private $signer;
+    private $keyPrefix;
 
     public function __construct()
     {
@@ -35,6 +36,14 @@ class MG_R2Storage implements MG_StorageInterface
         }
 
         $this->signer = new MG_S3Signature($accessKey, $secretKey, 'auto', 's3');
+
+        // [MT-1] 멀티테넌트: R2 키에 테넌트 프리픽스 추가
+        if (defined('MG_MULTITENANT_ENABLED') && MG_MULTITENANT_ENABLED
+            && defined('MG_TENANT_ID') && MG_TENANT_ID > 0) {
+            $this->keyPrefix = MG_TENANT_ID . '/';
+        } else {
+            $this->keyPrefix = '';
+        }
     }
 
     /**
@@ -110,7 +119,7 @@ class MG_R2Storage implements MG_StorageInterface
     public function url($path)
     {
         if ($this->publicUrl) {
-            return $this->publicUrl . '/' . $path;
+            return $this->publicUrl . '/' . $this->keyPrefix . $path;
         }
         // public URL 미설정 시 R2 endpoint URL (비공개)
         return $this->objectUrl($path);
@@ -160,7 +169,7 @@ class MG_R2Storage implements MG_StorageInterface
      */
     private function objectUrl($path)
     {
-        return $this->endpoint . '/' . $this->bucket . '/' . $path;
+        return $this->endpoint . '/' . $this->bucket . '/' . $this->keyPrefix . $path;
     }
 
     /**

@@ -68,11 +68,11 @@ if (isset($_FILES['rr_image']) && $_FILES['rr_image']['error'] == 0) {
     $allowed = array('jpg', 'jpeg', 'png', 'gif', 'webp');
     $ext = strtolower(pathinfo($_FILES['rr_image']['name'], PATHINFO_EXTENSION));
     if (in_array($ext, $allowed)) {
-        $upload_dir = G5_DATA_PATH . '/rp/';
+        $upload_dir = MG_RP_DATA_PATH . '/';
         if (!is_dir($upload_dir)) @mkdir($upload_dir, 0755, true);
         $filename = 'rp_' . time() . '_' . uniqid() . '.' . $ext;
         if (move_uploaded_file($_FILES['rr_image']['tmp_name'], $upload_dir . $filename)) {
-            $rr_image = G5_DATA_URL . '/rp/' . $filename;
+            $rr_image = MG_RP_DATA_URL . '/' . $filename;
         }
     }
 }

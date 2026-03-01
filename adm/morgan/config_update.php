@@ -195,8 +195,8 @@ if ($g5_updates) {
 }
 
 // 업로드 디렉토리
-$upload_dir = G5_DATA_PATH.'/morgan';
-$upload_url = G5_DATA_URL.'/morgan';
+$upload_dir = MG_MORGAN_DATA_PATH;
+$upload_url = MG_MORGAN_DATA_URL;
 
 if (!is_dir($upload_dir)) {
     @mkdir($upload_dir, 0755, true);

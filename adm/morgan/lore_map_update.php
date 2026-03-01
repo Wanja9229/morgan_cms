@@ -21,8 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $mode = isset($_POST['mode']) ? $_POST['mode'] : 'settings';
 
 // 업로드 디렉토리
-$upload_dir = G5_DATA_PATH.'/morgan';
-$upload_url = G5_DATA_URL.'/morgan';
+$upload_dir = MG_MORGAN_DATA_PATH;
+$upload_url = MG_MORGAN_DATA_URL;
 if (!is_dir($upload_dir)) {
     @mkdir($upload_dir, 0755, true);
     @chmod($upload_dir, 0755);
@@ -233,8 +233,8 @@ goto_url('./lore_map.php');
 // 내부 헬퍼
 // ==========================================
 function _upload_region_image($file, $mr_id) {
-    $upload_dir = G5_DATA_PATH.'/morgan';
-    $upload_url = G5_DATA_URL.'/morgan';
+    $upload_dir = MG_MORGAN_DATA_PATH;
+    $upload_url = MG_MORGAN_DATA_URL;
 
     $allowed_ext = array('jpg', 'jpeg', 'png', 'gif', 'webp');
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
