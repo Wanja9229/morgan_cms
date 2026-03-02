@@ -54,16 +54,15 @@ if ($_mg_subdomain === null) {
 }
 
 if ($_mg_subdomain === 'admin') {
-    // 슈퍼 관리자 패널 (MT-3에서 UI 구현)
-    define('MG_TENANT_ID', 0);
-    define('MG_TENANT_SUBDOMAIN', 'admin');
-    define('MG_IS_SUPER_ADMIN_PANEL', true);
-    define('G5_MYSQL_HOST', MG_MASTER_DB_HOST);
-    define('G5_MYSQL_USER', MG_MASTER_DB_USER);
-    define('G5_MYSQL_PASSWORD', MG_MASTER_DB_PASS);
-    define('G5_MYSQL_DB', MG_MASTER_DB_NAME);
-    define('G5_MYSQL_SET_MODE', true);
-    return;
+    // 슈퍼 관리자 패널
+    // 마스터 DB에는 gnuboard 테이블이 없으므로 common.php 로드를 차단한다.
+    // 슈퍼 관리자 페이지(adm/super/)는 자체 _common.php를 사용.
+    $_mg_uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
+    if (strpos($_mg_uri, '/adm/super/') === false) {
+        header('Location: /adm/super/');
+    }
+    // admin 서브도메인은 항상 여기서 중단 (common.php 로드 방지)
+    exit;
 }
 
 // ======================================================

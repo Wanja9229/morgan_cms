@@ -403,17 +403,18 @@ interface MG_StorageInterface {
 
 ### MT-3.1 슈퍼 관리자 인증
 
-- [ ] 슈퍼 관리자 로그인 페이지 (`adm/super/login.php`)
-- [ ] 마스터 DB `super_admins` 테이블 기반 인증
-- [ ] 일반 관리자 (`/adm/`)와 완전 분리된 세션
-- [ ] 슈퍼 관리자 접근은 특정 URL (`/adm/super/`) 또는 특정 서브도메인 (`admin.{도메인}`)
+- [x] 슈퍼 관리자 로그인 페이지 (`adm/super/login.php`)
+- [x] 마스터 DB `super_admins` 테이블 기반 인증
+- [x] 일반 관리자 (`/adm/`)와 완전 분리된 세션
+- [x] 슈퍼 관리자 접근은 특정 URL (`/adm/super/`) 또는 특정 서브도메인 (`admin.{도메인}`)
+- [x] 초기 슈퍼 관리자 계정 생성 스크립트 (`adm/super/bootstrap.php`)
 
 ### MT-3.2 테넌트 목록 & CRUD
 
-- [ ] 테넌트 목록 페이지 (상태, 생성일, DB명, 회원 수, 저장 용량)
-- [ ] 테넌트 생성 폼 (서브도메인, 관리자 이메일, 플랜 선택)
-- [ ] 테넌트 정지/활성화/삭제
-- [ ] 테넌트 설정 편집 (플랜, 리소스 제한, 커스텀 도메인)
+- [x] 테넌트 목록 페이지 (상태, 생성일, DB명, 필터, 페이지네이션)
+- [x] 테넌트 생성 폼 (서브도메인, 관리자 이메일, 플랜 선택)
+- [x] 테넌트 정지/활성화/삭제
+- [x] 테넌트 설정 편집 (플랜, 리소스 제한)
 
 ### MT-3.3 자동 프로비저닝
 
@@ -451,33 +452,37 @@ interface MG_StorageInterface {
         tenants 테이블에 신규 레코드
 ```
 
-- [ ] `plugin/morgan/tenant/TenantManager.php` — 프로비저닝 로직
-- [ ] `plugin/morgan/install/install.sql` 활용 (기존 파일 재사용)
-- [ ] 그누보드 기본 테이블 스키마 추출 + 별도 SQL 파일
-- [ ] 기본 데이터 시드 SQL (`plugin/morgan/install/seed.sql`)
-- [ ] 프로비저닝 진행률 API (AJAX)
+- [x] `plugin/morgan/tenant/TenantManager.php` — 프로비저닝 로직
+- [x] `plugin/morgan/install/install.sql` 활용 (기존 파일 재사용)
+- [x] 그누보드 기본 테이블 스키마: `install/gnuboard5.sql` 직접 로드 (별도 추출 불필요)
+- [x] 기본 데이터 시드 SQL (`plugin/morgan/install/seed.sql`)
+- [ ] 프로비저닝 진행률 API (AJAX) — 추후 필요 시
 
 ### MT-3.4 테넌트 모니터링
 
-- [ ] 테넌트별 통계 대시보드 (회원 수, 게시글 수, 저장 용량)
-- [ ] 최근 활동 로그
-- [ ] 에러 로그 (테넌트별 PHP 에러 분리)
-- [ ] 리소스 사용량 경고 (저장 용량 80% 초과 시)
+- [-] 테넌트별 통계 대시보드 (대시보드에 기본 통계 포함, 상세 통계 추후)
+- [x] 최근 활동 로그 (provision_log 테이블 + 조회 UI)
+- [ ] 에러 로그 (테넌트별 PHP 에러 분리) — MT-5에서
+- [ ] 리소스 사용량 경고 (저장 용량 80% 초과 시) — MT-5에서
 
 ### 신규 파일
 
 | 파일 | 역할 |
 |------|------|
+| `adm/super/_common.php` | 독립 진입점 (DB, 세션, 헬퍼, CSRF) |
+| `adm/super/_head.php` | 다크테마 레이아웃 헤더 |
+| `adm/super/_tail.php` | 레이아웃 푸터 |
 | `adm/super/login.php` | 슈퍼 관리자 로그인 |
+| `adm/super/logout.php` | 로그아웃 |
+| `adm/super/bootstrap.php` | 초기 계정 생성 (1회용) |
 | `adm/super/index.php` | 슈퍼 관리자 대시보드 |
 | `adm/super/tenants.php` | 테넌트 목록 |
 | `adm/super/tenant_form.php` | 테넌트 생성/편집 |
 | `adm/super/tenant_update.php` | 테넌트 CRUD 처리 |
-| `adm/super/tenant_stats.php` | 테넌트 통계 |
+| `adm/super/tenant_created.php` | 프로비저닝 완료 결과 |
+| `adm/super/provision_log.php` | 프로비저닝 로그 조회 |
 | `plugin/morgan/tenant/TenantManager.php` | 프로비저닝 로직 |
-| `plugin/morgan/tenant/TenantConfig.php` | 테넌트 설정 관리 |
 | `plugin/morgan/install/seed.sql` | 기본 데이터 시드 |
-| `plugin/morgan/install/gnuboard_schema.sql` | 그누보드 기본 테이블 |
 
 ---
 
@@ -932,6 +937,10 @@ ini_set('session.cookie_domain', $subdomain . '.' . MG_TENANT_DOMAIN);
 |------|------|
 | 2026-03-01 | 초안 작성 (멀티테넌트 + R2 통합 로드맵) |
 | 2026-03-01 | 인프라 방식 확정: 기존 VPS + Cloudflare Proxied 서브도메인, 도메인 별도 구매 |
+| 2026-03-01 | MT-0 완료: 테넌트 라우터 + 부트스트랩 |
+| 2026-03-01 | MT-1 완료: 파일 경로 테넌트 분리 |
+| 2026-03-01 | MT-2 완료: MG_Storage 추상화 + R2 드라이버 |
+| 2026-03-02 | MT-3 완료: 슈퍼 관리자 패널 + TenantManager 프로비저닝 |
 
 ---
 
