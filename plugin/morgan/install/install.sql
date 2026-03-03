@@ -284,19 +284,6 @@ CREATE TABLE IF NOT EXISTS `mg_gift` (
 -- 4. 샘플 데이터
 -- ======================================
 
--- 3.1 기본 프로필 양식
-INSERT INTO `mg_profile_field` (`pf_code`, `pf_name`, `pf_type`, `pf_placeholder`, `pf_required`, `pf_order`, `pf_category`) VALUES
-('age', '나이', 'text', '예: 25세, 불명', 0, 1, '기본정보'),
-('gender', '성별', 'select', NULL, 0, 2, '기본정보'),
-('height', '키', 'text', '예: 175cm', 0, 3, '외형'),
-('personality', '성격', 'textarea', '캐릭터의 성격을 설명해주세요', 0, 4, '성격'),
-('appearance', '외형', 'textarea', '외모 특징을 설명해주세요', 0, 5, '외형'),
-('background', '배경', 'textarea', '캐릭터의 배경 스토리', 0, 6, '기타')
-ON DUPLICATE KEY UPDATE `pf_name` = VALUES(`pf_name`);
-
--- 3.2 성별 옵션 추가
-UPDATE `mg_profile_field` SET `pf_options` = '["남성","여성","기타","불명"]' WHERE `pf_code` = 'gender';
-
 -- 4.3 기본 설정값 (전체)
 INSERT INTO `mg_config` (`cf_key`, `cf_value`, `cf_desc`) VALUES
 -- 사이트 기본
