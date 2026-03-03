@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS `mg_character` (
     `ch_profile_bg` varchar(50) DEFAULT '' COMMENT '프로필 배경 이펙트',
     `ch_profile_bg_color` varchar(7) NOT NULL DEFAULT '#f59f0a' COMMENT '프로필 배경색',
     `ch_profile_bg_image` varchar(255) NOT NULL DEFAULT '' COMMENT '커스텀 배경 이미지',
+    `ch_exp` int NOT NULL DEFAULT 0 COMMENT '경험치',
     `ch_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '등록일',
     `ch_update` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일',
     `ch_graph_layout` text COMMENT '관계도 레이아웃 (JSON)',
@@ -211,7 +212,7 @@ CREATE TABLE IF NOT EXISTS `mg_shop_item` (
     `si_desc` text COMMENT '설명',
     `si_image` varchar(500) DEFAULT NULL COMMENT '이미지',
     `si_price` int NOT NULL COMMENT '가격',
-    `si_type` enum('title','badge','nick_color','nick_effect','profile_border','equip','emoticon_set','emoticon_reg','furniture','material','seal_bg','seal_frame','seal_hover','seal_effect','profile_skin','profile_bg','profile_effect','char_slot','concierge_extra','title_prefix','title_suffix','etc') NOT NULL DEFAULT 'etc' COMMENT '타입',
+    `si_type` enum('title','badge','nick_color','nick_effect','profile_border','equip','emoticon_set','emoticon_reg','furniture','material','seal_bg','seal_frame','seal_hover','profile_skin','profile_bg','char_slot','concierge_extra','title_prefix','title_suffix','etc') NOT NULL DEFAULT 'etc' COMMENT '타입',
     `si_effect` text COMMENT '효과 데이터 (JSON)',
     `si_stock` int NOT NULL DEFAULT -1 COMMENT '재고 (-1=무제한)',
     `si_stock_sold` int NOT NULL DEFAULT 0 COMMENT '판매 수량',
@@ -224,6 +225,7 @@ CREATE TABLE IF NOT EXISTS `mg_shop_item` (
     `si_order` int NOT NULL DEFAULT 0 COMMENT '정렬 순서',
     `si_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '등록일',
     PRIMARY KEY (`si_id`),
+    UNIQUE KEY `uk_type_name` (`si_type`, `si_name`),
     INDEX `idx_category` (`sc_id`),
     INDEX `idx_display` (`si_display`, `si_use`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='상점 상품';
@@ -1598,6 +1600,8 @@ CREATE TABLE IF NOT EXISTS `mg_facility` (
     `fc_status` enum('locked','building','complete') NOT NULL DEFAULT 'locked' COMMENT '상태',
     `fc_unlock_type` varchar(50) NOT NULL DEFAULT '' COMMENT '해금 대상 타입 (board, shop, gift, achievement, history, fountain)',
     `fc_unlock_target` varchar(100) NOT NULL DEFAULT '' COMMENT '해금 대상 ID (게시판: bo_table, 그 외: 식별자)',
+    `fc_map_x` decimal(5,2) DEFAULT NULL COMMENT '맵 X좌표',
+    `fc_map_y` decimal(5,2) DEFAULT NULL COMMENT '맵 Y좌표',
     `fc_stamina_cost` int(11) NOT NULL DEFAULT 0 COMMENT '필요 총 노동력',
     `fc_stamina_current` int(11) NOT NULL DEFAULT 0 COMMENT '현재 투입된 노동력',
     `fc_order` int(11) NOT NULL DEFAULT 0 COMMENT '표시 순서',
@@ -1674,6 +1678,7 @@ CREATE TABLE IF NOT EXISTS `mg_board_reward` (
     `br_material_use` tinyint NOT NULL DEFAULT 0 COMMENT '재료 드롭 사용',
     `br_material_chance` int NOT NULL DEFAULT 30 COMMENT '드롭 확률 (0~100)',
     `br_material_list` text COMMENT '드롭 대상 재료 JSON ["wood","stone"]',
+    `br_material_comment` text COMMENT '댓글 재료 드롭 설정 JSON',
     `br_daily_limit` int NOT NULL DEFAULT 0 COMMENT '일일 보상 횟수 (0=무제한)',
     `br_like_use` tinyint NOT NULL DEFAULT 1 COMMENT '좋아요 보상 활성화 (0=비활성)',
     `br_dice_use` tinyint NOT NULL DEFAULT 0 COMMENT '댓글 주사위 활성화',
@@ -1736,6 +1741,9 @@ CREATE TABLE IF NOT EXISTS `mg_reward_queue` (
     `rq_process_datetime` datetime DEFAULT NULL COMMENT '처리일',
     `rq_process_mb_id` varchar(20) DEFAULT NULL COMMENT '처리 스탭',
     `rq_reject_reason` varchar(255) DEFAULT NULL COMMENT '반려 사유',
+    `rq_override_rwt_id` int DEFAULT NULL COMMENT '관리자 변경 보상 유형',
+    `rq_override_point` int DEFAULT NULL COMMENT '관리자 변경 포인트',
+    `rq_admin_note` varchar(255) DEFAULT NULL COMMENT '관리자 메모',
     PRIMARY KEY (`rq_id`),
     INDEX `idx_status` (`rq_status`, `rq_datetime`),
     INDEX `idx_mb_id` (`mb_id`),
@@ -1869,6 +1877,7 @@ CREATE TABLE IF NOT EXISTS `mg_seal` (
     `seal_link` varchar(500) DEFAULT NULL COMMENT '링크 URL',
     `seal_link_text` varchar(100) DEFAULT NULL COMMENT '링크 텍스트',
     `seal_text_color` varchar(7) DEFAULT NULL COMMENT '텍스트 색상',
+    `seal_bg_color` varchar(7) DEFAULT '' COMMENT '배경 색상',
     `seal_layout` text DEFAULT NULL COMMENT '그리드 레이아웃 JSON',
     `seal_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '최종 수정일',
     PRIMARY KEY (`seal_id`),
@@ -2133,9 +2142,12 @@ CREATE TABLE IF NOT EXISTS `mg_expedition_area` (
     `ea_status` enum('active','hidden','locked') NOT NULL DEFAULT 'active' COMMENT '상태',
     `ea_unlock_facility` int(11) DEFAULT NULL COMMENT '해금 조건 시설 ID',
     `ea_partner_point` int(11) NOT NULL DEFAULT 10 COMMENT '파트너 보상 포인트',
+    `ea_point_min` int DEFAULT 0,
+    `ea_point_max` int DEFAULT 0,
+    `ea_order` int(11) NOT NULL DEFAULT 0 COMMENT '정렬 순서',
     `ea_map_x` float DEFAULT NULL COMMENT '맵 X좌표 퍼센트',
     `ea_map_y` float DEFAULT NULL COMMENT '맵 Y좌표 퍼센트',
-    `ea_order` int(11) NOT NULL DEFAULT 0 COMMENT '정렬 순서',
+    `ea_image` varchar(255) DEFAULT NULL COMMENT '배경 이미지',
     PRIMARY KEY (`ea_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='파견지 정의';
 
@@ -2148,6 +2160,7 @@ CREATE TABLE IF NOT EXISTS `mg_expedition_drop` (
     `ed_chance` int(11) NOT NULL DEFAULT 100 COMMENT '드롭 확률(0~100)',
     `ed_is_rare` tinyint(1) NOT NULL DEFAULT 0 COMMENT '레어 드롭 여부',
     PRIMARY KEY (`ed_id`),
+    UNIQUE KEY `uk_area_material` (`ea_id`, `mt_id`),
     INDEX `idx_drop_area` (`ea_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='파견지별 드롭 테이블';
 
@@ -2274,7 +2287,8 @@ CREATE TABLE IF NOT EXISTS `mg_game_fortune` (
     `gf_point` int NOT NULL DEFAULT 10 COMMENT '획득 포인트',
     `gf_use` tinyint(1) NOT NULL DEFAULT 1 COMMENT '사용 여부',
     `gf_sort` int NOT NULL DEFAULT 0,
-    PRIMARY KEY (`gf_id`)
+    PRIMARY KEY (`gf_id`),
+    UNIQUE KEY `uk_star_text` (`gf_star`, `gf_text`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='운세뽑기';
 
 INSERT IGNORE INTO `mg_game_fortune` (`gf_star`, `gf_text`, `gf_point`, `gf_use`, `gf_sort`) VALUES
