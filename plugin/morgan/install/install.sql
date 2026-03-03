@@ -184,10 +184,10 @@ CREATE TABLE IF NOT EXISTS `mg_main_widget` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='메인 페이지 위젯';
 
 -- 2.7 메인 페이지 시드 데이터
-INSERT INTO `mg_main_row` (`row_order`, `row_use`) VALUES (1, 1);
+INSERT IGNORE INTO `mg_main_row` (`row_id`, `row_order`, `row_use`) VALUES (1, 1, 1);
 
-INSERT INTO `mg_main_widget` (`row_id`, `widget_type`, `widget_order`, `widget_cols`, `widget_x`, `widget_y`, `widget_w`, `widget_h`, `widget_config`, `widget_use`) VALUES
-(1, 'text', 0, 12, 0, 0, 12, 2, '{"content":"환영합니다.","font_size":"base","font_weight":"normal","text_align":"center","padding":"normal","text_color":"#f2f3f5","bg_color":"#2b2d31"}', 1);
+INSERT IGNORE INTO `mg_main_widget` (`widget_id`, `row_id`, `widget_type`, `widget_order`, `widget_cols`, `widget_x`, `widget_y`, `widget_w`, `widget_h`, `widget_config`, `widget_use`) VALUES
+(1, 1, 'text', 0, 12, 0, 0, 12, 2, '{"content":"환영합니다.","font_size":"base","font_weight":"normal","text_align":"center","padding":"normal","text_color":"#f2f3f5","bg_color":"#2b2d31"}', 1);
 
 -- ======================================
 -- 3. 상점 관련 테이블
@@ -1767,7 +1767,7 @@ CREATE TABLE IF NOT EXISTS `mg_achievement` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='업적 정의';
 
 -- 11.1a 업적 시드 데이터
-INSERT INTO `mg_achievement` (`ac_name`, `ac_desc`, `ac_icon`, `ac_category`, `ac_type`, `ac_condition`, `ac_reward`, `ac_rarity`, `ac_hidden`, `ac_order`, `ac_use`, `ac_datetime`) VALUES
+INSERT IGNORE INTO `mg_achievement` (`ac_name`, `ac_desc`, `ac_icon`, `ac_category`, `ac_type`, `ac_condition`, `ac_reward`, `ac_rarity`, `ac_hidden`, `ac_order`, `ac_use`, `ac_datetime`) VALUES
 ('글쟁이', '게시글을 작성하여 활동하세요', NULL, 'activity', 'progressive', '{"type":"write_count","target":100}', '{"type":"point","amount":500}', 'common', 0, 1, 1, NOW()),
 ('수다쟁이', '댓글을 많이 남겨보세요', NULL, 'activity', 'progressive', '{"type":"comment_count","target":200}', '{"type":"point","amount":500}', 'common', 0, 2, 1, NOW()),
 ('역극 마스터', 'RP 답글을 꾸준히 작성하세요', NULL, 'rp', 'progressive', '{"type":"rp_reply_count","target":100}', '{"type":"point","amount":1000}', 'uncommon', 0, 3, 1, NOW()),
@@ -2016,17 +2016,7 @@ CREATE TABLE IF NOT EXISTS `mg_relation_icon` (
     PRIMARY KEY (`ri_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='관계 아이콘';
 
--- 15.2 기본 아이콘 데이터
-INSERT INTO `mg_relation_icon` (`ri_category`, `ri_icon`, `ri_label`, `ri_color`, `ri_width`, `ri_order`) VALUES
-('love', '♡', '연인', '#e74c3c', 2, 1),
-('love', '♡♡', '깊은 사랑', '#c0392b', 3, 2),
-('friendship', '☆', '친구', '#3498db', 2, 3),
-('friendship', '★', '절친', '#2980b9', 2, 4),
-('family', '🏠', '가족', '#27ae60', 2, 5),
-('rival', '⚔', '라이벌', '#e67e22', 2, 6),
-('mentor', '📖', '스승/제자', '#9b59b6', 2, 7),
-('etc', '🔗', '동료/지인', '#95a5a6', 2, 8),
-('etc', '❓', '복잡한 관계', '#f39c12', 2, 9);
+-- 15.2 관계 아이콘 시드 (비워둠 — 테넌트 관리자가 직접 설정)
 
 -- 15.3 관계 데이터
 CREATE TABLE IF NOT EXISTS `mg_relation` (
