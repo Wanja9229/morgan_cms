@@ -357,11 +357,11 @@ if ($tab == 'articles') {
         <table class="mg-table" style="min-width:800px;">
             <thead>
                 <tr>
-                    <th style="width:50px;text-align:center;">ID</th>
+                    <th style="width:55px;text-align:center;">ID</th>
                     <th style="width:60px;text-align:center;">썸네일</th>
                     <th>제목</th>
                     <th style="width:100px;text-align:center;">카테고리</th>
-                    <th style="width:60px;text-align:center;">공개</th>
+                    <th style="width:65px;text-align:center;">공개</th>
                     <th style="width:80px;text-align:center;">조회수</th>
                     <th style="width:130px;text-align:center;">수정일</th>
                     <th style="width:140px;text-align:center;">관리</th>

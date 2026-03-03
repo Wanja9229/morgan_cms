@@ -65,8 +65,8 @@ require_once __DIR__.'/_head.php';
                             <th style="width:36px;"><input type="checkbox" onclick="checkAll(this, 'fsidelist');"></th>
                             <th>소속명</th>
                             <th style="width:120px;">아이콘</th>
-                            <th style="width:50px;">사용</th>
-                            <th style="width:40px;">ID</th>
+                            <th style="width:60px;">사용</th>
+                            <th style="width:50px;">ID</th>
                         </tr>
                     </thead>
                     <tbody id="side-sortable">
@@ -156,8 +156,8 @@ require_once __DIR__.'/_head.php';
                             <th>유형명</th>
                             <th style="width:140px;">소속</th>
                             <th style="width:120px;">아이콘</th>
-                            <th style="width:50px;">사용</th>
-                            <th style="width:40px;">ID</th>
+                            <th style="width:60px;">사용</th>
+                            <th style="width:50px;">ID</th>
                         </tr>
                     </thead>
                     <tbody id="class-sortable">

@@ -127,7 +127,7 @@ include_once('./_head.php');
         <table class="mg-table" style="min-width:800px;">
             <thead>
                 <tr>
-                    <th style="width:50px">ID</th>
+                    <th style="width:55px">ID</th>
                     <th>캐릭터 A</th>
                     <th style="width:60px">색상</th>
                     <th>캐릭터 B</th>

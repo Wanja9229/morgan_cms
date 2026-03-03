@@ -143,7 +143,7 @@ require_once __DIR__.'/_head.php';
         <table class="mg-table" style="min-width:900px;table-layout:fixed;">
             <thead>
                 <tr>
-                    <th style="width:50px;">순서</th>
+                    <th style="width:60px;">순서</th>
                     <th style="width:60px;">아이콘</th>
                     <th style="width:140px;">파견지명</th>
                     <th style="width:70px;">상태</th>

@@ -48,7 +48,7 @@ require_once __DIR__.'/_head.php';
                         <th style="width:100px;">아이콘</th>
                         <th style="width:70px;">사용</th>
                         <th style="width:80px;">상품수</th>
-                        <th style="width:50px;">ID</th>
+                        <th style="width:55px;">ID</th>
                     </tr>
                 </thead>
                 <tbody>

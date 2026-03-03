@@ -115,12 +115,12 @@ require_once __DIR__.'/_head.php';
         <table class="mg-table" style="min-width:1000px;">
             <thead>
                 <tr>
-                    <th style="width:50px;">ID</th>
+                    <th style="width:55px;">ID</th>
                     <th>회원</th>
                     <th>캐릭터</th>
                     <th>파트너</th>
                     <th>파견지</th>
-                    <th style="width:50px;">ST</th>
+                    <th style="width:55px;">ST</th>
                     <th>시작</th>
                     <th>종료</th>
                     <th style="width:70px;">상태</th>

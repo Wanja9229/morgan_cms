@@ -135,18 +135,18 @@ require_once __DIR__.'/_head.php';
         <table class="mg-table" style="min-width:1000px;">
             <thead>
                 <tr>
-                    <th style="width:50px;">ID</th>
+                    <th style="width:55px;">ID</th>
                     <th>의뢰자</th>
                     <th>제목</th>
-                    <th style="width:60px;">유형</th>
-                    <th style="width:60px;">보상</th>
+                    <th style="width:75px;">유형</th>
+                    <th style="width:80px;">보상</th>
                     <th>추가보상</th>
-                    <th style="width:80px;">지원/선정</th>
-                    <th style="width:60px;">매칭</th>
-                    <th>모집마감</th>
-                    <th>수행마감</th>
-                    <th style="width:70px;">상태</th>
-                    <th style="width:80px;">관리</th>
+                    <th style="width:100px;">지원/선정</th>
+                    <th style="width:75px;">매칭</th>
+                    <th style="width:130px;">모집마감</th>
+                    <th style="width:130px;">수행마감</th>
+                    <th style="width:80px;">상태</th>
+                    <th style="width:110px;">관리</th>
                 </tr>
             </thead>
             <tbody>

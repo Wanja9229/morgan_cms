@@ -119,13 +119,13 @@ function deleteMapImage() {
         <table class="mg-table" style="min-width:700px;">
             <thead>
                 <tr>
-                    <th style="width:50px;">순서</th>
+                    <th style="width:60px;">순서</th>
                     <th style="width:60px;">이미지</th>
                     <th>지역명</th>
                     <th>설명</th>
                     <th style="width:80px;">배치</th>
                     <th style="width:100px;">좌표</th>
-                    <th style="width:60px;">사용</th>
+                    <th style="width:65px;">사용</th>
                     <th style="width:100px;">관리</th>
                 </tr>
             </thead>

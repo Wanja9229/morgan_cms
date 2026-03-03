@@ -157,10 +157,10 @@ require_once __DIR__.'/_head.php';
                         <th>상품명</th>
                         <th style="width:100px;">타입</th>
                         <th style="width:80px;">가격</th>
-                        <th style="width:60px;">재고</th>
-                        <th class="mg-hide-mobile" style="width:50px;">노출</th>
-                        <th class="mg-hide-mobile" style="width:50px;">사용</th>
-                        <th style="width:60px;">관리</th>
+                        <th style="width:65px;">재고</th>
+                        <th class="mg-hide-mobile" style="width:55px;">노출</th>
+                        <th class="mg-hide-mobile" style="width:55px;">사용</th>
+                        <th style="width:70px;">관리</th>
                     </tr>
                 </thead>
                 <tbody>

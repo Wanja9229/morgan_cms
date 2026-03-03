@@ -95,10 +95,10 @@ require_once __DIR__.'/_head.php';
                     <th style="width:120px;">TABLE</th>
                     <th>제목</th>
                     <th style="width:120px;">스킨</th>
-                    <th style="width:60px;">읽기Lv</th>
-                    <th style="width:60px;">쓰기Lv</th>
-                    <th style="width:60px;">순서</th>
-                    <th style="width:60px;">검색</th>
+                    <th style="width:80px;">읽기Lv</th>
+                    <th style="width:80px;">쓰기Lv</th>
+                    <th style="width:70px;">순서</th>
+                    <th style="width:70px;">검색</th>
                     <th style="width:100px;">관리</th>
                 </tr>
             </thead>

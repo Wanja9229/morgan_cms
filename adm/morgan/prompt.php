@@ -302,14 +302,14 @@ $entry_status_labels = array(
         <table class="mg-table" style="min-width:1100px;">
             <thead>
                 <tr>
-                    <th style="width:40px;">ID</th>
+                    <th style="width:50px;">ID</th>
                     <th style="width:100px;">게시판</th>
                     <th style="min-width:160px;">제목</th>
-                    <th style="width:60px;text-align:center;">주기</th>
-                    <th style="width:50px;text-align:center;">모드</th>
+                    <th style="width:65px;text-align:center;">주기</th>
+                    <th style="width:60px;text-align:center;">모드</th>
                     <th style="width:70px;text-align:center;">상태</th>
                     <th style="width:200px;">기간</th>
-                    <th style="width:55px;text-align:center;">제출</th>
+                    <th style="width:60px;text-align:center;">제출</th>
                     <th style="width:90px;">작성일</th>
                     <th style="width:200px;text-align:center;">관리</th>
                 </tr>
@@ -756,7 +756,7 @@ function deletePrompt(pmId, title) {
                         <th style="width:40px;text-align:center;">
                             <input type="checkbox" id="chk-all" onclick="toggleAll(this)">
                         </th>
-                        <th style="width:40px;">#</th>
+                        <th style="width:45px;">#</th>
                         <th>제목</th>
                         <th style="width:100px;">작성자</th>
                         <th style="width:70px;text-align:center;">글자수</th>

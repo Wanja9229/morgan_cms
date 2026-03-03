@@ -172,14 +172,14 @@ $rarity_colors = array(
         <table class="mg-table" style="min-width:900px;">
             <thead>
                 <tr>
-                    <th style="width:50px;">ID</th>
+                    <th style="width:55px;">ID</th>
                     <th>업적명</th>
                     <th style="width:80px;">카테고리</th>
                     <th style="width:100px;">유형</th>
                     <th style="width:70px;">단계</th>
                     <th style="width:80px;">희귀도</th>
                     <th style="width:80px;">달성자</th>
-                    <th style="width:60px;">상태</th>
+                    <th style="width:65px;">상태</th>
                     <th style="width:200px;">관리</th>
                 </tr>
             </thead>
@@ -578,7 +578,7 @@ function escHtml(str) {
         <table class="mg-table">
             <thead>
                 <tr>
-                    <th style="width:50px;">단계</th>
+                    <th style="width:55px;">단계</th>
                     <th>단계명</th>
                     <th style="width:100px;">목표값</th>
                     <th>아이콘</th>
@@ -785,7 +785,7 @@ document.getElementById('tier-form').addEventListener('submit', function(e) {
                     <th style="width:120px;">닉네임</th>
                     <th style="width:80px;">진행도</th>
                     <th style="width:80px;">단계</th>
-                    <th style="width:60px;">완료</th>
+                    <th style="width:65px;">완료</th>
                     <th style="width:120px;">부여자</th>
                     <th>부여 사유</th>
                     <th style="width:150px;">달성일</th>

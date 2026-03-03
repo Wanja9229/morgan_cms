@@ -136,11 +136,11 @@ require_once __DIR__.'/_head.php';
                         <th style="width:60px;">미리보기</th>
                         <th>셋 이름</th>
                         <th style="width:80px;">제작자</th>
-                        <th style="width:70px;">상태</th>
-                        <th style="width:50px;">개수</th>
-                        <th style="width:70px;">가격</th>
-                        <th class="mg-hide-mobile" style="width:50px;">판매</th>
-                        <th class="mg-hide-mobile" style="width:50px;">사용</th>
+                        <th style="width:75px;">상태</th>
+                        <th style="width:60px;">개수</th>
+                        <th style="width:75px;">가격</th>
+                        <th class="mg-hide-mobile" style="width:60px;">판매</th>
+                        <th class="mg-hide-mobile" style="width:60px;">사용</th>
                         <th class="mg-hide-mobile" style="width:120px;">등록일</th>
                         <th style="width:100px;">관리</th>
                     </tr>

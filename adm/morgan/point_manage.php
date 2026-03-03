@@ -326,7 +326,7 @@ function givePoint(form) {
         <table class="mg-table">
             <thead>
                 <tr>
-                    <th style="width:50px;">번호</th>
+                    <th style="width:55px;">번호</th>
                     <th style="width:100px;">회원ID</th>
                     <th style="width:100px;">닉네임</th>
                     <th>내용</th>

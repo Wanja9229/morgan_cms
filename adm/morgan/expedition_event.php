@@ -66,12 +66,12 @@ require_once __DIR__.'/_head.php';
         <table class="mg-table" style="min-width:800px;">
             <thead>
                 <tr>
-                    <th style="width:50px;">순서</th>
-                    <th style="width:60px;">아이콘</th>
+                    <th style="width:60px;">순서</th>
+                    <th style="width:65px;">아이콘</th>
                     <th style="width:180px;">이벤트명</th>
                     <th>설명</th>
                     <th style="width:120px;">효과</th>
-                    <th style="width:100px;">효과 상세</th>
+                    <th style="width:120px;">효과 상세</th>
                     <th style="width:80px;">연결</th>
                     <th style="width:110px;">관리</th>
                 </tr>

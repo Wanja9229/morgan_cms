@@ -382,7 +382,7 @@ document.getElementById('fattendance').addEventListener('submit', function(e) {
                     <th style="width:120px;">별점</th>
                     <th>텍스트</th>
                     <th style="width:80px;text-align:right;">포인트</th>
-                    <th style="width:60px;text-align:center;">등장</th>
+                    <th style="width:65px;text-align:center;">등장</th>
                     <th style="width:120px;text-align:center;">관리</th>
                 </tr>
             </thead>

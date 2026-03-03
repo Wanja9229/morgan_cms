@@ -258,9 +258,9 @@ require_once __DIR__.'/_head.php';
                     <th style="width:70px;">모드</th>
                     <th style="width:70px;">기본P</th>
                     <th style="width:80px;">재료</th>
-                    <th style="width:70px;">일일제한</th>
-                    <th style="width:55px;">좋아요</th>
-                    <th style="width:65px;">관리</th>
+                    <th style="width:80px;">일일제한</th>
+                    <th style="width:65px;">좋아요</th>
+                    <th style="width:70px;">관리</th>
                 </tr>
             </thead>
             <tbody>
@@ -816,7 +816,7 @@ function escHtml(str) {
         <table class="mg-table" style="min-width:800px;">
             <thead>
                 <tr>
-                    <th style="width:50px;">ID</th>
+                    <th style="width:55px;">ID</th>
                     <th>역극</th>
                     <th style="width:120px;">캐릭터</th>
                     <th style="width:100px;">소유자</th>
@@ -988,7 +988,7 @@ function revokeReward(rcId, point, mbId) {
         <table class="mg-table" style="min-width:700px;">
             <thead>
                 <tr>
-                    <th style="width:50px;">ID</th>
+                    <th style="width:55px;">ID</th>
                     <th>누른 회원</th>
                     <th>받은 회원</th>
                     <th style="width:100px;">게시판</th>
@@ -1162,7 +1162,7 @@ $stl_status_badge = array(
             <thead>
                 <tr>
                     <th style="width:35px;"><input type="checkbox" id="stl_check_all" onchange="stlToggleAll(this)"></th>
-                    <th style="width:50px;">ID</th>
+                    <th style="width:55px;">ID</th>
                     <th style="width:120px;">요청자</th>
                     <th style="width:100px;">게시판</th>
                     <th>글 제목</th>

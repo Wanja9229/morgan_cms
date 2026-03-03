@@ -134,13 +134,13 @@ function saveTimelineDesc() {
             <thead>
                 <tr>
                     <th style="width:36px;"></th>
-                    <th style="width:50px;text-align:center;">ID</th>
+                    <th style="width:55px;text-align:center;">ID</th>
                     <th style="width:100px;text-align:center;">연도</th>
                     <th>제목</th>
                     <th style="width:80px;text-align:center;">이미지</th>
-                    <th style="width:60px;text-align:center;">주요</th>
-                    <th style="width:60px;text-align:center;">순서</th>
-                    <th style="width:60px;text-align:center;">사용</th>
+                    <th style="width:65px;text-align:center;">주요</th>
+                    <th style="width:65px;text-align:center;">순서</th>
+                    <th style="width:65px;text-align:center;">사용</th>
                     <th style="width:140px;text-align:center;">관리</th>
                 </tr>
             </thead>
