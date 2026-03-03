@@ -36,6 +36,7 @@ switch ($action) {
         }
 
         // 성공 — 결과 페이지로 리다이렉트
+        $result['subdomain'] = $subdomain;
         $_SESSION['sa_provision_result'] = $result;
         $_SESSION['sa_provision_log'] = $tm->getLog();
         header('Location: ' . sa_url('tenant_created.php'));

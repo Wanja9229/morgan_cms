@@ -29,12 +29,27 @@ include_once('./_head.php');
             테넌트가 성공적으로 생성되었습니다.
         </div>
 
+        <?php
+        $tenant_url = '';
+        if (!empty($result['subdomain']) && defined('MG_TENANT_BASE_DOMAIN')) {
+            $tenant_url = 'https://' . $result['subdomain'] . '.' . MG_TENANT_BASE_DOMAIN;
+        }
+        ?>
         <table class="sa-table" style="max-width:500px">
             <tbody>
                 <tr>
                     <td style="font-weight:500;width:140px">테넌트 ID</td>
                     <td><?php echo (int)$result['tenant_id']; ?></td>
                 </tr>
+                <?php if ($tenant_url): ?>
+                <tr>
+                    <td style="font-weight:500">사이트 URL</td>
+                    <td>
+                        <a href="<?php echo sa_h($tenant_url); ?>" target="_blank" style="color:var(--mg-accent);word-break:break-all"><?php echo sa_h($tenant_url); ?></a>
+                        <button type="button" onclick="navigator.clipboard.writeText('<?php echo sa_h($tenant_url); ?>');this.textContent='복사됨!';setTimeout(()=>this.textContent='복사',1500)" style="margin-left:0.5rem;padding:0.125rem 0.5rem;background:var(--mg-bg-tertiary);border:1px solid #4a4d55;border-radius:0.25rem;color:var(--mg-text-secondary);font-size:0.75rem;cursor:pointer">복사</button>
+                    </td>
+                </tr>
+                <?php endif; ?>
                 <tr>
                     <td style="font-weight:500">DB</td>
                     <td><code style="background:var(--mg-bg-tertiary);padding:0.125rem 0.375rem;border-radius:0.25rem"><?php echo sa_h($result['db_name']); ?></code></td>
