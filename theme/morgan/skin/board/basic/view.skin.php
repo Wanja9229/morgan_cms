@@ -103,8 +103,8 @@ $_mg_comment_cnt = isset($view['wr_comment']) ? (int)$view['wr_comment'] : 0;
                             </div>
                             <?php } ?>
                             <div>
-                                <span class="font-medium" style="color:var(--mg-text-primary);"><?php echo htmlspecialchars($mg_view_char['ch_name']); ?></span>
-                                <span class="text-xs block" style="color:var(--mg-text-muted);">@<?php echo mg_render_nickname($view['mb_id'], $view['wr_name'], $mg_view_char['ch_id']); ?></span>
+                                <span class="font-medium" style="color:var(--mg-text-primary);"><?php echo mg_render_title($view['mb_id'], $mg_view_char['ch_id']); ?><?php echo htmlspecialchars($mg_view_char['ch_name']); ?></span>
+                                <span class="text-xs block" style="color:var(--mg-text-muted);">@<?php echo mg_render_nickname($view['mb_id'], $view['wr_name'], $mg_view_char['ch_id'], false); ?></span>
                             </div>
                         </a>
                         <?php } else { ?>

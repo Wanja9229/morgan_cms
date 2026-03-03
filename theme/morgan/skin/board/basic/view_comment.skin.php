@@ -97,9 +97,9 @@ if (!empty($list)) {
                         <?php } else { ?>
                         <span class="w-6 h-6 rounded-full bg-mg-accent/20 flex items-center justify-center text-xs font-bold text-mg-accent"><?php echo mb_substr($cmt_char['ch_name'], 0, 1); ?></span>
                         <?php } ?>
-                        <span class="font-medium text-mg-text-primary"><?php echo htmlspecialchars($cmt_char['ch_name']); ?></span>
+                        <span class="font-medium text-mg-text-primary"><?php echo mg_render_title($row['mb_id'], $cmt_char['ch_id']); ?><?php echo htmlspecialchars($cmt_char['ch_name']); ?></span>
                     </a>
-                    <span class="text-xs text-mg-text-muted">@<?php echo mg_render_nickname($row['mb_id'], $row['wr_name'], $cmt_char['ch_id']); ?></span>
+                    <span class="text-xs text-mg-text-muted">@<?php echo mg_render_nickname($row['mb_id'], $row['wr_name'], $cmt_char['ch_id'], false); ?></span>
                     <?php } else { ?>
                     <span class="font-medium text-mg-text-primary"><?php echo $row['mb_id'] ? mg_render_nickname($row['mb_id'], $row['wr_name']) : htmlspecialchars($row['wr_name']); ?></span>
                     <?php } ?>

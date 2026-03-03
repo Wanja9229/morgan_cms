@@ -148,7 +148,7 @@ if (count($list) > 0) {
                                 <?php if ($row_char['ch_thumb']) { ?>
                                 <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.$row_char['ch_thumb']; ?>" alt="" class="w-5 h-5 rounded-full object-cover flex-shrink-0">
                                 <?php } ?>
-                                <span class="text-xs text-mg-text-secondary truncate"><?php echo htmlspecialchars($row_char['ch_name']); ?></span>
+                                <span class="text-xs text-mg-text-secondary truncate"><?php echo mg_render_title($row['mb_id'], $row_char['ch_id']); ?><?php echo htmlspecialchars($row_char['ch_name']); ?></span>
                             </a>
                             <?php } else { ?>
                             <span class="text-xs text-mg-text-secondary truncate"><?php echo $row['mb_id'] ? mg_render_nickname($row['mb_id'], $row['wr_name']) : htmlspecialchars($row['wr_name']); ?></span>

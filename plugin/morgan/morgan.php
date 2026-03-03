@@ -2229,23 +2229,60 @@ function mg_get_pending_gifts($mb_id, $limit = 0) {
 }
 
 /**
- * 닉네임 렌더링 (칭호, 색상, 효과 적용)
+ * 칭호 배지 렌더링 (캐릭터명 앞에 표시용)
+ *
+ * @param string $mb_id 회원 ID
+ * @param int $ch_id 캐릭터 ID (0이면 프로필 칭호 사용)
+ * @return string HTML (빈 문자열 또는 「칭호」 span)
+ */
+function mg_render_title($mb_id, $ch_id = 0) {
+    $titles = mg_get_active_titles($mb_id, $ch_id);
+    $title_parts = array();
+    if ($titles['prefix']) $title_parts[] = htmlspecialchars($titles['prefix']);
+    if ($titles['suffix']) $title_parts[] = htmlspecialchars($titles['suffix']);
+    if (empty($title_parts)) return '';
+
+    // 닉네임 효과(색상/클래스)도 칭호에 적용
+    list($style, $nick_class) = _mg_get_nick_effects($mb_id);
+    $cls = $nick_class ? ' '.$nick_class : '';
+
+    return '<span class="mg-title'.$cls.'" style="'.$style.'">「'.implode(' ', $title_parts).'」</span> ';
+}
+
+/**
+ * 닉네임 렌더링 (색상, 효과 적용)
  *
  * @param string $mb_id 회원 ID
  * @param string $mb_nick 닉네임
  * @param int $ch_id 캐릭터 ID (0이면 프로필 칭호 사용)
+ * @param bool $show_title 칭호 표시 여부 (캐릭터명 앞에 별도 표시 시 false)
  * @return string HTML
  */
-function mg_render_nickname($mb_id, $mb_nick, $ch_id = 0) {
-    static $cache = array();
+function mg_render_nickname($mb_id, $mb_nick, $ch_id = 0, $show_title = true) {
+    list($style, $nick_class) = _mg_get_nick_effects($mb_id);
 
-    if (isset($cache[$mb_id])) {
-        $active = $cache[$mb_id];
-    } else {
-        $active = mg_get_active_items($mb_id);
-        $cache[$mb_id] = $active;
+    $title_html = '';
+    if ($show_title) {
+        $title_html = mg_render_title($mb_id, $ch_id);
     }
 
+    $nick_html = htmlspecialchars($mb_nick);
+    if ($style || $nick_class) {
+        $nick_html = '<span class="'.$nick_class.'" style="'.$style.'">'.$nick_html.'</span>';
+    }
+
+    return $title_html . $nick_html;
+}
+
+/**
+ * 닉네임 효과(색상/클래스) 반환 (내부용)
+ */
+function _mg_get_nick_effects($mb_id) {
+    static $cache = array();
+
+    if (isset($cache[$mb_id])) return $cache[$mb_id];
+
+    $active = mg_get_active_items($mb_id);
     $style = '';
     $nick_class = '';
 
@@ -2281,25 +2318,8 @@ function mg_render_nickname($mb_id, $mb_nick, $ch_id = 0) {
         }
     }
 
-    // 칭호 조회: 캐릭터 지정 시 캐릭터 칭호, 아니면 프로필 칭호
-    $titles = mg_get_active_titles($mb_id, $ch_id);
-    $title_html = '';
-    $cls = $nick_class ? ' '.$nick_class : '';
-
-    // 접두+접미를 하나로 합쳐서 「접두 접미」 형태로 표시
-    $title_parts = array();
-    if ($titles['prefix']) $title_parts[] = htmlspecialchars($titles['prefix']);
-    if ($titles['suffix']) $title_parts[] = htmlspecialchars($titles['suffix']);
-    if (!empty($title_parts)) {
-        $title_html = '<span class="mg-title'.$cls.'" style="'.$style.'">「'.implode(' ', $title_parts).'」</span> ';
-    }
-
-    $nick_html = htmlspecialchars($mb_nick);
-    if ($style || $nick_class) {
-        $nick_html = '<span class="'.$nick_class.'" style="'.$style.'">'.$nick_html.'</span>';
-    }
-
-    return $title_html . $nick_html;
+    $cache[$mb_id] = array($style, $nick_class);
+    return array($style, $nick_class);
 }
 
 /**

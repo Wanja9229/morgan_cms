@@ -331,9 +331,9 @@ function _prompt_mode_label($mode) {
                                     <?php if ($row_char['ch_thumb']) { ?>
                                     <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.$row_char['ch_thumb']; ?>" alt="" class="w-4 h-4 rounded-full object-cover">
                                     <?php } ?>
-                                    <span class="text-mg-text-secondary"><?php echo htmlspecialchars($row_char['ch_name']); ?></span>
+                                    <span class="text-mg-text-secondary"><?php echo mg_render_title($row['mb_id'], $row_char['ch_id']); ?><?php echo htmlspecialchars($row_char['ch_name']); ?></span>
                                 </a>
-                                <span class="text-mg-text-muted">@<?php echo mg_render_nickname($row['mb_id'], $row['wr_name'], $row_char['ch_id']); ?></span>
+                                <span class="text-mg-text-muted">@<?php echo mg_render_nickname($row['mb_id'], $row['wr_name'], $row_char['ch_id'], false); ?></span>
                                 <?php } else { ?>
                                 <span><?php echo $row['mb_id'] ? mg_render_nickname($row['mb_id'], $row['wr_name']) : htmlspecialchars($row['wr_name']); ?></span>
                                 <?php } ?>
