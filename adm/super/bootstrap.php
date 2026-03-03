@@ -75,17 +75,12 @@ if (!$result) {
 $row = mysqli_fetch_assoc($result);
 
 if ((int)$row['cnt'] > 0) {
+    // 계정이 이미 존재하면 페이지 존재 자체를 숨김 (404)
+    // 재설정 필요 시: DB에서 TRUNCATE super_admins 후 다시 접근
     mysqli_close($link);
-    ?>
-    <!DOCTYPE html>
-    <html lang="ko"><head><meta charset="UTF-8"><title>Bootstrap</title>
-    <style>body{background:#1e1f22;color:#f2f3f5;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}.box{text-align:center;max-width:500px;padding:2rem}h1{color:#f59f0a}p{color:#949ba4;margin-top:1rem}a{color:#f59f0a}</style>
-    </head><body><div class="box">
-        <h1>Already Initialized</h1>
-        <p>슈퍼 관리자 계정이 이미 존재합니다.<br>보안을 위해 이 파일을 삭제해 주세요.</p>
-        <p><a href="./login.php">로그인 페이지로 이동</a></p>
-    </div></body></html>
-    <?php
+    http_response_code(404);
+    header('Content-Type: text/html; charset=utf-8');
+    echo '<!DOCTYPE html><html><head><title>404 Not Found</title></head><body><h1>Not Found</h1></body></html>';
     exit;
 }
 
