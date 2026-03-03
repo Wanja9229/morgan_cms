@@ -89,6 +89,8 @@ if ($_mg_subdomain === 'admin') {
             $_mg_script = rtrim($_mg_script, '/') . '/index.php';
         }
         if (file_exists($_mg_script) && pathinfo($_mg_script, PATHINFO_EXTENSION) === 'php') {
+            // 상대 경로 include가 정상 동작하도록 CWD 변경
+            chdir(dirname($_mg_script));
             require($_mg_script);
         } else {
             http_response_code(404);
