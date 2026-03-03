@@ -11,6 +11,23 @@ $g5_path['path'] = realpath(__DIR__ . '/../../');
 include_once($g5_path['path'] . '/config.php');
 
 // ============================================================
+// admin 서브도메인 접근 제한 — 비인가 경로에서는 존재 자체를 숨김
+// ============================================================
+
+$_sa_host = $_SERVER['HTTP_HOST'] ?? '';
+// 포트 제거 (예: admin.moonveil.org:8080 → admin.moonveil.org)
+$_sa_host = strtolower(preg_replace('/:\d+$/', '', $_sa_host));
+
+if (strpos($_sa_host, 'admin.') !== 0) {
+    http_response_code(404);
+    // 일반 404와 구분 불가능하게 최소한의 응답
+    header('Content-Type: text/html; charset=utf-8');
+    echo '<!DOCTYPE html><html><head><title>404 Not Found</title></head><body><h1>Not Found</h1></body></html>';
+    exit;
+}
+unset($_sa_host);
+
+// ============================================================
 // 마스터 DB 설정 로드
 // ============================================================
 
