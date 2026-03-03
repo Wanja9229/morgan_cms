@@ -1,4 +1,4 @@
-name: Deploy to Cafe24
+name: Deploy
 
 on:
   push:
@@ -10,7 +10,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  # ============================================================
+  # Cafe24 (FTP)
+  # ============================================================
+  cafe24:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -49,4 +52,23 @@ jobs:
               --exclude ^src/ \
               . .;
           "
-          echo "Deploy complete."
+          echo "Cafe24 deploy complete."
+
+  # ============================================================
+  # VPS (SSH git pull)
+  # ============================================================
+  vps:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            cd /var/www/morgan
+            git fetch origin main
+            git reset --hard origin/main
+            echo "VPS deploy complete: $(git log --oneline -1)"
