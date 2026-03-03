@@ -532,7 +532,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
                     <span class="truncate">연대기</span>
                     <span class="lp-dot ml-auto w-1 h-1 rounded-full bg-mg-accent <?php echo ($_current_script !== 'lore_timeline.php') ? 'hidden' : ''; ?>"></span>
                 </a>
-                <?php if (mg_config('expedition_map_image', '')) { ?>
+                <?php if (mg_config('lore_map_image', '')) { ?>
                 <a href="<?php echo G5_BBS_URL; ?>/lore_map.php" data-lore-page="lore_map.php"
                    class="lp-item flex items-center gap-2 px-2 py-1.5 rounded text-sm transition-colors <?php echo $map_active; ?>">
                     <svg class="lp-icon w-3.5 h-3.5 flex-shrink-0 <?php echo ($_current_script === 'lore_map.php') ? 'text-mg-accent' : 'text-mg-text-muted'; ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24">

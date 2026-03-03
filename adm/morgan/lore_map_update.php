@@ -38,7 +38,7 @@ if ($mode == 'settings') {
     }
 
     // 맵 이미지 처리
-    $old_map_image = mg_config('expedition_map_image', '');
+    $old_map_image = mg_config('lore_map_image', '');
     $map_image_action = isset($_POST['map_image_action']) ? $_POST['map_image_action'] : '';
 
     if ($map_image_action === '__DELETE__') {
@@ -46,7 +46,7 @@ if ($mode == 'settings') {
             $old_file = str_replace(G5_DATA_URL, G5_DATA_PATH, $old_map_image);
             if (file_exists($old_file)) @unlink($old_file);
         }
-        mg_set_config('expedition_map_image', '');
+        mg_set_config('lore_map_image', '');
     }
     elseif (isset($_FILES['map_image_file']) && $_FILES['map_image_file']['error'] === UPLOAD_ERR_OK) {
         $file = $_FILES['map_image_file'];
@@ -59,7 +59,7 @@ if ($mode == 'settings') {
                 if (file_exists($old_file)) @unlink($old_file);
             }
 
-            $new_filename = 'expedition_map_' . date('Ymd_His') . '.jpg';
+            $new_filename = 'lore_map_' . date('Ymd_His') . '.jpg';
             $target_path = $upload_dir . '/' . $new_filename;
 
             // 리사이즈 (최대 2560px)
@@ -96,7 +96,7 @@ if ($mode == 'settings') {
             if ($resized) {
                 @chmod($target_path, 0644);
                 $new_url = $upload_url . '/' . $new_filename;
-                mg_set_config('expedition_map_image', $new_url);
+                mg_set_config('lore_map_image', $new_url);
             }
         }
     }

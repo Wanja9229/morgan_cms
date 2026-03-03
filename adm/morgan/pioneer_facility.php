@@ -58,9 +58,9 @@ $_marker_style = mg_config('map_marker_style', 'pin');
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;">
     <div style="display:flex;align-items:center;gap:0.75rem;">
         <span style="font-size:0.85rem;color:var(--mg-text-secondary);">유저 UI:</span>
-        <div style="display:inline-flex;border-radius:8px;overflow:hidden;border:1px solid var(--mg-bg-tertiary);">
-            <button type="button" id="btn-mode-card" onclick="setViewMode('card')" style="padding:6px 14px;font-size:0.8rem;border:none;cursor:pointer;transition:background 0.15s;<?php echo $_pvm !== 'base' ? 'background:var(--mg-accent);color:var(--mg-bg-primary);font-weight:600;' : 'background:var(--mg-bg-primary);color:var(--mg-text-secondary);'; ?>">카드뷰</button>
-            <button type="button" id="btn-mode-base" onclick="setViewMode('base')" style="padding:6px 14px;font-size:0.8rem;border:none;cursor:pointer;transition:background 0.15s;<?php echo $_pvm === 'base' ? 'background:var(--mg-accent);color:var(--mg-bg-primary);font-weight:600;' : 'background:var(--mg-bg-primary);color:var(--mg-text-secondary);'; ?>"<?php echo !$_pmi ? ' disabled title="거점 이미지를 먼저 등록하세요"' : ''; ?>>거점뷰</button>
+        <div style="display:inline-flex;gap:4px;">
+            <button type="button" id="btn-mode-card" onclick="setViewMode('card')" class="mg-btn mg-btn-sm <?php echo $_pvm !== 'base' ? 'mg-btn-primary' : 'mg-btn-secondary'; ?>">카드뷰</button>
+            <button type="button" id="btn-mode-base" onclick="setViewMode('base')" class="mg-btn mg-btn-sm <?php echo $_pvm === 'base' ? 'mg-btn-primary' : 'mg-btn-secondary'; ?>">거점뷰</button>
         </div>
     </div>
     <button type="button" class="mg-btn mg-btn-primary" onclick="openFacilityModal()">시설 추가</button>
@@ -386,19 +386,11 @@ function setViewMode(mode) {
             var btnCard = document.getElementById('btn-mode-card');
             var btnBase = document.getElementById('btn-mode-base');
             if (data.mode === 'card') {
-                btnCard.style.background = 'var(--mg-accent)';
-                btnCard.style.color = 'var(--mg-bg-primary)';
-                btnCard.style.fontWeight = '600';
-                btnBase.style.background = 'var(--mg-bg-primary)';
-                btnBase.style.color = 'var(--mg-text-secondary)';
-                btnBase.style.fontWeight = '';
+                btnCard.className = 'mg-btn mg-btn-sm mg-btn-primary';
+                btnBase.className = 'mg-btn mg-btn-sm mg-btn-secondary';
             } else {
-                btnBase.style.background = 'var(--mg-accent)';
-                btnBase.style.color = 'var(--mg-bg-primary)';
-                btnBase.style.fontWeight = '600';
-                btnCard.style.background = 'var(--mg-bg-primary)';
-                btnCard.style.color = 'var(--mg-text-secondary)';
-                btnCard.style.fontWeight = '';
+                btnBase.className = 'mg-btn mg-btn-sm mg-btn-primary';
+                btnCard.className = 'mg-btn mg-btn-sm mg-btn-secondary';
             }
             document.getElementById('base-section').style.display = data.mode === 'base' ? 'block' : 'none';
             updateMapCoordSection();

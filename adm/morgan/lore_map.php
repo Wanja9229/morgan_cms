@@ -17,7 +17,7 @@ $tab = isset($_GET['tab']) ? $_GET['tab'] : 'settings';
 if (!in_array($tab, array('settings', 'regions'))) $tab = 'settings';
 
 // 공통 데이터
-$map_image = mg_config('expedition_map_image', '');
+$map_image = mg_config('lore_map_image', '');
 $map_desc = mg_config('lore_map_desc', '이 세계의 지도를 살펴보세요');
 
 // 지역 데이터

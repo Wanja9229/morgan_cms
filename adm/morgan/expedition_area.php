@@ -79,9 +79,9 @@ require_once __DIR__.'/_head.php';
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;">
     <div style="display:flex;align-items:center;gap:0.75rem;">
         <span style="font-size:0.85rem;color:var(--mg-text-secondary);">유저 UI:</span>
-        <div style="display:inline-flex;border-radius:8px;overflow:hidden;border:1px solid var(--mg-bg-tertiary);">
-            <button type="button" id="btn-mode-list" onclick="setUiMode('list')" style="padding:6px 14px;font-size:0.8rem;border:none;cursor:pointer;transition:background 0.15s;<?php echo $ui_mode !== 'map' ? 'background:var(--mg-accent);color:var(--mg-bg-primary);font-weight:600;' : 'background:var(--mg-bg-primary);color:var(--mg-text-secondary);'; ?>">카드 목록</button>
-            <button type="button" id="btn-mode-map" onclick="setUiMode('map')" style="padding:6px 14px;font-size:0.8rem;border:none;cursor:pointer;transition:background 0.15s;<?php echo $ui_mode === 'map' ? 'background:var(--mg-accent);color:var(--mg-bg-primary);font-weight:600;' : 'background:var(--mg-bg-primary);color:var(--mg-text-secondary);'; ?>"<?php echo !$map_image ? ' disabled title="파견 지도 이미지를 먼저 등록하세요"' : ''; ?>>파견 지도</button>
+        <div style="display:inline-flex;gap:4px;">
+            <button type="button" id="btn-mode-list" onclick="setUiMode('list')" class="mg-btn mg-btn-sm <?php echo $ui_mode !== 'map' ? 'mg-btn-primary' : 'mg-btn-secondary'; ?>">카드 목록</button>
+            <button type="button" id="btn-mode-map" onclick="setUiMode('map')" class="mg-btn mg-btn-sm <?php echo $ui_mode === 'map' ? 'mg-btn-primary' : 'mg-btn-secondary'; ?>">파견 지도</button>
         </div>
     </div>
     <button type="button" class="mg-btn mg-btn-primary" onclick="openAreaModal()">파견지 추가</button>
@@ -128,8 +128,8 @@ require_once __DIR__.'/_head.php';
                 <p style="font-size:0.8rem;color:var(--mg-text-muted);margin-top:0.25rem;">맵 마커 배치/편집은 PC에서 최적화되어 있습니다.</p>
             </div>
             <script>if(window.innerWidth<768)document.getElementById('map-mobile-notice').style.display='block';</script>
-            <div id="map-editor" style="position:relative;overflow:auto;max-height:600px;cursor:crosshair;">
-                <img src="<?php echo htmlspecialchars($map_image); ?>" id="map-editor-img" style="display:block;width:100%;min-width:600px;" alt="파견 지도" draggable="false">
+            <div id="map-editor" style="position:relative;cursor:crosshair;">
+                <img src="<?php echo htmlspecialchars($map_image); ?>" id="map-editor-img" style="display:block;width:100%;" alt="파견 지도" draggable="false">
                 <div id="map-editor-markers"></div>
             </div>
         </div>
@@ -732,25 +732,16 @@ function setUiMode(mode) {
 
     fetch(UPDATE_URL, { method: 'POST', credentials: 'same-origin', body: fd }).then(function(r) { return r.json(); }).then(function(data) {
         if (data.success) {
-            // 버튼 스타일 전환
             var btnList = document.getElementById('btn-mode-list');
             var btnMap = document.getElementById('btn-mode-map');
             var mapSection = document.getElementById('map-section');
             if (mode === 'map') {
-                btnMap.style.background = 'var(--mg-accent)';
-                btnMap.style.color = 'var(--mg-bg-primary)';
-                btnMap.style.fontWeight = '600';
-                btnList.style.background = 'var(--mg-bg-primary)';
-                btnList.style.color = 'var(--mg-text-secondary)';
-                btnList.style.fontWeight = '';
+                btnMap.className = 'mg-btn mg-btn-sm mg-btn-primary';
+                btnList.className = 'mg-btn mg-btn-sm mg-btn-secondary';
                 if (mapSection) mapSection.style.display = 'block';
             } else {
-                btnList.style.background = 'var(--mg-accent)';
-                btnList.style.color = 'var(--mg-bg-primary)';
-                btnList.style.fontWeight = '600';
-                btnMap.style.background = 'var(--mg-bg-primary)';
-                btnMap.style.color = 'var(--mg-text-secondary)';
-                btnMap.style.fontWeight = '';
+                btnList.className = 'mg-btn mg-btn-sm mg-btn-primary';
+                btnMap.className = 'mg-btn mg-btn-sm mg-btn-secondary';
                 if (mapSection) mapSection.style.display = 'none';
             }
         }

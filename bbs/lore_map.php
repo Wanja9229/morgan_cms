@@ -12,7 +12,7 @@ if (mg_config('lore_use', '1') == '0') {
     alert('세계관 위키가 비활성화되어 있습니다.', G5_BBS_URL);
 }
 
-$map_image = mg_config('expedition_map_image', '');
+$map_image = mg_config('lore_map_image', '');
 if (!$map_image) {
     alert('세계관 지도가 설정되지 않았습니다.', G5_BBS_URL . '/lore.php');
 }
