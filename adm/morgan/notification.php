@@ -62,6 +62,7 @@ $noti_types = array(
     'concierge_apply' => '의뢰 지원',
     'concierge_match' => '의뢰 매칭',
     'concierge_reward' => '의뢰 보상',
+    'concierge_result' => '의뢰 결과',
     'concierge_complete' => '의뢰 완료',
     'concierge_force_close' => '의뢰 강제종료',
     'reward' => '보상',

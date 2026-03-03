@@ -704,6 +704,16 @@ if (isset($menu)) {
             background: #16a34a;
         }
 
+        /* Button Warning */
+        .mg-btn-warning {
+            background: #f59e0b;
+            color: #000;
+        }
+
+        .mg-btn-warning:hover {
+            background: #d97706;
+        }
+
         /* Badge Primary */
         .mg-badge {
             background: var(--mg-bg-tertiary);
