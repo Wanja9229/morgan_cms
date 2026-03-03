@@ -30,14 +30,26 @@ if (!$link) {
 }
 mysqli_set_charset($link, 'utf8mb4');
 
-// 마스터 스키마 자동 부트스트랩 — 테이블이 없으면 생성
+// 마스터 스키마 자동 부트스트랩 — 테이블이 없거나 스키마가 잘못되면 재생성
+$_need_create = false;
 $check = mysqli_query($link, "SHOW TABLES LIKE 'super_admins'");
 if (!$check || mysqli_num_rows($check) === 0) {
+    $_need_create = true;
+} else {
+    // 테이블은 있지만 필수 컬럼(password_hash) 누락 → 스키마 불일치
+    $col = mysqli_query($link, "SHOW COLUMNS FROM super_admins LIKE 'password_hash'");
+    if (!$col || mysqli_num_rows($col) === 0) {
+        mysqli_query($link, "DROP TABLE IF EXISTS super_admins");
+        $_need_create = true;
+    }
+}
+
+if ($_need_create) {
+    // 전체 마스터 스키마 적용 시도
     $_master_sql = G5_PATH . '/db/migrations/20260301_220000_master_schema.sql';
     if (file_exists($_master_sql)) {
         $sql_content = file_get_contents($_master_sql);
         if ($sql_content) {
-            // multi_query 후 커넥션이 오염되므로 실행 후 재연결
             mysqli_multi_query($link, $sql_content);
             do {
                 if ($r = mysqli_store_result($link)) mysqli_free_result($r);
@@ -51,9 +63,12 @@ if (!$check || mysqli_num_rows($check) === 0) {
             }
             mysqli_set_charset($link, 'utf8mb4');
         }
-    } else {
-        // SQL 파일 없으면 직접 생성
-        mysqli_query($link, "CREATE TABLE IF NOT EXISTS super_admins (
+    }
+
+    // SQL 파일로 생성 안 됐으면 직접 생성
+    $verify = mysqli_query($link, "SHOW TABLES LIKE 'super_admins'");
+    if (!$verify || mysqli_num_rows($verify) === 0) {
+        mysqli_query($link, "CREATE TABLE super_admins (
             id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             username VARCHAR(50) NOT NULL,
             password_hash VARCHAR(255) NOT NULL,
@@ -66,6 +81,7 @@ if (!$check || mysqli_num_rows($check) === 0) {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     }
 }
+unset($_need_create);
 
 // 이미 계정 존재 확인
 $result = mysqli_query($link, "SELECT COUNT(*) AS cnt FROM super_admins");
