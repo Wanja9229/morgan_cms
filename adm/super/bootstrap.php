@@ -22,8 +22,28 @@ if (!$link) {
 }
 mysqli_set_charset($link, 'utf8mb4');
 
+// 마스터 스키마 자동 부트스트랩 — 테이블이 없으면 생성
+$_master_sql = G5_PATH . '/db/migrations/20260301_220000_master_schema.sql';
+if ($_master_sql && file_exists($_master_sql)) {
+    $check = mysqli_query($link, "SHOW TABLES LIKE 'super_admins'");
+    if (!$check || mysqli_num_rows($check) === 0) {
+        $sql_content = file_get_contents($_master_sql);
+        if ($sql_content) {
+            mysqli_multi_query($link, $sql_content);
+            // 모든 결과 세트 소비
+            do {
+                if ($r = mysqli_store_result($link)) mysqli_free_result($r);
+            } while (mysqli_more_results($link) && mysqli_next_result($link));
+        }
+    }
+}
+unset($_master_sql);
+
 // 이미 계정 존재 확인
 $result = mysqli_query($link, "SELECT COUNT(*) AS cnt FROM super_admins");
+if (!$result) {
+    die('super_admins 테이블 조회 실패: ' . mysqli_error($link));
+}
 $row = mysqli_fetch_assoc($result);
 
 if ((int)$row['cnt'] > 0) {
