@@ -35,11 +35,22 @@ include_once('./_head.php');
             <input type="hidden" name="id" value="<?php echo $tenant['id']; ?>">
             <?php endif; ?>
 
-            <?php if ($is_edit): ?>
+            <?php if ($is_edit):
+                $tenant_url = '';
+                if (!empty($tenant['subdomain']) && defined('MG_TENANT_BASE_DOMAIN')) {
+                    $tenant_url = 'https://' . $tenant['subdomain'] . '.' . MG_TENANT_BASE_DOMAIN;
+                }
+            ?>
             <!-- 편집 모드: 서브도메인 읽기 전용 -->
             <div class="sa-form-group">
                 <label class="sa-form-label">서브도메인</label>
-                <input type="text" class="sa-form-input" value="<?php echo sa_h($tenant['subdomain']); ?>" disabled style="opacity:0.6">
+                <input type="text" class="sa-form-input" value="<?php echo sa_h($tenant['subdomain']); ?>" disabled style="opacity:0.6;max-width:300px">
+                <?php if ($tenant_url): ?>
+                <div style="margin-top:0.375rem;display:flex;align-items:center;gap:0.5rem">
+                    <a href="<?php echo sa_h($tenant_url); ?>" target="_blank" style="color:var(--mg-accent);font-size:0.875rem"><?php echo sa_h($tenant_url); ?></a>
+                    <button type="button" onclick="navigator.clipboard.writeText('<?php echo sa_h($tenant_url); ?>');this.textContent='복사됨!';setTimeout(()=>this.textContent='복사',1500)" style="padding:0.125rem 0.5rem;background:var(--mg-bg-tertiary);border:1px solid #4a4d55;border-radius:0.25rem;color:var(--mg-text-secondary);font-size:0.75rem;cursor:pointer">복사</button>
+                </div>
+                <?php endif; ?>
                 <div class="sa-form-help">서브도메인은 변경할 수 없습니다.</div>
             </div>
             <?php else: ?>
