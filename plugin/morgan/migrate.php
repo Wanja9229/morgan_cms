@@ -46,6 +46,9 @@ function mg_run_migrations() {
         $filename = basename($file);
         if (in_array($filename, $applied)) continue;
 
+        // 마스터 DB 전용 파일 스킵 (파일명에 'master' 포함 시)
+        if (stripos($filename, 'master') !== false) continue;
+
         $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
 
         if ($ext === 'php') {
