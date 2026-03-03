@@ -124,8 +124,8 @@ include_once('./_head.php');
                     <th>한마디</th>
                     <th style="width:80px;">이미지</th>
                     <th style="width:70px;">상태</th>
-                    <th style="width:130px;">수정일</th>
-                    <th style="width:160px;">관리</th>
+                    <th style="width:150px;">수정일</th>
+                    <th style="width:190px;">관리</th>
                 </tr>
             </thead>
             <tbody>
@@ -152,7 +152,7 @@ include_once('./_head.php');
                         <span class="mg-badge mg-badge-secondary">OFF</span>
                         <?php } ?>
                     </td>
-                    <td><?php echo date('Y-m-d H:i', strtotime($s['seal_update'])); ?></td>
+                    <td style="text-align:center;color:var(--mg-text-muted);font-size:0.8rem;"><?php echo date('Y-m-d H:i', strtotime($s['seal_update'])); ?></td>
                     <td>
                         <button type="button" onclick="viewSeal('<?php echo $s['mb_id']; ?>')" class="mg-btn mg-btn-sm mg-btn-secondary">보기</button>
                         <?php if ($s['seal_use']) { ?>

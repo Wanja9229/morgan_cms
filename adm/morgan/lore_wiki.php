@@ -250,7 +250,7 @@ if ($tab == 'categories') { ?>
                     <th style="width:60px;text-align:center;">ID</th>
                     <th>카테고리명</th>
                     <th style="width:100px;text-align:center;">정렬순서</th>
-                    <th style="width:80px;text-align:center;">사용여부</th>
+                    <th style="width:100px;text-align:center;">사용여부</th>
                     <th style="width:80px;text-align:center;">문서수</th>
                     <th style="width:200px;text-align:center;">관리</th>
                 </tr>
@@ -363,7 +363,7 @@ if ($tab == 'articles') {
                     <th style="width:100px;text-align:center;">카테고리</th>
                     <th style="width:65px;text-align:center;">공개</th>
                     <th style="width:80px;text-align:center;">조회수</th>
-                    <th style="width:130px;text-align:center;">수정일</th>
+                    <th style="width:140px;text-align:center;">수정일</th>
                     <th style="width:140px;text-align:center;">관리</th>
                 </tr>
             </thead>

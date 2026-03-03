@@ -67,7 +67,7 @@ require_once __DIR__.'/_head.php';
             <thead>
                 <tr>
                     <th style="width:60px;">순서</th>
-                    <th style="width:65px;">아이콘</th>
+                    <th style="width:100px;">아이콘</th>
                     <th style="width:180px;">이벤트명</th>
                     <th>설명</th>
                     <th style="width:120px;">효과</th>

@@ -305,13 +305,13 @@ $entry_status_labels = array(
                     <th style="width:50px;">ID</th>
                     <th style="width:100px;">게시판</th>
                     <th style="min-width:160px;">제목</th>
-                    <th style="width:65px;text-align:center;">주기</th>
+                    <th style="width:80px;text-align:center;">주기</th>
                     <th style="width:60px;text-align:center;">모드</th>
-                    <th style="width:70px;text-align:center;">상태</th>
+                    <th style="width:80px;text-align:center;">상태</th>
                     <th style="width:200px;">기간</th>
                     <th style="width:60px;text-align:center;">제출</th>
-                    <th style="width:90px;">작성일</th>
-                    <th style="width:200px;text-align:center;">관리</th>
+                    <th style="width:150px;">작성일</th>
+                    <th style="width:240px;text-align:center;">관리</th>
                 </tr>
             </thead>
             <tbody>
@@ -357,7 +357,7 @@ $entry_status_labels = array(
                             <?php echo (int)$pm['entry_count']; ?>건
                         </a>
                     </td>
-                    <td><small style="color:var(--mg-text-muted);"><?php echo $pm['pm_created']; ?></small></td>
+                    <td style="text-align:center;color:var(--mg-text-muted);font-size:0.8rem;"><?php echo $pm['pm_created']; ?></td>
                     <td style="text-align:center;">
                         <a href="?mode=edit&pm_id=<?php echo $pm['pm_id']; ?>" class="mg-btn mg-btn-secondary mg-btn-sm">편집</a>
                         <a href="?mode=review&pm_id=<?php echo $pm['pm_id']; ?>" class="mg-btn mg-btn-secondary mg-btn-sm">검수</a>

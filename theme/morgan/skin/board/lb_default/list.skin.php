@@ -460,7 +460,6 @@ include_once(G5_THEME_PATH.'/skin/board/_lb_common.php');
                 <?php } ?>
             <?php } else { ?>
                 <div class="lb-def-empty">
-                    <div class="lb-def-empty-icon">&#128203;</div>
                     <h3>아직 작성된 글이 없습니다</h3>
                 </div>
             <?php } ?>

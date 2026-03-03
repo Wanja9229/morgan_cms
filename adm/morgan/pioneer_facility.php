@@ -128,7 +128,7 @@ $_marker_style = mg_config('map_marker_style', 'pin');
                     <th style="width:55px;">순서</th>
                     <th style="width:70px;">아이콘</th>
                     <th style="width:140px;">시설명</th>
-                    <th style="width:75px;">상태</th>
+                    <th style="width:75px;text-align:center;">상태</th>
                     <th style="width:120px;">스테미나</th>
                     <th style="width:180px;">재료</th>
                     <th style="width:110px;">해금</th>
@@ -197,7 +197,7 @@ $_marker_style = mg_config('map_marker_style', 'pin');
                         ?>
                         <span class="mg-badge"><?php echo $label; ?></span>
                         <?php if ($fc['fc_unlock_target']) { ?>
-                        <br><span class="mg-badge" style="margin-top:4px;"><?php echo htmlspecialchars($fc['fc_unlock_target']); ?></span>
+                        <span class="mg-badge" style="margin-left:4px;"><?php echo htmlspecialchars($fc['fc_unlock_target']); ?></span>
                         <?php } ?>
                         <?php } else { ?>
                         -

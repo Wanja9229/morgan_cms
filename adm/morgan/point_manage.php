@@ -347,7 +347,7 @@ function givePoint(form) {
                     <td><?php echo htmlspecialchars($row['mb_nick']); ?></td>
                     <td><?php echo htmlspecialchars($row['po_content']); ?></td>
                     <td style="text-align:right;<?php echo $point_class; ?>"><?php echo $point_prefix . number_format($row['po_point']); ?>P</td>
-                    <td style="color:var(--mg-text-muted);"><?php echo $row['po_datetime']; ?></td>
+                    <td style="text-align:center;color:var(--mg-text-muted);font-size:0.8rem;"><?php echo $row['po_datetime']; ?></td>
                 </tr>
                 <?php } ?>
                 <?php if ($total_count == 0) { ?>

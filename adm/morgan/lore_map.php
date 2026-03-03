@@ -124,9 +124,9 @@ function deleteMapImage() {
                     <th>지역명</th>
                     <th>설명</th>
                     <th style="width:80px;">배치</th>
-                    <th style="width:100px;">좌표</th>
+                    <th style="width:115px;">좌표</th>
                     <th style="width:65px;">사용</th>
-                    <th style="width:100px;">관리</th>
+                    <th style="width:140px;">관리</th>
                 </tr>
             </thead>
             <tbody>

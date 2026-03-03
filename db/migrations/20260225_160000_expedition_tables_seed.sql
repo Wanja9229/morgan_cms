@@ -58,7 +58,5 @@ SELECT 1, 7, 1, 3, 100, 0 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM `mg_expediti
 INSERT INTO `mg_expedition_drop` (`ea_id`, `mt_id`, `ed_min`, `ed_max`, `ed_chance`, `ed_is_rare`)
 SELECT 1, 11, 1, 1, 10, 1 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM `mg_expedition_drop` WHERE ea_id=1 AND mt_id=11);
 
--- 파견 설정
-INSERT IGNORE INTO `mg_config` (`cf_key`, `cf_value`) VALUES ('expedition_ui_mode', 'list');
-INSERT IGNORE INTO `mg_config` (`cf_key`, `cf_value`) VALUES ('expedition_map_image', '');
+-- 파견 설정 (expedition_ui_mode, expedition_map_image 는 20260218_120000에서 이미 INSERT)
 INSERT IGNORE INTO `mg_config` (`cf_key`, `cf_value`) VALUES ('expedition_max_slots', '1');

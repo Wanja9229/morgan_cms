@@ -150,7 +150,7 @@ require_once __DIR__.'/_head.php';
                         <th style="width:90px;">유형</th>
                         <th style="width:80px;">상태</th>
                         <th style="width:120px;">등록일</th>
-                        <th style="width:120px;">관리</th>
+                        <th style="width:180px;">관리</th>
                     </tr>
                 </thead>
                 <tbody>

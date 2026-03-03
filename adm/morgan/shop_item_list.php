@@ -155,11 +155,11 @@ require_once __DIR__.'/_head.php';
                         <th style="width:40px;"><input type="checkbox" onclick="checkAll(this);"></th>
                         <th style="width:60px;">이미지</th>
                         <th>상품명</th>
-                        <th style="width:100px;">타입</th>
-                        <th style="width:80px;">가격</th>
-                        <th style="width:65px;">재고</th>
-                        <th class="mg-hide-mobile" style="width:55px;">노출</th>
-                        <th class="mg-hide-mobile" style="width:55px;">사용</th>
+                        <th style="width:145px;text-align:center;">타입</th>
+                        <th style="width:100px;text-align:center;">가격</th>
+                        <th style="width:100px;text-align:center;">재고</th>
+                        <th class="mg-hide-mobile" style="width:80px;text-align:center;">노출</th>
+                        <th class="mg-hide-mobile" style="width:80px;text-align:center;">사용</th>
                         <th style="width:70px;">관리</th>
                     </tr>
                 </thead>
@@ -197,10 +197,10 @@ require_once __DIR__.'/_head.php';
                             </a>
                             <?php echo $status_badge; ?>
                         </td>
-                        <td>
+                        <td style="text-align:center;">
                             <span class="mg-badge"><?php echo $type_labels[$row['si_type']] ?? $row['si_type']; ?></span>
                         </td>
-                        <td style="text-align:right;"><?php echo number_format($row['si_price']); ?>P</td>
+                        <td style="text-align:center;"><?php echo number_format($row['si_price']); ?>P</td>
                         <td style="text-align:center;">
                             <?php echo $stock_display; ?>
                             <?php if ($row['si_stock'] > 0) { ?>

@@ -367,16 +367,16 @@ class TenantManager
     }
 
     /**
-     * 마이그레이션 실행
+     * 마이그레이션 실행 (신규 테넌트 프로비저닝용)
      *
-     * @return int 실행된 마이그레이션 수
+     * db/migrations/ — 메인 테넌트 전용: install+seed로 스키마 완성이므로 실행하지 않고 적용 완료로 기록만
+     * db/patches/    — 모든 테넌트 공통: 실제 실행
+     *
+     * @return int 실행된 패치 수
      */
     private function runMigrations($link)
     {
-        $migrationDir = G5_PATH . '/db/migrations';
-        if (!is_dir($migrationDir)) return 0;
-
-        // mg_migrations 테이블 존재 확인 (install.sql 컬럼명: mig_id, mig_file, mig_applied_at)
+        // mg_migrations 테이블 존재 확인
         try {
             $result = mysqli_query($link, "SHOW TABLES LIKE 'mg_migrations'");
             if (!$result || mysqli_num_rows($result) === 0) {
@@ -390,21 +390,43 @@ class TenantManager
             // 무시
         }
 
-        // SQL 파일 목록
-        $files = glob($migrationDir . '/*.sql');
-        if (!$files) return 0;
-        sort($files);
+        // --- 1) db/migrations/ 파일을 실행하지 않고 적용 완료로 기록 ---
+        // (install.sql + seed.sql로 스키마가 이미 완성된 상태이므로
+        //  DDL 재실행이나 문빌 전용 시드 데이터 삽입을 방지)
+        $migrationDir = G5_PATH . '/db/migrations';
+        if (is_dir($migrationDir)) {
+            $migFiles = array_merge(
+                glob($migrationDir . '/*.sql') ?: array(),
+                glob($migrationDir . '/*.php') ?: array()
+            );
+            foreach ($migFiles as $file) {
+                $filename = basename($file);
+                $esc = mysqli_real_escape_string($link, $filename);
+                try {
+                    mysqli_query($link, "INSERT IGNORE INTO mg_migrations (mig_file) VALUES ('{$esc}')");
+                } catch (\mysqli_sql_exception $e) {
+                    // 무시
+                }
+            }
+            $this->addLog('db/migrations/ ' . count($migFiles) . '개 파일 스킵 (적용 완료로 기록)');
+        }
+
+        // --- 2) db/patches/ 실제 실행 (모든 테넌트 공통) ---
+        $patchDir = G5_PATH . '/db/patches';
+        if (!is_dir($patchDir)) return 0;
+
+        $patchFiles = array_merge(
+            glob($patchDir . '/*.sql') ?: array(),
+            glob($patchDir . '/*.php') ?: array()
+        );
+        if (!$patchFiles) return 0;
+        sort($patchFiles);
 
         $count = 0;
-        foreach ($files as $file) {
+        foreach ($patchFiles as $file) {
             $filename = basename($file);
 
-            // 마스터 스키마 마이그레이션은 건너뛰기 (마스터 DB 전용)
-            if (strpos($filename, 'master_schema') !== false) {
-                continue;
-            }
-
-            // 이미 적용된 마이그레이션 스킵
+            // 이미 적용된 패치 스킵
             $esc = mysqli_real_escape_string($link, $filename);
             try {
                 $check = mysqli_query($link, "SELECT mig_id FROM mg_migrations WHERE mig_file = '{$esc}'");
@@ -412,25 +434,39 @@ class TenantManager
                     continue;
                 }
             } catch (\mysqli_sql_exception $e) {
-                // 테이블/컬럼 문제 시 계속 진행
+                // 계속 진행
             }
 
-            // 실행
-            $sql = file_get_contents($file);
-            $sql = preg_replace('/^--.*$/m', '', $sql);
+            $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
 
-            // mysqli_multi_query 사용
-            try {
-                if (mysqli_multi_query($link, $sql)) {
-                    do {
-                        if ($result = mysqli_store_result($link)) {
-                            mysqli_free_result($result);
-                        }
-                    } while (mysqli_next_result($link));
+            if ($ext === 'php') {
+                try {
+                    include($file);
+                } catch (\Exception $e) {
+                    error_log('[TenantManager] Patch PHP error (' . $filename . '): ' . $e->getMessage());
                 }
-            } catch (\mysqli_sql_exception $e) {
-                error_log('[TenantManager] Migration error (' . $filename . '): ' . $e->getMessage());
-                // 마이그레이션은 멱등성 보장이므로 계속 진행
+            } else {
+                // SQL 파일 실행
+                $sql = file_get_contents($file);
+                if (!trim($sql)) {
+                    // 빈 파일 → 기록만
+                    try {
+                        mysqli_query($link, "INSERT IGNORE INTO mg_migrations (mig_file) VALUES ('{$esc}')");
+                    } catch (\mysqli_sql_exception $e) {}
+                    continue;
+                }
+
+                try {
+                    if (mysqli_multi_query($link, $sql)) {
+                        do {
+                            if ($result = mysqli_store_result($link)) {
+                                mysqli_free_result($result);
+                            }
+                        } while (mysqli_next_result($link));
+                    }
+                } catch (\mysqli_sql_exception $e) {
+                    error_log('[TenantManager] Patch error (' . $filename . '): ' . $e->getMessage());
+                }
             }
 
             // 실행 기록

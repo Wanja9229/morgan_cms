@@ -121,9 +121,9 @@ require_once __DIR__.'/_head.php';
                     <th>파트너</th>
                     <th>파견지</th>
                     <th style="width:55px;">ST</th>
-                    <th>시작</th>
-                    <th>종료</th>
-                    <th style="width:70px;">상태</th>
+                    <th style="width:140px;">시작</th>
+                    <th style="width:140px;">종료</th>
+                    <th style="width:100px;text-align:center;">상태</th>
                     <th>보상</th>
                 </tr>
             </thead>
@@ -163,8 +163,8 @@ require_once __DIR__.'/_head.php';
                     </td>
                     <td><?php echo htmlspecialchars($log['ea_name'] ?: '-'); ?></td>
                     <td style="text-align:center;"><?php echo $log['el_stamina_used']; ?></td>
-                    <td style="font-size:0.8rem;"><?php echo substr($log['el_start'], 5, 11); ?></td>
-                    <td style="font-size:0.8rem;"><?php echo substr($log['el_end'], 5, 11); ?></td>
+                    <td style="text-align:center;color:var(--mg-text-muted);font-size:0.8rem;"><?php echo substr($log['el_start'], 2, 14); ?></td>
+                    <td style="text-align:center;color:var(--mg-text-muted);font-size:0.8rem;"><?php echo substr($log['el_end'], 2, 14); ?></td>
                     <td style="text-align:center;"><?php echo $badge; ?></td>
                     <td style="font-size:0.8rem;"><?php echo htmlspecialchars($rewards_text); ?></td>
                 </tr>

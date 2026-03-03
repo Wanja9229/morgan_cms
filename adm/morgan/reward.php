@@ -818,13 +818,13 @@ function escHtml(str) {
                 <tr>
                     <th style="width:55px;">ID</th>
                     <th>역극</th>
-                    <th style="width:120px;">캐릭터</th>
+                    <th style="width:180px;">캐릭터</th>
                     <th style="width:100px;">소유자</th>
-                    <th style="width:80px;">상호 이음</th>
+                    <th style="width:145px;">상호 이음</th>
                     <th style="width:80px;">보상</th>
-                    <th style="width:70px;">방식</th>
-                    <th style="width:70px;">상태</th>
-                    <th style="width:130px;">완결일</th>
+                    <th style="width:100px;text-align:center;">방식</th>
+                    <th style="width:100px;text-align:center;">상태</th>
+                    <th style="width:150px;">완결일</th>
                     <th style="width:70px;">관리</th>
                 </tr>
             </thead>
@@ -871,7 +871,7 @@ function escHtml(str) {
                         <span class="mg-badge mg-badge--success">완료</span>
                         <?php } ?>
                     </td>
-                    <td><small><?php echo $rc['rc_datetime']; ?></small></td>
+                    <td style="text-align:center;color:var(--mg-text-muted);font-size:0.8rem;"><?php echo $rc['rc_datetime']; ?></td>
                     <td style="text-align:center;">
                         <?php if ($rc['rc_status'] == 'completed' && $rc['rc_rewarded']) { ?>
                         <button type="button" class="mg-btn mg-btn-danger mg-btn-sm" onclick="revokeReward(<?php echo $rc['rc_id']; ?>, <?php echo (int)$rc['rc_point']; ?>, '<?php echo htmlspecialchars($rc['mb_id']); ?>')">회수</button>

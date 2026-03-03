@@ -20,6 +20,7 @@ if (!defined('_GNUBOARD_')) exit;
 .lb-char-selector { margin-bottom: 14px; }
 .lb-char-label, .lb-field-label {
     display: block; font-size: 0.75rem; font-weight: 600;
+    font-family: 'Noto Sans KR', -apple-system, sans-serif;
     text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
     color: var(--mg-text-muted, #949ba4);
 }
@@ -156,7 +157,7 @@ function lbCloseWrite() {
     document.body.style.overflow = '';
 }
 
-// 글 등록 (에디터 → textarea 동기화 → 토큰 → iframe submit)
+// 글 등록 (에디터 → textarea 동기화 → 토큰 → fetch submit → 새로고침)
 var _lb_submitting = false;
 function lbSubmitPost(f) {
     if (_lb_submitting) return false;
@@ -186,33 +187,23 @@ function lbSubmitPost(f) {
             f.token.value = data.token;
             _lb_submitting = true;
 
-            // hidden iframe으로 제출 (메인 페이지 유지)
-            var frame = document.getElementById('lb_submit_frame');
-            if (!frame) {
-                frame = document.createElement('iframe');
-                frame.id = 'lb_submit_frame';
-                frame.name = 'lb_submit_frame';
-                frame.style.display = 'none';
-                document.body.appendChild(frame);
-            }
-
-            // iframe 로드 완료 = 글 등록 처리 완료
-            frame.onload = function() {
+            // fetch로 제출 (리다이렉트 무시, 새로고침)
+            var formData = new FormData(f);
+            fetch(f.action, {
+                method: 'POST',
+                body: formData
+            }).then(function() {
                 _lb_submitting = false;
                 lbCloseWrite();
-                // 에디터 초기화
-                if (_lb_editor) {
-                    _lb_editor.setHTML('');
-                }
+                if (_lb_editor) _lb_editor.setHTML('');
                 f.wr_subject.value = '';
                 f.wr_content.value = '';
                 f.token.value = '';
-                // 목록 새로고침
                 location.reload();
-            };
-
-            f.target = 'lb_submit_frame';
-            f.submit();
+            }).catch(function() {
+                alert('등록 오류');
+                _lb_submitting = false;
+            });
         } catch(e) { alert('토큰 발급 오류'); _lb_submitting = false; }
     };
     xhr.onerror = function() { alert('네트워크 오류'); };

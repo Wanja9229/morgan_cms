@@ -64,7 +64,7 @@ require_once __DIR__.'/_head.php';
                             <th style="width:30px;"></th>
                             <th style="width:36px;"><input type="checkbox" onclick="checkAll(this, 'fsidelist');"></th>
                             <th>소속명</th>
-                            <th style="width:120px;">아이콘</th>
+                            <th style="width:180px;">아이콘</th>
                             <th style="width:60px;">사용</th>
                             <th style="width:50px;">ID</th>
                         </tr>
@@ -82,22 +82,16 @@ require_once __DIR__.'/_head.php';
                                 <input type="text" name="item_name[]" value="<?php echo htmlspecialchars($side['side_name'] ?? ''); ?>" class="mg-form-input">
                             </td>
                             <td>
-                                <input type="hidden" name="item_icon[]" value="<?php echo htmlspecialchars($icon_val); ?>">
-                                <?php if ($is_image) { ?>
-                                <div style="display:flex;align-items:center;gap:0.5rem;">
-                                    <img src="<?php echo htmlspecialchars($icon_val); ?>" style="width:24px;height:24px;object-fit:contain;">
-                                    <label style="color:var(--mg-error);font-size:0.75rem;cursor:pointer;">
-                                        <input type="checkbox" name="del_icon[<?php echo $side['side_id']; ?>]" value="1"> 삭제
-                                    </label>
+                                <div style="display:flex;flex-direction:column;">
+                                <?php mg_icon_input('edit_side_'.$side['side_id'], $icon_val, array(
+                                    'text_name' => 'item_icon['.$side['side_id'].']',
+                                    'file_name' => 'item_icon_file_'.$side['side_id'],
+                                    'delete_name' => 'del_icon['.$side['side_id'].']',
+                                    'show_preview' => true,
+                                    'show_delete' => $is_image,
+                                    'compact' => true
+                                )); ?>
                                 </div>
-                                <?php } elseif ($icon_val) { ?>
-                                <span style="display:inline-flex;align-items:center;gap:0.25rem;color:var(--mg-text-secondary);">
-                                    <?php echo mg_icon($icon_val, 'w-4 h-4'); ?>
-                                    <span style="font-size:0.75rem;"><?php echo htmlspecialchars($icon_val); ?></span>
-                                </span>
-                                <?php } else { ?>
-                                <span style="color:var(--mg-text-muted);font-size:0.875rem;">-</span>
-                                <?php } ?>
                             </td>
                             <td style="text-align:center;">
                                 <input type="checkbox" name="item_use[<?php echo $side['side_id']; ?>]" value="1" <?php echo $side['side_use'] ? 'checked' : ''; ?>>
@@ -112,7 +106,9 @@ require_once __DIR__.'/_head.php';
                             <td></td>
                             <td><input type="text" name="new_item_name" value="" class="mg-form-input" placeholder="새 소속명"></td>
                             <td>
+                                <div style="display:flex;flex-direction:column;">
                                 <?php mg_icon_input('new_side_icon', '', array('text_name' => 'new_item_icon', 'file_name' => 'new_item_icon_file', 'show_preview' => false, 'show_delete' => false, 'compact' => true)); ?>
+                                </div>
                             </td>
                             <td style="text-align:center;"><input type="checkbox" name="new_item_use" value="1" checked></td>
                             <td style="text-align:center;color:var(--mg-accent);font-size:0.75rem;">NEW</td>
@@ -155,7 +151,7 @@ require_once __DIR__.'/_head.php';
                             <th style="width:36px;"><input type="checkbox" onclick="checkAll(this, 'fclasslist');"></th>
                             <th>유형명</th>
                             <th style="width:140px;">소속</th>
-                            <th style="width:120px;">아이콘</th>
+                            <th style="width:180px;">아이콘</th>
                             <th style="width:60px;">사용</th>
                             <th style="width:50px;">ID</th>
                         </tr>
@@ -183,22 +179,16 @@ require_once __DIR__.'/_head.php';
                                 </select>
                             </td>
                             <td>
-                                <input type="hidden" name="item_icon[]" value="<?php echo htmlspecialchars($icon_val); ?>">
-                                <?php if ($is_image) { ?>
-                                <div style="display:flex;align-items:center;gap:0.5rem;">
-                                    <img src="<?php echo htmlspecialchars($icon_val); ?>" style="width:24px;height:24px;object-fit:contain;">
-                                    <label style="color:var(--mg-error);font-size:0.75rem;cursor:pointer;">
-                                        <input type="checkbox" name="del_icon[<?php echo $class['class_id']; ?>]" value="1"> 삭제
-                                    </label>
+                                <div style="display:flex;flex-direction:column;">
+                                <?php mg_icon_input('edit_class_'.$class['class_id'], $icon_val, array(
+                                    'text_name' => 'item_icon['.$class['class_id'].']',
+                                    'file_name' => 'item_icon_file_'.$class['class_id'],
+                                    'delete_name' => 'del_icon['.$class['class_id'].']',
+                                    'show_preview' => true,
+                                    'show_delete' => $is_image,
+                                    'compact' => true
+                                )); ?>
                                 </div>
-                                <?php } elseif ($icon_val) { ?>
-                                <span style="display:inline-flex;align-items:center;gap:0.25rem;color:var(--mg-text-secondary);">
-                                    <?php echo mg_icon($icon_val, 'w-4 h-4'); ?>
-                                    <span style="font-size:0.75rem;"><?php echo htmlspecialchars($icon_val); ?></span>
-                                </span>
-                                <?php } else { ?>
-                                <span style="color:var(--mg-text-muted);font-size:0.875rem;">-</span>
-                                <?php } ?>
                             </td>
                             <td style="text-align:center;">
                                 <input type="checkbox" name="item_use[<?php echo $class['class_id']; ?>]" value="1" <?php echo $class['class_use'] ? 'checked' : ''; ?>>
@@ -221,7 +211,9 @@ require_once __DIR__.'/_head.php';
                                 </select>
                             </td>
                             <td>
+                                <div style="display:flex;flex-direction:column;">
                                 <?php mg_icon_input('new_class_icon', '', array('text_name' => 'new_item_icon', 'file_name' => 'new_item_icon_file', 'show_preview' => false, 'show_delete' => false, 'compact' => true)); ?>
+                                </div>
                             </td>
                             <td style="text-align:center;"><input type="checkbox" name="new_item_use" value="1" checked></td>
                             <td style="text-align:center;color:var(--mg-accent);font-size:0.75rem;">NEW</td>

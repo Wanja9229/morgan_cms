@@ -2,8 +2,10 @@
 /**
  * Morgan DB Migration Runner
  *
- * db/migrations/ 폴더의 SQL 파일을 순서대로 자동 적용합니다.
- * 파일명 형식: YYYYMMDD_HHMMSS_description.sql
+ * db/migrations/ — 메인 테넌트 전용 마이그레이션 (DDL + 시드)
+ * db/patches/    — 모든 테넌트 공통 데이터 패치
+ *
+ * 파일명 형식: YYYYMMDD_HHMMSS_description.sql (또는 .php)
  * morgan.php에서 세션 기반 캐시로 호출 (파일 수 변경 시만 실행)
  */
 
@@ -24,16 +26,6 @@ function mg_run_migrations() {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     }
 
-    // 마이그레이션 디렉토리 스캔
-    $mig_dir = G5_PATH . '/db/migrations';
-    if (!is_dir($mig_dir)) return;
-
-    $sql_files = glob($mig_dir . '/*.sql');
-    $php_files = glob($mig_dir . '/*.php');
-    $files = array_merge($sql_files ?: array(), $php_files ?: array());
-    if (!$files) return;
-    sort($files);
-
     // 이미 적용된 목록
     $applied = array();
     $result = sql_query("SELECT mig_file FROM `{$table}`");
@@ -41,61 +33,113 @@ function mg_run_migrations() {
         $applied[] = $row['mig_file'];
     }
 
-    // 미적용 마이그레이션 실행
-    foreach ($files as $file) {
-        $filename = basename($file);
-        if (in_array($filename, $applied)) continue;
+    // --- 1) db/migrations/ (메인 테넌트 전용) ---
+    $mig_dir = G5_PATH . '/db/migrations';
+    if (is_dir($mig_dir)) {
+        $files = _mg_scan_migration_dir($mig_dir);
+        foreach ($files as $file) {
+            $filename = basename($file);
+            if (in_array($filename, $applied)) continue;
 
-        // 마스터 DB 전용 파일 스킵 (파일명에 'master' 포함 시)
-        if (stripos($filename, 'master') !== false) continue;
+            // 마스터 DB 전용 파일 스킵
+            if (stripos($filename, 'master') !== false) continue;
 
-        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+            _mg_execute_migration($file, $table);
+        }
+    }
 
-        if ($ext === 'php') {
-            // PHP 마이그레이션: 파일을 include하여 실행
-            $success = true;
-            try {
-                include($file);
-            } catch (Exception $e) {
-                $success = false;
-                error_log("[Morgan Migration] PHP FAILED: {$filename} — " . $e->getMessage());
-            }
-        } else {
-            // SQL 마이그레이션: mysqli_multi_query로 전체 실행
-            // (PREPARE/EXECUTE, ADD COLUMN IF NOT EXISTS 등 복합 구문 지원)
-            $sql_content = file_get_contents($file);
-            if (!trim($sql_content)) continue;
+    // --- 2) db/patches/ (모든 테넌트 공통) ---
+    $patch_dir = G5_PATH . '/db/patches';
+    if (is_dir($patch_dir)) {
+        $files = _mg_scan_migration_dir($patch_dir);
+        foreach ($files as $file) {
+            $filename = basename($file);
+            if (in_array($filename, $applied)) continue;
 
-            $success = true;
-            $errors = array();
-            $link = $g5['connect_db'];
+            _mg_execute_migration($file, $table);
+        }
+    }
+}
 
-            if (@mysqli_multi_query($link, $sql_content)) {
-                // 모든 결과 세트를 소비해야 다음 쿼리가 정상 동작
-                $stmt_idx = 0;
-                do {
-                    if ($r = mysqli_store_result($link)) {
-                        mysqli_free_result($r);
-                    }
-                    // 각 구문별 에러 체크
-                    if (mysqli_errno($link)) {
-                        $errors[] = "stmt[{$stmt_idx}]: " . mysqli_error($link);
-                    }
-                    $stmt_idx++;
-                } while (mysqli_more_results($link) && mysqli_next_result($link));
-            } else {
-                $success = false;
-                error_log("[Morgan Migration] FAILED: {$filename} — " . mysqli_error($link));
-            }
+/**
+ * 디렉토리에서 .sql + .php 파일 스캔 (정렬)
+ */
+function _mg_scan_migration_dir($dir) {
+    $sql_files = glob($dir . '/*.sql') ?: array();
+    $php_files = glob($dir . '/*.php') ?: array();
+    $files = array_merge($sql_files, $php_files);
+    sort($files);
+    return $files;
+}
 
-            if ($errors) {
-                error_log("[Morgan Migration] PARTIAL ERRORS in {$filename}: " . implode(' | ', $errors));
-            }
+/**
+ * 마이그레이션/패치 파일 1개 실행 + 적용 기록
+ */
+function _mg_execute_migration($file, $table) {
+    global $g5;
+
+    $filename = basename($file);
+    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+    if ($ext === 'php') {
+        // PHP 마이그레이션: 파일을 include하여 실행
+        try {
+            include($file);
+        } catch (Exception $e) {
+            error_log("[Morgan Migration] PHP FAILED: {$filename} — " . $e->getMessage());
+        }
+    } else {
+        // SQL 마이그레이션: mysqli_multi_query로 전체 실행
+        $sql_content = file_get_contents($file);
+        if (!trim($sql_content)) {
+            // 빈 파일은 적용 완료로 기록만
+            $filename_esc = sql_real_escape_string($filename);
+            sql_query("INSERT IGNORE INTO `{$table}` (mig_file) VALUES ('{$filename_esc}')");
+            return;
         }
 
-        // 항상 기록 — 부분 실패 시에도 재실행으로 인한 중복 데이터 방지
-        // (모든 SQL 구문은 멱등성을 보장해야 함: INSERT IGNORE, IF NOT EXISTS 등)
-        $filename_esc = sql_real_escape_string($filename);
-        sql_query("INSERT IGNORE INTO `{$table}` (mig_file) VALUES ('{$filename_esc}')");
+        $errors = array();
+        $link = $g5['connect_db'];
+
+        if (@mysqli_multi_query($link, $sql_content)) {
+            $stmt_idx = 0;
+            do {
+                if ($r = mysqli_store_result($link)) {
+                    mysqli_free_result($r);
+                }
+                if (mysqli_errno($link)) {
+                    $errors[] = "stmt[{$stmt_idx}]: " . mysqli_error($link);
+                }
+                $stmt_idx++;
+            } while (mysqli_more_results($link) && mysqli_next_result($link));
+        } else {
+            error_log("[Morgan Migration] FAILED: {$filename} — " . mysqli_error($link));
+        }
+
+        if ($errors) {
+            error_log("[Morgan Migration] PARTIAL ERRORS in {$filename}: " . implode(' | ', $errors));
+        }
     }
+
+    // 항상 기록 — 멱등성 보장 전제
+    $filename_esc = sql_real_escape_string($filename);
+    sql_query("INSERT IGNORE INTO `{$table}` (mig_file) VALUES ('{$filename_esc}')");
+}
+
+/**
+ * 마이그레이션+패치 파일 총 수 반환 (세션 캐시 판단용)
+ */
+function mg_count_migration_files() {
+    $count = 0;
+    $mig_dir = G5_PATH . '/db/migrations';
+    if (is_dir($mig_dir)) {
+        $count += count(glob($mig_dir . '/*.sql') ?: array());
+        $count += count(glob($mig_dir . '/*.php') ?: array());
+    }
+    $patch_dir = G5_PATH . '/db/patches';
+    if (is_dir($patch_dir)) {
+        $count += count(glob($patch_dir . '/*.sql') ?: array());
+        $count += count(glob($patch_dir . '/*.php') ?: array());
+    }
+    return $count;
 }

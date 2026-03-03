@@ -143,9 +143,9 @@ require_once __DIR__.'/_head.php';
                     <th>추가보상</th>
                     <th style="width:100px;">지원/선정</th>
                     <th style="width:75px;">매칭</th>
-                    <th style="width:130px;">모집마감</th>
-                    <th style="width:130px;">수행마감</th>
-                    <th style="width:80px;">상태</th>
+                    <th style="width:150px;">모집마감</th>
+                    <th style="width:150px;">수행마감</th>
+                    <th style="width:180px;">상태</th>
                     <th style="width:110px;">관리</th>
                 </tr>
             </thead>
@@ -172,12 +172,12 @@ require_once __DIR__.'/_head.php';
                         ?>
                     </td>
                     <td style="text-align:center;"><?php echo $item['cc_match_mode'] === 'lottery' ? '추첨' : '직접'; ?></td>
-                    <td style="font-size:0.8rem;"><?php echo substr($item['cc_deadline'], 0, 16); ?></td>
-                    <td style="font-size:0.8rem;"><?php echo $item['cc_complete_deadline'] ? substr($item['cc_complete_deadline'], 0, 16) : '-'; ?></td>
+                    <td style="text-align:center;color:var(--mg-text-muted);font-size:0.8rem;"><?php echo substr($item['cc_deadline'], 0, 16); ?></td>
+                    <td style="text-align:center;color:var(--mg-text-muted);font-size:0.8rem;"><?php echo $item['cc_complete_deadline'] ? substr($item['cc_complete_deadline'], 0, 16) : '-'; ?></td>
                     <td style="text-align:center;">
                         <?php echo $badge; ?>
                         <?php if (!empty($item['cc_force_completed'])) { ?>
-                        <br><span class="mg-badge mg-badge-warning" style="font-size:0.65rem;">강제<?php echo $item['cc_force_completed_by'] ? '('.$item['cc_force_completed_by'].')' : ''; ?></span>
+                        <span class="mg-badge mg-badge-warning" style="font-size:0.65rem;margin-left:4px;">강제<?php echo $item['cc_force_completed_by'] ? '('.$item['cc_force_completed_by'].')' : ''; ?></span>
                         <?php } ?>
                     </td>
                     <td style="text-align:center;">

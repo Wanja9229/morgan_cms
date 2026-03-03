@@ -133,15 +133,15 @@ require_once __DIR__.'/_head.php';
                 <thead>
                     <tr>
                         <th style="width:40px;"><input type="checkbox" onclick="checkAll(this);"></th>
-                        <th style="width:60px;">미리보기</th>
+                        <th style="width:100px;">미리보기</th>
                         <th>셋 이름</th>
                         <th style="width:80px;">제작자</th>
                         <th style="width:75px;">상태</th>
                         <th style="width:60px;">개수</th>
-                        <th style="width:75px;">가격</th>
+                        <th style="width:100px;">가격</th>
                         <th class="mg-hide-mobile" style="width:60px;">판매</th>
                         <th class="mg-hide-mobile" style="width:60px;">사용</th>
-                        <th class="mg-hide-mobile" style="width:120px;">등록일</th>
+                        <th class="mg-hide-mobile" style="width:150px;">등록일</th>
                         <th style="width:100px;">관리</th>
                     </tr>
                 </thead>
@@ -177,7 +177,7 @@ require_once __DIR__.'/_head.php';
                             <span style="color:var(--mg-text-muted);">X</span>
                             <?php } ?>
                         </td>
-                        <td class="mg-hide-mobile" style="font-size:0.8rem;"><?php echo substr($row['es_datetime'], 0, 16); ?></td>
+                        <td class="mg-hide-mobile" style="text-align:center;color:var(--mg-text-muted);font-size:0.8rem;"><?php echo substr($row['es_datetime'], 0, 16); ?></td>
                         <td>
                             <div style="display:flex;gap:0.25rem;flex-wrap:nowrap;">
                                 <a href="./emoticon_form.php?es_id=<?php echo $row['es_id']; ?>" class="mg-btn mg-btn-secondary mg-btn-sm" style="white-space:nowrap;">수정</a>

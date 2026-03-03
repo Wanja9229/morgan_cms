@@ -257,20 +257,15 @@ if (defined('MG_MULTITENANT_ENABLED') && MG_MULTITENANT_ENABLED
     unset($_mg_dirs, $_d);
 }
 
-// DB 마이그레이션 자동 실행 (세션당 1회)
+// DB 마이그레이션 자동 실행 (세션당 1회, migrations + patches 양쪽 스캔)
 if (!defined('MG_MIGRATION_CHECKED')) {
     define('MG_MIGRATION_CHECKED', true);
-    $mig_dir = G5_PATH . '/db/migrations';
-    if (is_dir($mig_dir)) {
-        $mig_sql = glob($mig_dir . '/*.sql') ?: array();
-        $mig_php = glob($mig_dir . '/*.php') ?: array();
-        $mig_count = count($mig_sql) + count($mig_php);
-        $mig_cache = isset($_SESSION['mg_mig_count']) ? (int)$_SESSION['mg_mig_count'] : -1;
-        if ($mig_count > 0 && $mig_cache !== $mig_count) {
-            include_once(G5_PLUGIN_PATH . '/morgan/migrate.php');
-            mg_run_migrations();
-            $_SESSION['mg_mig_count'] = $mig_count;
-        }
+    include_once(G5_PLUGIN_PATH . '/morgan/migrate.php');
+    $mig_count = mg_count_migration_files();
+    $mig_cache = isset($_SESSION['mg_mig_count']) ? (int)$_SESSION['mg_mig_count'] : -1;
+    if ($mig_count > 0 && $mig_cache !== $mig_count) {
+        mg_run_migrations();
+        $_SESSION['mg_mig_count'] = $mig_count;
     }
 }
 
@@ -2483,7 +2478,8 @@ function mg_icon_input($prefix, $current = '', $opts = array()) {
     }
 
     // 라디오 토글
-    echo '<div style="display:flex;gap:' . $gap . ';margin-bottom:' . $mb . ';">';
+    $flex_dir = $compact ? 'flex-direction:column;' : '';
+    echo '<div style="display:flex;' . $flex_dir . 'gap:' . $gap . ';margin-bottom:' . $mb . ';">';
     echo '<label style="font-size:' . $font_sm . ';display:flex;align-items:center;gap:0.25rem;cursor:pointer;">';
     echo '<input type="radio" name="' . $prefix . '_type" value="text" checked onchange="mgIconToggle(\'' . $prefix . '\')">';
     echo '<span>Heroicons</span></label>';

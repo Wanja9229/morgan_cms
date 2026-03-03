@@ -106,13 +106,44 @@ if (isset($_POST['btn_submit'])) {
 
         $order = (int)($item_orders[$i] ?? 0);
         $name = sql_real_escape_string(trim($item_names[$i] ?? ''));
-        $icon = trim($item_icons[$i] ?? '');
         $use = isset($item_uses[$item_id]) ? 1 : 0;
 
-        // 아이콘 삭제 처리
+        // 아이콘 처리 (ID 키 기반)
+        $icon = '';
+
         if (isset($del_icons[$item_id])) {
-            _delete_icon_file($icon);
+            // 삭제 요청
+            $old = sql_fetch("SELECT {$icon_field} FROM {$table} WHERE {$id_field} = {$item_id}");
+            _delete_icon_file($old[$icon_field] ?? '');
             $icon = '';
+        } else {
+            $icon_type_key = 'edit_' . $type . '_' . $item_id . '_type';
+            $icon_type = isset($_POST[$icon_type_key]) ? $_POST[$icon_type_key] : 'text';
+            $file_key = 'item_icon_file_' . $item_id;
+
+            if ($icon_type === 'file' && isset($_FILES[$file_key]) && $_FILES[$file_key]['error'] == 0) {
+                // 기존 아이콘 파일 삭제
+                $old = sql_fetch("SELECT {$icon_field} FROM {$table} WHERE {$id_field} = {$item_id}");
+                _delete_icon_file($old[$icon_field] ?? '');
+
+                if (!is_dir($upload_dir)) @mkdir($upload_dir, 0755, true);
+                $ext = strtolower(pathinfo($_FILES[$file_key]['name'], PATHINFO_EXTENSION));
+                $allowed_ext = array('jpg', 'jpeg', 'png', 'gif', 'webp', 'svg');
+                if (in_array($ext, $allowed_ext)) {
+                    $filename = $type . '_' . $item_id . '_' . time() . '.' . $ext;
+                    $filepath = $upload_dir . '/' . $filename;
+                    if (move_uploaded_file($_FILES[$file_key]['tmp_name'], $filepath)) {
+                        $icon = $upload_url . '/' . $filename;
+                    }
+                }
+                // 업로드 실패 시 기존 값 유지
+                if (!$icon) {
+                    $icon = trim($item_icons[$item_id] ?? '');
+                }
+            } else {
+                // 텍스트 모드: 입력값 사용
+                $icon = trim($item_icons[$item_id] ?? '');
+            }
         }
 
         $icon_escaped = sql_real_escape_string($icon);

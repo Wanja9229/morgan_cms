@@ -120,9 +120,9 @@ require_once __DIR__.'/_head.php';
                     <th style="width:100px;">유형</th>
                     <th>회원</th>
                     <th>상품명</th>
-                    <th style="width:80px;">타입</th>
-                    <th style="width:100px;">가격</th>
-                    <th style="width:150px;">일시</th>
+                    <th style="width:145px;text-align:center;">타입</th>
+                    <th style="width:100px;text-align:center;">가격</th>
+                    <th style="width:150px;text-align:center;">일시</th>
                 </tr>
             </thead>
             <tbody>
@@ -163,10 +163,10 @@ require_once __DIR__.'/_head.php';
                     <td style="text-align:center;">
                         <?php echo $item_types[$row['si_type']] ?? '-'; ?>
                     </td>
-                    <td style="text-align:right;">
+                    <td style="text-align:center;">
                         <?php echo number_format($row['sl_price']); ?>P
                     </td>
-                    <td style="text-align:center;color:var(--mg-text-muted);">
+                    <td style="text-align:center;color:var(--mg-text-muted);font-size:0.8rem;">
                         <?php echo $row['sl_datetime']; ?>
                     </td>
                 </tr>

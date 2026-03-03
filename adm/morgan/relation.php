@@ -133,9 +133,9 @@ include_once('./_head.php');
                     <th>캐릭터 B</th>
                     <th>관계명 A</th>
                     <th>관계명 B</th>
-                    <th style="width:70px">상태</th>
-                    <th style="width:110px">신청일</th>
-                    <th style="width:120px">관리</th>
+                    <th style="width:80px">상태</th>
+                    <th style="width:150px">신청일</th>
+                    <th style="width:140px">관리</th>
                 </tr>
             </thead>
             <tbody>
@@ -159,7 +159,7 @@ include_once('./_head.php');
                     <td><?php echo htmlspecialchars($rel['cr_label_a'] ?? ''); ?></td>
                     <td><?php echo htmlspecialchars($rel['cr_label_b'] ?: '-'); ?></td>
                     <td><span class="mg-badge <?php echo $badge_class; ?>"><?php echo $status_text; ?></span></td>
-                    <td><?php echo date('Y-m-d H:i', strtotime($rel['cr_datetime'])); ?></td>
+                    <td style="text-align:center;color:var(--mg-text-muted);font-size:0.8rem;"><?php echo date('Y-m-d H:i', strtotime($rel['cr_datetime'])); ?></td>
                     <td>
                         <?php if ($rel['cr_status'] === 'pending') { ?>
                         <button class="mg-btn mg-btn-primary mg-btn-sm" onclick="adminAction(<?php echo $rel['cr_id']; ?>, 'force_approve')">승인</button>

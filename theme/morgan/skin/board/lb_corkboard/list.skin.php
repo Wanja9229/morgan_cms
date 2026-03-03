@@ -10,7 +10,7 @@ if (!defined('_GNUBOARD_')) exit;
 include_once(G5_THEME_PATH.'/skin/board/_lb_common.php');
 ?>
 
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&family=East+Sea+Dokdo&family=Black+Han+Sans&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&family=Black+Han+Sans&display=swap">
 
 <style>
 /* ── 로드비(코르크보드) CSS ── */
@@ -202,7 +202,6 @@ include_once(G5_THEME_PATH.'/skin/board/_lb_common.php');
 }
 .lycan-admin-notice .notice-signature {
     text-align: right;
-    font-family: "East Sea Dokdo", sans-serif;
     font-size: 1.8rem;
     color: #3e2723;
     margin-top: 20px;
@@ -268,7 +267,7 @@ include_once(G5_THEME_PATH.'/skin/board/_lb_common.php');
 }
 .lycan-body h3 {
     margin: 0 0 20px 0; color: #3e2723; text-align: center;
-    border-bottom: 3px solid #3e2723; font-family: "East Sea Dokdo", sans-serif; font-size: 2rem;
+    border-bottom: 3px solid #3e2723; font-size: 2rem;
 }
 .lycan-body input, .lycan-body textarea {
     background: transparent; border: none; width: 100%;
@@ -284,7 +283,7 @@ include_once(G5_THEME_PATH.'/skin/board/_lb_common.php');
 .lycan-footer { text-align: center; margin-top: 25px; }
 .lycan-footer .btn-submit {
     background: #3e2723; color: #efebe9; padding: 10px 40px; border: 2px solid #5d4037;
-    font-size: 1.2rem; cursor: pointer; transform: rotate(1deg); font-family: "East Sea Dokdo", sans-serif;
+    font-size: 1.2rem; cursor: pointer; transform: rotate(1deg);
     transition: all 0.2s;
 }
 .lycan-footer .btn-submit:hover { background: #5d4037; transform: rotate(0deg) scale(1.05); }
@@ -298,7 +297,6 @@ include_once(G5_THEME_PATH.'/skin/board/_lb_common.php');
     margin-bottom: 10px;
 }
 .lb-board-header-cork h1 {
-    font-family: "East Sea Dokdo", sans-serif;
     color: #3e2723; font-size: 1.5rem; margin: 0;
 }
 .lb-board-meta-cork {
