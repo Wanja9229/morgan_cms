@@ -6,8 +6,15 @@
  * 마스터 DB(mg_master)에 직접 연결하여 슈퍼 관리자 기능을 제공한다.
  */
 
+// 디버그 (bootstrap 단계에서 500 에러 진단용)
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 // config.php가 _GNUBOARD_ 정의 + 경로 상수 설정
 $g5_path['path'] = realpath(__DIR__ . '/../../');
+if (!$g5_path['path']) {
+    die('[SA] realpath failed: ' . __DIR__ . '/../../');
+}
 include_once($g5_path['path'] . '/config.php');
 
 // ============================================================
@@ -180,9 +187,8 @@ function sa_verify_token() {
 // ============================================================
 
 function sa_url($path = '') {
-    // 현재 디렉토리 기준 상대 URL
-    $base = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
-    return $base . '/' . ltrim($path, '/');
+    // tenant_bootstrap의 require()를 거치면 SCRIPT_NAME이 루트가 되므로 고정 경로 사용
+    return '/adm/super/' . ltrim($path, '/');
 }
 
 function sa_alert($msg, $url = '') {
