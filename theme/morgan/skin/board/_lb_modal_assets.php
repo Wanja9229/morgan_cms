@@ -156,10 +156,10 @@ function lbCloseWrite() {
     document.body.style.overflow = '';
 }
 
-// 글 등록 (에디터 → textarea 동기화 → 토큰 → submit)
+// 글 등록 (에디터 → textarea 동기화 → 토큰 → iframe submit)
 var _lb_submitting = false;
 function lbSubmitPost(f) {
-    if (_lb_submitting) return true;
+    if (_lb_submitting) return false;
 
     if (!f.wr_subject.value.trim()) { alert('제목을 입력해주세요.'); f.wr_subject.focus(); return false; }
 
@@ -182,11 +182,38 @@ function lbSubmitPost(f) {
     xhr.onload = function() {
         try {
             var data = JSON.parse(xhr.responseText);
-            if (data.error) { alert(data.error); return; }
+            if (data.error) { alert(data.error); _lb_submitting = false; return; }
             f.token.value = data.token;
             _lb_submitting = true;
+
+            // hidden iframe으로 제출 (메인 페이지 유지)
+            var frame = document.getElementById('lb_submit_frame');
+            if (!frame) {
+                frame = document.createElement('iframe');
+                frame.id = 'lb_submit_frame';
+                frame.name = 'lb_submit_frame';
+                frame.style.display = 'none';
+                document.body.appendChild(frame);
+            }
+
+            // iframe 로드 완료 = 글 등록 처리 완료
+            frame.onload = function() {
+                _lb_submitting = false;
+                lbCloseWrite();
+                // 에디터 초기화
+                if (_lb_editor) {
+                    _lb_editor.setHTML('');
+                }
+                f.wr_subject.value = '';
+                f.wr_content.value = '';
+                f.token.value = '';
+                // 목록 새로고침
+                location.reload();
+            };
+
+            f.target = 'lb_submit_frame';
             f.submit();
-        } catch(e) { alert('토큰 발급 오류'); }
+        } catch(e) { alert('토큰 발급 오류'); _lb_submitting = false; }
     };
     xhr.onerror = function() { alert('네트워크 오류'); };
     xhr.send('bo_table=' + _lb_bo_table);
