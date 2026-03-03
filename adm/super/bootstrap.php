@@ -7,42 +7,70 @@
  * 생성 후 이 파일을 삭제할 것을 권고한다.
  */
 
+// 디버그: 서버 에러 표시 강제 (bootstrap 전용 — 운영에서는 파일 자체를 삭제)
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 $g5_path['path'] = realpath(__DIR__ . '/../../');
+if (!$g5_path['path']) {
+    die('[bootstrap] realpath 실패: ' . __DIR__ . '/../../');
+}
 include_once($g5_path['path'] . '/config.php');
 
 $_master_cfg = G5_DATA_PATH . '/dbconfig_master.php';
 if (!file_exists($_master_cfg)) {
-    die('dbconfig_master.php 없음');
+    die('[bootstrap] dbconfig_master.php 없음: ' . $_master_cfg);
 }
 include_once($_master_cfg);
 
+// 마스터 DB 연결
 $link = @mysqli_connect(MG_MASTER_DB_HOST, MG_MASTER_DB_USER, MG_MASTER_DB_PASS, MG_MASTER_DB_NAME);
 if (!$link) {
-    die('마스터 DB 연결 실패: ' . mysqli_connect_error());
+    die('[bootstrap] 마스터 DB 연결 실패: ' . mysqli_connect_error());
 }
 mysqli_set_charset($link, 'utf8mb4');
 
 // 마스터 스키마 자동 부트스트랩 — 테이블이 없으면 생성
-$_master_sql = G5_PATH . '/db/migrations/20260301_220000_master_schema.sql';
-if ($_master_sql && file_exists($_master_sql)) {
-    $check = mysqli_query($link, "SHOW TABLES LIKE 'super_admins'");
-    if (!$check || mysqli_num_rows($check) === 0) {
+$check = mysqli_query($link, "SHOW TABLES LIKE 'super_admins'");
+if (!$check || mysqli_num_rows($check) === 0) {
+    $_master_sql = G5_PATH . '/db/migrations/20260301_220000_master_schema.sql';
+    if (file_exists($_master_sql)) {
         $sql_content = file_get_contents($_master_sql);
         if ($sql_content) {
+            // multi_query 후 커넥션이 오염되므로 실행 후 재연결
             mysqli_multi_query($link, $sql_content);
-            // 모든 결과 세트 소비
             do {
                 if ($r = mysqli_store_result($link)) mysqli_free_result($r);
             } while (mysqli_more_results($link) && mysqli_next_result($link));
+
+            // 커넥션 재연결 (Commands out of sync 방지)
+            mysqli_close($link);
+            $link = mysqli_connect(MG_MASTER_DB_HOST, MG_MASTER_DB_USER, MG_MASTER_DB_PASS, MG_MASTER_DB_NAME);
+            if (!$link) {
+                die('[bootstrap] 스키마 생성 후 재연결 실패: ' . mysqli_connect_error());
+            }
+            mysqli_set_charset($link, 'utf8mb4');
         }
+    } else {
+        // SQL 파일 없으면 직접 생성
+        mysqli_query($link, "CREATE TABLE IF NOT EXISTS super_admins (
+            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            username VARCHAR(50) NOT NULL,
+            password_hash VARCHAR(255) NOT NULL,
+            email VARCHAR(200) NOT NULL DEFAULT '',
+            is_active TINYINT(1) NOT NULL DEFAULT 1,
+            last_login_at DATETIME DEFAULT NULL,
+            last_login_ip VARCHAR(45) DEFAULT NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uk_username (username)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     }
 }
-unset($_master_sql);
 
 // 이미 계정 존재 확인
 $result = mysqli_query($link, "SELECT COUNT(*) AS cnt FROM super_admins");
 if (!$result) {
-    die('super_admins 테이블 조회 실패: ' . mysqli_error($link));
+    die('[bootstrap] super_admins 조회 실패: ' . mysqli_error($link));
 }
 $row = mysqli_fetch_assoc($result);
 
@@ -75,10 +103,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (strlen($password) < 6) {
         $error = '비밀번호는 6자 이상이어야 합니다.';
     } else {
-        if (!$password) {
-            $password = bin2hex(random_bytes(8));
-        }
-
         $hash = password_hash($password, PASSWORD_DEFAULT);
         $esc_user = mysqli_real_escape_string($link, $username);
         $esc_email = mysqli_real_escape_string($link, $email);

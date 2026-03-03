@@ -79,11 +79,24 @@ if ($_mg_subdomain === 'admin') {
     // 슈퍼 관리자 패널
     // 마스터 DB에는 gnuboard 테이블이 없으므로 common.php 로드를 차단한다.
     // 슈퍼 관리자 페이지(adm/super/)는 자체 _common.php를 사용.
-    $_mg_uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
-    if (strpos($_mg_uri, '/adm/super/') === false) {
+    $_mg_uri = isset($_SERVER['REQUEST_URI']) ? strtok($_SERVER['REQUEST_URI'], '?') : '/';
+
+    if (strpos($_mg_uri, '/adm/super/') !== false) {
+        // /adm/super/ 하위 요청 → 해당 PHP 파일을 직접 실행
+        $_mg_script = G5_PATH . $_mg_uri;
+        // 디렉토리 요청이면 index.php 추가
+        if (is_dir($_mg_script)) {
+            $_mg_script = rtrim($_mg_script, '/') . '/index.php';
+        }
+        if (file_exists($_mg_script) && pathinfo($_mg_script, PATHINFO_EXTENSION) === 'php') {
+            require($_mg_script);
+        } else {
+            http_response_code(404);
+            echo '<!DOCTYPE html><html><head><title>404</title></head><body><h1>Not Found</h1></body></html>';
+        }
+    } else {
         header('Location: /adm/super/');
     }
-    // admin 서브도메인은 항상 여기서 중단 (common.php 로드 방지)
     exit;
 }
 
