@@ -11,7 +11,6 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // config.php가 _GNUBOARD_ 정의 + 경로 상수 설정
-if (!defined('_GNUBOARD_')) define('_GNUBOARD_', true);
 define('G5_IS_SUPER_ADMIN', true);
 
 $g5_path['path'] = realpath(__DIR__ . '/../../');
