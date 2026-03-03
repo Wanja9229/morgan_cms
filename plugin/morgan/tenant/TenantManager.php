@@ -276,20 +276,31 @@ class TenantManager
         $escUser = mysqli_real_escape_string($link, $dbUser);
         $escPass = mysqli_real_escape_string($link, $dbPass);
 
-        // DB 생성
-        if (!mysqli_query($link, "CREATE DATABASE `{$escDb}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")) {
-            $this->errors[] = 'DB 생성 실패: ' . mysqli_error($link);
-            return false;
+        // DB 생성 (이미 존재하면 재사용)
+        try {
+            mysqli_query($link, "CREATE DATABASE `{$escDb}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+        } catch (\mysqli_sql_exception $e) {
+            if (strpos($e->getMessage(), 'database exists') === false) {
+                $this->errors[] = 'DB 생성 실패: ' . $e->getMessage();
+                return false;
+            }
+            // 이미 존재하면 계속 진행 (재시도 허용)
         }
 
         // 사용자 생성 + 권한 부여
         // MySQL 8+ 호환: CREATE USER IF NOT EXISTS
-        mysqli_query($link, "CREATE USER IF NOT EXISTS '{$escUser}'@'%' IDENTIFIED BY '{$escPass}'");
-        if (!mysqli_query($link, "GRANT ALL PRIVILEGES ON `{$escDb}`.* TO '{$escUser}'@'%'")) {
-            $this->errors[] = '권한 부여 실패: ' . mysqli_error($link);
+        try {
+            mysqli_query($link, "CREATE USER IF NOT EXISTS '{$escUser}'@'%' IDENTIFIED BY '{$escPass}'");
+        } catch (\mysqli_sql_exception $e) {
+            // 이미 존재하면 무시
+        }
+        try {
+            mysqli_query($link, "GRANT ALL PRIVILEGES ON `{$escDb}`.* TO '{$escUser}'@'%'");
+        } catch (\mysqli_sql_exception $e) {
+            $this->errors[] = '권한 부여 실패: ' . $e->getMessage();
             return false;
         }
-        mysqli_query($link, "FLUSH PRIVILEGES");
+        try { mysqli_query($link, "FLUSH PRIVILEGES"); } catch (\mysqli_sql_exception $e) {}
 
         $this->addLog("DB 생성: {$dbName}, 사용자: {$dbUser}");
         return true;
