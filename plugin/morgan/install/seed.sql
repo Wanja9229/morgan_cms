@@ -6,7 +6,7 @@
 -- ============================================================
 -- 1. g5_config 기본 설정
 -- ============================================================
-INSERT INTO g5_config SET
+INSERT IGNORE INTO g5_config SET
     cf_title = 'Morgan CMS',
     cf_theme = 'morgan',
     cf_admin = '{ADMIN_ID}',
@@ -75,7 +75,7 @@ INSERT INTO g5_config SET
 -- ============================================================
 -- 2. 1:1 문의 설정
 -- ============================================================
-INSERT INTO g5_qa_config
+INSERT IGNORE INTO g5_qa_config
     (qa_title, qa_category, qa_skin, qa_mobile_skin, qa_use_email, qa_req_email,
      qa_use_hp, qa_req_hp, qa_use_editor, qa_subject_len, qa_mobile_subject_len,
      qa_page_rows, qa_mobile_page_rows, qa_image_width, qa_upload_size, qa_insert_content)
@@ -87,7 +87,7 @@ VALUES
 -- ============================================================
 -- 3. 내용 관리
 -- ============================================================
-INSERT INTO g5_content (co_id, co_html, co_subject, co_content, co_skin, co_mobile_skin) VALUES
+INSERT IGNORE INTO g5_content (co_id, co_html, co_subject, co_content, co_skin, co_mobile_skin) VALUES
     ('company', '1', '소개', '<p>소개 내용을 입력해 주세요.</p>', 'basic', 'basic'),
     ('privacy', '1', '개인정보 처리방침', '<p>개인정보 처리방침을 입력해 주세요.</p>', 'basic', 'basic'),
     ('provision', '1', '서비스 이용약관', '<p>서비스 이용약관을 입력해 주세요.</p>', 'basic', 'basic');
@@ -95,12 +95,12 @@ INSERT INTO g5_content (co_id, co_html, co_subject, co_content, co_skin, co_mobi
 -- ============================================================
 -- 4. 게시판 그룹
 -- ============================================================
-INSERT INTO g5_group (gr_id, gr_subject) VALUES ('community', '커뮤니티');
+INSERT IGNORE INTO g5_group (gr_id, gr_subject) VALUES ('community', '커뮤니티');
 
 -- ============================================================
 -- 5. 기본 게시판 7개
 -- ============================================================
-INSERT INTO g5_board (bo_table, gr_id, bo_subject, bo_device, bo_list_level, bo_read_level, bo_write_level, bo_reply_level, bo_comment_level, bo_upload_level, bo_download_level, bo_html_level, bo_link_level, bo_read_point, bo_write_point, bo_comment_point, bo_download_point, bo_use_dhtml_editor, bo_page_rows, bo_mobile_page_rows, bo_subject_len, bo_mobile_subject_len, bo_new, bo_hot, bo_image_width, bo_skin, bo_mobile_skin, bo_include_head, bo_include_tail, bo_gallery_cols, bo_gallery_width, bo_gallery_height, bo_mobile_gallery_width, bo_mobile_gallery_height) VALUES
+INSERT IGNORE INTO g5_board (bo_table, gr_id, bo_subject, bo_device, bo_list_level, bo_read_level, bo_write_level, bo_reply_level, bo_comment_level, bo_upload_level, bo_download_level, bo_html_level, bo_link_level, bo_read_point, bo_write_point, bo_comment_point, bo_download_point, bo_use_dhtml_editor, bo_page_rows, bo_mobile_page_rows, bo_subject_len, bo_mobile_subject_len, bo_new, bo_hot, bo_image_width, bo_skin, bo_mobile_skin, bo_include_head, bo_include_tail, bo_gallery_cols, bo_gallery_width, bo_gallery_height, bo_mobile_gallery_width, bo_mobile_gallery_height) VALUES
     ('notice',  'community', '공지사항',    'both', 1, 1, 5, 5, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/morgan/skin/board/basic', 'theme/morgan/skin/board/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
     ('qa',      'community', '문의',       'both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/morgan/skin/board/basic', 'theme/morgan/skin/board/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
     ('qna',     'community', '질문답변',    'both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/morgan/skin/board/basic', 'theme/morgan/skin/board/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
@@ -112,7 +112,7 @@ INSERT INTO g5_board (bo_table, gr_id, bo_subject, bo_device, bo_list_level, bo_
 -- ============================================================
 -- 6. mg_config 기본값 (Morgan 설정)
 -- ============================================================
-INSERT INTO mg_config (cf_key, cf_value) VALUES
+INSERT IGNORE INTO mg_config (cf_key, cf_value) VALUES
     ('color_accent', '#f59f0a'),
     ('color_accent_hover', '#d97706'),
     ('color_bg_primary', '#1e1f22'),
@@ -131,11 +131,11 @@ INSERT INTO mg_config (cf_key, cf_value) VALUES
 -- ============================================================
 -- 7. 기본 상점 카테고리
 -- ============================================================
-INSERT INTO mg_shop_category (sc_name, sc_order) VALUES
+INSERT IGNORE INTO mg_shop_category (sc_name, sc_order) VALUES
     ('프로필', 0),
     ('기타', 1);
 
 -- ============================================================
 -- 8. FAQ 마스터
 -- ============================================================
-INSERT INTO g5_faq_master (fm_id, fm_subject) VALUES (1, '자주 묻는 질문');
+INSERT IGNORE INTO g5_faq_master (fm_id, fm_subject) VALUES (1, '자주 묻는 질문');

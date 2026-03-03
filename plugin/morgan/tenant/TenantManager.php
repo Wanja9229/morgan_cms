@@ -337,9 +337,11 @@ class TenantManager
                 continue;
             }
 
-            if (!mysqli_query($link, $stmt)) {
-                $error = mysqli_error($link);
-                // 이미 존재하는 테이블/컬럼 등은 무시
+            try {
+                mysqli_query($link, $stmt);
+            } catch (\mysqli_sql_exception $e) {
+                $error = $e->getMessage();
+                // 이미 존재하는 테이블/컬럼, 중복 키 등은 무시
                 if (strpos($error, 'already exists') !== false ||
                     strpos($error, 'Duplicate') !== false) {
                     continue;
