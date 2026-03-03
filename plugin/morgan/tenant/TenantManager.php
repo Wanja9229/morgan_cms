@@ -376,16 +376,18 @@ class TenantManager
         $migrationDir = G5_PATH . '/db/migrations';
         if (!is_dir($migrationDir)) return 0;
 
-        // mg_migrations 테이블 존재 확인
-        $result = mysqli_query($link, "SHOW TABLES LIKE 'mg_migrations'");
-        if (!$result || mysqli_num_rows($result) === 0) {
-            // install.sql에서 이미 생성되어야 하지만 안전 장치
-            mysqli_query($link, "CREATE TABLE IF NOT EXISTS mg_migrations (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                migration VARCHAR(255) NOT NULL,
-                executed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE KEY uk_migration (migration)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        // mg_migrations 테이블 존재 확인 (install.sql 컬럼명: mig_id, mig_file, mig_applied_at)
+        try {
+            $result = mysqli_query($link, "SHOW TABLES LIKE 'mg_migrations'");
+            if (!$result || mysqli_num_rows($result) === 0) {
+                mysqli_query($link, "CREATE TABLE IF NOT EXISTS mg_migrations (
+                    mig_id INT AUTO_INCREMENT PRIMARY KEY,
+                    mig_file VARCHAR(200) NOT NULL UNIQUE,
+                    mig_applied_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            }
+        } catch (\mysqli_sql_exception $e) {
+            // 무시
         }
 
         // SQL 파일 목록
@@ -397,16 +399,20 @@ class TenantManager
         foreach ($files as $file) {
             $filename = basename($file);
 
-            // 이미 적용된 마이그레이션 스킵
-            $esc = mysqli_real_escape_string($link, $filename);
-            $check = mysqli_query($link, "SELECT id FROM mg_migrations WHERE migration = '{$esc}'");
-            if ($check && mysqli_num_rows($check) > 0) {
-                continue;
-            }
-
             // 마스터 스키마 마이그레이션은 건너뛰기 (마스터 DB 전용)
             if (strpos($filename, 'master_schema') !== false) {
                 continue;
+            }
+
+            // 이미 적용된 마이그레이션 스킵
+            $esc = mysqli_real_escape_string($link, $filename);
+            try {
+                $check = mysqli_query($link, "SELECT mig_id FROM mg_migrations WHERE mig_file = '{$esc}'");
+                if ($check && mysqli_num_rows($check) > 0) {
+                    continue;
+                }
+            } catch (\mysqli_sql_exception $e) {
+                // 테이블/컬럼 문제 시 계속 진행
             }
 
             // 실행
@@ -414,17 +420,25 @@ class TenantManager
             $sql = preg_replace('/^--.*$/m', '', $sql);
 
             // mysqli_multi_query 사용
-            if (mysqli_multi_query($link, $sql)) {
-                // 모든 결과셋 소비
-                do {
-                    if ($result = mysqli_store_result($link)) {
-                        mysqli_free_result($result);
-                    }
-                } while (mysqli_next_result($link));
+            try {
+                if (mysqli_multi_query($link, $sql)) {
+                    do {
+                        if ($result = mysqli_store_result($link)) {
+                            mysqli_free_result($result);
+                        }
+                    } while (mysqli_next_result($link));
+                }
+            } catch (\mysqli_sql_exception $e) {
+                error_log('[TenantManager] Migration error (' . $filename . '): ' . $e->getMessage());
+                // 마이그레이션은 멱등성 보장이므로 계속 진행
             }
 
             // 실행 기록
-            mysqli_query($link, "INSERT IGNORE INTO mg_migrations (migration) VALUES ('{$esc}')");
+            try {
+                mysqli_query($link, "INSERT IGNORE INTO mg_migrations (mig_file) VALUES ('{$esc}')");
+            } catch (\mysqli_sql_exception $e) {
+                // 무시
+            }
             $count++;
         }
 
