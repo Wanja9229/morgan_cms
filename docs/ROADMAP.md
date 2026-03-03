@@ -1,7 +1,7 @@
 # Morgan Edition - 개발 로드맵
 
 > 작성일: 2026-02-04
-> 최종 업데이트: 2026-02-22
+> 최종 업데이트: 2026-03-03
 
 ---
 
@@ -17,10 +17,10 @@
 
 ---
 
-## 현재 상태: 1차 완료 → QA/유지보수 진행중
+## 현재 상태: 클로즈 베타 테스트 (멀티테넌트 운영)
 
 > Phase 1~18 핵심 기능 + 잔여 구현(M1~M6) 완료. M7은 2차-B(SS Engine)로 이관.
-> 현재 전체 QA 및 유지보수 진행중.
+> 1차 정규 QA 완료. 멀티테넌트 서버에서 클로즈 베타 운영 중 — 트러블슈팅 & UX 개선 진행.
 
 ---
 
@@ -615,7 +615,7 @@
 - [x] 보상 관리 5탭 반응형 확인 (게시판별/활동/역극/좋아요/정산)
 - [x] 댓글 주사위 설정을 보상 관리 → 게시판 수정 페이지로 이동
 
-### 댓글 시스템 검수 (진행중)
+### 댓글 시스템 검수
 - [x] 댓글 작성 `w` 값 버그 수정 (`value=""` → `value="c"`)
 - [x] 댓글 주사위 UI 개선 (배경색, 패딩, 크기 축소)
 - [x] comment_update_after hook 파라미터 불일치 수정 (`$board` 배열 → `$bo_table` 추출)
@@ -685,6 +685,41 @@
 ### M7. 캐릭터 장비 (from Phase 5.3) → 2차-B(SS Engine)로 이관
 - SS Engine 장비 시스템과 완전히 겹치므로 통합 진행
 - 상세: `docs/plans/SS_ENGINE_DESIGN.md` 섹션 1.5
+
+---
+
+## 클로즈 베타 테스트 (트러블슈팅 & UX 개선)
+
+> 멀티테넌트 서버 운영 중 발견되는 이슈 수정 및 UX 개선.
+
+### 관리자 UI 개선
+- [x] 관리자 테이블 컬럼 너비/스타일 일괄 개선 (16개 파일, 한글 세로 표시 방지)
+- [x] 소속/유형 관리 아이콘 편집 기능 추가
+
+### 로드비 스킨 수정
+- [x] 로드비 글쓰기 모달 fetch redirect 수정
+- [x] East Sea Dokdo 폰트 제거
+- [x] 로드비 스킨 기타 버그 수정
+
+### 마이그레이션/패치 인프라
+- [x] db/patches/ 디렉토리 분리 (멀티테넌트: migrations=기록만, patches=실행)
+- [x] migrate.php 리팩토링 (_mg_scan_migration_dir, mg_run_migrations, mg_count_migration_files)
+- [x] TenantManager 마이그레이션 로직 개편
+
+### 칭호 시스템 수정
+- [x] 칭호(타이틀 배지) 위치 이동: 닉네임 앞 → 캐릭터명 앞 (「칭호」캐릭터명 @닉네임)
+- [x] mg_render_title() 함수 분리 + mg_render_nickname() $show_title 파라미터 추가
+- [x] 6개 보드 스킨 일괄 반영 (basic list/view/comment, gallery, memo, prompt)
+
+### 메모 아코디언 인라인 댓글
+- [x] bbs/comment_api.php 신규 — 댓글 AJAX JSON API (list/write/edit/delete)
+- [x] memo/list.skin.php 확장 — 아코디언 내 인라인 댓글 CRUD
+- [x] 텍스트 + 이모티콘(MgEmoticonPicker) + 주사위(comment_dice.php 재사용)
+- [x] 캐릭터 선택 + 비밀댓글 + 대댓글 들여쓰기
+- [x] 토큰 per-wr_id 격리 (다중 아코디언 동시 사용 지원)
+- [ ] 브라우저 실사용 테스트 (클로즈 베타에서 검증 예정)
+
+---
 
 ### M8. 인장 그리드 빌더 (from Phase 13)
 > 인장을 고정 레이아웃 → 2D 격자 캔버스 자유 배치 방식으로 전환.
@@ -766,6 +801,7 @@ new_cms/
 │   ├── timeline.php            # 세계관 타임라인
 │   ├── notification.php        # 알림 목록
 │   ├── comment_dice.php        # 댓글 주사위 처리
+│   ├── comment_api.php         # 댓글 AJAX API (메모 인라인 댓글용)
 │   └── search.php              # 검색 (sql_num_rows 수정됨)
 │
 ├── plugin/morgan/              # Morgan 플러그인
@@ -803,7 +839,8 @@ new_cms/
 │       ├── widget/             # 위젯 스킨
 │       └── attendance/         # 출석 스킨
 │
-├── db/migrations/              # DB 마이그레이션 파일
+├── db/migrations/              # DB 마이그레이션 파일 (메인 테넌트 전용)
+├── db/patches/                 # DB 패치 파일 (전 테넌트 실행)
 │
 ├── CLAUDE.md                   # AI 에이전트 프로젝트 컨텍스트
 │
@@ -858,6 +895,9 @@ new_cms/
 | 2026-02-23 | 파일 업로드 용량 통합 (16곳 → mg_upload_max_file/mg_upload_max_icon 2키) |
 | 2026-02-23 | 2차 작업 로드맵 분리 → ROADMAP_PHASE2.md, 2차-F SRPG 기획 추가 |
 | 2026-02-24 | 보상 관리 검수, 주사위 설정 이동, 댓글 CRUD 검수 (hook 파라미터 버그 수정, w값 버그 수정) |
+| 2026-03-03 | 관리자 테이블 스타일 개선, 로드비 스킨 수정, 마이그레이션 패치 인프라 분리 |
+| 2026-03-03 | 칭호 위치 수정 (캐릭터명 앞으로), 메모 아코디언 인라인 댓글 기능 (comment_api.php + JS) |
+| 2026-03-03 | 상태 변경: 1차 QA 완료 → 클로즈 베타 테스트 (멀티테넌트 운영) |
 
 ---
 
