@@ -44,6 +44,28 @@ $_mg_subdomain = _mg_extract_subdomain();
 // ======================================================
 
 if ($_mg_subdomain === null) {
+    $_mg_uri = isset($_SERVER['REQUEST_URI']) ? strtok($_SERVER['REQUEST_URI'], '?') : '/';
+
+    // [MT-5] 헬스 체크 엔드포인트
+    if ($_mg_uri === '/_health') {
+        $_mg_health_file = __DIR__ . '/health.php';
+        if (file_exists($_mg_health_file)) {
+            require_once($_mg_health_file);
+        } else {
+            header('Content-Type: application/json');
+            echo json_encode(['status' => 'ok']);
+        }
+        exit;
+    }
+
+    // [MT-5] 온보딩 위자드
+    if (strpos($_mg_uri, '/bbs/tenant_onboard.php') !== false) {
+        require_once(G5_PATH . '/bbs/tenant_onboard.php');
+        exit;
+    }
+
+    unset($_mg_uri);
+
     // bare domain 또는 www → 기본 테넌트로 폴백
     if (defined('MG_DEFAULT_TENANT_SUBDOMAIN') && MG_DEFAULT_TENANT_SUBDOMAIN) {
         $_mg_subdomain = MG_DEFAULT_TENANT_SUBDOMAIN;
@@ -120,6 +142,41 @@ if ($_mg_host === 'localhost' || preg_match('/^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/'
     define('G5_COOKIE_DOMAIN', '.' . $_mg_tenant['subdomain'] . '.' . MG_TENANT_BASE_DOMAIN);
 }
 unset($_mg_host);
+
+// [MT-4] 세션 쿠키 보안 강화
+ini_set('session.cookie_samesite', 'Lax');
+ini_set('session.cookie_httponly', 1);
+if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+    ini_set('session.cookie_secure', 1);
+}
+
+// ======================================================
+// 8. 보안 헬퍼 로드
+// ======================================================
+
+$_mg_security_file = __DIR__ . '/security.php';
+if (file_exists($_mg_security_file)) {
+    require_once($_mg_security_file);
+}
+unset($_mg_security_file);
+
+// [MT-4] CORS 헤더 설정
+if (function_exists('mg_set_cors_headers')) {
+    mg_set_cors_headers();
+}
+
+// ======================================================
+// 9. 테넌트별 에러 로그 분리
+// ======================================================
+
+$_mg_log_dir = G5_DATA_PATH . '/log';
+if (!is_dir($_mg_log_dir)) {
+    @mkdir($_mg_log_dir, 0755, true);
+    // .htaccess 보호
+    @file_put_contents($_mg_log_dir . '/.htaccess', "Deny from all\n");
+}
+ini_set('error_log', $_mg_log_dir . '/tenant_' . MG_TENANT_ID . '.log');
+unset($_mg_log_dir);
 
 // 정리
 unset($_mg_subdomain, $_mg_tenant, $_mg_db_host, $_mg_session_suffix);
@@ -285,6 +342,12 @@ function _mg_show_tenant_suspended() {
  * 랜딩 페이지 (bare domain)
  */
 function _mg_show_landing_page() {
+    $_mg_landing = __DIR__ . '/landing.php';
+    if (file_exists($_mg_landing)) {
+        include($_mg_landing);
+        return;
+    }
+    // 폴백: 간단한 안내
     echo '<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>Morgan CMS</title>';
     echo '<style>body{background:#1e1f22;color:#f2f3f5;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}';
     echo '.box{text-align:center} h1{color:#f59f0a;margin-bottom:0.5rem} p{color:#949ba4;line-height:1.6}</style></head>';

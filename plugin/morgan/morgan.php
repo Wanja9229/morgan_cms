@@ -411,6 +411,11 @@ function mg_upload_character_image($file, $mb_id, $type = 'thumb') {
         return $result;
     }
 
+    // [MT-4] 스토리지 쿼터 체크
+    if (!mg_check_upload_allowed($file['size'])) {
+        return $result;
+    }
+
     $storage = mg_storage();
 
     // 디렉토리 확보
@@ -627,6 +632,36 @@ function mg_config_set($key, $value, $desc = '') {
 function mg_storage() {
     require_once(MG_PLUGIN_PATH . '/storage/MG_Storage.php');
     return MG_Storage::getInstance();
+}
+
+/**
+ * [MT-4] 파일 업로드 전 테넌트 스토리지 쿼터 체크
+ *
+ * @param int $file_size 업로드할 파일 크기 (바이트)
+ * @return bool true = 허용, false = 쿼터 초과
+ */
+function mg_check_upload_allowed($file_size) {
+    if (!defined('MG_MULTITENANT_ENABLED') || !MG_MULTITENANT_ENABLED) {
+        return true;
+    }
+    if (function_exists('mg_check_storage_quota')) {
+        return mg_check_storage_quota($file_size);
+    }
+    return true;
+}
+
+/**
+ * [MT-4] 파일 업로드 후 사용량 갱신
+ *
+ * @param int $file_size 업로드된 파일 크기 (바이트, 삭제 시 음수)
+ */
+function mg_track_storage_usage($file_size) {
+    if (!defined('MG_MULTITENANT_ENABLED') || !MG_MULTITENANT_ENABLED) {
+        return;
+    }
+    if (function_exists('mg_update_storage_usage')) {
+        mg_update_storage_usage($file_size);
+    }
 }
 
 /**
@@ -2549,6 +2584,11 @@ function mg_handle_icon_upload($file_key, $subdir, $filename_prefix = 'icon') {
     }
 
     if ($_FILES[$file_key]['size'] > mg_upload_max_icon()) {
+        return null;
+    }
+
+    // [MT-4] 스토리지 쿼터 체크
+    if (!mg_check_upload_allowed($_FILES[$file_key]['size'])) {
         return null;
     }
 
@@ -7277,6 +7317,10 @@ function mg_upload_seal_image($file, $mb_id)
     if ($file['size'] > $max_size) {
         return array('success' => false, 'message' => '파일 크기가 제한(' . round($max_size/1024) . 'KB)을 초과했습니다.');
     }
+    // [MT-4] 스토리지 쿼터 체크
+    if (!mg_check_upload_allowed($file['size'])) {
+        return array('success' => false, 'message' => '저장 용량이 부족합니다.');
+    }
 
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
     if (!in_array($ext, $allowed_ext)) {
@@ -7533,6 +7577,11 @@ function mg_upload_lore_image($file, $type = 'article', $id = 0)
 
     if ($file['size'] > $max_size) {
         return array('success' => false, 'message' => '파일 크기 초과');
+    }
+
+    // [MT-4] 스토리지 쿼터 체크
+    if (!mg_check_upload_allowed($file['size'])) {
+        return array('success' => false, 'message' => '저장 용량이 부족합니다.');
     }
 
     $storage = mg_storage();
@@ -7874,6 +7923,11 @@ function mg_upload_prompt_banner($file, $pm_id = 0)
 
     if ($file['size'] > $max_size) {
         return array('success' => false, 'message' => '파일 크기 초과');
+    }
+
+    // [MT-4] 스토리지 쿼터 체크
+    if (!mg_check_upload_allowed($file['size'])) {
+        return array('success' => false, 'message' => '저장 용량이 부족합니다.');
     }
 
     $storage = mg_storage();

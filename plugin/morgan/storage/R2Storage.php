@@ -56,6 +56,16 @@ class MG_R2Storage implements MG_StorageInterface
      */
     public function put($path, $source, $options = [])
     {
+        // [MT-4] 경로 검증
+        if (function_exists('mg_validate_storage_path')) {
+            try {
+                $path = mg_validate_storage_path($path);
+            } catch (InvalidArgumentException $e) {
+                error_log($e->getMessage() . ': ' . $path);
+                return false;
+            }
+        }
+
         // 파일 내용 읽기
         if (is_file($source)) {
             $body = file_get_contents($source);
@@ -91,6 +101,16 @@ class MG_R2Storage implements MG_StorageInterface
      */
     public function delete($path)
     {
+        // [MT-4] 경로 검증
+        if (function_exists('mg_validate_storage_path')) {
+            try {
+                $path = mg_validate_storage_path($path);
+            } catch (InvalidArgumentException $e) {
+                error_log($e->getMessage() . ': ' . $path);
+                return false;
+            }
+        }
+
         $url = $this->objectUrl($path);
         $signedHeaders = $this->signer->signRequest('DELETE', $url);
 
@@ -105,6 +125,15 @@ class MG_R2Storage implements MG_StorageInterface
      */
     public function exists($path)
     {
+        // [MT-4] 경로 검증
+        if (function_exists('mg_validate_storage_path')) {
+            try {
+                $path = mg_validate_storage_path($path);
+            } catch (InvalidArgumentException $e) {
+                return false;
+            }
+        }
+
         $url = $this->objectUrl($path);
         $signedHeaders = $this->signer->signRequest('HEAD', $url);
 

@@ -42,7 +42,26 @@ class MG_LocalStorage implements MG_StorageInterface
      */
     public function put($path, $source, $options = [])
     {
+        // [MT-4] 경로 검증
+        if (function_exists('mg_validate_storage_path')) {
+            try {
+                $path = mg_validate_storage_path($path);
+            } catch (InvalidArgumentException $e) {
+                error_log($e->getMessage() . ': ' . $path);
+                return false;
+            }
+        }
+
         $fullPath = $this->basePath . '/' . $path;
+
+        // [MT-4] basePath 탈출 검증
+        if (function_exists('mg_verify_path_within_base')) {
+            if (!mg_verify_path_within_base($fullPath, $this->basePath)) {
+                error_log('[MG Security] Path escape attempt: ' . $path);
+                return false;
+            }
+        }
+
         $dir = dirname($fullPath);
 
         if (!is_dir($dir)) {
@@ -74,6 +93,16 @@ class MG_LocalStorage implements MG_StorageInterface
      */
     public function delete($path)
     {
+        // [MT-4] 경로 검증
+        if (function_exists('mg_validate_storage_path')) {
+            try {
+                $path = mg_validate_storage_path($path);
+            } catch (InvalidArgumentException $e) {
+                error_log($e->getMessage() . ': ' . $path);
+                return false;
+            }
+        }
+
         $fullPath = $this->basePath . '/' . $path;
         if (file_exists($fullPath)) {
             return @unlink($fullPath);
@@ -86,6 +115,15 @@ class MG_LocalStorage implements MG_StorageInterface
      */
     public function exists($path)
     {
+        // [MT-4] 경로 검증
+        if (function_exists('mg_validate_storage_path')) {
+            try {
+                $path = mg_validate_storage_path($path);
+            } catch (InvalidArgumentException $e) {
+                return false;
+            }
+        }
+
         return file_exists($this->basePath . '/' . $path);
     }
 
@@ -114,6 +152,15 @@ class MG_LocalStorage implements MG_StorageInterface
      */
     public function getFullPath($path)
     {
+        // [MT-4] 경로 검증
+        if (function_exists('mg_validate_storage_path')) {
+            try {
+                $path = mg_validate_storage_path($path);
+            } catch (InvalidArgumentException $e) {
+                return '';
+            }
+        }
+
         return $this->basePath . '/' . $path;
     }
 }
