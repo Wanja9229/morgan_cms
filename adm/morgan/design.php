@@ -172,7 +172,7 @@ require_once __DIR__.'/_head.php';
                 <label class="mg-form-label">배경 이미지</label>
                 <input type="file" name="bg_image" id="bg_image" accept="image/*" class="mg-form-input" onchange="previewBgImage(this)">
                 <input type="hidden" name="bg_image_url" id="bg_image_url" value="<?php echo isset($mg_configs['bg_image']) ? htmlspecialchars($mg_configs['bg_image']) : ''; ?>">
-                <small style="color:var(--mg-text-muted);font-size:0.75rem;">메인 콘텐츠 영역 배경 이미지 (최대 10MB, jpg/png/gif/webp)</small>
+                <small style="color:var(--mg-text-muted);font-size:0.75rem;">메인 콘텐츠 영역 배경 이미지 (최대 <?php echo round(mg_upload_max_file() / 1024 / 1024); ?>MB, jpg/png/gif/webp)</small>
                 <div id="bg_image_preview" style="margin-top:0.75rem;">
                     <?php if (!empty($mg_configs['bg_image'])): ?>
                     <div style="display:flex;align-items:center;gap:1rem;">

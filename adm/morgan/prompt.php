@@ -303,9 +303,9 @@ $entry_status_labels = array(
             <thead>
                 <tr>
                     <th style="width:50px;">ID</th>
-                    <th style="width:100px;">게시판</th>
+                    <th style="width:120px;">게시판</th>
                     <th style="min-width:160px;">제목</th>
-                    <th style="width:80px;text-align:center;">주기</th>
+                    <th style="width:100px;text-align:center;">주기</th>
                     <th style="width:60px;text-align:center;">모드</th>
                     <th style="width:80px;text-align:center;">상태</th>
                     <th style="width:200px;">기간</th>

@@ -91,10 +91,8 @@ if ($w === 'config') {
             alert('허용되지 않는 파일 형식입니다. (jpg, png, gif, webp만 가능)');
         }
 
-        // 맵 이미지는 일반 업로드 제한보다 큰 20MB까지 허용
-        $max_map_size = 20 * 1024 * 1024;
-        if ($file['size'] > $max_map_size) {
-            alert('파일 크기가 20MB를 초과합니다.');
+        if ($file['size'] > mg_upload_max_file()) {
+            alert('파일 크기가 ' . round(mg_upload_max_file() / 1024 / 1024) . 'MB를 초과합니다.');
         }
 
         if ($old_map) {

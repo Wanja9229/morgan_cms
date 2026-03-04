@@ -241,7 +241,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
                         <div class="py-8 text-center text-mg-text-muted text-sm">알림이 없습니다.</div>
                     </div>
                     <div class="border-t border-mg-bg-tertiary px-4 py-2.5 text-center">
-                        <a href="<?php echo G5_BBS_URL; ?>/notification.php" class="text-xs text-mg-accent hover:text-mg-accent-hover">모든 알림 보기</a>
+                        <a href="<?php echo G5_BBS_URL; ?>/notification.php" class="text-xs text-mg-accent hover:text-mg-accent-hover" onclick="if(window.MgNoti)MgNoti.close();">모든 알림 보기</a>
                     </div>
                 </div>
             </div>

@@ -72,7 +72,7 @@ function _cfg_radio($name, $configs, $default = '1', $labels = array('사용', '
                 <label class="mg-form-label">사이트 로고</label>
                 <input type="file" name="site_logo" id="site_logo" accept="image/*" class="mg-form-input" onchange="previewLogo(this)">
                 <input type="hidden" name="site_logo_action" id="site_logo_action" value="">
-                <small style="color:var(--mg-text-muted);font-size:0.75rem;">헤더 좌측 상단에 표시 (권장: 높이 32px, PNG/SVG 투명 배경, 최대 2MB)</small>
+                <small style="color:var(--mg-text-muted);font-size:0.75rem;">헤더 좌측 상단에 표시 (권장: 높이 32px, PNG/SVG 투명 배경, 최대 <?php echo round(mg_upload_max_file() / 1024 / 1024); ?>MB)</small>
                 <div id="site_logo_preview" style="margin-top:0.75rem;">
                     <?php if (!empty($mg_configs['site_logo'])): ?>
                     <div style="display:flex;align-items:center;gap:1rem;">

@@ -63,7 +63,7 @@ $update_url = G5_ADMIN_URL . '/morgan/lore_map_update.php';
                 <div style="margin-top:4px;font-size:0.8rem;color:var(--mg-accent);">새 이미지 선택됨</div>
             </div>
             <input type="hidden" name="map_image_action" id="map_image_action" value="">
-            <p style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.5rem;">JPG, PNG, GIF, WebP / 최대 10MB / 권장: 1920x1080px 이상</p>
+            <p style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.5rem;">JPG, PNG, GIF, WebP / 최대 <?php echo round(mg_upload_max_file() / 1024 / 1024); ?>MB / 권장: 1920x1080px 이상</p>
         </div>
 
         <hr style="border:0;border-top:1px solid var(--mg-bg-tertiary);margin:1.5rem 0;">
@@ -224,7 +224,7 @@ function deleteMapImage() {
             <div class="mg-form-group">
                 <label class="mg-form-label">지역 이미지</label>
                 <input type="file" name="mr_image_file" id="region-image-file" accept="image/*" class="mg-form-input">
-                <small style="color:var(--mg-text-muted);font-size:0.75rem;">JPG, PNG, GIF, WebP / 최대 2MB</small>
+                <small style="color:var(--mg-text-muted);font-size:0.75rem;">JPG, PNG, GIF, WebP / 최대 <?php echo round(mg_upload_max_file() / 1024 / 1024); ?>MB</small>
                 <div id="region-image-preview" style="margin-top:0.5rem;"></div>
                 <input type="hidden" name="mr_image_action" id="region-image-action" value="">
             </div>

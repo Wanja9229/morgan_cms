@@ -193,19 +193,31 @@
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
             xhr.onload = function() {
                 if (url && url !== '#') {
-                    window.location.href = url;
+                    MgNoti._spaNavigate(url);
                 }
             };
             xhr.onerror = function() {
                 if (url && url !== '#') {
-                    window.location.href = url;
+                    MgNoti._spaNavigate(url);
                 }
             };
             xhr.send('action=read&noti_id=' + notiId);
 
+            // 드롭다운 닫기
+            this.close();
+
             // 뱃지 즉시 업데이트
             if (this.lastCount > 0) {
                 this.updateBadge(this.lastCount - 1);
+            }
+        },
+
+        // SPA 라우터가 있으면 SPA 이동, 없으면 일반 이동
+        _spaNavigate: function(url) {
+            if (window.MG && MG.router && typeof MG.router.navigate === 'function' && MG.router.isInternalLink(url)) {
+                MG.router.navigate(url);
+            } else {
+                window.location.href = url;
             }
         },
 

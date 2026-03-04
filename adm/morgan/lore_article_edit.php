@@ -221,7 +221,7 @@ $update_url = G5_ADMIN_URL . '/morgan/lore_article_update.php';
                             </div>
                             <div style="flex:1;">
                                 <input type="file" accept="image/*" class="mg-form-input section-image-file" onchange="uploadSectionImage(this)" style="margin-bottom:0.5rem;">
-                                <div style="font-size:0.75rem;color:var(--mg-text-muted);">jpg, png, gif, webp (최대 2MB)</div>
+                                <div style="font-size:0.75rem;color:var(--mg-text-muted);">jpg, png, gif, webp (최대 <?php echo round(mg_upload_max_file() / 1024 / 1024); ?>MB)</div>
                             </div>
                         </div>
                     </div>
@@ -328,7 +328,7 @@ $update_url = G5_ADMIN_URL . '/morgan/lore_article_update.php';
                     </div>
                     <div style="flex:1;">
                         <input type="file" accept="image/*" class="mg-form-input section-image-file" onchange="uploadSectionImage(this)" style="margin-bottom:0.5rem;">
-                        <div style="font-size:0.75rem;color:var(--mg-text-muted);">jpg, png, gif, webp (최대 2MB)</div>
+                        <div style="font-size:0.75rem;color:var(--mg-text-muted);">jpg, png, gif, webp (최대 <?php echo round(mg_upload_max_file() / 1024 / 1024); ?>MB)</div>
                     </div>
                 </div>
             </div>

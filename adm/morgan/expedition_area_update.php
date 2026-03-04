@@ -41,14 +41,19 @@ if ($action === 'upload_map_image') {
     if (!in_array($ext, $allowed_ext)) {
         alert('허용되지 않는 파일 형식입니다. (JPG, PNG, GIF, WebP)');
     }
-    if ($file['size'] > 20 * 1024 * 1024) {
-        alert('파일 크기가 20MB를 초과합니다.');
+    if ($file['size'] > mg_upload_max_file()) {
+        alert('파일 크기가 ' . round(mg_upload_max_file() / 1024 / 1024) . 'MB를 초과합니다.');
     }
 
     // 기존 이미지 삭제
     $old_map = mg_config('expedition_map_image', '');
     if ($old_map) {
-        $old_file = G5_PATH . $old_map;
+        // 절대 URL이면 URL 부분만 추출하여 파일 경로로 변환
+        $old_rel = $old_map;
+        if (strpos($old_map, '://') !== false) {
+            $old_rel = parse_url($old_map, PHP_URL_PATH);
+        }
+        $old_file = G5_PATH . $old_rel;
         if (file_exists($old_file)) @unlink($old_file);
     }
 
@@ -57,7 +62,7 @@ if ($action === 'upload_map_image') {
 
     if (move_uploaded_file($file['tmp_name'], $target_path)) {
         @chmod($target_path, 0644);
-        $new_url = '/data/expedition/' . $new_filename;
+        $new_url = MG_EXPEDITION_DATA_URL . '/' . $new_filename;
         mg_set_config('expedition_map_image', $new_url);
         alert('파견 지도 이미지가 등록되었습니다.', G5_ADMIN_URL.'/morgan/expedition_area.php');
     } else {
@@ -71,7 +76,11 @@ if ($action === 'delete_map_image') {
     header('Content-Type: application/json; charset=utf-8');
     $old_map = mg_config('expedition_map_image', '');
     if ($old_map) {
-        $old_file = G5_PATH . $old_map;
+        $old_rel = $old_map;
+        if (strpos($old_map, '://') !== false) {
+            $old_rel = parse_url($old_map, PHP_URL_PATH);
+        }
+        $old_file = G5_PATH . $old_rel;
         if (file_exists($old_file)) @unlink($old_file);
     }
     mg_set_config('expedition_map_image', '');
@@ -102,6 +111,11 @@ if ($action === 'set_coords') {
     exit;
 }
 
+// action이 설정되었는데 위 핸들러에서 처리되지 않았으면 중단
+if ($action) {
+    alert('잘못된 요청입니다.');
+}
+
 $w = isset($_POST['w']) ? $_POST['w'] : '';
 $ea_id = isset($_POST['ea_id']) ? (int)$_POST['ea_id'] : 0;
 
@@ -114,7 +128,11 @@ if ($w === 'd' && $ea_id > 0) {
     // 이미지 파일도 함께 삭제
     $del_row = sql_fetch("SELECT ea_image FROM {$g5['mg_expedition_area_table']} WHERE ea_id = {$ea_id}");
     if (!empty($del_row['ea_image'])) {
-        $del_file = G5_PATH . $del_row['ea_image'];
+        $del_rel = $del_row['ea_image'];
+        if (strpos($del_rel, '://') !== false) {
+            $del_rel = parse_url($del_rel, PHP_URL_PATH);
+        }
+        $del_file = G5_PATH . $del_rel;
         if (file_exists($del_file)) @unlink($del_file);
     }
     sql_query("DELETE FROM {$g5['mg_expedition_drop_table']} WHERE ea_id = {$ea_id}");
@@ -223,7 +241,11 @@ $ea_image_action = isset($_POST['ea_image_action']) ? $_POST['ea_image_action'] 
 if ($ea_image_action === '__DELETE__') {
     // 이미지 삭제
     if ($old_image) {
-        $old_file = G5_PATH . $old_image;
+        $old_rel = $old_image;
+        if (strpos($old_image, '://') !== false) {
+            $old_rel = parse_url($old_image, PHP_URL_PATH);
+        }
+        $old_file = G5_PATH . $old_rel;
         if (file_exists($old_file)) @unlink($old_file);
     }
     sql_query("UPDATE {$g5['mg_expedition_area_table']} SET ea_image = '' WHERE ea_id = {$ea_id}");
@@ -236,7 +258,11 @@ elseif (isset($_FILES['ea_image_file']) && $_FILES['ea_image_file']['error'] ===
     if (in_array($ext, $allowed_ext) && $file['size'] <= mg_upload_max_file()) {
         // 기존 파일 삭제
         if ($old_image) {
-            $old_file = G5_PATH . $old_image;
+            $old_rel = $old_image;
+            if (strpos($old_image, '://') !== false) {
+                $old_rel = parse_url($old_image, PHP_URL_PATH);
+            }
+            $old_file = G5_PATH . $old_rel;
             if (file_exists($old_file)) @unlink($old_file);
         }
 
@@ -245,7 +271,7 @@ elseif (isset($_FILES['ea_image_file']) && $_FILES['ea_image_file']['error'] ===
 
         if (move_uploaded_file($file['tmp_name'], $target_path)) {
             @chmod($target_path, 0644);
-            $new_url = '/data/expedition/' . $new_filename;
+            $new_url = MG_EXPEDITION_DATA_URL . '/' . $new_filename;
             sql_query("UPDATE {$g5['mg_expedition_area_table']} SET ea_image = '".sql_real_escape_string($new_url)."' WHERE ea_id = {$ea_id}");
         }
     }

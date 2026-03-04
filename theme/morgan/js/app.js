@@ -354,6 +354,9 @@
 
                     console.log('SPA: Loaded', url);
 
+                    // 히든 이벤트 체크 트리거
+                    window.dispatchEvent(new CustomEvent('mg:pageLoaded', { detail: { url: url } }));
+
                 } catch (error) {
                     console.error('SPA Navigation Error:', error);
                     // 에러 시 전통적인 네비게이션

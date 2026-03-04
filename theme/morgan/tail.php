@@ -209,28 +209,28 @@ if (isset($is_ajax_request) && $is_ajax_request) {
                 <span id="radio-weather-desc" class="text-xs text-mg-text-muted"></span>
                 <a href="https://openweathermap.org/" target="_blank" rel="noopener" id="radio-owm-credit" class="text-mg-text-muted" style="display:none;margin-left:auto;font-size:0.6rem;opacity:0.6;">OWM</a>
             </div>
+            <!-- 멘트 -->
+            <div class="overflow-hidden mb-2" style="height:20px;">
+                <div id="radio-marquee" class="text-xs text-mg-text-muted whitespace-nowrap"></div>
+            </div>
             <!-- 플레이어 (트랙 없으면 숨김) -->
             <div id="radio-player-section" style="display:none;">
                 <!-- 현재 곡 -->
-                <div class="flex items-center gap-2 mb-2">
+                <div class="flex items-center gap-2 mb-2 border-t border-mg-bg-tertiary pt-2">
                     <span class="text-mg-accent" style="font-size:0.75rem;">♪</span>
                     <span id="radio-track-title" class="text-xs text-mg-text-primary truncate flex-1">(정지)</span>
                 </div>
                 <!-- 컨트롤 -->
-                <div class="flex items-center gap-2 mb-2">
+                <div class="flex items-center gap-2">
                     <button id="radio-play-btn" type="button" class="p-1.5 rounded hover:bg-mg-bg-tertiary text-mg-text-secondary transition-colors" title="재생/정지" style="font-size:0.85rem;line-height:1;">▶</button>
                     <button id="radio-next-btn" type="button" class="p-1.5 rounded hover:bg-mg-bg-tertiary text-mg-text-secondary transition-colors" title="다음 곡" style="font-size:0.75rem;line-height:1;">⏭</button>
                     <input type="range" id="radio-volume" min="0" max="100" value="30" style="flex:1;accent-color:var(--mg-accent);height:4px;">
-                    <button id="radio-video-btn" type="button" class="p-1.5 rounded hover:bg-mg-bg-tertiary text-mg-text-secondary transition-colors" title="영상 보기" style="font-size:0.75rem;line-height:1;">📺</button>
+                    <button id="radio-video-btn" type="button" class="p-1.5 rounded hover:bg-mg-bg-tertiary text-mg-text-secondary transition-colors" title="영상 보기"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button>
                 </div>
                 <!-- 영상 (접힘) -->
                 <div id="radio-video-wrap" style="height:0;overflow:hidden;transition:height .3s;border-radius:6px;">
                     <div id="radio-player"></div>
                 </div>
-            </div>
-            <!-- 멘트 -->
-            <div class="border-t border-mg-bg-tertiary pt-2 mt-1 overflow-hidden" style="height:22px;">
-                <div id="radio-marquee" class="text-xs text-mg-text-muted whitespace-nowrap"></div>
             </div>
         </div>
         <style>
@@ -396,10 +396,10 @@ if (isset($is_ajax_request) && $is_ajax_request) {
                 var wrap = document.getElementById('radio-video-wrap');
                 if (parseInt(wrap.style.height) === 0) {
                     wrap.style.height = '120px';
-                    this.textContent = '🔽';
+                    this.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
                 } else {
                     wrap.style.height = '0';
-                    this.textContent = '📺';
+                    this.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>';
                 }
             });
         })();
@@ -498,6 +498,172 @@ if (!empty($_SESSION['mg_achievement_toast'])) {
 })();
 </script>
 <?php } ?>
+
+<?php
+// ─── 히든 이벤트 위젯 (로그인 + 이벤트 활성 시만) ───
+if ($is_member) {
+    $he_active = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_hidden_event_table']} WHERE is_active = 1");
+    if ((int)($he_active['cnt'] ?? 0) > 0) {
+?>
+<div id="mg-hidden-event-overlay" style="display:none;position:fixed;z-index:9000;pointer-events:none;">
+    <img id="mg-he-image" src="" alt="" style="pointer-events:auto;cursor:pointer;position:absolute;width:80px;height:80px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(245,159,10,0.6));animation:mg-he-float 2s ease-in-out infinite;transition:transform .2s,opacity .4s;">
+</div>
+<style>
+@keyframes mg-he-float {
+    0%,100% { transform: translateY(0) rotate(-3deg); }
+    50% { transform: translateY(-12px) rotate(3deg); }
+}
+#mg-he-image:hover { transform: scale(1.2) !important; }
+</style>
+<script>
+(function(){
+    var HE = {
+        overlay: null,
+        img: null,
+        token: null,
+        cooldown: false,
+        fadeTimer: null,
+        BBS_URL: '<?php echo G5_BBS_URL; ?>',
+
+        init: function() {
+            this.overlay = document.getElementById('mg-hidden-event-overlay');
+            this.img = document.getElementById('mg-he-image');
+            if (!this.overlay || !this.img) return;
+
+            var self = this;
+            this.img.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                self.claim();
+            });
+
+            // SPA 페이지 전환 시 체크
+            window.addEventListener('mg:pageLoaded', function() {
+                self.check();
+            });
+
+            // 최초 로드 시 1회 체크
+            setTimeout(function() { self.check(); }, 2000);
+        },
+
+        check: function() {
+            if (this.cooldown) return;
+            this.cooldown = true;
+            var self = this;
+
+            // 5초 쿨다운
+            setTimeout(function() { self.cooldown = false; }, 5000);
+
+            fetch(this.BBS_URL + '/hidden_event_api.php?action=check', {
+                credentials: 'same-origin'
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success && data.event) {
+                    self.show(data.event);
+                }
+            })
+            .catch(function() {});
+        },
+
+        show: function(ev) {
+            this.token = ev.token;
+            this.img.src = ev.image_url;
+
+            // 랜덤 위치 (viewport 20%~80%)
+            var vw = window.innerWidth;
+            var vh = window.innerHeight;
+            var x = Math.floor(vw * 0.2 + Math.random() * vw * 0.6);
+            var y = Math.floor(vh * 0.2 + Math.random() * vh * 0.4);
+
+            this.overlay.style.left = x + 'px';
+            this.overlay.style.top = y + 'px';
+            this.img.style.opacity = '1';
+            this.overlay.style.display = 'block';
+
+            // 5초 후 자동 페이드아웃
+            var self = this;
+            if (this.fadeTimer) clearTimeout(this.fadeTimer);
+            this.fadeTimer = setTimeout(function() {
+                self.hide();
+            }, 5000);
+        },
+
+        hide: function() {
+            var self = this;
+            this.img.style.opacity = '0';
+            setTimeout(function() {
+                self.overlay.style.display = 'none';
+                self.token = null;
+            }, 400);
+        },
+
+        claim: function() {
+            if (!this.token) return;
+            var self = this;
+            if (this.fadeTimer) clearTimeout(this.fadeTimer);
+
+            // 클릭 즉시 축소 애니메이션
+            this.img.style.transform = 'scale(0.3)';
+            this.img.style.opacity = '0';
+
+            var formData = new FormData();
+            formData.append('action', 'claim');
+            formData.append('token', this.token);
+
+            fetch(this.BBS_URL + '/hidden_event_api.php?action=claim', {
+                method: 'POST',
+                credentials: 'same-origin',
+                body: formData
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                setTimeout(function() {
+                    self.overlay.style.display = 'none';
+                    self.img.style.transform = '';
+                }, 400);
+
+                if (data.success) {
+                    self.showRewardToast(data.reward_name);
+                }
+                self.token = null;
+            })
+            .catch(function() {
+                self.overlay.style.display = 'none';
+                self.img.style.transform = '';
+                self.token = null;
+            });
+        },
+
+        showRewardToast: function(rewardName) {
+            // 보상 토스트
+            var toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed;bottom:-80px;left:50%;transform:translateX(-50%);z-index:9999;background:var(--mg-bg-primary,#1e1f22);border:2px solid var(--mg-accent,#f59f0a);border-radius:12px;padding:12px 20px;box-shadow:0 0 20px rgba(245,159,10,0.3),0 8px 24px rgba(0,0,0,.5);transition:bottom .5s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;pointer-events:auto;';
+            toast.innerHTML = '<div style="display:flex;align-items:center;gap:10px;">'
+                + '<span style="font-size:20px;">&#127873;</span>'
+                + '<div>'
+                + '<div style="font-size:11px;font-weight:600;color:var(--mg-accent,#f59f0a);text-transform:uppercase;letter-spacing:.5px;">Hidden Event!</div>'
+                + '<div style="font-size:14px;font-weight:700;color:#fff;">' + (rewardName || '보상') + ' 획득!</div>'
+                + '</div></div>';
+            document.body.appendChild(toast);
+
+            setTimeout(function() { toast.style.bottom = '24px'; }, 50);
+            setTimeout(function() {
+                toast.style.bottom = '-80px';
+                setTimeout(function() { toast.remove(); }, 500);
+            }, 4000);
+        }
+    };
+
+    // DOM 준비 후 초기화
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() { HE.init(); });
+    } else {
+        HE.init();
+    }
+})();
+</script>
+<?php } } ?>
 
 </body>
 </html>

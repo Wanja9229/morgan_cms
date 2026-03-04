@@ -556,6 +556,7 @@ function rp_time_ago($datetime) {
 (function() {
     var RP_API_URL = '<?php echo G5_BBS_URL; ?>/rp_api.php';
     var RP_REPLY_URL = '<?php echo G5_BBS_URL; ?>/rp_reply.php';
+    var MG_UPLOAD_MAX = <?php echo mg_upload_max_file(); ?>;
     var CHAR_IMAGE_URL = '<?php echo MG_CHAR_IMAGE_URL; ?>';
     var MY_CHARACTERS = <?php echo json_encode(array_map(function($ch) { return array('ch_id' => $ch['ch_id'], 'ch_name' => $ch['ch_name'], 'ch_main' => $ch['ch_main']); }, $my_characters)); ?>;
     var IS_MEMBER = <?php echo $is_member ? 'true' : 'false'; ?>;
@@ -1086,8 +1087,8 @@ function rp_time_ago($datetime) {
 
         if (input.files && input.files[0]) {
             var file = input.files[0];
-            if (file.size > 5 * 1024 * 1024) {
-                alert('이미지 파일 크기는 5MB 이하만 가능합니다.');
+            if (file.size > MG_UPLOAD_MAX) {
+                alert('이미지 파일 크기는 ' + Math.round(MG_UPLOAD_MAX / 1024 / 1024) + 'MB 이하만 가능합니다.');
                 input.value = '';
                 preview.innerHTML = '';
                 preview.classList.add('hidden');

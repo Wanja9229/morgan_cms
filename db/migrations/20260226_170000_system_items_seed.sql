@@ -1,8 +1,5 @@
--- 시스템 아이템 시드: 캐릭터 슬롯, 이모티콘 등록권, 추가 의뢰권
-
--- 캐릭터 슬롯 (영구, 소모품)
-INSERT IGNORE INTO mg_shop_item (si_type, si_name, si_desc, si_price, si_image, si_effect, si_use, sc_id, si_consumable, si_display) VALUES
-('char_slot', '캐릭터 슬롯 +1', '캐릭터를 1개 더 생성할 수 있습니다. 사용 즉시 영구 적용됩니다.', 500, '', '{"slots":1}', 1, 0, 1, 1);
+-- 시스템 아이템 시드: 이모티콘 등록권, 추가 의뢰권
+-- NOTE: 캐릭터 슬롯은 20260222_250000_char_slot_item.sql에서 등록 (추가 캐릭터 슬롯, 5000P)
 
 -- 이모티콘 등록권 (소모품)
 INSERT IGNORE INTO mg_shop_item (si_type, si_name, si_desc, si_price, si_image, si_effect, si_use, sc_id, si_consumable, si_display) VALUES
@@ -14,7 +11,7 @@ INSERT IGNORE INTO mg_shop_item (si_type, si_name, si_desc, si_price, si_image, 
 
 -- 관리자 인벤토리에 테스트용 지급
 INSERT IGNORE INTO mg_inventory (mb_id, si_id, iv_count, iv_datetime)
-SELECT 'admin', si_id, 5, NOW() FROM mg_shop_item WHERE si_type IN ('char_slot', 'emoticon_reg', 'concierge_extra') AND si_use = 1;
+SELECT 'admin', si_id, 5, NOW() FROM mg_shop_item WHERE si_type IN ('emoticon_reg', 'concierge_extra') AND si_use = 1;
 
 -- max_characters 기본값을 1로 설정 (없는 경우에만)
 INSERT IGNORE INTO mg_config (cf_key, cf_value) VALUES ('max_characters', '1');

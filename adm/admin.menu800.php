@@ -36,6 +36,7 @@ $menu["menu800"] = array(
     array('800180', '게시판 관리', $mg_admin_url . '/board_list.php', 'mg_board'),
     array('801500', '미션 관리', $mg_admin_url . '/prompt.php', 'mg_prompt'),
     array('801400', '라디오 관리', $mg_admin_url . '/radio.php', 'mg_radio'),
+    array('801410', '히든 이벤트', $mg_admin_url . '/hidden_event.php', 'mg_hidden_event'),
     array('801800', '의뢰 관리', $mg_admin_url . '/concierge.php', 'mg_concierge'),
     // 재화 / 상점
     array('800550', '포인트 관리', $mg_admin_url . '/point_manage.php', 'mg_point', '재화 / 상점'),

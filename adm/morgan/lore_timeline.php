@@ -297,7 +297,7 @@ function saveTimelineDesc() {
                         </div>
                         <div style="flex:1;">
                             <input type="file" name="lv_image" id="event-image-file" accept="image/*" class="mg-form-input" onchange="previewEventImage(this)" style="margin-bottom:0.5rem;">
-                            <div style="font-size:0.75rem;color:var(--mg-text-muted);">jpg, png, gif, webp (최대 2MB)</div>
+                            <div style="font-size:0.75rem;color:var(--mg-text-muted);">jpg, png, gif, webp (최대 <?php echo round(mg_upload_max_file() / 1024 / 1024); ?>MB)</div>
                             <button type="button" id="event-image-remove" class="mg-btn mg-btn-danger mg-btn-sm" style="margin-top:0.25rem;display:none;" onclick="removeEventImage()">이미지 제거</button>
                         </div>
                     </div>

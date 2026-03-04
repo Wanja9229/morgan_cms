@@ -104,7 +104,7 @@ require_once __DIR__.'/_head.php';
             <form id="map-upload-form" method="post" action="<?php echo G5_ADMIN_URL; ?>/morgan/expedition_area_update.php" enctype="multipart/form-data" style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;">
                 <input type="hidden" name="action" value="upload_map_image">
                 <div class="mg-form-group" style="margin-bottom:0;">
-                    <label class="mg-form-label" style="font-size:0.75rem;">지도 이미지 (JPG/PNG/WebP, 최대 20MB)</label>
+                    <label class="mg-form-label" style="font-size:0.75rem;">지도 이미지 (JPG/PNG/WebP, 최대 <?php echo round(mg_upload_max_file() / 1024 / 1024); ?>MB)</label>
                     <input type="file" name="map_image_file" accept="image/*" class="mg-form-input" style="width:280px;">
                 </div>
                 <button type="submit" class="mg-btn mg-btn-primary mg-btn-sm">업로드</button>
@@ -144,7 +144,7 @@ require_once __DIR__.'/_head.php';
             <thead>
                 <tr>
                     <th style="width:60px;">순서</th>
-                    <th style="width:60px;">아이콘</th>
+                    <th style="width:60px;<?php echo $ui_mode === 'map' ? 'display:none;' : ''; ?>" class="col-icon">아이콘</th>
                     <th style="width:140px;">파견지명</th>
                     <th style="width:70px;">상태</th>
                     <th style="width:80px;">스태미나</th>
@@ -172,7 +172,7 @@ require_once __DIR__.'/_head.php';
                 ?>
                 <tr>
                     <td style="text-align:center;"><?php echo $area['ea_order']; ?></td>
-                    <td style="text-align:center;">
+                    <td style="text-align:center;<?php echo $ui_mode === 'map' ? 'display:none;' : ''; ?>" class="col-icon">
                         <?php if ($area['ea_icon']) {
                             echo mg_icon($area['ea_icon'], 'w-6 h-6');
                         } else {
@@ -300,7 +300,7 @@ require_once __DIR__.'/_head.php';
                     </div>
                     <input type="file" name="ea_image_file" id="ea_image_file" accept="image/*" class="mg-form-input" onchange="previewAreaImage(this)">
                     <input type="hidden" name="ea_image_action" id="ea_image_action" value="">
-                    <p style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:4px;">JPG, PNG, GIF, WebP / 최대 5MB / 권장 16:9 비율</p>
+                    <p style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:4px;">JPG, PNG, GIF, WebP / 최대 <?php echo round(mg_upload_max_file() / 1024 / 1024); ?>MB / 권장 16:9 비율</p>
                 </div>
 
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
@@ -735,14 +735,17 @@ function setUiMode(mode) {
             var btnList = document.getElementById('btn-mode-list');
             var btnMap = document.getElementById('btn-mode-map');
             var mapSection = document.getElementById('map-section');
+            var iconCols = document.querySelectorAll('.col-icon');
             if (mode === 'map') {
                 btnMap.className = 'mg-btn mg-btn-sm mg-btn-primary';
                 btnList.className = 'mg-btn mg-btn-sm mg-btn-secondary';
                 if (mapSection) mapSection.style.display = 'block';
+                iconCols.forEach(function(el) { el.style.display = 'none'; });
             } else {
                 btnList.className = 'mg-btn mg-btn-sm mg-btn-primary';
                 btnMap.className = 'mg-btn mg-btn-sm mg-btn-secondary';
                 if (mapSection) mapSection.style.display = 'none';
+                iconCols.forEach(function(el) { el.style.display = ''; });
             }
         }
     });

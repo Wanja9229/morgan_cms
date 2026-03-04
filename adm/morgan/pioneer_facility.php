@@ -85,7 +85,7 @@ $_marker_style = mg_config('map_marker_style', 'pin');
                 <input type="hidden" name="pioneer_view_mode" value="base">
                 <input type="hidden" name="pioneer_map_action" id="pioneer_map_action" value="">
                 <div class="mg-form-group" style="margin-bottom:0;">
-                    <label class="mg-form-label" style="font-size:0.75rem;">이미지 (JPG/PNG/WebP, 최대 20MB, 권장 1600px+)</label>
+                    <label class="mg-form-label" style="font-size:0.75rem;">이미지 (JPG/PNG/WebP, 최대 <?php echo round(mg_upload_max_file() / 1024 / 1024); ?>MB, 권장 1600px+)</label>
                     <input type="file" name="pioneer_map_image_file" accept="image/*" class="mg-form-input" style="width:280px;">
                 </div>
                 <button type="submit" class="mg-btn mg-btn-primary mg-btn-sm">업로드</button>

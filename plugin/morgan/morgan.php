@@ -110,6 +110,12 @@ $g5['mg_radio_config_table'] = 'mg_radio_config';
 $g5['mg_radio_playlist_table'] = 'mg_radio_playlist';
 $g5['mg_radio_ments_table'] = 'mg_radio_ments';
 
+// 히든 이벤트
+$g5['mg_hidden_event_table'] = 'mg_hidden_event';
+$g5['mg_event_token_table'] = 'mg_event_token';
+$g5['mg_event_claim_table'] = 'mg_event_claim';
+$g5['mg_event_suspicious_table'] = 'mg_event_suspicious';
+
 // [MT-1] 멀티테넌트 파일 경로 분기
 if (defined('MG_MULTITENANT_ENABLED') && MG_MULTITENANT_ENABLED
     && defined('MG_TENANT_ID') && MG_TENANT_ID > 0) {
