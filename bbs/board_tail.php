@@ -8,12 +8,14 @@ if (G5_IS_MOBILE) {
     include_once(G5_BBS_PATH.'/_tail.php');
 } else {
     echo run_replace('board_content_tail', html_purifier(stripslashes($board['bo_content_tail'])), $board);
-    // 하단 파일 경로를 입력하지 않았다면 기본 하단 파일도 include 하지 않음
     if (trim($board['bo_include_tail'])) {
-        if (is_include_path_check($board['bo_include_tail'])) {  //파일경로 체크
+        if (is_include_path_check($board['bo_include_tail'])) {
             @include ($board['bo_include_tail']);
-        } else {    //파일경로가 올바르지 않으면 기본파일을 가져옴
+        } else {
             include_once(G5_BBS_PATH.'/_tail.php');
         }
+    } else {
+        // Morgan: tail.php(위젯 사이드바/푸터) 로드 필요
+        include_once(G5_BBS_PATH.'/_tail.php');
     }
 }

@@ -823,7 +823,7 @@ include_once(G5_THEME_PATH.'/head.php');
 
         <!-- 8. 저장 -->
         <div class="flex justify-end gap-3">
-            <button type="submit" class="px-6 py-2.5 bg-mg-accent hover:bg-mg-accent-hover text-white font-medium rounded-lg transition-colors">저장</button>
+            <button type="submit" class="btn btn-primary px-6 py-2.5">저장</button>
         </div>
     </form>
 </div>

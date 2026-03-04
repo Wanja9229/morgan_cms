@@ -63,8 +63,10 @@ $mg_theme_colors = array(
 
 // 배경 이미지 설정
 $mg_theme_bg = array(
-    'image'   => '',
-    'opacity' => 20
+    'image'    => '',
+    'opacity'  => 20,
+    'position' => 'center center',
+    'size'     => 'cover',
 );
 
 // DB에서 디자인 설정 로드 (설정이 있으면 덮어쓰기)
@@ -73,7 +75,7 @@ $mg_config_table = isset($g5['mg_config_table']) ? $g5['mg_config_table'] : 'mg_
 
 if (function_exists('sql_query') && isset($g5['connect_db'])) {
     $sql = "SELECT cf_key, cf_value FROM {$mg_config_table}
-            WHERE cf_key IN ('color_accent', 'color_button', 'color_button_text', 'color_text', 'color_border', 'color_bg_primary', 'color_bg_secondary', 'bg_image', 'bg_opacity')";
+            WHERE cf_key IN ('color_accent', 'color_button', 'color_button_text', 'color_text', 'color_border', 'color_bg_primary', 'color_bg_secondary', 'bg_image', 'bg_opacity', 'bg_position', 'bg_size')";
     $result = sql_query($sql, false);
 
     if ($result) {
@@ -109,6 +111,16 @@ if (function_exists('sql_query') && isset($g5['connect_db'])) {
                     break;
                 case 'bg_opacity':
                     $mg_theme_bg['opacity'] = (int)$row['cf_value'];
+                    break;
+                case 'bg_position':
+                    if (preg_match('/^(top|center|bottom)\s+(left|center|right)$/', $row['cf_value'])) {
+                        $mg_theme_bg['position'] = $row['cf_value'];
+                    }
+                    break;
+                case 'bg_size':
+                    if (in_array($row['cf_value'], array('cover', 'contain', 'auto'))) {
+                        $mg_theme_bg['size'] = $row['cf_value'];
+                    }
                     break;
             }
         }

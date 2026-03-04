@@ -133,7 +133,7 @@ include_once(G5_THEME_PATH.'/head.php');
                 <div class="flex-1 flex gap-2">
                     <input type="text" name="stx" value="<?php echo htmlspecialchars($stx); ?>" placeholder="검색어 입력..."
                            class="flex-1 bg-mg-bg-primary border border-mg-bg-tertiary rounded-lg px-4 py-2 text-sm text-mg-text-primary placeholder-mg-text-muted focus:outline-none focus:border-mg-accent">
-                    <button type="submit" class="bg-mg-accent hover:bg-mg-accent-hover text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                    <button type="submit" class="btn btn-primary text-sm">
                         검색
                     </button>
                 </div>

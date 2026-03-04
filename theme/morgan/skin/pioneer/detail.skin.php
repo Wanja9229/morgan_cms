@@ -319,7 +319,7 @@ $status_label = $is_complete ? '완공' : ($is_building ? '건설 중' : '대기
     white-space: nowrap;
 }
 .pn-btn-contribute:disabled { opacity: 0.35; cursor: default; }
-.pn-btn-accent { background: var(--mg-accent); color: var(--mg-bg-primary); }
+.pn-btn-accent { background: var(--mg-button); color: var(--mg-button-text); }
 .pn-btn-accent:hover:not(:disabled) { opacity: 0.85; }
 .pn-btn-success { background: var(--mg-success, #10b981); color: #fff; }
 .pn-btn-success:hover:not(:disabled) { opacity: 0.85; }

@@ -219,7 +219,7 @@ if ($profile_bg_id) {
             </div>
             <div class="px-5 py-4 border-t border-mg-bg-tertiary flex justify-end gap-2">
                 <button type="button" onclick="closeRelRequestModal()" class="px-4 py-2 text-sm text-mg-text-secondary hover:text-mg-text-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">취소</button>
-                <button type="button" onclick="submitRelRequest()" class="px-4 py-2 text-sm bg-mg-accent hover:bg-mg-accent-hover text-white rounded-lg transition-colors">신청</button>
+                <button type="button" onclick="submitRelRequest()" class="btn btn-primary text-sm">신청</button>
             </div>
         </div>
     </div>

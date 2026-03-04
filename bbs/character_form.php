@@ -280,7 +280,7 @@ include_once(G5_THEME_PATH.'/head.php');
                                 </select>
                             </div>
                             <div class="flex items-end">
-                                <button type="button" onclick="saveCharTitle()" class="px-4 py-2 bg-mg-accent hover:bg-mg-accent-hover text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap">칭호 저장</button>
+                                <button type="button" onclick="saveCharTitle()" class="btn btn-primary text-sm whitespace-nowrap">칭호 저장</button>
                             </div>
                         </div>
                         <p class="text-xs text-mg-text-muted mt-2">이 캐릭터로 글을 쓸 때 「접두 접미」 닉네임 형태로 표시됩니다.</p>
@@ -562,7 +562,7 @@ include_once(G5_THEME_PATH.'/head.php');
 
             <!-- 버튼 -->
             <div class="flex items-center gap-3">
-                <button type="submit" name="btn_save" value="save" class="flex-1 bg-mg-accent hover:bg-mg-accent-hover text-white font-medium py-3 rounded-lg transition-colors">
+                <button type="submit" name="btn_save" value="save" class="flex-1 btn-primary font-medium py-3 rounded-lg transition-colors">
                     <?php echo $is_edit ? '저장하기' : '캐릭터 만들기'; ?>
                 </button>
                 <?php if (!$is_edit || ($char['ch_state'] ?? '') == 'editing') { ?>
@@ -628,7 +628,7 @@ include_once(G5_THEME_PATH.'/head.php');
                         </div>
                     </div>
                     <div class="flex gap-2 mt-3 ml-14">
-                        <button type="button" onclick="openCfAcceptModal(<?php echo $rel['cr_id']; ?>)" class="bg-mg-accent hover:bg-mg-accent-hover text-white text-sm px-4 py-1.5 rounded-lg transition-colors">승인</button>
+                        <button type="button" onclick="openCfAcceptModal(<?php echo $rel['cr_id']; ?>)" class="btn btn-primary text-sm" style="padding:0.375rem 1rem;">승인</button>
                         <button type="button" onclick="cfRejectRelation(<?php echo $rel['cr_id']; ?>)" class="bg-mg-bg-tertiary hover:bg-red-500/20 text-mg-text-secondary hover:text-red-400 text-sm px-4 py-1.5 rounded-lg transition-colors">거절</button>
                     </div>
                 </div>
@@ -754,7 +754,7 @@ include_once(G5_THEME_PATH.'/head.php');
                 </div>
                 <div class="px-5 py-4 border-t border-mg-bg-tertiary flex justify-end gap-2">
                     <button type="button" onclick="closeCfModal('cf-accept-modal')" class="px-4 py-2 text-sm text-mg-text-secondary rounded-lg hover:bg-mg-bg-tertiary transition-colors">취소</button>
-                    <button type="button" onclick="cfSubmitAccept()" class="px-4 py-2 text-sm bg-mg-accent hover:bg-mg-accent-hover text-white rounded-lg transition-colors">승인</button>
+                    <button type="button" onclick="cfSubmitAccept()" class="btn btn-primary text-sm">승인</button>
                 </div>
             </div>
         </div>
@@ -786,7 +786,7 @@ include_once(G5_THEME_PATH.'/head.php');
                 </div>
                 <div class="px-5 py-4 border-t border-mg-bg-tertiary flex justify-end gap-2">
                     <button type="button" onclick="closeCfModal('cf-edit-modal')" class="px-4 py-2 text-sm text-mg-text-secondary rounded-lg hover:bg-mg-bg-tertiary transition-colors">취소</button>
-                    <button type="button" onclick="cfSubmitEdit()" class="px-4 py-2 text-sm bg-mg-accent hover:bg-mg-accent-hover text-white rounded-lg transition-colors">저장</button>
+                    <button type="button" onclick="cfSubmitEdit()" class="btn btn-primary text-sm">저장</button>
                 </div>
             </div>
         </div>

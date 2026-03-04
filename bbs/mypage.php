@@ -270,7 +270,7 @@ $ach_rarity_colors = array(
             </div>
             <div class="mt-4 flex items-center justify-between">
                 <p class="text-xs text-mg-text-muted" id="widget-change-hint" style="display:none;">변경사항이 있습니다.</p>
-                <button id="widget-save-btn" onclick="saveWidgetToggles()" class="ml-auto px-4 py-2 bg-mg-accent hover:bg-mg-accent-hover text-white text-sm font-medium rounded-lg transition-colors">저장</button>
+                <button id="widget-save-btn" onclick="saveWidgetToggles()" class="ml-auto btn btn-primary text-sm">저장</button>
             </div>
         </div>
     </div>
@@ -358,7 +358,7 @@ $ach_rarity_colors = array(
                         </select>
                     </div>
                     <div class="flex items-end">
-                        <button onclick="saveProfileTitle()" class="px-4 py-2 bg-mg-accent hover:bg-mg-accent-hover text-white text-sm font-medium rounded-lg transition-colors">저장</button>
+                        <button onclick="saveProfileTitle()" class="btn btn-primary text-sm">저장</button>
                     </div>
                 </div>
                 <!-- 미리보기 -->

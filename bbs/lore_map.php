@@ -73,7 +73,7 @@ include_once(G5_THEME_PATH.'/head.php');
     </div>
 
     <!-- 맵 영역 -->
-    <div id="lore-map-container" style="position:relative;overflow:auto;max-height:75vh;border-radius:12px;border:1px solid var(--mg-bg-tertiary);background:var(--mg-bg-secondary);">
+    <div id="lore-map-container" data-map-fullview style="position:relative;overflow:auto;border-radius:12px;border:1px solid var(--mg-bg-tertiary);background:var(--mg-bg-secondary);">
         <img src="<?php echo htmlspecialchars($map_image); ?>" id="lore-map-image" style="display:block;width:100%;" alt="세계관 지도" draggable="false">
         <div id="lore-map-markers"></div>
         <div id="lore-map-popup" style="display:none;position:absolute;z-index:20;"></div>
@@ -99,6 +99,8 @@ include_once(G5_THEME_PATH.'/head.php');
     var markersEl = document.getElementById('lore-map-markers');
     var popupEl = document.getElementById('lore-map-popup');
     var container = document.getElementById('lore-map-container');
+
+    mgMapFullview(container);
 
     function getMarkerSVG(style, color, inner) {
         switch (style) {

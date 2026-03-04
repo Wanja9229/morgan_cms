@@ -124,7 +124,7 @@ if ($item['si_stock'] > 0) {
                 <div class="flex gap-3">
                     <?php if ($status == 'selling') { ?>
                         <?php if ($can_buy === true) { ?>
-                        <button type="button" onclick="buyItem(<?php echo $item['si_id']; ?>)" class="flex-1 bg-mg-accent hover:bg-mg-accent-hover text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                        <button type="button" onclick="buyItem(<?php echo $item['si_id']; ?>)" class="flex-1 btn-primary font-bold py-3 px-6 rounded-lg transition-colors">
                             구매하기
                         </button>
                         <?php } else { ?>

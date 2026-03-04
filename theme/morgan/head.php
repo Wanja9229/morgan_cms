@@ -71,7 +71,7 @@ $_is_home = ($_current_script === 'index.php' || $_current_script === '' || $_SE
 $_is_character_view_from_list = ($_current_script === 'character_view.php' && isset($_GET['from']) && $_GET['from'] === 'list');
 $_is_character_page = !$_is_character_view_from_list && in_array($_current_script, array('character.php', 'character_view.php', 'character_edit.php', 'character_form.php'));
 $_is_character_list_page = ($_current_script === 'character_list.php') || $_is_character_view_from_list;
-$_is_shop_page = ($_current_script === 'shop.php');
+$_is_shop_page = in_array($_current_script, array('shop.php', 'shop_view.php', 'shop_buy.php', 'shop_gift.php'));
 $_is_new_page = ($_current_script === 'new.php');
 $_is_notification_page = ($_current_script === 'notification.php');
 $_is_inventory_page = ($_current_script === 'inventory.php');

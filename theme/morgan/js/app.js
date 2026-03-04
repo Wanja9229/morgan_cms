@@ -331,6 +331,9 @@
                     const doc = parser.parseFromString(html, 'text/html');
                     const newContent = doc.getElementById('ajax-content');
 
+                    // 지도 풀뷰 모드 해제
+                    document.body.classList.remove('mg-map-fullview');
+
                     if (newContent) {
                         this.mainContent.innerHTML = newContent.innerHTML;
                     } else {
@@ -424,7 +427,7 @@
                         activeId = (params.get('from') === 'list') ? 'character_list' : 'character';
                     } else if (script === 'character_list.php') {
                         activeId = 'character_list';
-                    } else if (script === 'shop.php') {
+                    } else if (script === 'shop.php' || script === 'shop_view.php' || script === 'shop_buy.php' || script === 'shop_gift.php') {
                         activeId = 'shop';
                     } else if (script === 'inventory.php') {
                         activeId = 'shop';

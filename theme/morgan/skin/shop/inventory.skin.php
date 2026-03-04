@@ -312,7 +312,7 @@ $item_type_names = $mg['shop_type_labels'];
                     </button>
                     <?php } else { ?>
                     <div style="display:flex;gap:0.25rem;">
-                        <button type="button" onclick="useItem(<?php echo $item['si_id']; ?>)" style="flex:1;" class="bg-mg-accent text-white text-sm font-medium py-2 rounded-lg hover:bg-mg-accent-hover transition-colors">
+                        <button type="button" onclick="useItem(<?php echo $item['si_id']; ?>)" style="flex:1;" class="btn-primary text-sm font-medium py-2 rounded-lg transition-colors">
                             사용
                         </button>
                         <button type="button" onclick="openGiftModal(<?php echo $item['si_id']; ?>, '<?php echo htmlspecialchars(addslashes($item['si_name']), ENT_QUOTES); ?>')" style="flex-shrink:0;width:2.5rem;" class="bg-mg-bg-tertiary text-mg-text-secondary text-sm py-2 rounded-lg hover:bg-mg-accent hover:text-white transition-colors" title="선물하기">
@@ -399,7 +399,7 @@ $item_type_names = $mg['shop_type_labels'];
 
         <div style="display:flex;gap:0.5rem;">
             <button type="button" onclick="closeGiftModal()" style="flex:1;padding:0.6rem;background:var(--mg-bg-tertiary);color:var(--mg-text-secondary);border:none;border-radius:0.5rem;cursor:pointer;font-size:0.9rem;">취소</button>
-            <button type="button" id="gift-submit-btn" onclick="submitGift()" style="flex:1;padding:0.6rem;background:var(--mg-accent);color:white;border:none;border-radius:0.5rem;cursor:pointer;font-size:0.9rem;font-weight:500;">선물 보내기</button>
+            <button type="button" id="gift-submit-btn" onclick="submitGift()" style="flex:1;padding:0.6rem;background:var(--mg-button);color:var(--mg-button-text);border:none;border-radius:0.5rem;cursor:pointer;font-size:0.9rem;font-weight:500;">선물 보내기</button>
         </div>
     </div>
 </div>

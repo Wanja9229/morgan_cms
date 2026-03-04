@@ -156,6 +156,16 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
         .btn-primary:hover, .mg-btn-primary:hover {
             background-color: var(--mg-button-hover) !important;
         }
+        input[type="file"]::file-selector-button {
+            background-color: var(--mg-button) !important;
+            color: var(--mg-button-text) !important;
+        }
+        input[type="file"]::file-selector-button:hover {
+            background-color: var(--mg-button-hover) !important;
+        }
+        /* 지도 풀뷰 — 페이지 스크롤 제거 */
+        body.mg-map-fullview { overflow: hidden !important; }
+        body.mg-map-fullview #main-content { overflow: hidden; }
         <?php if (!empty($mg_theme_bg['image'])): ?>
         /* 배경 이미지 */
         #main-content {
@@ -170,8 +180,9 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
             right: 0;
             bottom: 0;
             background-image: url('<?php echo htmlspecialchars($mg_theme_bg['image']); ?>');
-            background-size: cover;
-            background-position: center;
+            background-size: <?php echo htmlspecialchars($mg_theme_bg['size']); ?>;
+            background-position: <?php echo htmlspecialchars($mg_theme_bg['position']); ?>;
+            background-repeat: no-repeat;
             background-attachment: fixed;
             opacity: <?php echo (100 - $mg_theme_bg['opacity']) / 100; ?>;
             pointer-events: none;
@@ -180,7 +191,15 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
         @media (min-width: 1024px) {
             #main-content::before {
                 left: 56px; /* 사이드바 너비 */
+                right: 18rem; /* 위젯 사이드바 너비 — 컨텐츠 영역 기준 중앙 */
             }
+        }
+        footer {
+            position: relative;
+            z-index: 1;
+        }
+        #widget-sidebar {
+            z-index: 1; /* fixed 유지, 배경 위로만 올림 */
         }
         <?php endif; ?>
         /* 메인 페이지 그리드 캔버스 — 모바일 반응형 */
@@ -238,6 +257,18 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
     <?php if(defined('G5_IS_ADMIN')) { ?>
     var g5_admin_url = "<?php echo G5_ADMIN_URL; ?>";
     <?php } ?>
+    /* 지도 풀뷰 */
+    function mgMapFullview(el) {
+        if (!el) return;
+        var h = window.innerHeight - el.getBoundingClientRect().top - 12;
+        el.style.maxHeight = 'none';
+        el.style.height = Math.max(300, h) + 'px';
+        document.body.classList.add('mg-map-fullview');
+    }
+    window.addEventListener('resize', function() {
+        var el = document.querySelector('[data-map-fullview]');
+        if (el) { el.style.height = ''; mgMapFullview(el); }
+    });
     </script>
 
     <!-- 그누보드 기본 JS -->

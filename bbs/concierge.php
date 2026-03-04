@@ -169,7 +169,7 @@ include_once(G5_THEME_PATH.'/head.php');
             <h1 class="text-2xl font-bold text-mg-text-primary">의뢰 게시판</h1>
             <p class="text-sm text-mg-text-secondary mt-1">창작 협업 의뢰를 등록하고 지원하세요</p>
         </div>
-        <button type="button" onclick="ccOpenModal()" class="px-4 py-2 bg-mg-accent text-mg-bg-primary font-medium rounded-lg hover:bg-mg-accent-hover transition-colors">
+        <button type="button" onclick="ccOpenModal()" class="btn btn-primary">
             의뢰 등록
         </button>
     </div>
@@ -218,7 +218,7 @@ include_once(G5_THEME_PATH.'/head.php');
     <?php if (empty($result['items'])) { ?>
     <div class="card text-center py-12">
         <p class="text-mg-text-muted mb-3">등록된 의뢰가 없습니다.</p>
-        <button type="button" onclick="ccOpenModal()" class="inline-block px-4 py-2 bg-mg-accent text-mg-bg-primary rounded-lg text-sm">첫 의뢰 등록하기</button>
+        <button type="button" onclick="ccOpenModal()" class="btn btn-primary text-sm">첫 의뢰 등록하기</button>
     </div>
     <?php } else { ?>
     <div class="grid grid-cols-1 gap-5" style="grid-template-columns:repeat(1,minmax(0,1fr))" id="cc-grid">
@@ -423,7 +423,7 @@ include_once(G5_THEME_PATH.'/head.php');
 
     <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
         <p class="text-sm text-mg-text-muted">의뢰 수행 결과물 <?php echo number_format($_rt_total_count); ?>건</p>
-        <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=concierge_result&w=w" class="px-4 py-2 bg-mg-accent text-mg-bg-primary font-medium rounded-lg text-sm hover:bg-mg-accent-hover transition-colors">결과물 등록</a>
+        <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=concierge_result&w=w" class="btn btn-primary text-sm">결과물 등록</a>
     </div>
 
     <div class="card">
@@ -588,7 +588,7 @@ include_once(G5_THEME_PATH.'/head.php');
 
         <div class="sticky bottom-0 bg-mg-bg-secondary border-t border-mg-bg-tertiary px-6 py-4 flex justify-end gap-2">
             <button type="button" onclick="ccCloseModal()" class="px-4 py-2 bg-mg-bg-tertiary text-mg-text-secondary rounded-lg text-sm hover:bg-mg-bg-primary transition-colors">취소</button>
-            <button type="button" onclick="ccSubmitModal()" id="cc-submit-btn" class="px-4 py-2 bg-mg-accent text-mg-bg-primary font-medium rounded-lg text-sm hover:bg-mg-accent-hover transition-colors">등록하기</button>
+            <button type="button" onclick="ccSubmitModal()" id="cc-submit-btn" class="btn btn-primary text-sm">등록하기</button>
         </div>
     </div>
 </div>
@@ -766,7 +766,7 @@ function ccRenderDetail(id, d) {
             for (var k = 0; k < CC.chars.length; k++) h += '<option value="' + CC.chars[k].ch_id + '">' + _e(CC.chars[k].ch_name) + '</option>';
             h += '</select>';
             h += '<input type="text" id="cc-apm-' + id + '" placeholder="지원 메시지" class="flex-1 px-3 py-1.5 bg-mg-bg-tertiary text-mg-text-primary rounded text-sm border border-mg-bg-tertiary" maxlength="200" style="min-width:120px">';
-            h += '<button type="button" onclick="ccApply(' + id + ')" class="px-3 py-1.5 bg-mg-accent text-mg-bg-primary rounded text-sm font-medium hover:bg-mg-accent-hover transition-colors">지원</button>';
+            h += '<button type="button" onclick="ccApply(' + id + ')" class="btn btn-primary text-sm" style="padding:0.375rem 0.75rem;">지원</button>';
             h += '</div>';
         } else {
             h += '<span class="text-xs text-mg-text-muted py-1">승인된 캐릭터가 없어 지원할 수 없습니다.</span>';
@@ -800,7 +800,7 @@ function ccRenderDetail(id, d) {
                     }
                 }
                 if (!myResult) {
-                    h += '<a href="' + CC.bbs + '/board.php?bo_table=concierge_result&w=w&mg_concierge_id=' + id + '" class="px-3 py-1.5 bg-mg-accent text-mg-bg-primary rounded text-sm font-medium hover:bg-mg-accent-hover transition-colors inline-flex items-center gap-1">결과물 등록</a>';
+                    h += '<a href="' + CC.bbs + '/board.php?bo_table=concierge_result&w=w&mg_concierge_id=' + id + '" class="btn btn-primary text-sm inline-flex items-center gap-1" style="padding:0.375rem 0.75rem;">결과물 등록</a>';
                 } else {
                     h += '<span class="text-xs text-green-400 py-1">결과물 등록 완료</span>';
                     h += '<button type="button" onclick="ccSettle(' + id + ',true)" class="px-3 py-1.5 bg-yellow-500/20 text-yellow-400 rounded text-sm hover:bg-yellow-500/30 transition-colors">강제 완료</button>';

@@ -191,6 +191,47 @@ require_once __DIR__.'/_head.php';
                 </div>
                 <small style="color:var(--mg-text-muted);font-size:0.75rem;">0%: 원본 그대로 / 100%: 완전 투명</small>
             </div>
+
+            <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-top:1rem;">
+                <div class="mg-form-group" style="flex:1;min-width:200px;">
+                    <label class="mg-form-label">배경 위치</label>
+                    <?php $_bg_pos = isset($mg_configs['bg_position']) ? $mg_configs['bg_position'] : 'center center'; ?>
+                    <div style="display:inline-grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--mg-bg-primary);padding:6px;border-radius:8px;border:1px solid var(--mg-bg-tertiary);">
+                        <?php
+                        $_pos_map = array(
+                            'top left' => '↖', 'top center' => '↑', 'top right' => '↗',
+                            'center left' => '←', 'center center' => '·', 'center right' => '→',
+                            'bottom left' => '↙', 'bottom center' => '↓', 'bottom right' => '↘',
+                        );
+                        foreach ($_pos_map as $_pv => $_pl) { ?>
+                        <label style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:4px;cursor:pointer;font-size:1.1rem;<?php echo $_bg_pos === $_pv ? 'background:var(--mg-accent);color:#fff;' : 'background:var(--mg-bg-secondary);color:var(--mg-text-muted);'; ?>" title="<?php echo $_pv; ?>">
+                            <input type="radio" name="bg_position" value="<?php echo $_pv; ?>" <?php echo $_bg_pos === $_pv ? 'checked' : ''; ?> style="display:none;" onchange="updatePosGrid(this)">
+                            <?php echo $_pl; ?>
+                        </label>
+                        <?php } ?>
+                    </div>
+                </div>
+
+                <div class="mg-form-group" style="flex:1;min-width:200px;">
+                    <label class="mg-form-label">배경 크기</label>
+                    <?php $_bg_size = isset($mg_configs['bg_size']) ? $mg_configs['bg_size'] : 'cover'; ?>
+                    <div style="display:flex;flex-direction:column;gap:6px;">
+                        <?php
+                        $_size_opts = array(
+                            'cover' => array('채우기', '영역을 빈틈없이 채움 (잘릴 수 있음)'),
+                            'contain' => array('맞추기', '이미지 전체가 보이도록 맞춤'),
+                            'auto' => array('원본', '이미지 원본 크기 그대로'),
+                        );
+                        foreach ($_size_opts as $_sv => $_sd) { ?>
+                        <label style="display:flex;align-items:center;gap:0.5rem;padding:6px 10px;border-radius:6px;cursor:pointer;<?php echo $_bg_size === $_sv ? 'background:var(--mg-accent);color:#fff;' : 'background:var(--mg-bg-primary);color:var(--mg-text-secondary);border:1px solid var(--mg-bg-tertiary);'; ?>" onclick="updateSizeLabel(this)">
+                            <input type="radio" name="bg_size" value="<?php echo $_sv; ?>" <?php echo $_bg_size === $_sv ? 'checked' : ''; ?> style="display:none;">
+                            <span style="font-size:0.85rem;font-weight:500;"><?php echo $_sd[0]; ?></span>
+                            <span style="font-size:0.7rem;opacity:0.7;"><?php echo $_sd[1]; ?></span>
+                        </label>
+                        <?php } ?>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -223,6 +264,21 @@ function removeBgImage() {
     document.getElementById('bg_image_url').value = '__DELETE__';
     document.getElementById('bg_image').value = '';
     document.getElementById('bg_image_preview').innerHTML = '<span style="color:var(--mg-text-muted);font-size:0.8rem;">이미지가 삭제됩니다 (저장 시 적용)</span>';
+}
+
+function updatePosGrid(radio) {
+    var labels = radio.closest('div').querySelectorAll('label');
+    labels.forEach(function(l) { l.style.background = 'var(--mg-bg-secondary)'; l.style.color = 'var(--mg-text-muted)'; });
+    radio.parentElement.style.background = 'var(--mg-accent)';
+    radio.parentElement.style.color = '#fff';
+}
+
+function updateSizeLabel(label) {
+    var siblings = label.parentElement.querySelectorAll('label');
+    siblings.forEach(function(l) { l.style.background = 'var(--mg-bg-primary)'; l.style.color = 'var(--mg-text-secondary)'; l.style.border = '1px solid var(--mg-bg-tertiary)'; });
+    label.style.background = 'var(--mg-accent)';
+    label.style.color = '#fff';
+    label.style.border = '1px solid var(--mg-accent)';
 }
 
 function previewFont(fontName) {

@@ -72,7 +72,7 @@ include_once(G5_THEME_PATH.'/head.php');
             <p class="text-sm text-mg-text-muted mt-1"><?php echo $current_count; ?> / <?php echo $max_characters; ?>개</p>
         </div>
         <?php if ($can_create) { ?>
-        <a href="<?php echo G5_BBS_URL; ?>/character_form.php" class="inline-flex items-center gap-2 bg-mg-accent hover:bg-mg-accent-hover text-white px-4 py-2 rounded-lg transition-colors">
+        <a href="<?php echo G5_BBS_URL; ?>/character_form.php" class="btn btn-primary inline-flex items-center gap-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
@@ -174,7 +174,7 @@ include_once(G5_THEME_PATH.'/head.php');
         </div>
         <h3 class="text-lg font-medium text-mg-text-primary mb-2">아직 캐릭터가 없습니다</h3>
         <p class="text-mg-text-muted mb-6">첫 번째 캐릭터를 만들어보세요!</p>
-        <a href="<?php echo G5_BBS_URL; ?>/character_form.php" class="inline-flex items-center gap-2 bg-mg-accent hover:bg-mg-accent-hover text-white px-6 py-2.5 rounded-lg transition-colors">
+        <a href="<?php echo G5_BBS_URL; ?>/character_form.php" class="btn btn-primary inline-flex items-center gap-2 px-6 py-2.5">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>

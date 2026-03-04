@@ -72,7 +72,7 @@ unset($_fc);
     <!-- 거점뷰 (맵 이미지 + 마커) -->
     <!-- =============================== -->
     <div id="pioneer-base-view">
-        <div id="pn-map-container" class="pn-map-container">
+        <div id="pn-map-container" class="pn-map-container" data-map-fullview
             <img src="<?php echo htmlspecialchars($pioneer_map_image); ?>" id="pn-map-image" class="pn-map-image" alt="거점 이미지" draggable="false">
             <div id="pn-map-markers"></div>
         </div>
@@ -393,7 +393,7 @@ unset($_fc);
 /* ============================== */
 /* 거점뷰 (맵) */
 /* ============================== */
-.pn-map-container { position: relative; overflow: auto; max-height: 75vh; border-radius: 12px; border: 1px solid var(--mg-bg-tertiary); background: var(--mg-bg-secondary); }
+.pn-map-container { position: relative; overflow: auto; border-radius: 12px; border: 1px solid var(--mg-bg-tertiary); background: var(--mg-bg-secondary); }
 .pn-map-image { display: block; width: 100%; min-width: 600px; user-select: none; }
 
 .pn-marker {
@@ -530,7 +530,7 @@ unset($_fc);
     transition: opacity 0.2s; white-space: nowrap;
 }
 .pn-m-btn:disabled { opacity: 0.3; cursor: default; }
-.pn-m-btn-amber { background: var(--mg-accent); color: var(--mg-bg-primary); }
+.pn-m-btn-amber { background: var(--mg-button); color: var(--mg-button-text); }
 .pn-m-btn-amber:hover:not(:disabled) { opacity: 0.85; }
 .pn-m-btn-green { background: var(--mg-success, #10b981); color: #fff; }
 .pn-m-btn-green:hover:not(:disabled) { opacity: 0.85; }
@@ -825,6 +825,7 @@ unset($_fc);
     // === 거점뷰 마커 ===
     <?php if ($pioneer_view_mode === 'base') { ?>
     (function() {
+        mgMapFullview(document.getElementById('pn-map-container'));
         var markersEl = document.getElementById('pn-map-markers');
 
         function getMarkerSVG(color, inner) {

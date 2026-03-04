@@ -158,8 +158,12 @@ $config_keys = array(
     'color_bg_primary',
     'color_bg_secondary',
     'bg_opacity',
+    'bg_position',
+    'bg_size',
     // 폰트 설정
-    'site_font'
+    'site_font',
+    // 푸터
+    'footer_text'
 );
 
 foreach ($config_keys as $key) {

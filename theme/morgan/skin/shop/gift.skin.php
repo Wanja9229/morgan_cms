@@ -114,7 +114,7 @@ $status_colors = array(
 
                 <!-- 버튼 -->
                 <div class="flex sm:flex-col gap-2 flex-shrink-0">
-                    <button type="button" onclick="acceptGift(<?php echo $gift['gf_id']; ?>)" class="flex-1 sm:flex-none bg-mg-accent hover:bg-mg-accent-hover text-white font-medium px-4 py-2 rounded-lg transition-colors">
+                    <button type="button" onclick="acceptGift(<?php echo $gift['gf_id']; ?>)" class="flex-1 sm:flex-none btn-primary font-medium px-4 py-2 rounded-lg transition-colors">
                         수락
                     </button>
                     <button type="button" onclick="rejectGift(<?php echo $gift['gf_id']; ?>)" class="flex-1 sm:flex-none bg-mg-bg-tertiary hover:bg-mg-error hover:text-white text-mg-text-secondary font-medium px-4 py-2 rounded-lg transition-colors">

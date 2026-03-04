@@ -7,13 +7,15 @@ if (G5_IS_MOBILE) {
     include_once(G5_BBS_PATH.'/_head.php');
     echo run_replace('board_mobile_content_head', html_purifier(stripslashes($board['bo_mobile_content_head'])), $board);
 } else {
-    // 상단 파일 경로를 입력하지 않았다면 기본 상단 파일도 include 하지 않음
     if (trim($board['bo_include_head'])) {
-        if (is_include_path_check($board['bo_include_head'])) {  //파일경로 체크
+        if (is_include_path_check($board['bo_include_head'])) {
             @include ($board['bo_include_head']);
-        } else {    //파일경로가 올바르지 않으면 기본파일을 가져옴
+        } else {
             include_once(G5_BBS_PATH.'/_head.php');
         }
+    } else {
+        // Morgan: head.sub.php는 HTML head만 출력하므로 head.php(헤더/사이드바)도 로드 필요
+        include_once(G5_BBS_PATH.'/_head.php');
     }
     echo run_replace('board_content_head', html_purifier(stripslashes($board['bo_content_head'])), $board);
 }

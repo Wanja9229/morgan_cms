@@ -53,7 +53,7 @@ $type_labels = array('collaboration' => '합작', 'illustration' => '일러스�
             <h1 class="text-xl font-bold text-mg-text-primary"><?php echo $board['bo_subject']; ?></h1>
             <p class="text-sm text-mg-text-muted mt-0.5">의뢰 수행 결과물 <?php echo number_format($total_count); ?>건</p>
         </div>
-        <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=<?php echo $bo_table; ?>&w=w" class="px-4 py-2 bg-mg-accent text-mg-bg-primary font-medium rounded-lg hover:bg-mg-accent-hover transition-colors text-sm">
+        <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=<?php echo $bo_table; ?>&w=w" class="btn btn-primary text-sm">
             결과물 등록
         </a>
     </div>

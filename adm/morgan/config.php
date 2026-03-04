@@ -183,6 +183,28 @@ function _cfg_radio($name, $configs, $default = '1', $labels = array('사용', '
         </div>
     </div>
 
+    <div class="mg-card" style="margin-top:1.5rem;">
+        <div class="mg-card-header"><h3>푸터</h3></div>
+        <div class="mg-card-body">
+            <div class="mg-form-group">
+                <label class="mg-form-label" for="footer_text">푸터 텍스트</label>
+                <textarea name="footer_text" id="footer_text" class="mg-form-input" rows="3" style="max-width:600px;"><?php echo htmlspecialchars(function_exists('mg_config') ? mg_config('footer_text', '') : ''); ?></textarea>
+                <small style="color:var(--mg-text-muted);font-size:0.75rem;">푸터 상단에 표시됩니다. 빈칸이면 숨김 처리됩니다.</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="mg-card" style="margin-top:1.5rem;">
+        <div class="mg-card-header"><h3>콘텐츠 페이지</h3></div>
+        <div class="mg-card-body">
+            <p style="color:var(--mg-text-muted);font-size:0.8125rem;margin-bottom:1rem;">이용약관, 개인정보처리방침 페이지의 내용을 편집합니다.</p>
+            <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+                <a href="./content_page.php?co_id=provision" class="mg-btn" style="background:var(--mg-bg-tertiary);color:var(--mg-text-secondary);">이용약관 편집</a>
+                <a href="./content_page.php?co_id=privacy" class="mg-btn" style="background:var(--mg-bg-tertiary);color:var(--mg-text-secondary);">개인정보처리방침 편집</a>
+            </div>
+        </div>
+    </div>
+
     <div style="margin-top:1.5rem;">
         <button type="submit" class="mg-btn mg-btn-primary">설정 저장</button>
     </div>

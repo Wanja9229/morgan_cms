@@ -63,7 +63,7 @@ $relation_url = G5_BBS_URL . '/relation.php';
         <!-- 맵뷰 -->
         <?php if ($ui_mode === 'map' && $map_image) { ?>
         <div id="area-map-view" style="display:block;">
-            <div id="map-container" style="position:relative;overflow:auto;max-height:70vh;border-radius:12px;border:1px solid var(--mg-bg-tertiary);">
+            <div id="map-container" data-map-fullview style="position:relative;overflow:auto;border-radius:12px;border:1px solid var(--mg-bg-tertiary);">
                 <img src="<?php echo $map_image; ?>" id="map-image" style="display:block;width:100%;min-width:600px;" alt="파견 지도" draggable="false">
                 <div id="map-markers"></div>
                 <div id="map-popup" style="display:none;position:absolute;z-index:20;"></div>
@@ -136,7 +136,7 @@ $relation_url = G5_BBS_URL . '/relation.php';
             </div>
 
             <!-- 파견 버튼 -->
-            <button id="dm-dispatch-btn" onclick="submitDispatch()" class="w-full px-4 py-3 bg-mg-accent text-mg-bg-primary font-medium rounded-lg hover:bg-mg-accent-hover transition-colors" disabled>캐릭터를 선택해주세요</button>
+            <button id="dm-dispatch-btn" onclick="submitDispatch()" class="btn btn-primary w-full" style="padding-top:0.75rem;padding-bottom:0.75rem;" disabled>캐릭터를 선택해주세요</button>
         </div>
     </div>
 </div>
@@ -149,7 +149,7 @@ $relation_url = G5_BBS_URL . '/relation.php';
             <h3 class="text-lg font-bold text-mg-text-primary">파견 완료!</h3>
         </div>
         <div id="reward-items" class="space-y-2 mb-4"></div>
-        <button onclick="closeRewardModal()" class="w-full px-4 py-3 bg-mg-accent text-mg-bg-primary font-medium rounded-lg hover:bg-mg-accent-hover transition-colors">확인</button>
+        <button onclick="closeRewardModal()" class="btn btn-primary w-full" style="padding-top:0.75rem;padding-bottom:0.75rem;">확인</button>
     </div>
 </div>
 
@@ -180,8 +180,8 @@ $relation_url = G5_BBS_URL . '/relation.php';
 .map-popup-name { font-weight:600; color:var(--mg-text-primary); font-size:0.95rem; }
 .map-popup-desc { font-size:0.75rem; color:var(--mg-text-muted); margin-top:2px; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; }
 .map-popup-meta { display:flex; gap:8px; font-size:0.75rem; color:var(--mg-text-secondary); margin-top:8px; }
-.map-popup-btn { display:block; width:100%; margin-top:10px; padding:8px; border:none; border-radius:8px; background:var(--mg-accent); color:var(--mg-bg-primary); font-weight:500; font-size:0.85rem; cursor:pointer; text-align:center; }
-.map-popup-btn:hover { background:var(--mg-accent-hover); }
+.map-popup-btn { display:block; width:100%; margin-top:10px; padding:8px; border:none; border-radius:8px; background:var(--mg-button); color:var(--mg-button-text); font-weight:500; font-size:0.85rem; cursor:pointer; text-align:center; }
+.map-popup-btn:hover { background:var(--mg-button-hover); }
 </style>
 
 <script>
@@ -212,6 +212,7 @@ $relation_url = G5_BBS_URL . '/relation.php';
     var cachedCharacters = null;
 
     // === 초기 로드 ===
+    mgMapFullview(document.getElementById('map-container'));
     loadStatus();
     loadAreas();
     loadPartnerHistory();
@@ -280,7 +281,7 @@ $relation_url = G5_BBS_URL . '/relation.php';
 
             var actionHtml = '';
             if (exp.is_complete) {
-                actionHtml = '<button class="w-full px-4 py-2 bg-mg-accent text-mg-bg-primary font-medium rounded-lg hover:bg-mg-accent-hover transition-colors" onclick="claimExpedition(' + exp.el_id + ')">보상 수령</button>';
+                actionHtml = '<button class="btn btn-primary w-full" onclick="claimExpedition(' + exp.el_id + ')">보상 수령</button>';
             } else {
                 actionHtml = '<div class="mb-2"><div class="flex justify-between text-xs text-mg-text-muted mb-1"><span>진행 중</span><span id="timer-' + exp.el_id + '">' + formatTime(exp.remaining_seconds) + '</span></div>' +
                     '<div class="h-2 bg-mg-bg-primary rounded-full overflow-hidden"><div class="h-full bg-mg-accent transition-all" id="bar-' + exp.el_id + '" style="width:' + exp.progress + '%"></div></div></div>' +
