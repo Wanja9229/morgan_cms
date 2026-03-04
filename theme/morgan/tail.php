@@ -93,7 +93,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
         $inventory_items = array();
         $inventory_count = 0;
         if (function_exists('mg_get_inventory')) {
-            $inv_data = mg_get_inventory($member['mb_id'], 0, 1, 6);
+            $inv_data = mg_get_inventory($member['mb_id'], 0, 1, 3);
             $inventory_items = isset($inv_data['items']) ? $inv_data['items'] : array();
             $inventory_count = isset($inv_data['total']) ? $inv_data['total'] : 0;
         }
@@ -124,12 +124,12 @@ if (isset($is_ajax_request) && $is_ajax_request) {
                     <?php } ?>
                 </div>
                 <?php } ?>
-                <?php for ($i = count($inventory_items); $i < 6; $i++) { ?>
+                <?php for ($i = count($inventory_items); $i < 3; $i++) { ?>
                 <div class="aspect-square bg-mg-bg-tertiary/50 rounded-lg border border-dashed border-mg-bg-tertiary"></div>
                 <?php } ?>
             </div>
-            <?php if ($inventory_count > 6) { ?>
-            <p class="text-xs text-mg-text-muted text-center mt-2">+<?php echo $inventory_count - 6; ?>개 더 보유</p>
+            <?php if ($inventory_count > 3) { ?>
+            <p class="text-xs text-mg-text-muted text-center mt-2">+<?php echo $inventory_count - 3; ?>개 더 보유</p>
             <?php } ?>
             <?php } else { ?>
             <div class="text-center py-4">
@@ -191,6 +191,220 @@ if (isset($is_ajax_request) && $is_ajax_request) {
             </div>
             <?php } ?>
         </div>
+
+        <!-- 라디오 위젯 -->
+        <?php
+        $_mg_radio_on = false;
+        if (isset($g5['mg_radio_config_table'])) {
+            $_mg_rcfg = sql_fetch("SELECT is_active FROM {$g5['mg_radio_config_table']} WHERE config_id = 1");
+            if ($_mg_rcfg && $_mg_rcfg['is_active']) $_mg_radio_on = true;
+        }
+        if ($_mg_radio_on) {
+        ?>
+        <div class="card mt-4" id="mg-radio-widget">
+            <!-- 날씨 -->
+            <div class="flex items-center gap-2 mb-2" id="radio-weather" style="display:none;">
+                <span id="radio-weather-icon" style="font-size:1.1rem;"></span>
+                <span id="radio-weather-temp" class="text-sm text-mg-text-primary font-semibold"></span>
+                <span id="radio-weather-desc" class="text-xs text-mg-text-muted"></span>
+                <a href="https://openweathermap.org/" target="_blank" rel="noopener" id="radio-owm-credit" class="text-mg-text-muted" style="display:none;margin-left:auto;font-size:0.6rem;opacity:0.6;">OWM</a>
+            </div>
+            <!-- 플레이어 (트랙 없으면 숨김) -->
+            <div id="radio-player-section" style="display:none;">
+                <!-- 현재 곡 -->
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-mg-accent" style="font-size:0.75rem;">♪</span>
+                    <span id="radio-track-title" class="text-xs text-mg-text-primary truncate flex-1">(정지)</span>
+                </div>
+                <!-- 컨트롤 -->
+                <div class="flex items-center gap-2 mb-2">
+                    <button id="radio-play-btn" type="button" class="p-1.5 rounded hover:bg-mg-bg-tertiary text-mg-text-secondary transition-colors" title="재생/정지" style="font-size:0.85rem;line-height:1;">▶</button>
+                    <button id="radio-next-btn" type="button" class="p-1.5 rounded hover:bg-mg-bg-tertiary text-mg-text-secondary transition-colors" title="다음 곡" style="font-size:0.75rem;line-height:1;">⏭</button>
+                    <input type="range" id="radio-volume" min="0" max="100" value="30" style="flex:1;accent-color:var(--mg-accent);height:4px;">
+                    <button id="radio-video-btn" type="button" class="p-1.5 rounded hover:bg-mg-bg-tertiary text-mg-text-secondary transition-colors" title="영상 보기" style="font-size:0.75rem;line-height:1;">📺</button>
+                </div>
+                <!-- 영상 (접힘) -->
+                <div id="radio-video-wrap" style="height:0;overflow:hidden;transition:height .3s;border-radius:6px;">
+                    <div id="radio-player"></div>
+                </div>
+            </div>
+            <!-- 멘트 -->
+            <div class="border-t border-mg-bg-tertiary pt-2 mt-1 overflow-hidden" style="height:22px;">
+                <div id="radio-marquee" class="text-xs text-mg-text-muted whitespace-nowrap"></div>
+            </div>
+        </div>
+        <style>
+        @keyframes mg-marquee { 0%{transform:translateX(100%)} 100%{transform:translateX(-100%)} }
+        #radio-volume { -webkit-appearance: none; background: var(--mg-bg-tertiary); border-radius: 2px; }
+        #radio-volume::-webkit-slider-thumb { -webkit-appearance:none; width:12px; height:12px; border-radius:50%; background:var(--mg-accent); cursor:pointer; }
+        </style>
+        <script src="https://www.youtube.com/iframe_api"></script>
+        <script>
+        (function(){
+            var MR = {
+                player: null, tracks: [], ments: [], mentIdx: 0,
+                trackIdx: 0, playing: false, playMode: 'sequential',
+                mentMode: 'sequential', mentInterval: 12, mentTimer: null,
+                weatherIcons: {
+                    sunny:'☀️', partly_cloudy:'⛅', cloudy:'☁️', rain:'🌧️',
+                    shower:'🌦️', snow:'❄️', fog:'🌫️', thunderstorm:'⛈️'
+                },
+                weatherNames: {
+                    sunny:'맑음', partly_cloudy:'구름조금', cloudy:'흐림', rain:'비',
+                    shower:'소나기', snow:'눈', fog:'안개', thunderstorm:'천둥번개'
+                }
+            };
+            window._MR = MR;
+
+            // API 로드
+            fetch('<?php echo G5_BBS_URL; ?>/radio_api.php?action=status')
+                .then(function(r){ return r.json(); })
+                .then(function(d){
+                    if (!d.success) return;
+                    var data = d.data;
+                    MR.tracks = data.tracks || [];
+                    MR.ments = data.ments || [];
+                    MR.playMode = data.play_mode;
+                    MR.mentMode = data.ment_mode;
+                    MR.mentInterval = data.ment_interval || 12;
+
+                    // 날씨
+                    if (data.weather) {
+                        var wEl = document.getElementById('radio-weather');
+                        wEl.style.display = '';
+                        document.getElementById('radio-weather-icon').textContent = MR.weatherIcons[data.weather.type] || '☀️';
+                        document.getElementById('radio-weather-temp').textContent = data.weather.temp + '°C';
+                        document.getElementById('radio-weather-desc').textContent = MR.weatherNames[data.weather.type] || '';
+                        if (data.weather_mode === 'api') {
+                            var owm = document.getElementById('radio-owm-credit');
+                            if (owm) owm.style.display = '';
+                        }
+                    }
+
+                    // 멘트 시작
+                    if (MR.ments.length > 0) {
+                        startMent();
+                    }
+
+                    // 트랙 있으면 플레이어 표시
+                    if (MR.tracks.length > 0) {
+                        var ps = document.getElementById('radio-player-section');
+                        if (ps) ps.style.display = '';
+                    }
+
+                    // 랜덤 모드면 셔플
+                    if (MR.playMode === 'random' && MR.tracks.length > 1) {
+                        for (var i = MR.tracks.length - 1; i > 0; i--) {
+                            var j = Math.floor(Math.random() * (i + 1));
+                            var tmp = MR.tracks[i]; MR.tracks[i] = MR.tracks[j]; MR.tracks[j] = tmp;
+                        }
+                    }
+                });
+
+            // 멘트 로테이션
+            function startMent() {
+                showMent();
+                MR.mentTimer = setInterval(function(){
+                    if (MR.mentMode === 'random') {
+                        MR.mentIdx = Math.floor(Math.random() * MR.ments.length);
+                    } else {
+                        MR.mentIdx = (MR.mentIdx + 1) % MR.ments.length;
+                    }
+                    showMent();
+                }, MR.mentInterval * 1000);
+            }
+
+            function showMent() {
+                var el = document.getElementById('radio-marquee');
+                if (!el || MR.ments.length === 0) return;
+                el.textContent = MR.ments[MR.mentIdx];
+                el.style.animation = 'none';
+                el.offsetHeight;
+                el.style.animation = 'mg-marquee ' + Math.max(6, MR.mentInterval) + 's linear infinite';
+            }
+
+            // YouTube Player
+            window.onYouTubeIframeAPIReady = function() {
+                MR.player = new YT.Player('radio-player', {
+                    height: '120',
+                    width: '100%',
+                    playerVars: {
+                        autoplay: 0, controls: 0, disablekb: 1,
+                        modestbranding: 1, rel: 0, fs: 0
+                    },
+                    events: {
+                        onReady: function(e) {
+                            e.target.setVolume(parseInt(document.getElementById('radio-volume').value));
+                        },
+                        onStateChange: function(e) {
+                            if (e.data === YT.PlayerState.ENDED) {
+                                nextTrack();
+                            }
+                        },
+                        onError: function() {
+                            nextTrack();
+                        }
+                    }
+                });
+            };
+
+            function playTrack(idx) {
+                if (!MR.player || MR.tracks.length === 0) return;
+                MR.trackIdx = idx % MR.tracks.length;
+                var t = MR.tracks[MR.trackIdx];
+                document.getElementById('radio-track-title').textContent = t.title;
+                MR.player.loadVideoById(t.vid);
+                MR.playing = true;
+                document.getElementById('radio-play-btn').textContent = '⏸';
+            }
+
+            function nextTrack() {
+                if (MR.tracks.length === 0) return;
+                playTrack(MR.trackIdx + 1);
+            }
+
+            // 재생/정지
+            document.getElementById('radio-play-btn').addEventListener('click', function() {
+                if (!MR.player || MR.tracks.length === 0) return;
+                if (MR.playing) {
+                    MR.player.pauseVideo();
+                    MR.playing = false;
+                    this.textContent = '▶';
+                } else {
+                    if (MR.player.getPlayerState && MR.player.getPlayerState() === YT.PlayerState.PAUSED) {
+                        MR.player.playVideo();
+                        MR.playing = true;
+                        this.textContent = '⏸';
+                    } else {
+                        playTrack(MR.trackIdx);
+                    }
+                }
+            });
+
+            // 다음 곡
+            document.getElementById('radio-next-btn').addEventListener('click', function() {
+                nextTrack();
+            });
+
+            // 볼륨
+            document.getElementById('radio-volume').addEventListener('input', function() {
+                if (MR.player && MR.player.setVolume) MR.player.setVolume(parseInt(this.value));
+            });
+
+            // 영상 토글
+            document.getElementById('radio-video-btn').addEventListener('click', function() {
+                var wrap = document.getElementById('radio-video-wrap');
+                if (parseInt(wrap.style.height) === 0) {
+                    wrap.style.height = '120px';
+                    this.textContent = '🔽';
+                } else {
+                    wrap.style.height = '0';
+                    this.textContent = '📺';
+                }
+            });
+        })();
+        </script>
+        <?php } ?>
 
         <?php } else { ?>
         <!-- 비로그인 상태 -->

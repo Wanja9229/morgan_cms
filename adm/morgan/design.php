@@ -630,6 +630,7 @@ foreach ($widgets as $w) {
 ?>
 
 var widgetData = <?php echo json_encode($widgets_json, JSON_UNESCAPED_UNICODE); ?>;
+var widgetMinHPx = <?php echo json_encode(array_map(function($t) { return $t['min_h_px'] ?? 0; }, $widget_types)); ?>;
 
 function buildWidgetContent(w) {
     return '<div class="gs-item-header">'
@@ -653,6 +654,12 @@ function calcSquareCellHeight() {
     var canvas = document.getElementById('gridCanvas');
     if (!canvas) return 50;
     return Math.floor(canvas.clientWidth / currentGridColumns);
+}
+
+function calcMinH(type, cellHeight) {
+    var px = widgetMinHPx[type] || 0;
+    if (!px || !cellHeight) return 1;
+    return Math.ceil(px / cellHeight);
 }
 
 function updateCanvasSize(cellH) {
@@ -685,14 +692,26 @@ document.addEventListener('DOMContentLoaded', function() {
             var newH = calcSquareCellHeight();
             grid.cellHeight(newH);
             updateCanvasSize(newH);
+            // minH 재계산
+            grid.getGridItems().forEach(function(el) {
+                var node = el.gridstackNode;
+                if (!node) return;
+                var w = widgetData.find(function(d) { return String(d.id) === String(node.id); });
+                if (w) {
+                    var minH = calcMinH(w.type, newH);
+                    if (minH > 1) grid.update(el, { minH: minH });
+                }
+            });
         }, 200);
     });
 
     // 위젯 로드 (content 없이 추가 후 innerHTML 수동 설정)
     widgetData.forEach(function(w) {
+        var minH = calcMinH(w.type, squareH);
         grid.addWidget({
-            x: w.x, y: w.y, w: w.w, h: w.h,
-            id: String(w.id)
+            x: w.x, y: w.y, w: w.w, h: Math.max(w.h, minH),
+            id: String(w.id),
+            minH: minH > 1 ? minH : undefined
         });
     });
 
@@ -805,6 +824,8 @@ function addWidget() {
 
     var w = parseInt(document.getElementById('addWidgetW').value, 10);
     var h = parseInt(document.getElementById('addWidgetH').value, 10);
+    var minH = calcMinH(selectedType, calcSquareCellHeight());
+    if (minH > 1) h = Math.max(h, minH);
 
     fetch('./main_builder_update.php', {
         method: 'POST',

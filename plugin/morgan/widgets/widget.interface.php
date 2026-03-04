@@ -46,6 +46,13 @@ interface MG_Widget_Interface {
     public function getAllowedCols();
 
     /**
+     * 최소 높이(px) 반환 — 0이면 제한 없음
+     *
+     * @return int
+     */
+    public function getMinHeightPx();
+
+    /**
      * 기본 설정값 반환
      *
      * @return array
@@ -60,6 +67,7 @@ abstract class MG_Widget_Base implements MG_Widget_Interface {
     protected $type = '';
     protected $name = '';
     protected $allowed_cols = array(12);
+    protected $min_h_px = 0;
     protected $default_config = array();
 
     public function getType() {
@@ -72,6 +80,10 @@ abstract class MG_Widget_Base implements MG_Widget_Interface {
 
     public function getAllowedCols() {
         return $this->allowed_cols;
+    }
+
+    public function getMinHeightPx() {
+        return $this->min_h_px;
     }
 
     public function getDefaultConfig() {

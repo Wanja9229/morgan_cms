@@ -91,7 +91,8 @@ class MG_Widget_Factory {
             $list[$type] = array(
                 'type' => $instance->getType(),
                 'name' => $instance->getName(),
-                'allowed_cols' => $instance->getAllowedCols()
+                'allowed_cols' => $instance->getAllowedCols(),
+                'min_h_px' => $instance->getMinHeightPx()
             );
         }
 

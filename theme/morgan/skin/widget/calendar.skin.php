@@ -21,7 +21,7 @@ $_cal_id = 'mg-cal-' . uniqid();
     </h2>
 
     <!-- 달력 네비게이션 -->
-    <div class="flex items-center justify-between mb-3">
+    <div class="flex items-center justify-between mb-1">
         <button type="button" class="cal-nav-btn text-mg-text-secondary hover:text-mg-accent p-1" data-dir="-1">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
         </button>
@@ -32,27 +32,30 @@ $_cal_id = 'mg-cal-' . uniqid();
     </div>
 
     <!-- 달력 그리드 -->
-    <div class="cal-grid mb-3">
-        <div class="grid grid-cols-7 text-center text-xs text-mg-text-muted mb-1">
+    <div class="cal-grid mb-1">
+        <div class="grid grid-cols-7 text-center text-xs text-mg-text-muted">
             <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
         </div>
-        <div class="cal-days grid grid-cols-7 text-center text-sm gap-y-1"></div>
+        <div class="cal-days grid grid-cols-7 text-center text-sm"></div>
     </div>
 
     <!-- 선택된 날짜의 미션 목록 -->
-    <div class="cal-detail flex-1 overflow-auto border-t border-mg-bg-tertiary pt-2" style="min-height:60px;">
+    <div class="cal-detail flex-1 overflow-auto border-t border-mg-bg-tertiary pt-1" style="min-height:40px;">
         <div class="cal-detail-list space-y-1"></div>
     </div>
 </div>
 
 <style>
+.mg-widget-calendar .card-header {
+    padding: 0.5rem 0.75rem;
+}
 .mg-widget-calendar .cal-day {
     position: relative;
-    padding: 4px 0;
-    border-radius: 6px;
+    padding: 2px 0;
+    border-radius: 4px;
     cursor: default;
     transition: background 0.15s;
-    line-height: 1.4;
+    line-height: 1.2;
 }
 .mg-widget-calendar .cal-day.has-mission {
     cursor: pointer;
@@ -74,13 +77,13 @@ $_cal_id = 'mg-cal-' . uniqid();
 .mg-widget-calendar .cal-dots {
     display: flex;
     justify-content: center;
-    gap: 2px;
-    height: 6px;
+    gap: 1px;
+    height: 4px;
     margin-top: 1px;
 }
 .mg-widget-calendar .cal-dot {
-    width: 5px;
-    height: 5px;
+    width: 3px;
+    height: 3px;
     border-radius: 50%;
 }
 .mg-widget-calendar .cal-dot.active {
@@ -92,18 +95,18 @@ $_cal_id = 'mg-cal-' . uniqid();
 .mg-widget-calendar .cal-mission-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 4px 6px;
+    gap: 4px;
+    padding: 2px 4px;
     border-radius: 4px;
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
     transition: background 0.15s;
 }
 .mg-widget-calendar .cal-mission-item:hover {
     background: var(--mg-bg-tertiary);
 }
 .mg-widget-calendar .cal-mission-dot {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     flex-shrink: 0;
 }

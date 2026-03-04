@@ -105,6 +105,11 @@ $g5['mg_title_setting_table'] = 'mg_title_setting';
 // 마이그레이션
 $g5['mg_migrations_table'] = 'mg_migrations';
 
+// 라디오
+$g5['mg_radio_config_table'] = 'mg_radio_config';
+$g5['mg_radio_playlist_table'] = 'mg_radio_playlist';
+$g5['mg_radio_ments_table'] = 'mg_radio_ments';
+
 // [MT-1] 멀티테넌트 파일 경로 분기
 if (defined('MG_MULTITENANT_ENABLED') && MG_MULTITENANT_ENABLED
     && defined('MG_TENANT_ID') && MG_TENANT_ID > 0) {
