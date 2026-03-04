@@ -6,7 +6,6 @@ $sub_menu = '801410';
 require_once __DIR__.'/../_common.php';
 auth_check_menu($auth, $sub_menu, 'w');
 include_once(G5_PATH.'/plugin/morgan/morgan.php');
-check_admin_token();
 
 $action = isset($_POST['action']) ? $_POST['action'] : '';
 $redirect = './hidden_event.php';

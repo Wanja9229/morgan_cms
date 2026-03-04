@@ -20,14 +20,46 @@ if (isset($is_ajax_request) && $is_ajax_request) {
     <aside id="widget-sidebar" class="hidden lg:block w-72 bg-mg-bg-secondary fixed right-0 top-12 bottom-0 p-4 border-l border-mg-bg-tertiary overflow-y-auto">
 
         <?php if ($is_member) { ?>
-        <!-- 로그인 상태: 회원 정보 + 대표 캐릭터 통합 -->
         <?php
+        // ─── 위젯 순서 + 표시 상태 조회 ───
+        $_wid_mb_esc = sql_real_escape_string($member['mb_id']);
+        $_wid_default_order = array('member_card', 'inventory', 'gift', 'achievement', 'notification', 'pioneer', 'expedition', 'radio');
+        $_wid_fixed = array('member_card', 'radio');
+        $_wid_default_visible = array(
+            'inventory' => 1, 'gift' => 1,
+            'achievement' => 0, 'notification' => 0,
+            'pioneer' => 0, 'expedition' => 0
+        );
+        $_wid_visible = $_wid_default_visible;
+        $_wid_order = $_wid_default_order;
+
+        $_wid_saved = sql_query("SELECT widget_name, widget_order, widget_visible FROM {$g5['mg_user_widget_table']} WHERE mb_id = '{$_wid_mb_esc}' ORDER BY widget_order");
+        if ($_wid_saved) {
+            $_wid_saved_names = array();
+            while ($_wr = sql_fetch_array($_wid_saved)) {
+                $_wid_saved_names[] = $_wr['widget_name'];
+                if (isset($_wid_default_visible[$_wr['widget_name']])) {
+                    $_wid_visible[$_wr['widget_name']] = (int)$_wr['widget_visible'];
+                }
+            }
+            if (count($_wid_saved_names) > 0) {
+                $_wid_order = array_values(array_intersect($_wid_saved_names, $_wid_default_order));
+                foreach ($_wid_default_order as $_wd) {
+                    if (!in_array($_wd, $_wid_order)) $_wid_order[] = $_wd;
+                }
+            }
+        }
+
+        // ─── 각 위젯 output buffer 수집 ───
+        $_wid_buffers = array();
+
+        // === member_card ===
         $_show_main_char = function_exists('mg_config') ? mg_config('show_main_character', '1') : '1';
         $main_char = null;
         if ($_show_main_char == '1' && function_exists('mg_get_main_character')) {
             $main_char = mg_get_main_character($member['mb_id']);
         }
-        ?>
+        ob_start(); ?>
         <div class="card mb-4">
             <div class="flex items-center gap-3 mb-3">
                 <?php if ($main_char && !empty($main_char['ch_thumb'])) { ?>
@@ -55,30 +87,22 @@ if (isset($is_ajax_request) && $is_ajax_request) {
                     </svg>
                 </a>
             </div>
-
-            <!-- 포인트 -->
             <div class="flex items-center justify-between py-2 border-t border-mg-bg-tertiary">
                 <span class="text-sm text-mg-text-secondary"><?php echo function_exists('mg_point_name') ? mg_point_name() : '포인트'; ?></span>
                 <span class="text-sm font-semibold text-mg-accent"><?php echo function_exists('mg_point_format') ? mg_point_format($member['mb_point']) : number_format($member['mb_point']).'P'; ?></span>
             </div>
-
-            <!-- 출석체크 버튼 -->
             <a href="<?php echo G5_BBS_URL; ?>/attendance.php" class="flex items-center justify-center gap-2 w-full py-2 mt-2 bg-mg-accent/10 hover:bg-mg-accent/20 text-mg-accent rounded-md text-sm font-medium transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                 </svg>
                 출석체크
             </a>
-
-            <!-- 마이 페이지 버튼 -->
             <a href="<?php echo G5_BBS_URL; ?>/mypage.php" class="flex items-center justify-center gap-2 w-full py-2 mt-2 bg-mg-bg-tertiary hover:bg-mg-bg-tertiary/80 text-mg-text-secondary hover:text-mg-text-primary rounded-md text-sm font-medium transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
                 마이 페이지
             </a>
-
-            <!-- 로그아웃 버튼 -->
             <a href="<?php echo G5_BBS_URL; ?>/logout.php" class="flex items-center justify-center gap-2 w-full py-2 mt-2 text-mg-text-muted hover:text-mg-error rounded-md text-sm transition-colors" data-no-spa>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
@@ -86,10 +110,10 @@ if (isset($is_ajax_request) && $is_ajax_request) {
                 로그아웃
             </a>
         </div>
+        <?php $_wid_buffers['member_card'] = ob_get_clean();
 
-        <!-- 인벤토리 미니 -->
-        <?php
-        // 인벤토리 데이터 가져오기
+        // === inventory ===
+        if (!empty($_wid_visible['inventory'])) {
         $inventory_items = array();
         $inventory_count = 0;
         if (function_exists('mg_get_inventory')) {
@@ -97,7 +121,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
             $inventory_items = isset($inv_data['items']) ? $inv_data['items'] : array();
             $inventory_count = isset($inv_data['total']) ? $inv_data['total'] : 0;
         }
-        ?>
+        ob_start(); ?>
         <div class="card mb-4">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-sm font-semibold text-mg-text-primary flex items-center gap-2">
@@ -138,18 +162,19 @@ if (isset($is_ajax_request) && $is_ajax_request) {
             </div>
             <?php } ?>
         </div>
+        <?php $_wid_buffers['inventory'] = ob_get_clean();
+        } // end inventory
 
-        <!-- 선물함 미니 -->
-        <?php
-        // 대기 중인 선물 개수
+        // === gift ===
+        if (!empty($_wid_visible['gift'])) {
         $pending_gifts = array();
         $gift_count = 0;
         if (function_exists('mg_get_pending_gifts')) {
             $pending_gifts = mg_get_pending_gifts($member['mb_id'], 3);
             $gift_count = count($pending_gifts);
         }
-        ?>
-        <div class="card">
+        ob_start(); ?>
+        <div class="card mb-4">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-sm font-semibold text-mg-text-primary flex items-center gap-2">
                     <svg class="w-4 h-4 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -191,17 +216,206 @@ if (isset($is_ajax_request) && $is_ajax_request) {
             </div>
             <?php } ?>
         </div>
+        <?php $_wid_buffers['gift'] = ob_get_clean();
+        } // end gift
 
-        <!-- 라디오 위젯 -->
-        <?php
+        // === achievement ===
+        if (!empty($_wid_visible['achievement'])) {
+            $_ach_showcase = function_exists('mg_get_achievement_display') ? mg_get_achievement_display($member['mb_id']) : array();
+            $_ach_rarity_colors = array('common' => '#949ba4', 'uncommon' => '#22c55e', 'rare' => '#3b82f6', 'epic' => '#a855f7', 'legendary' => '#f59e0b');
+            ob_start(); ?>
+        <div class="card mb-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-semibold text-mg-text-primary flex items-center gap-2">
+                    <svg class="w-4 h-4 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                    </svg>
+                    업적
+                </h3>
+                <a href="<?php echo G5_BBS_URL; ?>/achievement.php" class="text-xs text-mg-accent hover:text-mg-accent-hover">전체보기</a>
+            </div>
+            <?php if (!empty($_ach_showcase)) { ?>
+            <div class="flex gap-2 flex-wrap">
+                <?php foreach ($_ach_showcase as $_acd) {
+                    $_a_icon = isset($_acd['tier_icon']) ? $_acd['tier_icon'] : (isset($_acd['ac_icon']) ? $_acd['ac_icon'] : '');
+                    $_a_name = isset($_acd['tier_name']) && $_acd['tier_name'] ? $_acd['tier_name'] : (isset($_acd['ac_name']) ? $_acd['ac_name'] : '');
+                    $_a_rarity = isset($_acd['ac_rarity']) ? $_acd['ac_rarity'] : 'common';
+                    $_a_color = isset($_ach_rarity_colors[$_a_rarity]) ? $_ach_rarity_colors[$_a_rarity] : '#949ba4';
+                ?>
+                <div class="flex flex-col items-center p-2 rounded-lg" style="border:1px solid <?php echo $_a_color; ?>;" title="<?php echo htmlspecialchars($_a_name); ?>">
+                    <?php if ($_a_icon) { ?>
+                    <img src="<?php echo htmlspecialchars($_a_icon); ?>" alt="" class="w-8 h-8 object-contain">
+                    <?php } else { ?>
+                    <span class="text-lg">&#127942;</span>
+                    <?php } ?>
+                    <span class="text-xs text-mg-text-muted mt-0.5 max-w-[50px] truncate"><?php echo htmlspecialchars($_a_name); ?></span>
+                </div>
+                <?php } ?>
+            </div>
+            <?php } else { ?>
+            <div class="text-center py-3">
+                <p class="text-xs text-mg-text-muted">쇼케이스가 비어있습니다</p>
+            </div>
+            <?php } ?>
+        </div>
+            <?php $_wid_buffers['achievement'] = ob_get_clean();
+        }
+
+        // === notification ===
+        if (!empty($_wid_visible['notification'])) {
+            $_noti_items = array();
+            $_noti_unread = 0;
+            if (function_exists('mg_get_notifications')) {
+                $_noti_data = mg_get_notifications($member['mb_id'], 1, 3);
+                $_noti_items = isset($_noti_data['items']) ? $_noti_data['items'] : array();
+            }
+            if (function_exists('mg_get_unread_notification_count')) {
+                $_noti_unread = mg_get_unread_notification_count($member['mb_id']);
+            }
+            ob_start(); ?>
+        <div class="card mb-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-semibold text-mg-text-primary flex items-center gap-2">
+                    <svg class="w-4 h-4 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                    </svg>
+                    알림
+                    <?php if ($_noti_unread > 0) { ?>
+                    <span class="bg-mg-error text-white text-xs px-1.5 py-0.5 rounded-full"><?php echo $_noti_unread > 99 ? '99+' : $_noti_unread; ?></span>
+                    <?php } ?>
+                </h3>
+                <a href="<?php echo G5_BBS_URL; ?>/notification.php" class="text-xs text-mg-accent hover:text-mg-accent-hover">전체보기</a>
+            </div>
+            <?php if (!empty($_noti_items)) { ?>
+            <ul class="space-y-1.5">
+                <?php foreach ($_noti_items as $_ni) { ?>
+                <li>
+                    <a href="<?php echo htmlspecialchars($_ni['noti_url'] ?? '#'); ?>" class="block p-2 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors <?php echo empty($_ni['noti_read']) ? '' : 'opacity-60'; ?>">
+                        <p class="text-xs text-mg-text-primary truncate"><?php echo htmlspecialchars($_ni['noti_title'] ?? ''); ?></p>
+                        <p class="text-xs text-mg-text-muted mt-0.5"><?php echo isset($_ni['noti_datetime']) ? substr($_ni['noti_datetime'], 5, 11) : ''; ?></p>
+                    </a>
+                </li>
+                <?php } ?>
+            </ul>
+            <?php } else { ?>
+            <div class="text-center py-3">
+                <p class="text-xs text-mg-text-muted">새 알림이 없습니다</p>
+            </div>
+            <?php } ?>
+        </div>
+            <?php $_wid_buffers['notification'] = ob_get_clean();
+        }
+
+        // === pioneer ===
+        if (!empty($_wid_visible['pioneer'])) {
+            $_pn_stamina = function_exists('mg_get_stamina') ? mg_get_stamina($member['mb_id']) : array('current' => 0, 'max' => 100);
+            $_pn_last = null;
+            if (isset($g5['mg_facility_contribution_table']) && isset($g5['mg_facility_table'])) {
+                $_pn_last = sql_fetch("SELECT fcn.fcn_amount, fcn.fcn_datetime, f.fc_name, f.fc_icon
+                    FROM {$g5['mg_facility_contribution_table']} fcn
+                    JOIN {$g5['mg_facility_table']} f ON fcn.fc_id = f.fc_id
+                    WHERE fcn.mb_id = '{$_wid_mb_esc}' AND fcn.fcn_type = 'stamina'
+                    ORDER BY fcn.fcn_datetime DESC LIMIT 1");
+            }
+            $_pn_pct = $_pn_stamina['max'] > 0 ? round($_pn_stamina['current'] / $_pn_stamina['max'] * 100) : 0;
+            ob_start(); ?>
+        <div class="card mb-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-semibold text-mg-text-primary flex items-center gap-2">
+                    <svg class="w-4 h-4 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2z"/>
+                    </svg>
+                    개척
+                </h3>
+                <a href="<?php echo G5_BBS_URL; ?>/pioneer.php" class="text-xs text-mg-accent hover:text-mg-accent-hover">보기</a>
+            </div>
+            <div class="mb-2">
+                <div class="flex items-center justify-between text-xs mb-1">
+                    <span class="text-mg-text-muted">스태미너</span>
+                    <span class="text-mg-text-secondary"><?php echo $_pn_stamina['current']; ?>/<?php echo $_pn_stamina['max']; ?></span>
+                </div>
+                <div class="w-full h-1.5 bg-mg-bg-tertiary rounded-full overflow-hidden">
+                    <div class="h-full bg-mg-accent rounded-full" style="width:<?php echo $_pn_pct; ?>%;"></div>
+                </div>
+            </div>
+            <?php if ($_pn_last) { ?>
+            <div class="flex items-center gap-2 p-2 bg-mg-bg-primary rounded-lg">
+                <?php if (!empty($_pn_last['fc_icon'])) { ?>
+                <span class="text-mg-accent flex-shrink-0"><?php echo mg_icon($_pn_last['fc_icon'], 'w-5 h-5'); ?></span>
+                <?php } ?>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs text-mg-text-primary truncate"><?php echo htmlspecialchars($_pn_last['fc_name'] ?? ''); ?></p>
+                    <p class="text-xs text-mg-text-muted"><?php echo substr($_pn_last['fcn_datetime'] ?? '', 5, 11); ?></p>
+                </div>
+                <span class="text-xs text-mg-text-muted flex-shrink-0"><?php echo (int)($_pn_last['fcn_amount'] ?? 0); ?>스태미너</span>
+            </div>
+            <?php } else { ?>
+            <p class="text-xs text-mg-text-muted text-center py-1">투자 기록 없음</p>
+            <?php } ?>
+        </div>
+            <?php $_wid_buffers['pioneer'] = ob_get_clean();
+        }
+
+        // === expedition ===
+        if (!empty($_wid_visible['expedition'])) {
+            if (!isset($_pn_stamina)) {
+                $_pn_stamina = function_exists('mg_get_stamina') ? mg_get_stamina($member['mb_id']) : array('current' => 0, 'max' => 100);
+            }
+            $_exp_active = function_exists('mg_get_active_expeditions') ? mg_get_active_expeditions($member['mb_id']) : array();
+            $_exp_first = !empty($_exp_active) ? reset($_exp_active) : null;
+            $_exp_pct = isset($_pn_stamina['max']) && $_pn_stamina['max'] > 0 ? round($_pn_stamina['current'] / $_pn_stamina['max'] * 100) : 0;
+            ob_start(); ?>
+        <div class="card mb-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-semibold text-mg-text-primary flex items-center gap-2">
+                    <svg class="w-4 h-4 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                    </svg>
+                    파견
+                </h3>
+                <a href="<?php echo G5_BBS_URL; ?>/pioneer.php?view=expedition" class="text-xs text-mg-accent hover:text-mg-accent-hover">보기</a>
+            </div>
+            <div class="mb-2">
+                <div class="flex items-center justify-between text-xs mb-1">
+                    <span class="text-mg-text-muted">스태미너</span>
+                    <span class="text-mg-text-secondary"><?php echo $_pn_stamina['current']; ?>/<?php echo $_pn_stamina['max']; ?></span>
+                </div>
+                <div class="w-full h-1.5 bg-mg-bg-tertiary rounded-full overflow-hidden">
+                    <div class="h-full bg-mg-accent rounded-full" style="width:<?php echo $_exp_pct; ?>%;"></div>
+                </div>
+            </div>
+            <?php if ($_exp_first) { ?>
+            <div class="flex items-center gap-2 p-2 bg-mg-bg-primary rounded-lg">
+                <?php if (!empty($_exp_first['ea_icon'])) { ?>
+                <img src="<?php echo htmlspecialchars($_exp_first['ea_icon']); ?>" alt="" class="w-6 h-6 object-contain flex-shrink-0">
+                <?php } ?>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs text-mg-text-primary truncate"><?php echo htmlspecialchars($_exp_first['ea_name'] ?? '파견지'); ?></p>
+                    <?php if (!empty($_exp_first['is_complete'])) { ?>
+                    <p class="text-xs text-green-400">완료!</p>
+                    <?php } else { ?>
+                    <div class="w-full h-1 bg-mg-bg-tertiary rounded-full overflow-hidden mt-1">
+                        <div class="h-full bg-green-500 rounded-full" style="width:<?php echo isset($_exp_first['progress']) ? (int)$_exp_first['progress'] : 0; ?>%;"></div>
+                    </div>
+                    <?php } ?>
+                </div>
+            </div>
+            <?php } else { ?>
+            <p class="text-xs text-mg-text-muted text-center py-1">진행 중인 파견 없음</p>
+            <?php } ?>
+        </div>
+            <?php $_wid_buffers['expedition'] = ob_get_clean();
+        }
+
+        // === radio ===
         $_mg_radio_on = false;
         if (isset($g5['mg_radio_config_table'])) {
             $_mg_rcfg = sql_fetch("SELECT is_active FROM {$g5['mg_radio_config_table']} WHERE config_id = 1");
             if ($_mg_rcfg && $_mg_rcfg['is_active']) $_mg_radio_on = true;
         }
         if ($_mg_radio_on) {
-        ?>
-        <div class="card mt-4" id="mg-radio-widget">
+            ob_start(); ?>
+        <div class="card mb-4" id="mg-radio-widget">
             <!-- 날씨 -->
             <div class="flex items-center gap-2 mb-2" id="radio-weather" style="display:none;">
                 <span id="radio-weather-icon" style="font-size:1.1rem;"></span>
@@ -404,7 +618,55 @@ if (isset($is_ajax_request) && $is_ajax_request) {
             });
         })();
         </script>
-        <?php } ?>
+            <?php $_wid_buffers['radio'] = ob_get_clean();
+        } // end radio
+
+        // ─── 순서대로 위젯 출력 ───
+        ?>
+        <div id="widget-sort-container">
+        <?php foreach ($_wid_order as $_wname) {
+            if (!empty($_wid_buffers[$_wname])) { ?>
+            <div class="widget-sortable" data-widget="<?php echo $_wname; ?>">
+                <div class="widget-drag-handle" title="드래그하여 순서 변경">⠿</div>
+                <?php echo $_wid_buffers[$_wname]; ?>
+            </div>
+        <?php }
+        } ?>
+        </div>
+        <style>
+        .widget-drag-handle { text-align:center; cursor:grab; padding:2px 0 0; color:var(--mg-text-muted); opacity:0; font-size:14px; transition:opacity .2s; user-select:none; line-height:1; }
+        .widget-sortable:hover .widget-drag-handle { opacity:0.5; }
+        .widget-drag-handle:hover { opacity:0.8 !important; }
+        .widget-drag-handle:active { cursor:grabbing; }
+        .widget-sortable.sortable-ghost { opacity:0.4; }
+        .widget-sortable.sortable-chosen { opacity:0.8; }
+        </style>
+        <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+        <script>
+        (function(){
+            var container = document.getElementById('widget-sort-container');
+            if (!container) return;
+            Sortable.create(container, {
+                handle: '.widget-drag-handle',
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                onEnd: function() {
+                    var order = [];
+                    container.querySelectorAll('.widget-sortable').forEach(function(el) {
+                        order.push(el.dataset.widget);
+                    });
+                    var body = order.map(function(n){ return 'order[]=' + encodeURIComponent(n); }).join('&');
+                    fetch('<?php echo G5_BBS_URL; ?>/widget_api.php?action=save_order', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body: body
+                    });
+                }
+            });
+        })();
+        </script>
 
         <?php } else { ?>
         <!-- 비로그인 상태 -->
@@ -506,7 +768,7 @@ if ($is_member) {
     if ((int)($he_active['cnt'] ?? 0) > 0) {
 ?>
 <div id="mg-hidden-event-overlay" style="display:none;position:fixed;z-index:9000;pointer-events:none;">
-    <img id="mg-he-image" src="" alt="" style="pointer-events:auto;cursor:pointer;position:absolute;width:80px;height:80px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(245,159,10,0.6));animation:mg-he-float 2s ease-in-out infinite;transition:transform .2s,opacity .4s;">
+    <img id="mg-he-image" src="" alt="" style="pointer-events:auto;cursor:pointer;position:absolute;width:80px;height:80px;max-width:none;object-fit:contain;filter:drop-shadow(0 0 8px rgba(245,159,10,0.6));animation:mg-he-float 2s ease-in-out infinite;transition:transform .2s,opacity .4s;">
 </div>
 <style>
 @keyframes mg-he-float {

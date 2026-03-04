@@ -146,12 +146,33 @@ $ach_rarity_colors = array(
             <h2 class="text-sm font-semibold text-mg-text-primary">바로가기</h2>
         </div>
         <div class="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            <!-- Row 1: 활동 -->
             <a href="<?php echo G5_BBS_URL; ?>/attendance.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
                 <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                 </svg>
                 <span class="text-sm text-mg-text-secondary">출석체크</span>
             </a>
+            <a href="<?php echo G5_BBS_URL; ?>/my_posts.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
+                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14h6m-6-4h6"/>
+                </svg>
+                <span class="text-sm text-mg-text-secondary">내 글 모아보기</span>
+            </a>
+            <a href="<?php echo G5_BBS_URL; ?>/character_list.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
+                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+                <span class="text-sm text-mg-text-secondary">캐릭터 관리</span>
+            </a>
+            <a href="<?php echo G5_BBS_URL; ?>/inventory.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
+                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                </svg>
+                <span class="text-sm text-mg-text-secondary">인벤토리</span>
+            </a>
+            <!-- Row 2: 성장 -->
             <?php if ($_seal_enabled) { ?>
             <a href="<?php echo G5_BBS_URL; ?>/seal_edit.php" data-no-spa class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
                 <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -172,23 +193,30 @@ $ach_rarity_colors = array(
                 </svg>
                 <span class="text-sm text-mg-text-secondary">알림</span>
             </a>
-            <a href="<?php echo G5_URL; ?>/bbs/memo.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
+            <a href="<?php echo G5_BBS_URL; ?>/gift.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
                 <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
                 </svg>
-                <span class="text-sm text-mg-text-secondary">쪽지</span>
-            </a>
-            <a href="<?php echo G5_URL; ?>/bbs/scrap.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
-                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
-                </svg>
-                <span class="text-sm text-mg-text-secondary">스크랩</span>
+                <span class="text-sm text-mg-text-secondary">선물함</span>
             </a>
             <a href="<?php echo G5_URL; ?>/bbs/point.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
                 <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
                 <span class="text-sm text-mg-text-secondary">포인트 내역</span>
+            </a>
+            <!-- Row 3: 컨텐츠/설정 -->
+            <a href="<?php echo G5_BBS_URL; ?>/pioneer.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
+                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2z"/>
+                </svg>
+                <span class="text-sm text-mg-text-secondary">개척</span>
+            </a>
+            <a href="<?php echo G5_BBS_URL; ?>/pioneer.php?view=expedition" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
+                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                </svg>
+                <span class="text-sm text-mg-text-secondary">파견</span>
             </a>
             <a href="<?php echo G5_BBS_URL; ?>/member_confirm.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
                 <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -197,6 +225,53 @@ $ach_rarity_colors = array(
                 </svg>
                 <span class="text-sm text-mg-text-secondary">회원정보 수정</span>
             </a>
+        </div>
+    </div>
+
+    <!-- 사이드바 위젯 관리 -->
+    <?php
+    $_widget_defs = array(
+        'inventory'    => array('label' => '인벤토리', 'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>'),
+        'gift'         => array('label' => '선물함', 'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>'),
+        'achievement'  => array('label' => '업적', 'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>'),
+        'notification' => array('label' => '알림', 'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>'),
+        'pioneer'      => array('label' => '개척', 'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2z"/></svg>'),
+        'expedition'   => array('label' => '파견', 'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>'),
+    );
+    // 현재 위젯 상태 조회
+    $widget_states = array('inventory' => 1, 'gift' => 1, 'achievement' => 0, 'notification' => 0, 'pioneer' => 0, 'expedition' => 0);
+    $_ws_result = sql_query("SELECT widget_name, widget_visible FROM {$g5['mg_user_widget_table']} WHERE mb_id = '".sql_real_escape_string($mb['mb_id'])."'");
+    if ($_ws_result) {
+        while ($_ws_row = sql_fetch_array($_ws_result)) {
+            if (isset($widget_states[$_ws_row['widget_name']])) {
+                $widget_states[$_ws_row['widget_name']] = (int)$_ws_row['widget_visible'];
+            }
+        }
+    }
+    $_ws_active_count = 0;
+    foreach ($widget_states as $_wsv) { if ($_wsv) $_ws_active_count++; }
+    ?>
+    <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden mb-6">
+        <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary">
+            <h2 class="text-sm font-semibold text-mg-text-primary">사이드바 위젯 관리</h2>
+            <p class="text-xs text-mg-text-muted mt-1">우측 사이드바에 표시할 위젯을 선택하세요 (최대 3개, 현재 <span id="widget-active-count"><?php echo $_ws_active_count; ?></span>개)</p>
+        </div>
+        <div class="p-4">
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <?php foreach ($_widget_defs as $_wkey => $_wdef) {
+                    $_wchecked = !empty($widget_states[$_wkey]);
+                ?>
+                <label class="flex items-center gap-2.5 p-3 bg-mg-bg-primary rounded-lg cursor-pointer hover:bg-mg-bg-tertiary transition-colors">
+                    <input type="checkbox" class="widget-toggle" data-widget="<?php echo $_wkey; ?>" <?php echo $_wchecked ? 'checked' : ''; ?> style="accent-color:var(--mg-accent);width:16px;height:16px;">
+                    <span class="text-mg-accent flex-shrink-0"><?php echo $_wdef['icon']; ?></span>
+                    <span class="text-sm text-mg-text-secondary"><?php echo $_wdef['label']; ?></span>
+                </label>
+                <?php } ?>
+            </div>
+            <div class="mt-4 flex items-center justify-between">
+                <p class="text-xs text-mg-text-muted" id="widget-change-hint" style="display:none;">변경사항이 있습니다.</p>
+                <button id="widget-save-btn" onclick="saveWidgetToggles()" class="ml-auto px-4 py-2 bg-mg-accent hover:bg-mg-accent-hover text-white text-sm font-medium rounded-lg transition-colors">저장</button>
+            </div>
         </div>
     </div>
 
@@ -593,6 +668,57 @@ $ach_rarity_colors = array(
     };
 
     function _e(s) { var d = document.createElement('div'); d.appendChild(document.createTextNode(s)); return d.innerHTML; }
+
+    // 위젯 토글
+    var WIDGET_API = '<?php echo G5_BBS_URL; ?>/widget_api.php';
+    var MAX_WIDGETS = 3;
+    var _widgetInitial = {};
+    document.querySelectorAll('.widget-toggle').forEach(function(cb) {
+        _widgetInitial[cb.dataset.widget] = cb.checked;
+        cb.addEventListener('change', function() {
+            // 클라이언트 3개 제한 체크
+            var checked = document.querySelectorAll('.widget-toggle:checked');
+            if (checked.length > MAX_WIDGETS) {
+                alert('최대 ' + MAX_WIDGETS + '개까지 선택할 수 있습니다.');
+                this.checked = false;
+                return;
+            }
+            document.getElementById('widget-active-count').textContent = checked.length;
+            // 변경사항 힌트
+            var changed = false;
+            document.querySelectorAll('.widget-toggle').forEach(function(c) {
+                if (c.checked !== _widgetInitial[c.dataset.widget]) changed = true;
+            });
+            document.getElementById('widget-change-hint').style.display = changed ? '' : 'none';
+        });
+    });
+
+    window.saveWidgetToggles = function() {
+        var on = [];
+        document.querySelectorAll('.widget-toggle:checked').forEach(function(cb) {
+            on.push(cb.dataset.widget);
+        });
+        if (on.length > MAX_WIDGETS) {
+            alert('최대 ' + MAX_WIDGETS + '개까지 선택할 수 있습니다.');
+            return;
+        }
+        var body = on.map(function(w) { return 'on[]=' + encodeURIComponent(w); }).join('&');
+        fetch(WIDGET_API + '?action=save_toggles', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: body
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.error || '저장에 실패했습니다.');
+            }
+        })
+        .catch(function() { alert('오류가 발생했습니다.'); });
+    };
 })();
 </script>
 

@@ -115,6 +115,8 @@ $g5['mg_hidden_event_table'] = 'mg_hidden_event';
 $g5['mg_event_token_table'] = 'mg_event_token';
 $g5['mg_event_claim_table'] = 'mg_event_claim';
 $g5['mg_event_suspicious_table'] = 'mg_event_suspicious';
+// 유저 위젯 설정
+$g5['mg_user_widget_table'] = 'mg_user_widget';
 
 // [MT-1] 멀티테넌트 파일 경로 분기
 if (defined('MG_MULTITENANT_ENABLED') && MG_MULTITENANT_ENABLED
@@ -220,6 +222,8 @@ $mg['concierge_apply_table'] = $g5['mg_concierge_apply_table'];
 $mg['concierge_result_table'] = $g5['mg_concierge_result_table'];
 // 마이그레이션
 $mg['migrations_table'] = $g5['mg_migrations_table'];
+// 유저 위젯 설정
+$mg['user_widget_table'] = $g5['mg_user_widget_table'];
 
 // 상점 이미지 저장 경로
 define('MG_SHOP_IMAGE_PATH', $_mg_data_base_path.'/shop');

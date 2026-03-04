@@ -10,8 +10,6 @@ include_once(G5_PATH.'/plugin/morgan/morgan.php');
 $tab = isset($_GET['tab']) ? $_GET['tab'] : 'list';
 if (!in_array($tab, array('list','edit','log'))) $tab = 'list';
 
-$token = get_admin_token();
-
 // 재료 목록 (추가/수정 폼용)
 $materials = array();
 $result = sql_query("SELECT mt_id, mt_name FROM {$g5['mg_material_type_table']} ORDER BY mt_name ASC");
@@ -52,10 +50,10 @@ if ($result) while ($row = sql_fetch_array($result)) $events[] = $row;
                     <th>제목</th>
                     <th style="width:100px;">보상</th>
                     <th style="width:70px;">확률</th>
-                    <th style="width:70px;">일일한도</th>
+                    <th style="width:100px;">일일한도</th>
                     <th style="width:140px;">기간</th>
                     <th style="width:60px;">상태</th>
-                    <th style="width:100px;">관리</th>
+                    <th style="width:140px;">관리</th>
                 </tr>
             </thead>
             <tbody>
@@ -85,16 +83,16 @@ if ($result) while ($row = sql_fetch_array($result)) $events[] = $row;
                     </td>
                     <td>
                         <form method="post" action="./hidden_event_update.php" style="display:inline;">
-                            <input type="hidden" name="token" value="<?php echo $token; ?>">
+
                             <input type="hidden" name="action" value="toggle_event">
                             <input type="hidden" name="event_id" value="<?php echo $ev['event_id']; ?>">
-                            <button type="submit" class="mg-btn mg-btn-sm <?php echo $ev['is_active'] ? 'mg-btn-primary' : 'mg-btn-secondary'; ?>"><?php echo $ev['is_active'] ? 'ON' : 'OFF'; ?></button>
+                            <button type="submit" class="mg-btn mg-btn-sm <?php echo $ev['is_active'] ? 'mg-btn-primary' : ''; ?>" style="<?php echo !$ev['is_active'] ? 'background:var(--mg-bg-tertiary);color:var(--mg-text-muted);border:1px solid var(--mg-text-muted);' : ''; ?>"><?php echo $ev['is_active'] ? 'ON' : 'OFF'; ?></button>
                         </form>
                     </td>
                     <td>
                         <a href="?tab=edit&event_id=<?php echo $ev['event_id']; ?>" class="mg-btn mg-btn-sm mg-btn-secondary">수정</a>
                         <form method="post" action="./hidden_event_update.php" style="display:inline;" onsubmit="return confirm('삭제하시겠습니까?');">
-                            <input type="hidden" name="token" value="<?php echo $token; ?>">
+
                             <input type="hidden" name="action" value="delete_event">
                             <input type="hidden" name="event_id" value="<?php echo $ev['event_id']; ?>">
                             <button type="submit" class="mg-btn mg-btn-sm mg-btn-danger">삭제</button>
@@ -120,7 +118,6 @@ $is_edit = $ev ? true : false;
 ?>
 
 <form method="post" action="./hidden_event_update.php" enctype="multipart/form-data">
-    <input type="hidden" name="token" value="<?php echo $token; ?>">
     <input type="hidden" name="action" value="<?php echo $is_edit ? 'edit_event' : 'add_event'; ?>">
     <?php if ($is_edit) { ?>
     <input type="hidden" name="event_id" value="<?php echo $ev['event_id']; ?>">
@@ -142,7 +139,7 @@ $is_edit = $ev ? true : false;
                 </div>
                 <?php } ?>
                 <input type="file" name="event_image" class="mg-form-input" accept="image/*" <?php echo $is_edit ? '' : 'required'; ?>>
-                <p class="mg-form-help">PNG/GIF 권장, 투명 배경이면 떠다니는 연출에 어울립니다.</p>
+                <p class="mg-form-help">투명 배경 권장 (PNG/GIF)</p>
             </div>
 
             <div class="mg-form-group">
