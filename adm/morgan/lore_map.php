@@ -63,7 +63,7 @@ $update_url = G5_ADMIN_URL . '/morgan/lore_map_update.php';
                 <div style="margin-top:4px;font-size:0.8rem;color:var(--mg-accent);">새 이미지 선택됨</div>
             </div>
             <input type="hidden" name="map_image_action" id="map_image_action" value="">
-            <p style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.5rem;">JPG, PNG, GIF, WebP / 최대 <?php echo round(mg_upload_max_file() / 1024 / 1024); ?>MB / 권장: 1920x1080px 이상</p>
+            <p style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.5rem;">JPG, PNG, GIF, WebP / 최대 <?php echo round(mg_upload_max_file() / 1024 / 1024); ?>MB / 권장 가로: <?php echo htmlspecialchars(mg_config('content_max_width', '72rem')); ?> 이하</p>
         </div>
 
         <hr style="border:0;border-top:1px solid var(--mg-bg-tertiary);margin:1.5rem 0;">

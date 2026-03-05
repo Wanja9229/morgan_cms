@@ -35,11 +35,7 @@ if ($mode == 'role_add') {
         if ($val) $permissions[$pkey] = 'r,w,d';
     }
 
-    $perm_json = json_encode($permissions, JSON_UNESCAPED_UNICODE);
-    $sr_name = sql_real_escape_string($sr_name);
-    $sr_description = sql_real_escape_string($sr_description);
-    $sr_color = sql_real_escape_string($sr_color);
-    $perm_json = sql_real_escape_string($perm_json);
+    $perm_json = sql_real_escape_string(json_encode($permissions, JSON_UNESCAPED_UNICODE));
 
     sql_query("INSERT INTO {$g5['mg_staff_role_table']}
                SET sr_name = '{$sr_name}',
@@ -71,11 +67,7 @@ if ($mode == 'role_edit') {
         if ($val) $permissions[$pkey] = 'r,w,d';
     }
 
-    $perm_json = json_encode($permissions, JSON_UNESCAPED_UNICODE);
-    $sr_name = sql_real_escape_string($sr_name);
-    $sr_description = sql_real_escape_string($sr_description);
-    $sr_color = sql_real_escape_string($sr_color);
-    $perm_json = sql_real_escape_string($perm_json);
+    $perm_json = sql_real_escape_string(json_encode($permissions, JSON_UNESCAPED_UNICODE));
 
     sql_query("UPDATE {$g5['mg_staff_role_table']}
                SET sr_name = '{$sr_name}',
@@ -123,7 +115,7 @@ if ($mode == 'member_add') {
     if (!$sr_id) alert('역할을 선택해주세요.');
 
     // 회원 존재 확인
-    $member_check = sql_fetch("SELECT mb_id FROM {$g5['member_table']} WHERE mb_id = '" . sql_real_escape_string($mb_id) . "'");
+    $member_check = sql_fetch("SELECT mb_id FROM {$g5['member_table']} WHERE mb_id = '{$mb_id}'");
     if (!$member_check['mb_id']) {
         alert('존재하지 않는 회원입니다.');
     }

@@ -26,7 +26,7 @@ if ($mode == 'board_reward') {
     }
 
     // 게시판 존재 확인
-    $board = sql_fetch("SELECT bo_table FROM {$g5['board_table']} WHERE bo_table = '".sql_real_escape_string($bo_table)."'");
+    $board = sql_fetch("SELECT bo_table FROM {$g5['board_table']} WHERE bo_table = '{$bo_table}'");
     if (!$board['bo_table']) {
         echo json_encode(['success' => false, 'message' => '존재하지 않는 게시판입니다.']);
         exit;
@@ -59,17 +59,13 @@ if ($mode == 'board_reward') {
         if (!is_array($decoded_c)) $br_material_comment = '';
     }
 
-    $bo_table_esc = sql_real_escape_string($bo_table);
-    $br_material_list_esc = sql_real_escape_string($br_material_list);
-    $br_material_comment_esc = sql_real_escape_string($br_material_comment);
-
     $sql = "INSERT INTO {$g5['mg_board_reward_table']}
             (bo_table, br_mode, br_point, br_bonus_500, br_bonus_1000, br_bonus_image,
              br_material_use, br_material_chance, br_material_list, br_material_comment, br_daily_limit, br_like_use,
              br_dice_use, br_dice_once, br_dice_max)
             VALUES
-            ('{$bo_table_esc}', '{$br_mode}', {$br_point}, 0, 0, 0,
-             {$br_material_use}, {$br_material_chance}, '{$br_material_list_esc}', '{$br_material_comment_esc}', {$br_daily_limit}, {$br_like_use},
+            ('{$bo_table}', '{$br_mode}', {$br_point}, 0, 0, 0,
+             {$br_material_use}, {$br_material_chance}, '{$br_material_list}', '{$br_material_comment}', {$br_daily_limit}, {$br_like_use},
              {$br_dice_use}, {$br_dice_once}, {$br_dice_max})
             ON DUPLICATE KEY UPDATE
             br_mode = '{$br_mode}',
@@ -79,8 +75,8 @@ if ($mode == 'board_reward') {
             br_bonus_image = 0,
             br_material_use = {$br_material_use},
             br_material_chance = {$br_material_chance},
-            br_material_list = '{$br_material_list_esc}',
-            br_material_comment = '{$br_material_comment_esc}',
+            br_material_list = '{$br_material_list}',
+            br_material_comment = '{$br_material_comment}',
             br_daily_limit = {$br_daily_limit},
             br_like_use = {$br_like_use},
             br_dice_use = {$br_dice_use},
@@ -172,9 +168,7 @@ if ($mode == 'reward_type_save') {
         exit;
     }
 
-    $bo_esc = $bo_table ? "'".sql_real_escape_string($bo_table)."'" : 'NULL';
-    $name_esc = sql_real_escape_string($rwt_name);
-    $desc_esc = sql_real_escape_string($rwt_desc);
+    $bo_sql = $bo_table ? "'{$bo_table}'" : 'NULL';
 
     // 정렬 순서: 마지막 + 1
     $last = sql_fetch("SELECT MAX(rwt_order) as max_order FROM {$g5['mg_reward_type_table']}");
@@ -182,7 +176,7 @@ if ($mode == 'reward_type_save') {
 
     sql_query("INSERT INTO {$g5['mg_reward_type_table']}
         (bo_table, rwt_name, rwt_point, rwt_desc, rwt_order)
-        VALUES ({$bo_esc}, '{$name_esc}', {$rwt_point}, '{$desc_esc}', {$order})");
+        VALUES ({$bo_sql}, '{$rwt_name}', {$rwt_point}, '{$rwt_desc}', {$order})");
 
     $rwt_id = sql_insert_id();
     echo json_encode(['success' => true, 'message' => '추가되었습니다.', 'rwt_id' => $rwt_id]);

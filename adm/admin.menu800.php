@@ -46,7 +46,7 @@ $menu["menu800"] = array(
     array('800900', '구매/선물 내역', $mg_admin_url . '/shop_log.php', 'mg_shop_log'),
     array('800950', '이모티콘 관리', $mg_admin_url . '/emoticon_list.php', 'mg_emoticon'),
     // 개척
-    array('801000', '시설 관리', $mg_admin_url . '/pioneer_facility.php', 'mg_pioneer', '개척'),
+    array('801000', '개척지 관리', $mg_admin_url . '/pioneer_facility.php', 'mg_pioneer', '개척'),
     array('801100', '재료 관리', $mg_admin_url . '/pioneer_material.php', 'mg_pioneer_material'),
     array('801110', '파견지 관리', $mg_admin_url . '/expedition_area.php', 'mg_expedition'),
     array('801115', '파견 이벤트', $mg_admin_url . '/expedition_event.php', 'mg_expedition_event'),

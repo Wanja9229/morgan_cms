@@ -645,7 +645,7 @@ if(isset($_FILES['bf_file']['name']) && is_array($_FILES['bf_file']['name'])) {
 for ($i=0; $i<count($upload); $i++)
 {
     $upload[$i]['source'] = sql_real_escape_string($upload[$i]['source']);
-    $bf_content[$i] = isset($bf_content[$i]) ? sql_real_escape_string($bf_content[$i]) : '';
+    $bf_content[$i] = isset($bf_content[$i]) ? $bf_content[$i] : '';
     $bf_width = isset($upload[$i]['image'][0]) ? (int) $upload[$i]['image'][0] : 0;
     $bf_height = isset($upload[$i]['image'][1]) ? (int) $upload[$i]['image'][1] : 0;
     $bf_type = isset($upload[$i]['image'][2]) ? (int) $upload[$i]['image'][2] : 0;

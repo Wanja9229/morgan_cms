@@ -639,7 +639,16 @@ include_once(G5_THEME_PATH.'/head.php');
 
         <!-- 내 관계 -->
         <div class="mb-6">
-            <h2 class="text-lg font-bold text-mg-text-primary mb-3">내 관계 <span class="text-sm text-mg-text-muted font-normal">(<?php echo count($my_relations); ?>개)</span></h2>
+            <?php
+            $rel_count = mg_get_relation_count($ch_id);
+            $rel_max = mg_get_max_relations($ch_id);
+            ?>
+            <h2 class="text-lg font-bold text-mg-text-primary mb-3">내 관계 <span class="text-sm text-mg-text-muted font-normal">(<?php echo $rel_count; ?>/<?php echo $rel_max; ?>)</span></h2>
+            <?php if ($rel_count >= $rel_max) { ?>
+            <div style="padding:0.5rem 0.75rem;background:var(--mg-bg-primary);border-radius:0.5rem;margin-bottom:0.75rem;font-size:0.8rem;color:var(--mg-text-muted);border-left:3px solid var(--mg-accent);">
+                관계 슬롯이 가득 찼습니다. 상점에서 관계 슬롯 확장권을 구매하여 추가할 수 있습니다.
+            </div>
+            <?php } ?>
             <?php if (empty($my_relations)) { ?>
             <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary p-6 text-center text-mg-text-muted text-sm">
                 맺어진 관계가 없습니다.

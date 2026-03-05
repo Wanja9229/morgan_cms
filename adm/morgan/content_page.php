@@ -30,19 +30,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['mode']) && $_POST['mo
         alert('제목을 입력해주세요.');
     }
 
-    // 기존 행 존재 여부
-    $exists = sql_fetch("SELECT co_id FROM {$g5['content_table']} WHERE co_id = '".sql_real_escape_string($co_id)."'");
+    // 기존 행 존재 여부 ($co_id는 preg_replace로 영숫자+밑줄만 허용)
+    $exists = sql_fetch("SELECT co_id FROM {$g5['content_table']} WHERE co_id = '{$co_id}'");
 
     if ($exists['co_id']) {
         sql_query("UPDATE {$g5['content_table']}
-            SET co_subject = '".sql_real_escape_string($co_subject)."',
-                co_content = '".sql_real_escape_string($co_content)."',
+            SET co_subject = '{$co_subject}',
+                co_content = '{$co_content}',
                 co_html = 1
-            WHERE co_id = '".sql_real_escape_string($co_id)."'");
+            WHERE co_id = '{$co_id}'");
     } else {
         sql_query("INSERT INTO {$g5['content_table']}
             (co_id, co_subject, co_content, co_html, co_skin, co_mobile_skin)
-            VALUES ('".sql_real_escape_string($co_id)."', '".sql_real_escape_string($co_subject)."', '".sql_real_escape_string($co_content)."', 1, 'basic', 'basic')");
+            VALUES ('{$co_id}', '{$co_subject}', '{$co_content}', 1, 'basic', 'basic')");
     }
 
     $url = G5_ADMIN_URL.'/morgan/content_page.php?co_id='.$co_id.'&msg=saved';
@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['mode']) && $_POST['mo
 }
 
 // 데이터 로드
-$co = sql_fetch("SELECT * FROM {$g5['content_table']} WHERE co_id = '".sql_real_escape_string($co_id)."'");
+$co = sql_fetch("SELECT * FROM {$g5['content_table']} WHERE co_id = '{$co_id}'");
 if (!isset($co['co_id'])) {
     $co = array('co_id' => $co_id, 'co_subject' => '', 'co_content' => '');
 }

@@ -23,9 +23,9 @@ $mode = isset($_POST['mode']) ? $_POST['mode'] : '';
 // 시대 추가
 // ==========================================
 if ($mode == 'era_add') {
-    $le_name = sql_real_escape_string(trim($_POST['le_name']));
-    $le_period = sql_real_escape_string(trim($_POST['le_period']));
-    $le_desc = sql_real_escape_string(trim($_POST['le_desc'] ?? ''));
+    $le_name = trim($_POST['le_name']);
+    $le_period = trim($_POST['le_period']);
+    $le_desc = trim($_POST['le_desc'] ?? '');
     $le_order = (int)$_POST['le_order'];
     $le_use = isset($_POST['le_use']) ? 1 : 0;
 
@@ -42,9 +42,9 @@ if ($mode == 'era_add') {
 // ==========================================
 if ($mode == 'era_edit') {
     $le_id = (int)$_POST['le_id'];
-    $le_name = sql_real_escape_string(trim($_POST['le_name']));
-    $le_period = sql_real_escape_string(trim($_POST['le_period']));
-    $le_desc = sql_real_escape_string(trim($_POST['le_desc'] ?? ''));
+    $le_name = trim($_POST['le_name']);
+    $le_period = trim($_POST['le_period']);
+    $le_desc = trim($_POST['le_desc'] ?? '');
     $le_order = (int)$_POST['le_order'];
     $le_use = isset($_POST['le_use']) ? 1 : 0;
 
@@ -84,9 +84,9 @@ if ($mode == 'era_delete') {
 if ($mode == 'event_add') {
     $le_id = (int)$_POST['le_id'];
     $la_id = (int)($_POST['la_id'] ?? 0);
-    $lv_year = sql_real_escape_string(trim($_POST['lv_year']));
-    $lv_title = sql_real_escape_string(trim($_POST['lv_title']));
-    $lv_content = sql_real_escape_string(trim($_POST['lv_content']));
+    $lv_year = trim($_POST['lv_year']);
+    $lv_title = trim($_POST['lv_title']);
+    $lv_content = trim($_POST['lv_content']);
     $lv_order = (int)$_POST['lv_order'];
     $lv_is_major = isset($_POST['lv_is_major']) ? 1 : 0;
     $lv_use = isset($_POST['lv_use']) ? 1 : 0;
@@ -98,7 +98,7 @@ if ($mode == 'event_add') {
         alert('이벤트 제목을 입력해주세요.', './lore_timeline.php');
     }
 
-    // 이미지 처리
+    // 이미지 처리 (computed path from upload, not from $_POST)
     $lv_image = '';
     if (isset($_FILES['lv_image']) && $_FILES['lv_image']['error'] == UPLOAD_ERR_OK) {
         $upload = mg_upload_lore_image($_FILES['lv_image'], 'event', 0);
@@ -123,9 +123,9 @@ if ($mode == 'event_edit') {
     $lv_id = (int)$_POST['lv_id'];
     $le_id = (int)$_POST['le_id'];
     $la_id = (int)($_POST['la_id'] ?? 0);
-    $lv_year = sql_real_escape_string(trim($_POST['lv_year']));
-    $lv_title = sql_real_escape_string(trim($_POST['lv_title']));
-    $lv_content = sql_real_escape_string(trim($_POST['lv_content']));
+    $lv_year = trim($_POST['lv_year']);
+    $lv_title = trim($_POST['lv_title']);
+    $lv_content = trim($_POST['lv_content']);
     $lv_order = (int)$_POST['lv_order'];
     $lv_is_major = isset($_POST['lv_is_major']) ? 1 : 0;
     $lv_use = isset($_POST['lv_use']) ? 1 : 0;
@@ -169,7 +169,7 @@ if ($mode == 'event_edit') {
         $lv_image = '';
     }
 
-    $lv_image_esc = sql_real_escape_string($lv_image);
+    $lv_image_esc = $lv_image;
 
     sql_query("UPDATE {$g5['mg_lore_event_table']} SET
         le_id = {$le_id},

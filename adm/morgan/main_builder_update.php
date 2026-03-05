@@ -106,7 +106,8 @@ switch ($action) {
             $size_sql .= ", widget_h = {$widget_h}";
         }
 
-        // 설정 저장
+        // 설정 저장 (POST 값은 addslashes 적용 상태이므로 stripslashes 후 JSON 인코딩)
+        array_walk_recursive($widget_config, function(&$val) { $val = stripslashes($val); });
         $config_json = sql_real_escape_string(json_encode($widget_config, JSON_UNESCAPED_UNICODE));
         sql_query("UPDATE {$g5['mg_main_widget_table']} SET widget_config = '{$config_json}'{$size_sql} WHERE widget_id = {$widget_id}");
 

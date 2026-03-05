@@ -25,7 +25,6 @@ if (!$thread['rt_id']) {
     alert('존재하지 않는 역극입니다.');
 }
 
-$rt_status_esc = sql_real_escape_string($rt_status);
-sql_query("UPDATE {$g5['mg_rp_thread_table']} SET rt_status = '{$rt_status_esc}' WHERE rt_id = {$rt_id}");
+sql_query("UPDATE {$g5['mg_rp_thread_table']} SET rt_status = '{$rt_status}' WHERE rt_id = {$rt_id}");
 
 goto_url($redirect);

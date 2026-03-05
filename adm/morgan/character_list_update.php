@@ -85,7 +85,7 @@ if (isset($_POST['btn_approve_selected'])) {
 // 개별/선택 반려
 if (isset($_POST['btn_reject'])) {
     $reject_ch_id = isset($_POST['reject_ch_id']) ? (int)$_POST['reject_ch_id'] : 0;
-    $reject_reason = isset($_POST['reject_reason']) ? trim(clean_xss_tags($_POST['reject_reason'])) : '';
+    $reject_reason = isset($_POST['reject_reason']) ? trim(clean_xss_tags($_POST['reject_reason'], 0, 0, 0, 0)) : '';
     $chk = isset($_POST['chk']) ? $_POST['chk'] : array();
 
     // 개별 반려
@@ -109,9 +109,8 @@ if (isset($_POST['btn_reject'])) {
         sql_query("UPDATE {$g5['mg_character_table']} SET ch_state = 'editing', ch_update = NOW() WHERE ch_id = {$ch_id}");
 
         // 로그 기록
-        $reason_esc = sql_real_escape_string($reject_reason);
         sql_query("INSERT INTO {$g5['mg_character_log_table']} (ch_id, log_action, log_memo, admin_id)
-                   VALUES ({$ch_id}, 'reject', '{$reason_esc}', '{$member['mb_id']}')");
+                   VALUES ({$ch_id}, 'reject', '{$reject_reason}', '{$member['mb_id']}')");
 
         // 알림 발송
         if (function_exists('mg_notify')) {

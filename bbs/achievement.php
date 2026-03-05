@@ -12,6 +12,13 @@ if (!$is_member) {
     alert_close('로그인이 필요합니다.');
 }
 
+// 업적 해금 확인 (개척 시설 연동)
+if (!mg_is_unlocked('achievement')) {
+    $unlock_info = mg_get_unlock_info('achievement');
+    $fc_name = ($unlock_info && $unlock_info['fc_name']) ? $unlock_info['fc_name'] : '관련 시설';
+    alert_close("업적은 '{$fc_name}' 건설 완료 후 이용 가능합니다.");
+}
+
 $mb_id = $member['mb_id'];
 
 // AJAX: 쇼케이스 저장
@@ -268,7 +275,7 @@ include_once(G5_THEME_PATH.'/head.php');
                 </div>
 
                 <p class="text-sm text-mg-text-muted mb-2">
-                    <?php echo htmlspecialchars($ac['ac_hidden'] && !$completed && !$progress ? '???' : $ac['ac_desc']); ?>
+                    <?php echo nl2br(htmlspecialchars($ac['ac_hidden'] && !$completed && !$progress ? '???' : $ac['ac_desc'])); ?>
                 </p>
 
                 <!-- 진행 바 -->

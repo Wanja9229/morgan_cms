@@ -62,9 +62,9 @@ $relation_url = G5_BBS_URL . '/relation.php';
 
         <!-- 맵뷰 -->
         <?php if ($ui_mode === 'map' && $map_image) { ?>
-        <div id="area-map-view" style="display:block;">
-            <div id="map-container" data-map-fullview style="position:relative;overflow:auto;border-radius:12px;border:1px solid var(--mg-bg-tertiary);">
-                <img src="<?php echo $map_image; ?>" id="map-image" style="display:block;width:100%;min-width:600px;" alt="파견 지도" draggable="false">
+        <div id="area-map-view" style="display:block;text-align:center;">
+            <div id="map-container" style="position:relative;display:inline-block;max-width:100%;overflow:hidden;border:1px solid var(--mg-bg-tertiary);">
+                <img src="<?php echo $map_image; ?>" id="map-image" style="display:block;max-width:100%;height:auto;" alt="파견 이미지" draggable="false">
                 <div id="map-markers"></div>
                 <div id="map-popup" style="display:none;position:absolute;z-index:20;"></div>
             </div>
@@ -169,7 +169,7 @@ $relation_url = G5_BBS_URL . '/relation.php';
 .exp-card-drops { display:flex; flex-wrap:wrap; gap:4px; }
 .exp-card-drops .drop-tag { font-size:0.7rem; padding:1px 6px; border-radius:4px; background:var(--mg-bg-primary); color:var(--mg-text-secondary); }
 .exp-card-drops .drop-tag.rare { background:rgba(167,139,250,0.15); color:#a78bfa; font-weight:600; }
-.map-marker { position:absolute; width:40px; height:40px; margin-left:-20px; margin-top:-40px; cursor:pointer; transition:transform 0.15s; z-index:5; user-select:none; }
+.map-marker { position:absolute; cursor:pointer; transition:transform 0.15s; z-index:5; user-select:none; }
 .map-marker:hover { transform:scale(1.2); z-index:10; }
 .map-marker svg { width:100%; height:100%; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
 .map-marker.is-locked { opacity:0.4; cursor:default; }
@@ -197,14 +197,19 @@ $relation_url = G5_BBS_URL . '/relation.php';
         inner = inner || 'var(--mg-bg-primary)';
         switch (style) {
             case 'circle':
-                return '<svg viewBox="0 0 28 28" width="40" height="40"><circle cx="14" cy="14" r="12" fill="'+color+'" stroke="'+inner+'" stroke-width="2.5"/><circle cx="14" cy="14" r="4" fill="'+inner+'"/></svg>';
+                return '<svg viewBox="0 0 28 28" width="28" height="28"><circle cx="14" cy="14" r="12" fill="'+color+'" stroke="'+inner+'" stroke-width="2.5"/><circle cx="14" cy="14" r="4" fill="'+inner+'"/></svg>';
             case 'diamond':
-                return '<svg viewBox="0 0 24 32" width="30" height="40"><path d="M12 1 L23 16 L12 31 L1 16 Z" fill="'+color+'" stroke="'+inner+'" stroke-width="1.5"/><circle cx="12" cy="16" r="3.5" fill="'+inner+'"/></svg>';
+                return '<svg viewBox="0 0 24 32" width="24" height="32"><path d="M12 1 L23 16 L12 31 L1 16 Z" fill="'+color+'" stroke="'+inner+'" stroke-width="1.5"/><circle cx="12" cy="16" r="3.5" fill="'+inner+'"/></svg>';
             case 'flag':
-                return '<svg viewBox="0 0 24 36" width="27" height="40"><rect x="10" y="6" width="2.5" height="26" rx="1" fill="'+color+'"/><path d="M12.5 6 L23 11 L12.5 16 Z" fill="'+color+'"/><circle cx="11.25" cy="4.5" r="2.5" fill="'+color+'"/></svg>';
+                return '<svg viewBox="0 0 24 36" width="24" height="36"><rect x="10" y="6" width="2.5" height="26" rx="1" fill="'+color+'"/><path d="M12.5 6 L23 11 L12.5 16 Z" fill="'+color+'"/><circle cx="11.25" cy="4.5" r="2.5" fill="'+color+'"/></svg>';
             default:
-                return '<svg viewBox="0 0 24 36" width="27" height="40"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0z" fill="'+color+'"/><circle cx="12" cy="12" r="5" fill="'+inner+'"/></svg>';
+                return '<svg viewBox="0 0 24 36" width="24" height="36"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0z" fill="'+color+'"/><circle cx="12" cy="12" r="5" fill="'+inner+'"/></svg>';
         }
+    }
+    function getMarkerSize(style) {
+        if (style === 'circle') return { w: 28, h: 28 };
+        if (style === 'diamond') return { w: 24, h: 32 };
+        return { w: 24, h: 36 }; // pin, flag
     }
     var selected = { ch_id: 0, partner_ch_id: 0, ea_id: 0 };
     var timerIntervals = [];
@@ -212,7 +217,6 @@ $relation_url = G5_BBS_URL . '/relation.php';
     var cachedCharacters = null;
 
     // === 초기 로드 ===
-    mgMapFullview(document.getElementById('map-container'));
     loadStatus();
     loadAreas();
     loadPartnerHistory();
@@ -378,7 +382,7 @@ $relation_url = G5_BBS_URL . '/relation.php';
 
             var bodyHtml = '<div class="exp-card-body">' +
                 '<div class="exp-card-name">' + escHtml(area.ea_name) + '</div>' +
-                '<div class="exp-card-desc">' + escHtml(area.ea_desc || '') + '</div>' +
+                '<div class="exp-card-desc">' + escHtml(area.ea_desc || '').replace(/\n/g, '<br>') + '</div>' +
                 '<div class="exp-card-meta">' +
                     '<span>' + durText.trim() + '</span>' +
                     (pointText ? '<span>' + pointText + '</span>' : '') +
@@ -409,10 +413,15 @@ $relation_url = G5_BBS_URL . '/relation.php';
             if (area.ea_map_x == null || area.ea_map_y == null) return;
             var locked = !area.is_unlocked;
 
+            var sz = getMarkerSize(MARKER_STYLE);
             var marker = document.createElement('div');
             marker.className = 'map-marker' + (locked ? ' is-locked' : '');
             marker.style.left = area.ea_map_x + '%';
             marker.style.top = area.ea_map_y + '%';
+            marker.style.width = sz.w + 'px';
+            marker.style.height = sz.h + 'px';
+            marker.style.marginLeft = (-sz.w / 2) + 'px';
+            marker.style.marginTop = (-sz.h) + 'px';
             marker.title = area.ea_name;
 
             var pinColor = locked ? '#6b7280' : 'var(--mg-accent)';
@@ -451,7 +460,7 @@ $relation_url = G5_BBS_URL . '/relation.php';
             imgHtml +
             '<div class="map-popup-body">' +
                 '<div class="map-popup-name">' + escHtml(area.ea_name) + '</div>' +
-                (area.ea_desc ? '<div class="map-popup-desc">' + escHtml(area.ea_desc) + '</div>' : '') +
+                (area.ea_desc ? '<div class="map-popup-desc">' + escHtml(area.ea_desc).replace(/\n/g, '<br>') + '</div>' : '') +
                 '<div class="map-popup-meta">' +
                     '<span>' + area.ea_stamina_cost + '</span>' +
                     '<span>' + durText.trim() + '</span>' +
@@ -465,17 +474,21 @@ $relation_url = G5_BBS_URL . '/relation.php';
         var mapRect = mapContainer.getBoundingClientRect();
         var markerRect = markerEl.getBoundingClientRect();
 
-        var popupLeft = markerRect.left - mapRect.left + mapContainer.scrollLeft - 120;
-        var popupTop = markerRect.top - mapRect.top + mapContainer.scrollTop - popupEl.firstChild.offsetHeight - 10;
+        var markerCX = markerRect.left - mapRect.left + markerRect.width / 2;
+        var markerTopY = markerRect.top - mapRect.top;
+        var popupW = popupEl.firstChild.offsetWidth || 280;
+        var popupH = popupEl.firstChild.offsetHeight;
+
+        var popupLeft = markerCX - popupW / 2;
+        var popupTop = markerTopY - popupH - 10;
 
         // 좌우 경계 보정
         if (popupLeft < 8) popupLeft = 8;
-        var mapWidth = mapContainer.scrollWidth;
-        if (popupLeft + 280 > mapWidth - 8) popupLeft = mapWidth - 288;
+        if (popupLeft + popupW > mapContainer.clientWidth - 8) popupLeft = mapContainer.clientWidth - popupW - 8;
 
         // 위로 공간이 부족하면 아래에 표시
         if (popupTop < 8) {
-            popupTop = markerRect.top - mapRect.top + mapContainer.scrollTop + 10;
+            popupTop = markerTopY + markerRect.height + 10;
         }
 
         popupEl.style.left = popupLeft + 'px';
@@ -504,7 +517,7 @@ $relation_url = G5_BBS_URL . '/relation.php';
             imgEl.style.display = 'none';
         }
         document.getElementById('dm-area-name').textContent = area.ea_name;
-        document.getElementById('dm-area-desc').textContent = area.ea_desc || '';
+        document.getElementById('dm-area-desc').innerHTML = escHtml(area.ea_desc || '').replace(/\n/g, '<br>');
 
         document.getElementById('dm-stamina').textContent = area.ea_stamina_cost;
 

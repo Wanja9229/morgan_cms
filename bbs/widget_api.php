@@ -37,9 +37,8 @@ switch ($action) {
         }));
 
         foreach ($order as $idx => $widget_name) {
-            $wn_esc = sql_real_escape_string($widget_name);
             sql_query("INSERT INTO {$g5['mg_user_widget_table']}
-                (mb_id, widget_name, widget_order) VALUES ('{$mb_id_esc}', '{$wn_esc}', {$idx})
+                (mb_id, widget_name, widget_order) VALUES ('{$mb_id_esc}', '{$widget_name}', {$idx})
                 ON DUPLICATE KEY UPDATE widget_order = {$idx}, updated_at = NOW()");
         }
 
@@ -89,9 +88,8 @@ switch ($action) {
             }
         }
 
-        $wn_esc = sql_real_escape_string($widget_name);
         sql_query("INSERT INTO {$g5['mg_user_widget_table']}
-            (mb_id, widget_name, widget_order, widget_visible) VALUES ('{$mb_id_esc}', '{$wn_esc}', 99, {$visible})
+            (mb_id, widget_name, widget_order, widget_visible) VALUES ('{$mb_id_esc}', '{$widget_name}', 99, {$visible})
             ON DUPLICATE KEY UPDATE widget_visible = {$visible}, updated_at = NOW()");
 
         // 현재 active count 반환

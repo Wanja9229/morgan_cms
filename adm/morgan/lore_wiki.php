@@ -28,7 +28,7 @@ if ($tab == 'categories' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $mode = isset($_POST['mode']) ? $_POST['mode'] : '';
 
     if ($mode == 'add') {
-        $lc_name = sql_real_escape_string(trim($_POST['lc_name']));
+        $lc_name = trim($_POST['lc_name']);
         $lc_order = (int)$_POST['lc_order'];
         $lc_use = isset($_POST['lc_use']) ? 1 : 0;
 
@@ -43,7 +43,7 @@ if ($tab == 'categories' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($mode == 'edit') {
         $lc_id = (int)$_POST['lc_id'];
-        $lc_name = sql_real_escape_string(trim($_POST['lc_name']));
+        $lc_name = trim($_POST['lc_name']);
         $lc_order = (int)$_POST['lc_order'];
         $lc_use = isset($_POST['lc_use']) ? 1 : 0;
 

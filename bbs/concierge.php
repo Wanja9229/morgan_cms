@@ -25,7 +25,7 @@ $open_cc_id = isset($_GET['cc_id']) ? (int)$_GET['cc_id'] : 0;
 $open_write = !empty($_GET['write']);
 
 // Config
-$cfg_match_mode = mg_config('concierge_match_mode_allowed', 'both');
+$cfg_match_mode = mg_config('concierge_match_mode_allowed', 'lottery_only');
 $cfg_anonymous  = mg_config('concierge_apply_anonymous', '0') === '1';
 $cfg_point_min  = (int)mg_config('concierge_point_min', 0);
 $cfg_point_max  = (int)mg_config('concierge_point_max', 1000);
@@ -34,6 +34,7 @@ $cfg_fee_rate   = (int)mg_config('concierge_fee_rate', 0);
 $mb_id    = $member['mb_id'];
 $mb_point = (int)$member['mb_point'];
 $my_characters = mg_get_usable_characters($mb_id);
+$direct_pick_count = mg_get_direct_pick_count($mb_id);
 
 $type_labels = array('collaboration' => '합작', 'illustration' => '일러스트', 'novel' => '소설', 'other' => '기타');
 
@@ -538,12 +539,10 @@ include_once(G5_THEME_PATH.'/head.php');
             </div>
 
             <div class="grid grid-cols-2 gap-3">
-                <div>
+                <div style="display:none">
                     <label class="block text-xs text-mg-text-muted mb-1">매칭 방식</label>
-                    <select id="cc-f-match" class="w-full px-3 py-2 bg-mg-bg-tertiary border border-mg-bg-tertiary text-mg-text-primary rounded-lg text-sm"
-                            <?php echo $cfg_match_mode !== 'both' ? 'disabled' : ''; ?>>
-                        <option value="direct" <?php echo $cfg_match_mode === 'lottery_only' ? 'style="display:none"' : ''; ?>>직접선택</option>
-                        <option value="lottery" <?php echo $cfg_match_mode === 'direct_only' ? 'style="display:none"' : ''; ?>>추첨</option>
+                    <select id="cc-f-match" class="w-full px-3 py-2 bg-mg-bg-tertiary border border-mg-bg-tertiary text-mg-text-primary rounded-lg text-sm">
+                        <option value="lottery" selected>추첨</option>
                     </select>
                 </div>
                 <div>
@@ -609,6 +608,7 @@ var CC = {
     isAdmin: <?php echo $is_admin === 'super' ? 'true' : 'false'; ?>,
     chars: <?php echo json_encode($my_characters); ?>,
     types: <?php echo json_encode($type_labels); ?>,
+    directPickCount: <?php echo $direct_pick_count; ?>,
     cache: {}
 };
 
@@ -776,8 +776,11 @@ function ccRenderDetail(id, d) {
     if (own && d.cc_status === 'recruiting') {
         if (d.cc_match_mode === 'direct' && d.applies.length > 0)
             h += '<button type="button" onclick="ccMatch(' + id + ')" class="px-3 py-1.5 bg-green-600 text-white rounded text-sm font-medium hover:opacity-80 transition-opacity">매칭 실행</button>';
-        if (d.cc_match_mode === 'lottery' && d.applies.length >= parseInt(d.cc_max_members))
+        if (d.cc_match_mode === 'lottery' && d.applies.length >= parseInt(d.cc_max_members)) {
+            if (CC.directPickCount > 0)
+                h += '<button type="button" onclick="ccDirectPick(' + id + ')" class="px-3 py-1.5 bg-mg-accent text-white rounded text-sm font-medium hover:opacity-80 transition-opacity">지목권 사용 (' + CC.directPickCount + ')</button>';
             h += '<button type="button" onclick="ccLottery(' + id + ')" class="px-3 py-1.5 bg-blue-500 text-white rounded text-sm font-medium hover:opacity-80 transition-opacity">추첨 실행</button>';
+        }
         h += '<button type="button" onclick="ccCloseDetail();ccEdit(' + id + ')" class="px-3 py-1.5 bg-mg-bg-tertiary text-mg-text-secondary rounded text-sm hover:bg-mg-bg-primary transition-colors">수정</button>';
         h += '<button type="button" onclick="ccCancel(' + id + ')" class="px-3 py-1.5 bg-red-500/20 text-red-400 rounded text-sm hover:bg-red-500/30 transition-colors">취소</button>';
     }
@@ -837,6 +840,13 @@ function ccMatch(id) {
 function ccLottery(id) {
     if (!confirm('추첨을 실행하시겠습니까?')) return;
     _post({ action: 'lottery', cc_id: id })
+        .then(function(d) { alert(d.message); if (d.success) location.reload(); });
+}
+
+// ── 지목권 사용 ──
+function ccDirectPick(id) {
+    if (!confirm('지목권을 사용하시겠습니까? (1개 소모)\n사용 후 지원자를 직접 선택할 수 있습니다.')) return;
+    _post({ action: 'use_direct_pick', cc_id: id })
         .then(function(d) { alert(d.message); if (d.success) location.reload(); });
 }
 

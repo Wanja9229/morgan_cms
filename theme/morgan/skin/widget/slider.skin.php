@@ -75,6 +75,7 @@ $slider_id = 'mg_slider_'.uniqid();
 
         window.mgSliderGoto = window.mgSliderGoto || function(id, index) {
             var s = document.getElementById(id);
+            if (!s) return;
             var t = s.querySelector('.mg-slider-track');
             var dots = s.querySelectorAll('.mg-slider-dots button');
             t.style.transform = 'translateX(-' + (index * 100) + '%)';
@@ -87,6 +88,7 @@ $slider_id = 'mg_slider_'.uniqid();
 
         window.mgSliderPrev = window.mgSliderPrev || function(id) {
             var s = document.getElementById(id);
+            if (!s) return;
             var count = s.querySelectorAll('.mg-slider-slide').length;
             var idx = parseInt(s.dataset.currentIndex || 0);
             idx = (idx - 1 + count) % count;
@@ -95,6 +97,7 @@ $slider_id = 'mg_slider_'.uniqid();
 
         window.mgSliderNext = window.mgSliderNext || function(id) {
             var s = document.getElementById(id);
+            if (!s) return;
             var count = s.querySelectorAll('.mg-slider-slide').length;
             var idx = parseInt(s.dataset.currentIndex || 0);
             idx = (idx + 1) % count;

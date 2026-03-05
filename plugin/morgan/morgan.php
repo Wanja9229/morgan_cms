@@ -109,6 +109,7 @@ $g5['mg_migrations_table'] = 'mg_migrations';
 $g5['mg_radio_config_table'] = 'mg_radio_config';
 $g5['mg_radio_playlist_table'] = 'mg_radio_playlist';
 $g5['mg_radio_ments_table'] = 'mg_radio_ments';
+$g5['mg_radio_requests_table'] = 'mg_radio_requests';
 
 // 히든 이벤트
 $g5['mg_hidden_event_table'] = 'mg_hidden_event';
@@ -522,7 +523,7 @@ $mg['shop_type_groups'] = array(
     'system' => array(
         'label' => '이용권',
         'icon' => 'ticket',
-        'types' => array('char_slot', 'emoticon_reg', 'concierge_extra')
+        'types' => array('char_slot', 'relation_slot', 'emoticon_reg', 'concierge_extra', 'concierge_direct_pick', 'radio_song', 'radio_ment')
     ),
     'material' => array(
         'label' => '재료',
@@ -565,8 +566,12 @@ function mg_get_item_types() {
         'seal_hover' => array('name' => '인장 호버', 'desc' => '인장 호버 효과', 'group' => 'seal'),
         // 이용권
         'char_slot' => array('name' => '캐릭터 슬롯', 'desc' => '사용 시 캐릭터를 1개 더 생성할 수 있습니다 (영구, 해제 불가)', 'group' => 'system'),
+        'relation_slot' => array('name' => '관계 슬롯', 'desc' => '캐릭터의 관계 슬롯을 추가합니다 (영구, 해제 불가)', 'group' => 'system'),
         'emoticon_reg' => array('name' => '이모티콘 등록권', 'desc' => '커스텀 이모티콘 등록 권한', 'group' => 'system'),
         'concierge_extra' => array('name' => '추가 의뢰권', 'desc' => '추가 의뢰 등록 권한 (소모품)', 'group' => 'system'),
+        'concierge_direct_pick' => array('name' => '의뢰 지목권', 'desc' => '추첨 대신 직접 선택 (소모품)', 'group' => 'system'),
+        'radio_song' => array('name' => '노래 신청권', 'desc' => '라디오에 원하는 곡을 신청할 수 있습니다 (관리자 승인 후 반영)', 'group' => 'system'),
+        'radio_ment' => array('name' => '라디오 멘트권', 'desc' => '라디오 멘트를 신청할 수 있습니다 (관리자 승인 후 반영)', 'group' => 'system'),
         // 재료·가구·기타
         'material' => array('name' => '재료', 'desc' => '개척 시스템 재료 아이템', 'group' => 'material'),
         'furniture' => array('name' => '가구', 'desc' => '마이룸 가구', 'group' => 'furniture'),
@@ -1347,6 +1352,36 @@ function mg_get_max_characters($mb_id) {
 }
 
 /**
+ * 캐릭터당 최대 관계 수 (기본값 + 확장 슬롯)
+ *
+ * @param int $ch_id 캐릭터 ID
+ * @return int
+ */
+function mg_get_max_relations($ch_id) {
+    global $g5;
+    $base = (int)mg_config('max_relations', 3);
+    $ch_id = (int)$ch_id;
+    $row = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_item_active_table']}
+                      WHERE ch_id = {$ch_id} AND ia_type = 'relation_slot'");
+    return $base + (int)($row['cnt'] ?? 0);
+}
+
+/**
+ * 캐릭터의 현재 관계 수 (active + pending)
+ *
+ * @param int $ch_id 캐릭터 ID
+ * @return int
+ */
+function mg_get_relation_count($ch_id) {
+    global $g5;
+    $ch_id = (int)$ch_id;
+    $row = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_relation_table']}
+                      WHERE (ch_id_a = {$ch_id} OR ch_id_b = {$ch_id})
+                      AND cr_status IN ('active','pending')");
+    return (int)($row['cnt'] ?? 0);
+}
+
+/**
  * 상점 상품 목록 가져오기 (페이지네이션)
  *
  * @param int $sc_id 카테고리 ID (0=전체)
@@ -1761,6 +1796,26 @@ function mg_use_item($mb_id, $si_id, $ch_id = null) {
         return array('success' => true, 'message' => '캐릭터 슬롯이 ' . $slots . '개 추가되었습니다.');
     }
 
+    // 관계 슬롯 확장권: 캐릭터 선택 필수, 영구
+    if ($item['si_type'] === 'relation_slot') {
+        if (!$ch_id) {
+            return array('success' => false, 'message' => '캐릭터를 선택해주세요.');
+        }
+        $ch_id = (int)$ch_id;
+        $ch = sql_fetch("SELECT ch_id, mb_id FROM {$mg['character_table']} WHERE ch_id = {$ch_id}");
+        if (!$ch || $ch['mb_id'] !== $mb_id) {
+            return array('success' => false, 'message' => '권한이 없는 캐릭터입니다.');
+        }
+        sql_query("INSERT INTO {$mg['item_active_table']} (mb_id, si_id, ia_type, ch_id)
+                   VALUES ('{$mb_id}', {$si_id}, 'relation_slot', {$ch_id})");
+        sql_query("UPDATE {$mg['inventory_table']}
+                   SET iv_count = iv_count - 1
+                   WHERE mb_id = '{$mb_id}' AND si_id = {$si_id}");
+        sql_query("DELETE FROM {$mg['inventory_table']}
+                   WHERE mb_id = '{$mb_id}' AND si_id = {$si_id} AND iv_count <= 0");
+        return array('success' => true, 'message' => '관계 슬롯이 추가되었습니다.');
+    }
+
     // 이미 사용중인지 확인
     if (mg_is_item_active($mb_id, $si_id)) {
         return array('success' => false, 'message' => '이미 사용 중인 아이템입니다.');
@@ -1807,6 +1862,9 @@ function mg_unuse_item($mb_id, $si_id) {
     $item = mg_get_shop_item($si_id);
     if ($item && $item['si_type'] === 'char_slot') {
         return array('success' => false, 'message' => '캐릭터 슬롯은 해제할 수 없습니다.');
+    }
+    if ($item && $item['si_type'] === 'relation_slot') {
+        return array('success' => false, 'message' => '관계 슬롯은 해제할 수 없습니다.');
     }
 
     sql_query("DELETE FROM {$mg['item_active_table']}
@@ -2755,8 +2813,8 @@ function mg_create_rp_thread($data) {
 
     $mb_id = sql_real_escape_string($data['mb_id']);
     $ch_id = (int)$data['ch_id'];
-    $title = sql_real_escape_string($data['rt_title']);
-    $content = sql_real_escape_string($data['rt_content']);
+    $title = sql_real_escape_string(stripslashes($data['rt_title']));
+    $content = sql_real_escape_string(stripslashes($data['rt_content']));
     $image = isset($data['rt_image']) ? sql_real_escape_string($data['rt_image']) : '';
     $max_member = isset($data['rt_max_member']) ? (int)$data['rt_max_member'] : 0;
 
@@ -2863,7 +2921,7 @@ function mg_create_rp_reply($data) {
     $mb_id = sql_real_escape_string($data['mb_id']);
     $ch_id = (int)$data['ch_id'];
     $context_ch_id = isset($data['rr_context_ch_id']) ? (int)$data['rr_context_ch_id'] : 0;
-    $content = sql_real_escape_string($data['rr_content']);
+    $content = sql_real_escape_string(stripslashes($data['rr_content']));
     $image = isset($data['rr_image']) ? sql_real_escape_string($data['rr_image']) : '';
 
     // 역극 존재/상태 체크
@@ -3608,8 +3666,8 @@ function mg_can_create_emoticon($mb_id) {
 function mg_create_emoticon_set($mb_id, $data) {
     global $mg;
 
-    $es_name = sql_real_escape_string(trim($data['es_name']));
-    $es_desc = sql_real_escape_string(trim($data['es_desc'] ?? ''));
+    $es_name = sql_real_escape_string(stripslashes(trim($data['es_name'])));
+    $es_desc = sql_real_escape_string(stripslashes(trim($data['es_desc'] ?? '')));
     $es_price = (int)($data['es_price'] ?? 0);
     $es_preview = sql_real_escape_string(trim($data['es_preview'] ?? ''));
 
@@ -3718,7 +3776,7 @@ function mg_reject_emoticon_set($es_id, $reason = '') {
         return array('success' => false, 'message' => '승인 대기 상태가 아닙니다.');
     }
 
-    $reason_esc = sql_real_escape_string($reason);
+    $reason_esc = sql_real_escape_string(stripslashes($reason));
     sql_query("UPDATE {$mg['emoticon_set_table']}
                SET es_status = 'rejected', es_reject_reason = '{$reason_esc}'
                WHERE es_id = {$es_id}");
@@ -5315,8 +5373,8 @@ function mg_create_concierge($mb_id, $data) {
         }
     }
 
-    $title = sql_real_escape_string(clean_xss_tags($data['cc_title']));
-    $content = sql_real_escape_string(clean_xss_tags($data['cc_content'], 0, 0, 0, 0));
+    $title = sql_real_escape_string(clean_xss_tags(stripslashes($data['cc_title'])));
+    $content = sql_real_escape_string(clean_xss_tags(stripslashes($data['cc_content']), 0, 0, 0, 0));
     $type = in_array($data['cc_type'], array('collaboration', 'illustration', 'novel', 'other')) ? $data['cc_type'] : 'collaboration';
     $max_members = max(1, min(5, (int)$data['cc_max_members']));
     $max_applicants = isset($data['cc_max_applicants']) && (int)$data['cc_max_applicants'] > 0 ? (int)$data['cc_max_applicants'] : null;
@@ -5368,7 +5426,7 @@ function mg_create_concierge($mb_id, $data) {
     $deadline_esc = sql_real_escape_string($deadline);
     $complete_dl_esc = $complete_deadline ? "'" . sql_real_escape_string($complete_deadline) . "'" : 'NULL';
     $max_app_sql = $max_applicants !== null ? $max_applicants : 'NULL';
-    $reward_memo = !empty($data['cc_reward_memo']) ? "'" . sql_real_escape_string(mb_substr(trim($data['cc_reward_memo']), 0, 200)) . "'" : 'NULL';
+    $reward_memo = !empty($data['cc_reward_memo']) ? "'" . sql_real_escape_string(mb_substr(trim(stripslashes($data['cc_reward_memo'])), 0, 200)) . "'" : 'NULL';
     sql_query("INSERT INTO {$g5['mg_concierge_table']}
                (mb_id, ch_id, cc_title, cc_content, cc_type, cc_max_members, cc_max_applicants, cc_match_mode, cc_point_total, cc_reward_memo, cc_deadline, cc_complete_deadline)
                VALUES ('{$mb_id_esc}', {$ch_id}, '{$title}', '{$content}', '{$type}', {$max_members},
@@ -5445,7 +5503,7 @@ function mg_apply_concierge($mb_id, $cc_id, $ch_id, $message = '') {
         return array('success' => false, 'message' => '사용할 수 없는 캐릭터입니다.');
     }
 
-    $message_esc = sql_real_escape_string(clean_xss_tags($message, 0, 0, 0, 0));
+    $message_esc = sql_real_escape_string(clean_xss_tags(stripslashes($message), 0, 0, 0, 0));
     sql_query("INSERT INTO {$g5['mg_concierge_apply_table']}
                (cc_id, mb_id, ch_id, ca_message)
                VALUES ({$cc_id}, '{$mb_id_esc}', {$ch_id}, '{$message_esc}')");
@@ -5851,11 +5909,11 @@ function mg_update_concierge($mb_id, $cc_id, $data) {
     $apply_cnt = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_concierge_apply_table']} WHERE cc_id = {$cc_id}");
     $has_applicants = (int)$apply_cnt['cnt'] > 0;
 
-    $title = sql_real_escape_string(clean_xss_tags($data['cc_title']));
-    $content = sql_real_escape_string(clean_xss_tags($data['cc_content'], 0, 0, 0, 0));
+    $title = sql_real_escape_string(clean_xss_tags(stripslashes($data['cc_title'])));
+    $content = sql_real_escape_string(clean_xss_tags(stripslashes($data['cc_content']), 0, 0, 0, 0));
     $deadline = $data['cc_deadline'];
     $complete_deadline = !empty($data['cc_complete_deadline']) ? $data['cc_complete_deadline'] : null;
-    $reward_memo_sql = !empty($data['cc_reward_memo']) ? "'" . sql_real_escape_string(mb_substr(trim($data['cc_reward_memo']), 0, 200)) . "'" : 'NULL';
+    $reward_memo_sql = !empty($data['cc_reward_memo']) ? "'" . sql_real_escape_string(mb_substr(trim(stripslashes($data['cc_reward_memo'])), 0, 200)) . "'" : 'NULL';
 
     if ($has_applicants) {
         // 지원자 있으면: 제목/내용/마감일/추가보상메모만 수정 가능
@@ -5968,6 +6026,71 @@ function mg_consume_concierge_extra($mb_id) {
     sql_query("DELETE FROM {$g5['mg_inventory_table']}
                WHERE mb_id = '{$mb_id_esc}' AND si_id = {$si_id} AND iv_count <= 0");
     return true;
+}
+
+/**
+ * 의뢰 지목권 보유 수량 조회
+ */
+function mg_get_direct_pick_count($mb_id) {
+    global $g5;
+    $mb_id_esc = sql_real_escape_string($mb_id);
+    $row = sql_fetch("SELECT COALESCE(SUM(v.iv_count), 0) as cnt
+                      FROM {$g5['mg_inventory_table']} v
+                      JOIN {$g5['mg_shop_item_table']} i ON v.si_id = i.si_id
+                      WHERE v.mb_id = '{$mb_id_esc}' AND i.si_type = 'concierge_direct_pick' AND v.iv_count > 0");
+    return (int)($row['cnt'] ?? 0);
+}
+
+/**
+ * 의뢰 지목권 1개 소비
+ */
+function mg_consume_direct_pick($mb_id) {
+    global $g5;
+    $mb_id_esc = sql_real_escape_string($mb_id);
+    $row = sql_fetch("SELECT v.si_id FROM {$g5['mg_inventory_table']} v
+                      JOIN {$g5['mg_shop_item_table']} i ON v.si_id = i.si_id
+                      WHERE v.mb_id = '{$mb_id_esc}' AND i.si_type = 'concierge_direct_pick' AND v.iv_count > 0
+                      ORDER BY v.iv_datetime ASC LIMIT 1");
+    if (!$row || !$row['si_id']) return false;
+    $si_id = (int)$row['si_id'];
+    sql_query("UPDATE {$g5['mg_inventory_table']} SET iv_count = iv_count - 1
+               WHERE mb_id = '{$mb_id_esc}' AND si_id = {$si_id}");
+    sql_query("DELETE FROM {$g5['mg_inventory_table']}
+               WHERE mb_id = '{$mb_id_esc}' AND si_id = {$si_id} AND iv_count <= 0");
+    return true;
+}
+
+/**
+ * 라디오 신청권 1개 소비 (radio_song 또는 radio_ment)
+ * @return int|false 성공 시 소비한 si_id, 실패 시 false
+ */
+function mg_consume_radio_ticket($mb_id, $type) {
+    global $g5;
+    if (!in_array($type, array('radio_song', 'radio_ment'))) return false;
+    $mb_id_esc = sql_real_escape_string($mb_id);
+    $type_esc  = sql_real_escape_string($type);
+    $row = sql_fetch("SELECT v.si_id FROM {$g5['mg_inventory_table']} v
+                      JOIN {$g5['mg_shop_item_table']} i ON v.si_id = i.si_id
+                      WHERE v.mb_id = '{$mb_id_esc}' AND i.si_type = '{$type_esc}' AND v.iv_count > 0
+                      ORDER BY v.iv_datetime ASC LIMIT 1");
+    if (!$row || !$row['si_id']) return false;
+    $si_id = (int)$row['si_id'];
+    sql_query("UPDATE {$g5['mg_inventory_table']} SET iv_count = iv_count - 1
+               WHERE mb_id = '{$mb_id_esc}' AND si_id = {$si_id}");
+    sql_query("DELETE FROM {$g5['mg_inventory_table']}
+               WHERE mb_id = '{$mb_id_esc}' AND si_id = {$si_id} AND iv_count <= 0");
+    return $si_id;
+}
+
+/**
+ * YouTube URL에서 Video ID 추출 (공용 헬퍼)
+ */
+function mg_parse_youtube_vid($url) {
+    if (preg_match('#youtu\.be/([a-zA-Z0-9_-]{11})#', $url, $m)) return $m[1];
+    if (preg_match('#[?&]v=([a-zA-Z0-9_-]{11})#', $url, $m)) return $m[1];
+    if (preg_match('#/embed/([a-zA-Z0-9_-]{11})#', $url, $m)) return $m[1];
+    if (preg_match('#/shorts/([a-zA-Z0-9_-]{11})#', $url, $m)) return $m[1];
+    return '';
 }
 
 /**
@@ -6650,6 +6773,9 @@ function mg_trigger_achievement($mb_id, $event_type, $increment = 1, $context = 
 {
     global $g5;
     if (!$mb_id) return;
+
+    // 업적 해금 안 됐으면 트리거 무시
+    if (!mg_is_unlocked('achievement')) return;
 
     $mb_esc = sql_real_escape_string($mb_id);
 
@@ -8056,6 +8182,19 @@ function mg_request_relation($from_ch_id, $to_ch_id, $label, $color = '#95a5a6',
         return array('success' => false, 'message' => '이미 관계가 존재합니다.');
     }
 
+    // 슬롯 체크 (신청자)
+    $from_count = mg_get_relation_count($from_ch_id);
+    $from_max = mg_get_max_relations($from_ch_id);
+    if ($from_count >= $from_max) {
+        return array('success' => false, 'message' => '관계 슬롯이 부족합니다. (' . $from_count . '/' . $from_max . ')');
+    }
+    // 슬롯 체크 (대상자)
+    $to_count = mg_get_relation_count($to_ch_id);
+    $to_max = mg_get_max_relations($to_ch_id);
+    if ($to_count >= $to_max) {
+        return array('success' => false, 'message' => '대상 캐릭터의 관계 슬롯이 가득 찼습니다.');
+    }
+
     $label_esc = sql_real_escape_string($label);
     $color_esc = sql_real_escape_string($color ?: '#95a5a6');
     $memo_esc = sql_real_escape_string($memo);
@@ -8483,7 +8622,7 @@ function mg_staff_perm_groups()
             'mg_emoticon' => '이모티콘 관리',
         ),
         '개척' => array(
-            'mg_pioneer'          => '시설 관리',
+            'mg_pioneer'          => '개척지 관리',
             'mg_pioneer_material' => '재료 관리',
             'mg_expedition'       => '파견지 관리',
             'mg_expedition_log'   => '파견 로그',

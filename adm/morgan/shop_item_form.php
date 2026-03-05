@@ -470,6 +470,40 @@ require_once __DIR__.'/_head.php';
                         </div>
                     </div>
 
+                    <!-- 라디오 신청권 설정 -->
+                    <div class="effect-field" data-type="radio_song,radio_ment" style="<?php echo !in_array($si_type, array('radio_song', 'radio_ment')) ? 'display:none;' : ''; ?>">
+                        <div class="mg-form-group">
+                            <label class="mg-form-label" for="effect_duration_hours">노출 기간 (시간)</label>
+                            <input type="number" name="effect[duration_hours]" id="effect_duration_hours" class="mg-form-input" value="<?php echo htmlspecialchars($effect['duration_hours'] ?? ''); ?>" placeholder="<?php echo $si_type === 'radio_ment' ? '24' : '72'; ?>" min="1" style="max-width:200px;">
+                            <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;">승인 후 플레이리스트/멘트에 노출되는 시간. 비워두면 기본값 적용 (노래: 72시간, 멘트: 24시간)</div>
+                        </div>
+                        <div style="padding:1rem;background:var(--mg-bg-primary);border-radius:0.5rem;border-left:3px solid var(--mg-accent);margin-top:0.75rem;">
+                            <p style="font-size:0.875rem;color:var(--mg-text-primary);margin-bottom:0.5rem;font-weight:500;">📻 라디오 신청권 안내</p>
+                            <ul style="font-size:0.8rem;color:var(--mg-text-secondary);margin:0;padding-left:1.25rem;line-height:1.8;">
+                                <li>유저가 인벤토리에서 사용 시 신청 모달이 열립니다.</li>
+                                <li>신청 내용은 관리자 → 라디오 관리에서 확인할 수 있습니다.</li>
+                                <li>관리자가 승인하면 플레이리스트/멘트에 추가되며, 설정 기간 후 자동 만료됩니다.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- 관계 슬롯 확장권 설정 -->
+                    <div class="effect-field" data-type="relation_slot" style="<?php echo $si_type !== 'relation_slot' ? 'display:none;' : ''; ?>">
+                        <div class="mg-form-group">
+                            <label class="mg-form-label" for="effect_slots">추가 슬롯 수</label>
+                            <input type="number" name="effect[slots]" id="effect_slots" class="mg-form-input" value="<?php echo htmlspecialchars($effect['slots'] ?? '1'); ?>" min="1" max="10" style="max-width:200px;">
+                            <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;">사용 시 캐릭터의 관계 슬롯이 이 수만큼 추가됩니다.</div>
+                        </div>
+                        <div style="padding:1rem;background:var(--mg-bg-primary);border-radius:0.5rem;border-left:3px solid var(--mg-accent);margin-top:0.75rem;">
+                            <p style="font-size:0.875rem;color:var(--mg-text-primary);margin-bottom:0.5rem;font-weight:500;">관계 슬롯 확장권 안내</p>
+                            <ul style="font-size:0.8rem;color:var(--mg-text-secondary);margin:0;padding-left:1.25rem;line-height:1.8;">
+                                <li>인벤토리에서 사용 시 캐릭터 선택 모달이 열립니다.</li>
+                                <li>선택한 캐릭터의 관계 슬롯이 영구적으로 추가됩니다.</li>
+                                <li>해제 불가 (영구 효과).</li>
+                            </ul>
+                        </div>
+                    </div>
+
                     <!-- 기타 타입 -->
                     <div class="effect-field" data-type="equip,furniture,etc" style="<?php echo !in_array($si_type, array('equip','furniture','etc')) ? 'display:none;' : ''; ?>">
                         <div class="mg-form-group">

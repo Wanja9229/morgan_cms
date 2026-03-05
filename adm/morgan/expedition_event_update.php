@@ -69,12 +69,12 @@ switch ($ee_effect_type) {
 }
 $ee_effect_json = json_encode($effect, JSON_UNESCAPED_UNICODE);
 
-// SQL 이스케이프
-$s_name   = sql_real_escape_string($ee_name);
-$s_desc   = sql_real_escape_string($ee_desc);
-$s_icon   = sql_real_escape_string($ee_icon);
-$s_type   = sql_real_escape_string($ee_effect_type);
-$s_effect = sql_real_escape_string($ee_effect_json);
+// POST 값은 Gnuboard common.php에서 이미 addslashes 처리됨
+$s_name   = $ee_name;
+$s_desc   = $ee_desc;
+$s_icon   = $ee_icon;
+$s_type   = $ee_effect_type;
+$s_effect = sql_real_escape_string($ee_effect_json);  // json_encode 결과는 POST가 아닌 계산값
 
 if ($w === 'u') {
     // 수정

@@ -73,7 +73,7 @@ if ($view === 'expedition') {
     $pioneer_view_mode = mg_config('pioneer_view_mode', 'card');
     $pioneer_map_image = mg_config('pioneer_map_image', '');
 
-    // 거점뷰인데 이미지가 없으면 카드뷰로 폴백
+    // 이미지 모드인데 이미지가 없으면 카드 목록으로 폴백
     if ($pioneer_view_mode === 'base' && !$pioneer_map_image) {
         $pioneer_view_mode = 'card';
     }

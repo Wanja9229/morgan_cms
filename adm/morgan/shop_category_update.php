@@ -25,8 +25,8 @@ if (isset($_POST['btn_submit'])) {
     foreach ($sc_ids as $i => $sc_id) {
         $sc_id = (int)$sc_id;
         $sc_order = (int)$sc_orders[$i];
-        $sc_name = sql_real_escape_string(trim($sc_names[$i]));
-        $sc_desc = sql_real_escape_string(trim($sc_descs[$i]));
+        $sc_name = trim($sc_names[$i]);
+        $sc_desc = trim($sc_descs[$i]);
         $sc_icon = trim($sc_icons[$i]);
         $sc_use = isset($sc_uses[$sc_id]) ? 1 : 0;
 
@@ -41,8 +41,6 @@ if (isset($_POST['btn_submit'])) {
             }
             $sc_icon = '';
         }
-
-        $sc_icon = sql_real_escape_string($sc_icon);
 
         if ($sc_name) {
             sql_query("UPDATE {$g5['mg_shop_category_table']} SET
@@ -59,15 +57,14 @@ if (isset($_POST['btn_submit'])) {
     $new_sc_name = isset($_POST['new_sc_name']) ? trim($_POST['new_sc_name']) : '';
     if ($new_sc_name) {
         // 중복 체크
-        $exists = sql_fetch("SELECT sc_id FROM {$g5['mg_shop_category_table']} WHERE sc_name = '" . sql_real_escape_string($new_sc_name) . "'");
+        $exists = sql_fetch("SELECT sc_id FROM {$g5['mg_shop_category_table']} WHERE sc_name = '{$new_sc_name}'");
         if ($exists['sc_id']) {
             alert('이미 존재하는 카테고리명입니다.');
         }
 
         $new_sc_order = (int)$_POST['new_sc_order'];
-        $new_sc_desc = sql_real_escape_string(trim($_POST['new_sc_desc']));
+        $new_sc_desc = trim($_POST['new_sc_desc']);
         $new_sc_use = isset($_POST['new_sc_use']) ? 1 : 0;
-        $new_sc_name_escaped = sql_real_escape_string($new_sc_name);
 
         // 아이콘 처리
         $new_sc_icon = '';
@@ -95,11 +92,9 @@ if (isset($_POST['btn_submit'])) {
             $new_sc_icon = isset($_POST['new_sc_icon']) ? trim($_POST['new_sc_icon']) : '';
         }
 
-        $new_sc_icon = sql_real_escape_string($new_sc_icon);
-
         sql_query("INSERT INTO {$g5['mg_shop_category_table']}
             (sc_name, sc_desc, sc_icon, sc_order, sc_use) VALUES
-            ('{$new_sc_name_escaped}', '{$new_sc_desc}', '{$new_sc_icon}', {$new_sc_order}, {$new_sc_use})");
+            ('{$new_sc_name}', '{$new_sc_desc}', '{$new_sc_icon}', {$new_sc_order}, {$new_sc_use})");
     }
 
     goto_url('./shop_category.php');

@@ -26,7 +26,7 @@ if ($mode === 'section_reorder') {
             if (!$category) continue;
             // 해당 섹션의 필드들을 현재 순서대로 조회
             $result = sql_query("SELECT pf_id FROM {$g5['mg_profile_field_table']}
-                WHERE pf_category = '".sql_real_escape_string($category)."'
+                WHERE pf_category = '{$category}'
                 ORDER BY pf_order, pf_id");
             while ($row = sql_fetch_array($result)) {
                 sql_query("UPDATE {$g5['mg_profile_field_table']} SET pf_order = {$base_order} WHERE pf_id = {$row['pf_id']}");
@@ -65,7 +65,7 @@ if ($mode === 'field_reorder_cross') {
             $category = isset($field_categories[$i]) ? trim($field_categories[$i]) : '';
             if (!$category) continue;
             sql_query("UPDATE {$g5['mg_profile_field_table']}
-                SET pf_order = {$i}, pf_category = '".sql_real_escape_string($category)."'
+                SET pf_order = {$i}, pf_category = '{$category}'
                 WHERE pf_id = {$pf_id}");
         }
     }
@@ -96,7 +96,7 @@ if (isset($_POST['btn_add_section'])) {
     // 섹션에 기본 필드 하나 추가 (섹션만 따로 저장할 수 없으므로)
     $code = 'pf_'.time().'_'.mt_rand(100, 999);
     sql_query("INSERT INTO {$g5['mg_profile_field_table']} (pf_code, pf_name, pf_type, pf_category, pf_use, pf_order)
-               VALUES ('{$code}', '새 필드', 'text', '".sql_real_escape_string($category)."', 1, 0)");
+               VALUES ('{$code}', '새 필드', 'text', '{$category}', 1, 0)");
 
     alert('섹션이 추가되었습니다.', $redirect_url);
 }
@@ -110,8 +110,8 @@ if (isset($_POST['btn_rename_section'])) {
         alert('섹션명을 입력해주세요.');
     }
 
-    sql_query("UPDATE {$g5['mg_profile_field_table']} SET pf_category = '".sql_real_escape_string($new_category)."'
-               WHERE pf_category = '".sql_real_escape_string($old_category)."'");
+    sql_query("UPDATE {$g5['mg_profile_field_table']} SET pf_category = '{$new_category}'
+               WHERE pf_category = '{$old_category}'");
 
     alert('섹션명이 변경되었습니다.', $redirect_url);
 }
@@ -134,7 +134,7 @@ if (isset($_POST['btn_add_field'])) {
     $code = 'pf_'.time().'_'.mt_rand(100, 999);
 
     // 순서: 해당 카테고리의 마지막 + 1
-    $max_order = sql_fetch("SELECT MAX(pf_order) as max_order FROM {$g5['mg_profile_field_table']} WHERE pf_category = '".sql_real_escape_string($category)."'");
+    $max_order = sql_fetch("SELECT MAX(pf_order) as max_order FROM {$g5['mg_profile_field_table']} WHERE pf_category = '{$category}'");
     $order = ($max_order['max_order'] ?? 0) + 1;
 
     $valid_types = array('text', 'textarea', 'select', 'multiselect', 'url', 'image');
@@ -148,14 +148,14 @@ if (isset($_POST['btn_add_field'])) {
     sql_query("INSERT INTO {$g5['mg_profile_field_table']}
                (pf_code, pf_name, pf_type, pf_options, pf_placeholder, pf_required, pf_order, pf_category, pf_use)
                VALUES (
-                   '".sql_real_escape_string($code)."',
-                   '".sql_real_escape_string($name)."',
+                   '{$code}',
+                   '{$name}',
                    '{$type}',
-                   '".sql_real_escape_string($options)."',
-                   '".sql_real_escape_string($placeholder)."',
+                   '{$options}',
+                   '{$placeholder}',
                    {$required},
                    {$order},
-                   '".sql_real_escape_string($category)."',
+                   '{$category}',
                    {$use}
                )");
 
@@ -188,12 +188,12 @@ if (isset($_POST['btn_edit_field'])) {
     $options = options_to_json($options_text);
 
     sql_query("UPDATE {$g5['mg_profile_field_table']} SET
-               pf_name = '".sql_real_escape_string($name)."',
+               pf_name = '{$name}',
                pf_type = '{$type}',
-               pf_options = '".sql_real_escape_string($options)."',
-               pf_placeholder = '".sql_real_escape_string($placeholder)."',
-               pf_help = '".sql_real_escape_string($help)."',
-               pf_category = '".sql_real_escape_string($category)."',
+               pf_options = '{$options}',
+               pf_placeholder = '{$placeholder}',
+               pf_help = '{$help}',
+               pf_category = '{$category}',
                pf_required = {$required},
                pf_use = {$use}
                WHERE pf_id = {$pf_id}");
@@ -229,9 +229,9 @@ if (isset($_POST['btn_save'])) {
         $options = options_to_json($options_text);
 
         sql_query("UPDATE {$g5['mg_profile_field_table']} SET
-                   pf_name = '".sql_real_escape_string($name)."',
+                   pf_name = '{$name}',
                    pf_type = '{$type}',
-                   pf_options = '".sql_real_escape_string($options)."',
+                   pf_options = '{$options}',
                    pf_required = {$required},
                    pf_use = {$use}
                    WHERE pf_id = {$pf_id}");

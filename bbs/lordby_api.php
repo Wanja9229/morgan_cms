@@ -36,7 +36,7 @@ switch ($action) {
         }
 
         // 게시판 존재 확인
-        $board = sql_fetch("SELECT * FROM {$g5['board_table']} WHERE bo_table = '".sql_real_escape_string($bo_table)."'");
+        $board = sql_fetch("SELECT * FROM {$g5['board_table']} WHERE bo_table = '{$bo_table}'");
         if (!$board['bo_table']) {
             echo json_encode(array('error' => '존재하지 않는 게시판입니다.'));
             exit;
@@ -83,8 +83,8 @@ switch ($action) {
 
         // 내용 정리
         $content = strip_tags($content);
-        $content_esc = sql_real_escape_string($content);
-        $wr_name_esc = sql_real_escape_string($wr_name);
+        $content_esc = $content;
+        $wr_name_esc = $is_member ? sql_real_escape_string($wr_name) : $wr_name;
         $mb_id_esc = sql_real_escape_string($mb_id);
         $wr_email_esc = sql_real_escape_string($wr_email);
         $wr_password_esc = sql_real_escape_string($wr_password);

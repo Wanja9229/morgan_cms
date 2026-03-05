@@ -7,6 +7,20 @@ if (!defined('_GNUBOARD_')) exit;
 
 // 상품 타입명 (morgan.php 단일 소스)
 $item_type_names = $mg['shop_type_labels'];
+
+// 관계 슬롯 확장권용: 내 캐릭터 목록 + 관계 슬롯 정보
+$_relslot_chars = array();
+if ($is_member) {
+    $_rs_result = sql_query("SELECT ch_id, ch_name, ch_thumb FROM {$g5['mg_character_table']}
+                             WHERE mb_id = '{$member['mb_id']}' AND ch_state = 'approved' ORDER BY ch_id");
+    if ($_rs_result) {
+        while ($_rs_row = sql_fetch_array($_rs_result)) {
+            $_rs_row['rel_count'] = mg_get_relation_count($_rs_row['ch_id']);
+            $_rs_row['rel_max'] = mg_get_max_relations($_rs_row['ch_id']);
+            $_relslot_chars[] = $_rs_row;
+        }
+    }
+}
 ?>
 
 <div class="mg-inner">
@@ -328,6 +342,22 @@ $item_type_names = $mg['shop_type_labels'];
                 <div style="display:flex;gap:0.25rem;align-items:center;">
                     <span class="text-xs text-mg-text-muted" style="flex:1;text-align:center;">의뢰 등록 시 자동 사용</span>
                 </div>
+                <?php } elseif ($item['si_type'] === 'concierge_direct_pick') { ?>
+                <div style="display:flex;gap:0.25rem;align-items:center;">
+                    <span class="text-xs text-mg-text-muted" style="flex:1;text-align:center;">추첨 시 사용 가능</span>
+                </div>
+                <?php } elseif ($item['si_type'] === 'relation_slot') { ?>
+                <button type="button" onclick="openRelSlotModal(<?php echo $item['si_id']; ?>, '<?php echo htmlspecialchars(addslashes($item['si_name']), ENT_QUOTES); ?>')" class="w-full btn-primary text-sm font-medium py-2 rounded-lg transition-colors">
+                    캐릭터에 사용
+                </button>
+                <?php } elseif ($item['si_type'] === 'radio_song') { ?>
+                <button type="button" onclick="openRadioSongModal(<?php echo $item['si_id']; ?>)" class="w-full btn-primary text-sm font-medium py-2 rounded-lg transition-colors">
+                    🎵 노래 신청
+                </button>
+                <?php } elseif ($item['si_type'] === 'radio_ment') { ?>
+                <button type="button" onclick="openRadioMentModal(<?php echo $item['si_id']; ?>)" class="w-full btn-primary text-sm font-medium py-2 rounded-lg transition-colors">
+                    💬 멘트 신청
+                </button>
                 <?php } else { ?>
                 <div style="display:flex;gap:0.25rem;align-items:center;">
                     <span class="text-xs text-mg-text-muted" style="flex:1;text-align:center;">사용 불가</span>
@@ -400,6 +430,109 @@ $item_type_names = $mg['shop_type_labels'];
         <div style="display:flex;gap:0.5rem;">
             <button type="button" onclick="closeGiftModal()" style="flex:1;padding:0.6rem;background:var(--mg-bg-tertiary);color:var(--mg-text-secondary);border:none;border-radius:0.5rem;cursor:pointer;font-size:0.9rem;">취소</button>
             <button type="button" id="gift-submit-btn" onclick="submitGift()" style="flex:1;padding:0.6rem;background:var(--mg-button);color:var(--mg-button-text);border:none;border-radius:0.5rem;cursor:pointer;font-size:0.9rem;font-weight:500;">선물 보내기</button>
+        </div>
+    </div>
+</div>
+
+<!-- 노래 신청 모달 -->
+<div id="radio-song-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;">
+    <div style="background:var(--mg-bg-secondary);border-radius:0.75rem;padding:1.5rem;width:90%;max-width:440px;max-height:90vh;overflow-y:auto;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+            <h3 style="font-size:1.1rem;font-weight:600;color:var(--mg-text-primary);display:flex;align-items:center;gap:0.5rem;">
+                🎵 노래 신청
+            </h3>
+            <button type="button" onclick="closeRadioModal('song')" style="color:var(--mg-text-muted);font-size:1.5rem;line-height:1;background:none;border:none;cursor:pointer;">&times;</button>
+        </div>
+
+        <div style="margin-bottom:1rem;">
+            <label style="display:block;font-size:0.85rem;color:var(--mg-text-secondary);margin-bottom:0.25rem;">YouTube URL <span style="color:var(--mg-error);">*</span></label>
+            <input type="text" id="rs-youtube-url" placeholder="https://www.youtube.com/watch?v=..." style="width:100%;padding:0.5rem 0.75rem;background:var(--mg-bg-tertiary);border:1px solid transparent;border-radius:0.5rem;color:var(--mg-text-primary);font-size:0.9rem;outline:none;" onfocus="this.style.borderColor='var(--mg-accent)'" onblur="this.style.borderColor='transparent'">
+        </div>
+
+        <div style="margin-bottom:1rem;">
+            <label style="display:block;font-size:0.85rem;color:var(--mg-text-secondary);margin-bottom:0.25rem;">곡 제목 <span style="color:var(--mg-error);">*</span></label>
+            <input type="text" id="rs-title" placeholder="곡 제목을 입력해주세요" maxlength="200" style="width:100%;padding:0.5rem 0.75rem;background:var(--mg-bg-tertiary);border:1px solid transparent;border-radius:0.5rem;color:var(--mg-text-primary);font-size:0.9rem;outline:none;" onfocus="this.style.borderColor='var(--mg-accent)'" onblur="this.style.borderColor='transparent'">
+        </div>
+
+        <div style="padding:0.75rem;background:var(--mg-bg-primary);border-radius:0.5rem;margin-bottom:1rem;font-size:0.75rem;color:var(--mg-text-muted);line-height:1.5;">
+            ⚠️ 관리자 검수에 따라 신청곡이 반영되지 않을 수 있습니다.<br>
+            신청 시 신청권 1개가 소모됩니다.
+        </div>
+
+        <div style="display:flex;gap:0.5rem;">
+            <button type="button" onclick="closeRadioModal('song')" style="flex:1;padding:0.6rem;background:var(--mg-bg-tertiary);color:var(--mg-text-secondary);border:none;border-radius:0.5rem;cursor:pointer;font-size:0.9rem;">취소</button>
+            <button type="button" id="rs-submit-btn" onclick="submitRadioSong()" style="flex:1;padding:0.6rem;background:var(--mg-button);color:var(--mg-button-text);border:none;border-radius:0.5rem;cursor:pointer;font-size:0.9rem;font-weight:500;">신청하기</button>
+        </div>
+    </div>
+</div>
+
+<!-- 멘트 신청 모달 -->
+<div id="radio-ment-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;">
+    <div style="background:var(--mg-bg-secondary);border-radius:0.75rem;padding:1.5rem;width:90%;max-width:440px;max-height:90vh;overflow-y:auto;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+            <h3 style="font-size:1.1rem;font-weight:600;color:var(--mg-text-primary);display:flex;align-items:center;gap:0.5rem;">
+                💬 라디오 멘트 신청
+            </h3>
+            <button type="button" onclick="closeRadioModal('ment')" style="color:var(--mg-text-muted);font-size:1.5rem;line-height:1;background:none;border:none;cursor:pointer;">&times;</button>
+        </div>
+
+        <div style="margin-bottom:1rem;">
+            <label style="display:block;font-size:0.85rem;color:var(--mg-text-secondary);margin-bottom:0.25rem;">멘트 내용 <span style="color:var(--mg-error);">*</span></label>
+            <textarea id="rm-content" rows="4" maxlength="200" placeholder="라디오에서 읽어줄 멘트를 입력해주세요" style="width:100%;padding:0.5rem 0.75rem;background:var(--mg-bg-tertiary);border:1px solid transparent;border-radius:0.5rem;color:var(--mg-text-primary);font-size:0.9rem;resize:vertical;outline:none;" onfocus="this.style.borderColor='var(--mg-accent)'" onblur="this.style.borderColor='transparent'"></textarea>
+            <p id="rm-char-count" style="font-size:0.75rem;color:var(--mg-text-muted);text-align:right;margin-top:0.25rem;">0 / 200</p>
+        </div>
+
+        <div style="padding:0.75rem;background:var(--mg-bg-primary);border-radius:0.5rem;margin-bottom:1rem;font-size:0.75rem;color:var(--mg-text-muted);line-height:1.5;">
+            ⚠️ 관리자 검수에 따라 멘트가 반영되지 않을 수 있습니다.<br>
+            신청 시 멘트권 1개가 소모됩니다.
+        </div>
+
+        <div style="display:flex;gap:0.5rem;">
+            <button type="button" onclick="closeRadioModal('ment')" style="flex:1;padding:0.6rem;background:var(--mg-bg-tertiary);color:var(--mg-text-secondary);border:none;border-radius:0.5rem;cursor:pointer;font-size:0.9rem;">취소</button>
+            <button type="button" id="rm-submit-btn" onclick="submitRadioMent()" style="flex:1;padding:0.6rem;background:var(--mg-button);color:var(--mg-button-text);border:none;border-radius:0.5rem;cursor:pointer;font-size:0.9rem;font-weight:500;">신청하기</button>
+        </div>
+    </div>
+</div>
+
+<!-- 관계 슬롯 확장 - 캐릭터 선택 모달 -->
+<div id="relslot-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;">
+    <div style="background:var(--mg-bg-secondary);border-radius:0.75rem;padding:1.5rem;width:90%;max-width:440px;max-height:90vh;overflow-y:auto;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+            <h3 style="font-size:1.1rem;font-weight:600;color:var(--mg-text-primary);display:flex;align-items:center;gap:0.5rem;">
+                관계 슬롯 사용
+            </h3>
+            <button type="button" onclick="closeRelSlotModal()" style="color:var(--mg-text-muted);font-size:1.5rem;line-height:1;background:none;border:none;cursor:pointer;">&times;</button>
+        </div>
+
+        <div id="relslot-item-name" style="padding:0.75rem;background:var(--mg-bg-primary);border-radius:0.5rem;margin-bottom:1rem;font-size:0.9rem;color:var(--mg-text-primary);font-weight:500;"></div>
+
+        <div style="margin-bottom:1rem;">
+            <label style="display:block;font-size:0.85rem;color:var(--mg-text-secondary);margin-bottom:0.5rem;">슬롯을 추가할 캐릭터 선택</label>
+            <?php if (empty($_relslot_chars)) { ?>
+            <p style="font-size:0.85rem;color:var(--mg-text-muted);padding:1rem;text-align:center;">승인된 캐릭터가 없습니다.</p>
+            <?php } else { ?>
+            <div style="display:flex;flex-direction:column;gap:0.5rem;" id="relslot-char-list">
+                <?php foreach ($_relslot_chars as $_rsc) { ?>
+                <label style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem;background:var(--mg-bg-primary);border-radius:0.5rem;cursor:pointer;border:2px solid transparent;transition:border-color 0.15s;" class="relslot-char-option" onmouseenter="this.style.borderColor='var(--mg-bg-tertiary)'" onmouseleave="if(!this.querySelector('input').checked)this.style.borderColor='transparent'">
+                    <input type="radio" name="relslot_ch_id" value="<?php echo $_rsc['ch_id']; ?>" style="accent-color:var(--mg-accent);width:1rem;height:1rem;flex-shrink:0;">
+                    <?php if ($_rsc['ch_thumb']) { ?>
+                    <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.$_rsc['ch_thumb']; ?>" style="width:2rem;height:2rem;border-radius:50%;object-fit:cover;flex-shrink:0;" alt="">
+                    <?php } else { ?>
+                    <div style="width:2rem;height:2rem;border-radius:50%;background:var(--mg-bg-tertiary);display:flex;align-items:center;justify-content:center;color:var(--mg-text-muted);font-size:0.75rem;flex-shrink:0;">?</div>
+                    <?php } ?>
+                    <div style="flex:1;min-width:0;">
+                        <span style="font-size:0.9rem;color:var(--mg-text-primary);font-weight:500;"><?php echo htmlspecialchars($_rsc['ch_name']); ?></span>
+                        <span style="font-size:0.75rem;color:var(--mg-text-muted);margin-left:0.5rem;">관계 <?php echo $_rsc['rel_count']; ?>/<?php echo $_rsc['rel_max']; ?></span>
+                    </div>
+                </label>
+                <?php } ?>
+            </div>
+            <?php } ?>
+        </div>
+
+        <div style="display:flex;gap:0.5rem;">
+            <button type="button" onclick="closeRelSlotModal()" style="flex:1;padding:0.6rem;background:var(--mg-bg-tertiary);color:var(--mg-text-secondary);border:none;border-radius:0.5rem;cursor:pointer;font-size:0.9rem;">취소</button>
+            <button type="button" id="relslot-submit-btn" onclick="submitRelSlot()" style="flex:1;padding:0.6rem;background:var(--mg-button);color:var(--mg-button-text);border:none;border-radius:0.5rem;cursor:pointer;font-size:0.9rem;font-weight:500;">사용</button>
         </div>
     </div>
 </div>
@@ -518,6 +651,173 @@ document.getElementById('gift-mb-id-to').addEventListener('input', function() {
         .catch(function() { info.textContent = ''; });
     }, 400);
 });
+
+// ─── 라디오 신청 모달 ───
+var _radioSiId = 0;
+
+function openRadioSongModal(si_id) {
+    _radioSiId = si_id;
+    document.getElementById('rs-youtube-url').value = '';
+    document.getElementById('rs-title').value = '';
+    document.getElementById('radio-song-modal').style.display = 'flex';
+}
+
+function openRadioMentModal(si_id) {
+    _radioSiId = si_id;
+    document.getElementById('rm-content').value = '';
+    document.getElementById('rm-char-count').textContent = '0 / 200';
+    document.getElementById('radio-ment-modal').style.display = 'flex';
+}
+
+function closeRadioModal(type) {
+    document.getElementById('radio-' + type + '-modal').style.display = 'none';
+    _radioSiId = 0;
+}
+
+// 멘트 글자수 카운트
+document.getElementById('rm-content').addEventListener('input', function() {
+    document.getElementById('rm-char-count').textContent = this.value.length + ' / 200';
+});
+
+// 모달 외부 클릭 닫기
+document.getElementById('radio-song-modal').addEventListener('click', function(e) {
+    if (e.target === this && document._mgMdTarget === this) closeRadioModal('song');
+});
+document.getElementById('radio-ment-modal').addEventListener('click', function(e) {
+    if (e.target === this && document._mgMdTarget === this) closeRadioModal('ment');
+});
+
+function submitRadioSong() {
+    var url = document.getElementById('rs-youtube-url').value.trim();
+    var title = document.getElementById('rs-title').value.trim();
+    if (!url || !title) {
+        alert('YouTube URL과 곡 제목을 모두 입력해주세요.');
+        return;
+    }
+    var btn = document.getElementById('rs-submit-btn');
+    btn.disabled = true;
+    btn.textContent = '처리 중...';
+
+    fetch('<?php echo G5_BBS_URL; ?>/radio_api.php?action=request_song', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ youtube_url: url, title: title })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            alert(data.message);
+            closeRadioModal('song');
+            location.reload();
+        } else {
+            alert(data.message);
+            btn.disabled = false;
+            btn.textContent = '신청하기';
+        }
+    })
+    .catch(function() {
+        alert('오류가 발생했습니다.');
+        btn.disabled = false;
+        btn.textContent = '신청하기';
+    });
+}
+
+function submitRadioMent() {
+    var content = document.getElementById('rm-content').value.trim();
+    if (!content) {
+        alert('멘트 내용을 입력해주세요.');
+        return;
+    }
+    var btn = document.getElementById('rm-submit-btn');
+    btn.disabled = true;
+    btn.textContent = '처리 중...';
+
+    fetch('<?php echo G5_BBS_URL; ?>/radio_api.php?action=request_ment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: content })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            alert(data.message);
+            closeRadioModal('ment');
+            location.reload();
+        } else {
+            alert(data.message);
+            btn.disabled = false;
+            btn.textContent = '신청하기';
+        }
+    })
+    .catch(function() {
+        alert('오류가 발생했습니다.');
+        btn.disabled = false;
+        btn.textContent = '신청하기';
+    });
+}
+
+// ─── 관계 슬롯 모달 ───
+var _relSlotSiId = 0;
+
+function openRelSlotModal(si_id, itemName) {
+    _relSlotSiId = si_id;
+    document.getElementById('relslot-item-name').textContent = itemName;
+    // 라디오 버튼 초기화
+    var radios = document.querySelectorAll('input[name="relslot_ch_id"]');
+    radios.forEach(function(r) { r.checked = false; r.closest('label').style.borderColor = 'transparent'; });
+    document.getElementById('relslot-modal').style.display = 'flex';
+}
+
+function closeRelSlotModal() {
+    document.getElementById('relslot-modal').style.display = 'none';
+    _relSlotSiId = 0;
+}
+
+// 라디오 선택 시 하이라이트
+document.querySelectorAll('.relslot-char-option input').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+        document.querySelectorAll('.relslot-char-option').forEach(function(l) { l.style.borderColor = 'transparent'; });
+        if (this.checked) this.closest('label').style.borderColor = 'var(--mg-accent)';
+    });
+});
+
+document.getElementById('relslot-modal').addEventListener('click', function(e) {
+    if (e.target === this && document._mgMdTarget === this) closeRelSlotModal();
+});
+
+function submitRelSlot() {
+    var selected = document.querySelector('input[name="relslot_ch_id"]:checked');
+    if (!selected) {
+        alert('캐릭터를 선택해주세요.');
+        return;
+    }
+    var btn = document.getElementById('relslot-submit-btn');
+    btn.disabled = true;
+    btn.textContent = '처리 중...';
+
+    fetch('<?php echo G5_BBS_URL; ?>/inventory_use.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'action=use&si_id=' + _relSlotSiId + '&ch_id=' + selected.value
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            alert(data.message);
+            closeRelSlotModal();
+            location.reload();
+        } else {
+            alert(data.message);
+            btn.disabled = false;
+            btn.textContent = '사용';
+        }
+    })
+    .catch(function() {
+        alert('오류가 발생했습니다.');
+        btn.disabled = false;
+        btn.textContent = '사용';
+    });
+}
 
 function submitGift() {
     var mbIdTo = document.getElementById('gift-mb-id-to').value.trim();

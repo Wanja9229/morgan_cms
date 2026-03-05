@@ -25,6 +25,21 @@ $ments = array();
 $result = sql_query("SELECT * FROM {$g5['mg_radio_ments_table']} ORDER BY sort_order ASC, ment_id ASC");
 if ($result) while ($row = sql_fetch_array($result)) $ments[] = $row;
 
+// 신청 대기
+$pending_songs = array();
+$result = sql_query("SELECT r.*, m.mb_nick FROM {$g5['mg_radio_requests_table']} r
+                     LEFT JOIN {$g5['member_table']} m ON r.mb_id = m.mb_id
+                     WHERE r.rr_type = 'song' AND r.rr_status = 'pending'
+                     ORDER BY r.rr_created_at ASC");
+if ($result) while ($row = sql_fetch_array($result)) $pending_songs[] = $row;
+
+$pending_ments = array();
+$result = sql_query("SELECT r.*, m.mb_nick FROM {$g5['mg_radio_requests_table']} r
+                     LEFT JOIN {$g5['member_table']} m ON r.mb_id = m.mb_id
+                     WHERE r.rr_type = 'ment' AND r.rr_status = 'pending'
+                     ORDER BY r.rr_created_at ASC");
+if ($result) while ($row = sql_fetch_array($result)) $pending_ments[] = $row;
+
 // OpenWeatherMap 국가별 수도 목록
 $weather_cities = array(
     '동아시아' => array(
@@ -117,8 +132,8 @@ require_once __DIR__.'/_head.php';
 <!-- 탭 바 -->
 <div class="mg-tabs" style="margin-bottom:1.5rem;">
     <a href="?tab=config" class="mg-tab <?php echo $tab == 'config' ? 'active' : ''; ?>">설정</a>
-    <a href="?tab=playlist" class="mg-tab <?php echo $tab == 'playlist' ? 'active' : ''; ?>">플레이리스트 (<?php echo count($tracks); ?>)</a>
-    <a href="?tab=ments" class="mg-tab <?php echo $tab == 'ments' ? 'active' : ''; ?>">멘트 (<?php echo count($ments); ?>)</a>
+    <a href="?tab=playlist" class="mg-tab <?php echo $tab == 'playlist' ? 'active' : ''; ?>">플레이리스트 (<?php echo count($tracks); ?>)<?php if (count($pending_songs)) { ?> <span style="background:var(--mg-error);color:#fff;font-size:0.7rem;padding:1px 6px;border-radius:9px;margin-left:4px;"><?php echo count($pending_songs); ?></span><?php } ?></a>
+    <a href="?tab=ments" class="mg-tab <?php echo $tab == 'ments' ? 'active' : ''; ?>">멘트 (<?php echo count($ments); ?>)<?php if (count($pending_ments)) { ?> <span style="background:var(--mg-error);color:#fff;font-size:0.7rem;padding:1px 6px;border-radius:9px;margin-left:4px;"><?php echo count($pending_ments); ?></span><?php } ?></a>
 </div>
 
 <?php if ($tab == 'config') { ?>
@@ -283,6 +298,50 @@ function toggleWeatherMode(mode) {
 
 <?php } elseif ($tab == 'playlist') { ?>
 <!-- ====== 플레이리스트 탭 ====== -->
+
+<?php if (!empty($pending_songs)) { ?>
+<div class="mg-card" style="margin-bottom:1rem;border:1px solid var(--mg-warning);">
+    <div class="mg-card-header" style="background:var(--mg-warning);color:#000;">🔔 신청곡 대기 (<?php echo count($pending_songs); ?>건)</div>
+    <div class="mg-card-body" style="padding:0;">
+        <table class="mg-table">
+            <thead>
+                <tr>
+                    <th style="width:100px;">신청자</th>
+                    <th>제목</th>
+                    <th style="width:110px;">Video ID</th>
+                    <th style="width:100px;">신청일</th>
+                    <th style="width:120px;">관리</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($pending_songs as $ps) { ?>
+                <tr>
+                    <td><?php echo htmlspecialchars($ps['mb_nick'] ?? $ps['mb_id']); ?></td>
+                    <td><?php echo htmlspecialchars($ps['rr_title']); ?></td>
+                    <td><code style="font-size:0.75rem;"><?php echo htmlspecialchars($ps['rr_youtube_vid']); ?></code></td>
+                    <td style="font-size:0.8rem;"><?php echo substr($ps['rr_created_at'], 5, 11); ?></td>
+                    <td>
+                        <form method="post" action="./radio_update.php" style="display:inline;">
+                            <input type="hidden" name="token" value="<?php echo $token; ?>">
+                            <input type="hidden" name="action" value="approve_song_request">
+                            <input type="hidden" name="rr_id" value="<?php echo $ps['rr_id']; ?>">
+                            <button type="submit" class="mg-btn mg-btn-sm mg-btn-primary" title="승인 → 플레이리스트에 추가">✅</button>
+                        </form>
+                        <form method="post" action="./radio_update.php" style="display:inline;" onsubmit="return confirm('이 신청을 거절하시겠습니까?');">
+                            <input type="hidden" name="token" value="<?php echo $token; ?>">
+                            <input type="hidden" name="action" value="reject_request">
+                            <input type="hidden" name="rr_id" value="<?php echo $ps['rr_id']; ?>">
+                            <button type="submit" class="mg-btn mg-btn-sm mg-btn-danger" title="거절">❌</button>
+                        </form>
+                    </td>
+                </tr>
+                <?php } ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+<?php } ?>
+
 <div class="mg-card">
     <div class="mg-card-header">곡 추가</div>
     <div class="mg-card-body">
@@ -314,6 +373,7 @@ function toggleWeatherMode(mode) {
                     <th style="width:50px;">순서</th>
                     <th>제목</th>
                     <th style="width:120px;">Video ID</th>
+                    <th style="width:100px;">만료</th>
                     <th style="width:60px;">상태</th>
                     <th style="width:100px;">관리</th>
                 </tr>
@@ -326,6 +386,15 @@ function toggleWeatherMode(mode) {
                     </td>
                     <td><?php echo htmlspecialchars($t['title']); ?></td>
                     <td><code style="font-size:0.75rem;"><?php echo htmlspecialchars($t['youtube_vid']); ?></code></td>
+                    <td style="font-size:0.75rem;">
+                        <?php if (empty($t['expires_at'])) { ?>
+                            <span style="color:var(--mg-text-muted);">무기한</span>
+                        <?php } elseif (strtotime($t['expires_at']) > time()) { ?>
+                            <span style="color:var(--mg-text-secondary);"><?php echo date('m-d H:i', strtotime($t['expires_at'])); ?></span>
+                        <?php } else { ?>
+                            <span style="color:var(--mg-error);text-decoration:line-through;">만료됨</span>
+                        <?php } ?>
+                    </td>
                     <td>
                         <form method="post" action="./radio_update.php" style="display:inline;">
                             <input type="hidden" name="token" value="<?php echo $token; ?>">
@@ -373,6 +442,48 @@ function saveSortTracks() {
 
 <?php } elseif ($tab == 'ments') { ?>
 <!-- ====== 멘트 탭 ====== -->
+
+<?php if (!empty($pending_ments)) { ?>
+<div class="mg-card" style="margin-bottom:1rem;border:1px solid var(--mg-warning);">
+    <div class="mg-card-header" style="background:var(--mg-warning);color:#000;">🔔 신청 멘트 대기 (<?php echo count($pending_ments); ?>건)</div>
+    <div class="mg-card-body" style="padding:0;">
+        <table class="mg-table">
+            <thead>
+                <tr>
+                    <th style="width:100px;">신청자</th>
+                    <th>멘트 내용</th>
+                    <th style="width:100px;">신청일</th>
+                    <th style="width:120px;">관리</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($pending_ments as $pm) { ?>
+                <tr>
+                    <td><?php echo htmlspecialchars($pm['mb_nick'] ?? $pm['mb_id']); ?></td>
+                    <td><?php echo htmlspecialchars($pm['rr_content']); ?></td>
+                    <td style="font-size:0.8rem;"><?php echo substr($pm['rr_created_at'], 5, 11); ?></td>
+                    <td>
+                        <form method="post" action="./radio_update.php" style="display:inline;">
+                            <input type="hidden" name="token" value="<?php echo $token; ?>">
+                            <input type="hidden" name="action" value="approve_ment_request">
+                            <input type="hidden" name="rr_id" value="<?php echo $pm['rr_id']; ?>">
+                            <button type="submit" class="mg-btn mg-btn-sm mg-btn-primary" title="승인 → 멘트 목록에 추가">✅</button>
+                        </form>
+                        <form method="post" action="./radio_update.php" style="display:inline;" onsubmit="return confirm('이 신청을 거절하시겠습니까?');">
+                            <input type="hidden" name="token" value="<?php echo $token; ?>">
+                            <input type="hidden" name="action" value="reject_request">
+                            <input type="hidden" name="rr_id" value="<?php echo $pm['rr_id']; ?>">
+                            <button type="submit" class="mg-btn mg-btn-sm mg-btn-danger" title="거절">❌</button>
+                        </form>
+                    </td>
+                </tr>
+                <?php } ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+<?php } ?>
+
 <div class="mg-card">
     <div class="mg-card-header">멘트 추가</div>
     <div class="mg-card-body">
@@ -399,6 +510,7 @@ function saveSortTracks() {
                 <tr>
                     <th style="width:50px;">순서</th>
                     <th>내용</th>
+                    <th style="width:100px;">만료</th>
                     <th style="width:60px;">상태</th>
                     <th style="width:100px;">관리</th>
                 </tr>
@@ -410,6 +522,15 @@ function saveSortTracks() {
                         <input type="number" value="<?php echo (int)$m['sort_order']; ?>" min="0" style="width:50px;padding:2px 4px;background:var(--mg-bg-tertiary);border:1px solid var(--mg-bg-tertiary);border-radius:4px;color:var(--mg-text-primary);text-align:center;" data-ment-id="<?php echo $m['ment_id']; ?>" class="sort-ment-input">
                     </td>
                     <td><?php echo htmlspecialchars($m['content']); ?></td>
+                    <td style="font-size:0.75rem;">
+                        <?php if (empty($m['expires_at'])) { ?>
+                            <span style="color:var(--mg-text-muted);">무기한</span>
+                        <?php } elseif (strtotime($m['expires_at']) > time()) { ?>
+                            <span style="color:var(--mg-text-secondary);"><?php echo date('m-d H:i', strtotime($m['expires_at'])); ?></span>
+                        <?php } else { ?>
+                            <span style="color:var(--mg-error);text-decoration:line-through;">만료됨</span>
+                        <?php } ?>
+                    </td>
                     <td>
                         <form method="post" action="./radio_update.php" style="display:inline;">
                             <input type="hidden" name="token" value="<?php echo $token; ?>">

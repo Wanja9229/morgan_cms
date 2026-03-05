@@ -81,6 +81,7 @@ $config_keys = array(
     'attendance_point',
     'character_create_point',
     'max_characters',
+    'max_relations',
     'show_main_character',
     'use_side',
     'use_class',
@@ -177,10 +178,10 @@ foreach ($config_keys as $key) {
     $cnt = isset($row['cnt']) ? (int)$row['cnt'] : 0;
     if ($cnt > 0) {
         // 업데이트
-        $sql = "UPDATE {$g5['mg_config_table']} SET cf_value = '".sql_escape_string($value)."' WHERE cf_key = '".sql_escape_string($key)."'";
+        $sql = "UPDATE {$g5['mg_config_table']} SET cf_value = '{$value}' WHERE cf_key = '".sql_escape_string($key)."'";
     } else {
         // 삽입
-        $sql = "INSERT INTO {$g5['mg_config_table']} (cf_key, cf_value) VALUES ('".sql_escape_string($key)."', '".sql_escape_string($value)."')";
+        $sql = "INSERT INTO {$g5['mg_config_table']} (cf_key, cf_value) VALUES ('".sql_escape_string($key)."', '{$value}')";
     }
     sql_query($sql);
 }

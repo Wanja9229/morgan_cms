@@ -30,7 +30,7 @@ if ($w === 'd') {
         alert('시스템 게시판은 삭제할 수 없습니다.', $redirect_url);
     }
 
-    $board = sql_fetch("SELECT * FROM {$g5['board_table']} WHERE bo_table = '".sql_real_escape_string($bo_table)."'");
+    $board = sql_fetch("SELECT * FROM {$g5['board_table']} WHERE bo_table = '{$bo_table}'");
     if (!$board['bo_table']) {
         alert('존재하지 않는 게시판입니다.');
     }
@@ -102,7 +102,7 @@ $fields = array(
 
 if ($w === 'u' && $old_bo_table) {
     // 수정
-    $board = sql_fetch("SELECT * FROM {$g5['board_table']} WHERE bo_table = '".sql_real_escape_string($old_bo_table)."'");
+    $board = sql_fetch("SELECT * FROM {$g5['board_table']} WHERE bo_table = '{$old_bo_table}'");
     if (!$board['bo_table']) {
         alert('존재하지 않는 게시판입니다.');
     }
@@ -110,29 +110,27 @@ if ($w === 'u' && $old_bo_table) {
     $set_clause = array();
     foreach ($fields as $key => $value) {
         if (is_string($value)) {
-            $set_clause[] = "{$key} = '".sql_real_escape_string($value)."'";
+            $set_clause[] = "{$key} = '{$value}'";
         } else {
             $set_clause[] = "{$key} = {$value}";
         }
     }
 
-    sql_query("UPDATE {$g5['board_table']} SET ".implode(', ', $set_clause)." WHERE bo_table = '".sql_real_escape_string($old_bo_table)."'");
+    sql_query("UPDATE {$g5['board_table']} SET ".implode(', ', $set_clause)." WHERE bo_table = '{$old_bo_table}'");
 
     // 주사위 설정 저장 (mg_board_reward 테이블)
     $br_dice_use = isset($_POST['br_dice_use']) ? 1 : 0;
     $br_dice_once = isset($_POST['br_dice_once']) ? 1 : 0;
     $br_dice_max = max(1, (int)($_POST['br_dice_max'] ?? 100));
-    $bo_esc = sql_real_escape_string($old_bo_table);
-
     sql_query("INSERT INTO {$g5['mg_board_reward_table']} (bo_table, br_dice_use, br_dice_once, br_dice_max)
-               VALUES ('{$bo_esc}', {$br_dice_use}, {$br_dice_once}, {$br_dice_max})
+               VALUES ('{$old_bo_table}', {$br_dice_use}, {$br_dice_once}, {$br_dice_max})
                ON DUPLICATE KEY UPDATE br_dice_use = {$br_dice_use}, br_dice_once = {$br_dice_once}, br_dice_max = {$br_dice_max}");
 
     alert('게시판이 수정되었습니다.', './board_form.php?w=u&bo_table='.$old_bo_table);
 
 } else {
     // 추가
-    $exists = sql_fetch("SELECT bo_table FROM {$g5['board_table']} WHERE bo_table = '".sql_real_escape_string($bo_table)."'");
+    $exists = sql_fetch("SELECT bo_table FROM {$g5['board_table']} WHERE bo_table = '{$bo_table}'");
     if ($exists['bo_table']) {
         alert('이미 존재하는 게시판 테이블명입니다.');
     }
@@ -211,7 +209,7 @@ if ($w === 'u' && $old_bo_table) {
     foreach ($fields as $key => $value) {
         $columns[] = $key;
         if (is_string($value)) {
-            $values[] = "'".sql_real_escape_string($value)."'";
+            $values[] = "'{$value}'";
         } else {
             $values[] = $value;
         }
@@ -229,10 +227,8 @@ if ($w === 'u' && $old_bo_table) {
     $br_dice_use = isset($_POST['br_dice_use']) ? 1 : 0;
     $br_dice_once = isset($_POST['br_dice_once']) ? 1 : 0;
     $br_dice_max = max(1, (int)($_POST['br_dice_max'] ?? 100));
-    $bo_esc = sql_real_escape_string($bo_table);
-
     sql_query("INSERT INTO {$g5['mg_board_reward_table']} (bo_table, br_dice_use, br_dice_once, br_dice_max)
-               VALUES ('{$bo_esc}', {$br_dice_use}, {$br_dice_once}, {$br_dice_max})
+               VALUES ('{$bo_table}', {$br_dice_use}, {$br_dice_once}, {$br_dice_max})
                ON DUPLICATE KEY UPDATE br_dice_use = {$br_dice_use}, br_dice_once = {$br_dice_once}, br_dice_max = {$br_dice_max}");
 
     alert('게시판이 생성되었습니다.', './board_form.php?w=u&bo_table='.$bo_table);

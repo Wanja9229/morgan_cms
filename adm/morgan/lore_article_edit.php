@@ -601,6 +601,8 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('#sections-container .section-block').forEach(function(block) {
         initSectionEditor(block);
     });
+    // 에디터 초기화 후 스크롤 최상단으로 복원
+    setTimeout(function() { window.scrollTo(0, 0); }, 100);
 });
 
 // === HTML 툴바 태그 삽입 ===

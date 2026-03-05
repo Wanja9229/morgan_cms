@@ -19,7 +19,15 @@ $ch_name = isset($_POST['ch_name']) ? clean_xss_tags(trim($_POST['ch_name'])) : 
 $side_id = isset($_POST['side_id']) ? (int)$_POST['side_id'] : 0;
 $class_id = isset($_POST['class_id']) ? (int)$_POST['class_id'] : 0;
 $ch_main = isset($_POST['ch_main']) ? 1 : 0;
-$profile = isset($_POST['profile']) ? $_POST['profile'] : array();
+$profile_raw = isset($_POST['profile']) ? $_POST['profile'] : array();
+$profile = array();
+foreach ($profile_raw as $k => $v) {
+    if (is_array($v)) {
+        $profile[$k] = array_map('stripslashes', $v);
+    } else {
+        $profile[$k] = stripslashes($v);
+    }
+}
 
 $btn_save = isset($_POST['btn_save']);
 $btn_submit = isset($_POST['btn_submit']);
@@ -262,16 +270,16 @@ if ($btn_submit) {
 if ($is_edit) {
     // 수정
     $sql = "UPDATE {$g5['mg_character_table']} SET
-            ch_name = '".sql_real_escape_string($ch_name)."',
+            ch_name = '{$ch_name}',
             side_id = ".($side_id ?: 'NULL').",
             class_id = ".($class_id ?: 'NULL').",
             ch_main = {$ch_main},
             ch_thumb = '".sql_real_escape_string($ch_thumb)."',
             ch_image = '".sql_real_escape_string($ch_image)."',
             ch_header = '".sql_real_escape_string($ch_header)."',
-            ch_profile_skin = '".sql_real_escape_string($ch_profile_skin)."',
-            ch_profile_bg = '".sql_real_escape_string($ch_profile_bg)."',
-            ch_profile_bg_color = '".sql_real_escape_string($ch_profile_bg_color)."',
+            ch_profile_skin = '{$ch_profile_skin}',
+            ch_profile_bg = '{$ch_profile_bg}',
+            ch_profile_bg_color = '{$ch_profile_bg_color}',
             ch_profile_bg_image = '".sql_real_escape_string($ch_profile_bg_image)."',
             ch_state = '{$ch_state}',
             ch_update = NOW()
@@ -292,16 +300,16 @@ if ($is_edit) {
 
     $sql = "INSERT INTO {$g5['mg_character_table']} SET
             mb_id = '{$member['mb_id']}',
-            ch_name = '".sql_real_escape_string($ch_name)."',
+            ch_name = '{$ch_name}',
             side_id = ".($side_id ?: 'NULL').",
             class_id = ".($class_id ?: 'NULL').",
             ch_main = {$ch_main},
             ch_thumb = '".sql_real_escape_string($ch_thumb)."',
             ch_image = '".sql_real_escape_string($ch_image)."',
             ch_header = '".sql_real_escape_string($ch_header)."',
-            ch_profile_skin = '".sql_real_escape_string($ch_profile_skin)."',
-            ch_profile_bg = '".sql_real_escape_string($ch_profile_bg)."',
-            ch_profile_bg_color = '".sql_real_escape_string($ch_profile_bg_color)."',
+            ch_profile_skin = '{$ch_profile_skin}',
+            ch_profile_bg = '{$ch_profile_bg}',
+            ch_profile_bg_color = '{$ch_profile_bg_color}',
             ch_profile_bg_image = '".sql_real_escape_string($ch_profile_bg_image)."',
             ch_state = '{$ch_state}',
             ch_datetime = NOW()";

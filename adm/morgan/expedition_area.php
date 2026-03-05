@@ -81,19 +81,19 @@ require_once __DIR__.'/_head.php';
         <span style="font-size:0.85rem;color:var(--mg-text-secondary);">유저 UI:</span>
         <div style="display:inline-flex;gap:4px;">
             <button type="button" id="btn-mode-list" onclick="setUiMode('list')" class="mg-btn mg-btn-sm <?php echo $ui_mode !== 'map' ? 'mg-btn-primary' : 'mg-btn-secondary'; ?>">카드 목록</button>
-            <button type="button" id="btn-mode-map" onclick="setUiMode('map')" class="mg-btn mg-btn-sm <?php echo $ui_mode === 'map' ? 'mg-btn-primary' : 'mg-btn-secondary'; ?>">파견 지도</button>
+            <button type="button" id="btn-mode-map" onclick="setUiMode('map')" class="mg-btn mg-btn-sm <?php echo $ui_mode === 'map' ? 'mg-btn-primary' : 'mg-btn-secondary'; ?>">이미지</button>
         </div>
     </div>
     <button type="button" class="mg-btn mg-btn-primary" onclick="openAreaModal()">파견지 추가</button>
 </div>
 
-<!-- 파견 지도 관리 (맵 모드일 때만 표시) -->
+<!-- 파견 이미지 관리 (이미지 모드일 때만 표시) -->
 <div id="map-section" style="display:<?php echo $ui_mode === 'map' ? 'block' : 'none'; ?>;">
     <!-- 맵 이미지 업로드 -->
     <div class="mg-card" style="margin-bottom:1rem;">
         <div class="mg-card-header">
-            <h3>파견 지도</h3>
-            <span style="font-size:0.8rem;color:var(--mg-text-muted);">파견 전용 지도 이미지 (세계관 맵과 별도)</span>
+            <h3>파견 이미지</h3>
+            <span style="font-size:0.8rem;color:var(--mg-text-muted);">파견지 배경 이미지</span>
         </div>
         <div class="mg-card-body">
             <?php if ($map_image) { ?>
@@ -104,7 +104,7 @@ require_once __DIR__.'/_head.php';
             <form id="map-upload-form" method="post" action="<?php echo G5_ADMIN_URL; ?>/morgan/expedition_area_update.php" enctype="multipart/form-data" style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;">
                 <input type="hidden" name="action" value="upload_map_image">
                 <div class="mg-form-group" style="margin-bottom:0;">
-                    <label class="mg-form-label" style="font-size:0.75rem;">지도 이미지 (JPG/PNG/WebP, 최대 <?php echo round(mg_upload_max_file() / 1024 / 1024); ?>MB)</label>
+                    <label class="mg-form-label" style="font-size:0.75rem;">지도 이미지 (JPG/PNG/WebP, 최대 <?php echo round(mg_upload_max_file() / 1024 / 1024); ?>MB, 권장 가로 <?php echo htmlspecialchars(mg_config('content_max_width', '72rem')); ?> 이하)</label>
                     <input type="file" name="map_image_file" accept="image/*" class="mg-form-input" style="width:280px;">
                 </div>
                 <button type="submit" class="mg-btn mg-btn-primary mg-btn-sm">업로드</button>
@@ -129,7 +129,7 @@ require_once __DIR__.'/_head.php';
             </div>
             <script>if(window.innerWidth<768)document.getElementById('map-mobile-notice').style.display='block';</script>
             <div id="map-editor" style="position:relative;cursor:crosshair;">
-                <img src="<?php echo htmlspecialchars($map_image); ?>" id="map-editor-img" style="display:block;width:100%;" alt="파견 지도" draggable="false">
+                <img src="<?php echo htmlspecialchars($map_image); ?>" id="map-editor-img" style="display:block;width:100%;" alt="파견 이미지" draggable="false">
                 <div id="map-editor-markers"></div>
             </div>
         </div>
@@ -751,9 +751,9 @@ function setUiMode(mode) {
     });
 }
 
-// === 파견 지도 이미지 삭제 ===
+// === 파견 이미지 삭제 ===
 function deleteMapImage() {
-    if (!confirm('파견 지도 이미지를 삭제하시겠습니까?\n맵 모드가 비활성화됩니다.')) return;
+    if (!confirm('파견 이미지를 삭제하시겠습니까?\n이미지 모드가 비활성화됩니다.')) return;
 
     var fd = new FormData();
     fd.append('action', 'delete_map_image');

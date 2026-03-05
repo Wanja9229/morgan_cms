@@ -147,7 +147,7 @@ include_once(G5_THEME_PATH.'/head.php');
                 <p class="text-sm text-mg-text-muted mt-0.5"><?php echo htmlspecialchars($era['le_period']); ?></p>
                 <?php } ?>
                 <?php if (!empty($era['le_desc'])) { ?>
-                <p class="text-sm text-mg-text-secondary mt-1"><?php echo htmlspecialchars($era['le_desc']); ?></p>
+                <p class="text-sm text-mg-text-secondary mt-1"><?php echo nl2br(htmlspecialchars($era['le_desc'])); ?></p>
                 <?php } ?>
             </div>
         </div>

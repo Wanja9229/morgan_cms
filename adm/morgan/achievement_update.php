@@ -55,12 +55,12 @@ if ($mode == 'save') {
     if (json_decode($ac_condition) === null) $ac_condition = '{}';
     if (json_decode($ac_reward) === null) $ac_reward = '{}';
 
-    $name_esc = sql_real_escape_string($ac_name);
-    $desc_esc = sql_real_escape_string($ac_desc);
-    $icon_esc = sql_real_escape_string($ac_icon);
-    $cat_esc = sql_real_escape_string($ac_category);
-    $cond_esc = sql_real_escape_string($ac_condition);
-    $reward_esc = sql_real_escape_string($ac_reward);
+    $name_esc = $ac_name;
+    $desc_esc = $ac_desc;
+    $icon_esc = $ac_icon;
+    $cat_esc = $ac_category;
+    $cond_esc = $ac_condition;
+    $reward_esc = $ac_reward;
 
     if ($ac_id > 0) {
         // 수정
@@ -176,9 +176,9 @@ if ($mode == 'save_tier') {
 
     if (json_decode($at_reward) === null) $at_reward = '{}';
 
-    $name_esc = sql_real_escape_string($at_name);
-    $icon_esc = sql_real_escape_string($at_icon);
-    $reward_esc = sql_real_escape_string($at_reward);
+    $name_esc = $at_name;
+    $icon_esc = $at_icon;
+    $reward_esc = $at_reward;
 
     if ($at_id > 0) {
         // 수정

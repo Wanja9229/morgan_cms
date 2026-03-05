@@ -43,6 +43,14 @@ switch ($action) {
             exit;
         }
 
+        // 신청자 슬롯 체크
+        $from_count = mg_get_relation_count($from_ch_id);
+        $from_max = mg_get_max_relations($from_ch_id);
+        if ($from_count >= $from_max) {
+            echo json_encode(array('success' => false, 'message' => '관계 슬롯이 부족합니다. (' . $from_count . '/' . $from_max . ')'));
+            exit;
+        }
+
         $result = mg_request_relation($from_ch_id, $to_ch_id, $label, $color, $memo);
         echo json_encode($result);
         break;
@@ -144,11 +152,10 @@ switch ($action) {
             echo json_encode(array());
             exit;
         }
-        $kw = sql_real_escape_string($keyword);
         $sql = "SELECT ch_id, ch_name, ch_thumb, mb_id
                 FROM {$g5['mg_character_table']}
                 WHERE ch_state = 'approved'
-                AND ch_name LIKE '%{$kw}%'
+                AND ch_name LIKE '%{$keyword}%'
                 ORDER BY ch_name
                 LIMIT 20";
         $result = sql_query($sql);

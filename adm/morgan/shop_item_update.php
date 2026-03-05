@@ -17,14 +17,14 @@ $si_id = isset($_POST['si_id']) ? (int)$_POST['si_id'] : 0;
 // 상품 등록/수정
 if ($mode == 'add' || $mode == 'edit') {
     $sc_id = isset($_POST['sc_id']) ? (int)$_POST['sc_id'] : 0;
-    $si_name = sql_real_escape_string(trim($_POST['si_name']));
-    $si_desc = sql_real_escape_string(trim($_POST['si_desc']));
+    $si_name = trim($_POST['si_name']);
+    $si_desc = trim($_POST['si_desc']);
     $si_price = (int)$_POST['si_price'];
-    $si_type = sql_real_escape_string($_POST['si_type']);
+    $si_type = trim($_POST['si_type']);
     $si_stock = (int)$_POST['si_stock'];
     $si_limit_per_user = (int)$_POST['si_limit_per_user'];
-    $si_sale_start = isset($_POST['si_sale_start']) && $_POST['si_sale_start'] ? "'" . sql_real_escape_string($_POST['si_sale_start']) . "'" : "NULL";
-    $si_sale_end = isset($_POST['si_sale_end']) && $_POST['si_sale_end'] ? "'" . sql_real_escape_string($_POST['si_sale_end']) . "'" : "NULL";
+    $si_sale_start = isset($_POST['si_sale_start']) && $_POST['si_sale_start'] ? "'" . trim($_POST['si_sale_start']) . "'" : "NULL";
+    $si_sale_end = isset($_POST['si_sale_end']) && $_POST['si_sale_end'] ? "'" . trim($_POST['si_sale_end']) . "'" : "NULL";
     $si_consumable = isset($_POST['si_consumable']) ? 1 : 0;
     $si_display = isset($_POST['si_display']) ? 1 : 0;
     $si_use = isset($_POST['si_use']) ? 1 : 0;
@@ -43,8 +43,9 @@ if ($mode == 'add' || $mode == 'edit') {
         alert('프로필 배경은 관리자 페이지에서 신규 등록할 수 없습니다.');
     }
 
-    // 효과 데이터 처리
+    // 효과 데이터 처리 (POST 값은 addslashes 적용 상태이므로 stripslashes 후 사용)
     $effect = isset($_POST['effect']) ? $_POST['effect'] : array();
+    array_walk_recursive($effect, function(&$val) { $val = stripslashes($val); });
     $effect_data = array();
 
     switch ($si_type) {
@@ -223,6 +224,9 @@ if ($mode == 'add' || $mode == 'edit') {
                 $effect_data['badge_icon'] = $badge_icon;
                 $effect_data['badge_color'] = $effect['badge_color'] ?? '#fbbf24';
             }
+            break;
+        case 'relation_slot':
+            $effect_data['slots'] = max(1, (int)($effect['slots'] ?? 1));
             break;
         default:
             if (!empty($effect['custom'])) {

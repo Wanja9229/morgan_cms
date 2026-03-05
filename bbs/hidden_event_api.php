@@ -100,7 +100,7 @@ switch ($action) {
             exit;
         }
 
-        $token_esc = sql_real_escape_string($token_id);
+        $token_esc = $token_id;
         $mb_id_esc = sql_real_escape_string($mb_id);
 
         // 토큰 조회 + 검증

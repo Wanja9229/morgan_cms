@@ -68,11 +68,9 @@ elseif ($action === 'update') {
         exit;
     }
 
-    $es_name_esc = sql_real_escape_string($es_name);
-    $es_desc_esc = sql_real_escape_string($es_desc);
     sql_query("UPDATE {$g5['mg_emoticon_set_table']}
-               SET es_name = '{$es_name_esc}',
-                   es_desc = '{$es_desc_esc}',
+               SET es_name = '{$es_name}',
+                   es_desc = '{$es_desc}',
                    es_price = {$es_price},
                    es_order = {$es_order},
                    es_use = {$es_use}
@@ -123,9 +121,8 @@ if (isset($_POST['em_codes']) && is_array($_POST['em_codes'])) {
         $em_id = (int)$em_id;
         $cv = mg_validate_emoticon_code($code);
         if ($em_id > 0 && $cv['valid']) {
-            $code_esc = sql_real_escape_string($cv['code']);
             sql_query("UPDATE {$g5['mg_emoticon_table']}
-                       SET em_code = '{$code_esc}'
+                       SET em_code = '{$cv['code']}'
                        WHERE em_id = {$em_id} AND es_id = {$es_id}");
         }
     }

@@ -108,8 +108,8 @@ if ($mode == 'settings') {
 // 지역 추가
 // ==========================================
 if ($mode == 'region_add') {
-    $mr_name = sql_real_escape_string(trim($_POST['mr_name'] ?? ''));
-    $mr_desc = sql_real_escape_string(trim($_POST['mr_desc'] ?? ''));
+    $mr_name = trim($_POST['mr_name'] ?? '');
+    $mr_desc = trim($_POST['mr_desc'] ?? '');
     $mr_use = isset($_POST['mr_use']) ? 1 : 0;
 
     if (!$mr_name) {
@@ -123,7 +123,7 @@ if ($mode == 'region_add') {
     sql_query("INSERT INTO {$g5['mg_map_region_table']} (mr_name, mr_desc, mr_order, mr_use) VALUES ('{$mr_name}', '{$mr_desc}', {$mr_order}, {$mr_use})");
     $mr_id = sql_insert_id();
 
-    // 이미지 업로드
+    // 이미지 업로드 (computed path from upload handler, keep escaping)
     if ($mr_id && isset($_FILES['mr_image_file']) && $_FILES['mr_image_file']['error'] === UPLOAD_ERR_OK) {
         $img_url = _upload_region_image($_FILES['mr_image_file'], $mr_id);
         if ($img_url) {
@@ -139,8 +139,8 @@ if ($mode == 'region_add') {
 // ==========================================
 if ($mode == 'region_edit') {
     $mr_id = (int)($_POST['mr_id'] ?? 0);
-    $mr_name = sql_real_escape_string(trim($_POST['mr_name'] ?? ''));
-    $mr_desc = sql_real_escape_string(trim($_POST['mr_desc'] ?? ''));
+    $mr_name = trim($_POST['mr_name'] ?? '');
+    $mr_desc = trim($_POST['mr_desc'] ?? '');
     $mr_use = isset($_POST['mr_use']) ? 1 : 0;
 
     if (!$mr_id) alert('잘못된 요청입니다.', './lore_map.php?tab=regions');

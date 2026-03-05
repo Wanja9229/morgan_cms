@@ -1,6 +1,6 @@
 <?php
 /**
- * Morgan Edition - 시설 관리
+ * Morgan Edition - 개척지 관리
  */
 
 $sub_menu = "801000";
@@ -25,7 +25,7 @@ while ($row = sql_fetch_array($result)) {
     $boards[] = $row;
 }
 
-$g5['title'] = '시설 관리';
+$g5['title'] = '개척지 관리';
 require_once __DIR__.'/_head.php';
 ?>
 
@@ -59,20 +59,20 @@ $_marker_style = mg_config('map_marker_style', 'pin');
     <div style="display:flex;align-items:center;gap:0.75rem;">
         <span style="font-size:0.85rem;color:var(--mg-text-secondary);">유저 UI:</span>
         <div style="display:inline-flex;gap:4px;">
-            <button type="button" id="btn-mode-card" onclick="setViewMode('card')" class="mg-btn mg-btn-sm <?php echo $_pvm !== 'base' ? 'mg-btn-primary' : 'mg-btn-secondary'; ?>">카드뷰</button>
-            <button type="button" id="btn-mode-base" onclick="setViewMode('base')" class="mg-btn mg-btn-sm <?php echo $_pvm === 'base' ? 'mg-btn-primary' : 'mg-btn-secondary'; ?>">거점뷰</button>
+            <button type="button" id="btn-mode-card" onclick="setViewMode('card')" class="mg-btn mg-btn-sm <?php echo $_pvm !== 'base' ? 'mg-btn-primary' : 'mg-btn-secondary'; ?>">카드 목록</button>
+            <button type="button" id="btn-mode-base" onclick="setViewMode('base')" class="mg-btn mg-btn-sm <?php echo $_pvm === 'base' ? 'mg-btn-primary' : 'mg-btn-secondary'; ?>">이미지</button>
         </div>
     </div>
     <button type="button" class="mg-btn mg-btn-primary" onclick="openFacilityModal()">시설 추가</button>
 </div>
 
-<!-- 거점뷰 설정 (거점뷰일 때만 표시) -->
+<!-- 이미지 모드 설정 (이미지 모드일 때만 표시) -->
 <div id="base-section" style="display:<?php echo $_pvm === 'base' ? 'block' : 'none'; ?>;">
-    <!-- 거점 이미지 업로드 -->
+    <!-- 개척지 이미지 업로드 -->
     <div class="mg-card" style="margin-bottom:1rem;">
         <div class="mg-card-header">
-            <h3>거점 이미지</h3>
-            <span style="font-size:0.8rem;color:var(--mg-text-muted);">시설 배치용 거점 맵 이미지</span>
+            <h3>개척지 이미지</h3>
+            <span style="font-size:0.8rem;color:var(--mg-text-muted);">개척지 배경 이미지</span>
         </div>
         <div class="mg-card-body">
             <?php if ($_pmi) { ?>
@@ -85,7 +85,7 @@ $_marker_style = mg_config('map_marker_style', 'pin');
                 <input type="hidden" name="pioneer_view_mode" value="base">
                 <input type="hidden" name="pioneer_map_action" id="pioneer_map_action" value="">
                 <div class="mg-form-group" style="margin-bottom:0;">
-                    <label class="mg-form-label" style="font-size:0.75rem;">이미지 (JPG/PNG/WebP, 최대 <?php echo round(mg_upload_max_file() / 1024 / 1024); ?>MB, 권장 1600px+)</label>
+                    <label class="mg-form-label" style="font-size:0.75rem;">이미지 (JPG/PNG/WebP, 최대 <?php echo round(mg_upload_max_file() / 1024 / 1024); ?>MB, 권장 가로 <?php echo htmlspecialchars(mg_config('content_max_width', '72rem')); ?> 이하)</label>
                     <input type="file" name="pioneer_map_image_file" accept="image/*" class="mg-form-input" style="width:280px;">
                 </div>
                 <button type="submit" class="mg-btn mg-btn-primary mg-btn-sm">업로드</button>
@@ -186,7 +186,7 @@ $_marker_style = mg_config('map_marker_style', 'pin');
                     <td style="font-size:0.8rem;">
                         <?php if ($fc['fc_unlock_type']) {
                             $unlock_labels = array(
-                                'board' => '게시판',
+                                'board' => '게시판/역극',
                                 'shop' => '상점',
                                 'gift' => '선물함',
                                 'achievement' => '업적',
@@ -302,12 +302,12 @@ $_marker_style = mg_config('map_marker_style', 'pin');
                 </div>
 
                 <div id="map-coord-section" class="mg-form-group" style="display:none;">
-                    <label class="mg-form-label">맵 좌표 (거점뷰용)</label>
+                    <label class="mg-form-label">맵 좌표 (이미지 모드용)</label>
                     <div style="display:flex;gap:8px;align-items:center;">
                         <label style="font-size:0.8rem;color:var(--mg-text-muted);">X%</label>
-                        <input type="number" name="fc_map_x" id="fc_map_x" class="mg-form-input" style="width:100px;" min="0" max="100" step="0.1" placeholder="0.0">
+                        <input type="number" name="fc_map_x" id="fc_map_x" class="mg-form-input" style="width:100px;" min="0" max="100" step="any" placeholder="0.0">
                         <label style="font-size:0.8rem;color:var(--mg-text-muted);">Y%</label>
-                        <input type="number" name="fc_map_y" id="fc_map_y" class="mg-form-input" style="width:100px;" min="0" max="100" step="0.1" placeholder="0.0">
+                        <input type="number" name="fc_map_y" id="fc_map_y" class="mg-form-input" style="width:100px;" min="0" max="100" step="any" placeholder="0.0">
                     </div>
                     <small style="color:var(--mg-text-muted);font-size:0.75rem;">이미지 좌상단 기준 백분율 좌표 (0~100)</small>
                 </div>
@@ -330,6 +330,7 @@ $_marker_style = mg_config('map_marker_style', 'pin');
                         <!-- 게시판 선택 드롭다운 -->
                         <select name="fc_unlock_target_board" id="fc_unlock_target_board" class="mg-form-input" style="display:none;">
                             <option value="">게시판 선택</option>
+                            <option value="roleplay">역극 (roleplay)</option>
                             <?php foreach ($boards as $board) { ?>
                             <option value="<?php echo $board['bo_table']; ?>"><?php echo htmlspecialchars($board['bo_subject']); ?> (<?php echo $board['bo_table']; ?>)</option>
                             <?php } ?>
@@ -398,9 +399,9 @@ function setViewMode(mode) {
     });
 }
 
-// 거점 이미지 삭제 (AJAX)
+// 개척지 이미지 삭제 (AJAX)
 function deleteBaseImage() {
-    if (!confirm('거점 이미지를 삭제하시겠습니까?\n카드뷰로 자동 전환됩니다.')) return;
+    if (!confirm('개척지 이미지를 삭제하시겠습니까?\n카드 목록으로 자동 전환됩니다.')) return;
 
     var formData = new FormData();
     formData.append('action', 'delete_base_image');
@@ -413,7 +414,7 @@ function deleteBaseImage() {
     });
 }
 
-// 거점뷰일 때만 좌표 입력 표시
+// 이미지 모드일 때만 좌표 입력 표시
 function updateMapCoordSection() {
     var section = document.getElementById('map-coord-section');
     if (section) section.style.display = pioneerViewMode === 'base' ? 'block' : 'none';

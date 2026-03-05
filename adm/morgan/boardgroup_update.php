@@ -21,12 +21,12 @@ if ($w === 'd') {
     }
 
     // 게시판이 있는지 체크
-    $board_count = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['board_table']} WHERE gr_id = '".sql_real_escape_string($gr_id)."'");
+    $board_count = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['board_table']} WHERE gr_id = '{$gr_id}'");
     if ($board_count['cnt'] > 0) {
         alert('이 그룹에 속한 게시판이 있어 삭제할 수 없습니다.');
     }
 
-    sql_query("DELETE FROM {$g5['group_table']} WHERE gr_id = '".sql_real_escape_string($gr_id)."'");
+    sql_query("DELETE FROM {$g5['group_table']} WHERE gr_id = '{$gr_id}'");
 
     alert('그룹이 삭제되었습니다.', $redirect_url);
 }
@@ -46,10 +46,10 @@ if ($w === 'u') {
     }
 
     sql_query("UPDATE {$g5['group_table']} SET
-        gr_subject = '".sql_real_escape_string($gr_subject)."',
-        gr_admin = '".sql_real_escape_string($gr_admin)."',
+        gr_subject = '{$gr_subject}',
+        gr_admin = '{$gr_admin}',
         gr_order = {$gr_order}
-        WHERE gr_id = '".sql_real_escape_string($old_gr_id)."'");
+        WHERE gr_id = '{$old_gr_id}'");
 
     alert('그룹이 수정되었습니다.', $redirect_url);
 }
@@ -72,12 +72,12 @@ if (!$gr_subject) {
 }
 
 // 중복 체크
-$exists = sql_fetch("SELECT gr_id FROM {$g5['group_table']} WHERE gr_id = '".sql_real_escape_string($gr_id)."'");
+$exists = sql_fetch("SELECT gr_id FROM {$g5['group_table']} WHERE gr_id = '{$gr_id}'");
 if ($exists['gr_id']) {
     alert('이미 존재하는 그룹 ID입니다.');
 }
 
 sql_query("INSERT INTO {$g5['group_table']} (gr_id, gr_subject, gr_admin, gr_order)
-    VALUES ('".sql_real_escape_string($gr_id)."', '".sql_real_escape_string($gr_subject)."', '".sql_real_escape_string($gr_admin)."', {$gr_order})");
+    VALUES ('{$gr_id}', '{$gr_subject}', '{$gr_admin}', {$gr_order})");
 
 alert('그룹이 추가되었습니다.', $redirect_url);

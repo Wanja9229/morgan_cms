@@ -40,6 +40,9 @@ $stat_prompt_active = $_r ? $_r['cnt'] : 0;
 $_r = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_prompt_entry_table']} WHERE pe_status = 'submitted'");
 $stat_prompt_review = $_r ? $_r['cnt'] : 0;
 
+$_r = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_radio_requests_table']} WHERE rr_status = 'pending'");
+$stat_radio_pending = $_r ? $_r['cnt'] : 0;
+
 // ─── 미션 검수 대기 ───
 $pending_prompt_entries = array();
 $result = sql_query("SELECT e.pe_id, e.pm_id, e.mb_id, e.pe_datetime, e.bo_table, e.wr_id,
@@ -52,6 +55,15 @@ $result = sql_query("SELECT e.pe_id, e.pm_id, e.mb_id, e.pe_datetime, e.bo_table
 while ($row = sql_fetch_array($result)) {
     $pending_prompt_entries[] = $row;
 }
+
+// ─── 라디오 신청 대기 ───
+$pending_radio = array();
+$result = sql_query("SELECT r.rr_id, r.rr_type, r.rr_title, r.rr_content, r.rr_created_at, r.mb_id, m.mb_nick
+    FROM {$g5['mg_radio_requests_table']} r
+    LEFT JOIN {$g5['member_table']} m ON r.mb_id = m.mb_id
+    WHERE r.rr_status = 'pending'
+    ORDER BY r.rr_created_at DESC LIMIT 5");
+if ($result) while ($row = sql_fetch_array($result)) $pending_radio[] = $row;
 
 // ─── 승인 요청 캐릭터 ───
 $pending_chars = array();
@@ -368,6 +380,10 @@ require_once __DIR__.'/_head.php';
         <div class="mg-stat-label">미션 검수</div>
         <div class="mg-stat-value <?php echo $stat_prompt_review > 0 ? 'mg-stat-highlight' : ''; ?>" style="<?php echo $stat_prompt_review == 0 ? 'color:var(--mg-text-muted);' : ''; ?>"><?php echo number_format($stat_prompt_review); ?></div>
     </div>
+    <div class="mg-stat-card">
+        <div class="mg-stat-label">라디오 신청</div>
+        <div class="mg-stat-value <?php echo $stat_radio_pending > 0 ? 'mg-stat-highlight' : ''; ?>" style="<?php echo $stat_radio_pending == 0 ? 'color:var(--mg-text-muted);' : ''; ?>"><?php echo number_format($stat_radio_pending); ?></div>
+    </div>
 </div>
 
 <!-- 위젯 그리드 -->
@@ -494,6 +510,30 @@ require_once __DIR__.'/_head.php';
                         <span class="wl-nick"><?php echo htmlspecialchars($pe['mb_nick'] ?: $pe['mb_id']); ?></span>
                         <span class="wl-sub"><?php echo mg_time_ago($pe['pe_datetime']); ?></span>
                         <a href="./prompt.php?mode=review&pm_id=<?php echo $pe['pm_id']; ?>" class="wl-sub" style="color:var(--mg-accent);">검수</a>
+                    </li>
+                    <?php } ?>
+                </ul>
+                <?php } ?>
+            </div>
+        </div>
+
+        <!-- 라디오 신청 대기 -->
+        <div class="mg-card mg-widget">
+            <div class="mg-card-header">
+                <h3>라디오 신청 대기<?php if ($stat_radio_pending > 0) echo ' <span style="color:var(--mg-warning);font-size:0.8rem;">('.$stat_radio_pending.')</span>'; ?></h3>
+                <a href="./radio.php?tab=playlist">전체보기 &rarr;</a>
+            </div>
+            <div class="mg-card-body">
+                <?php if (empty($pending_radio)) { ?>
+                <div class="mg-widget-empty">대기 중인 라디오 신청이 없습니다.</div>
+                <?php } else { ?>
+                <ul class="mg-widget-list">
+                    <?php foreach ($pending_radio as $pr) { ?>
+                    <li>
+                        <span class="wl-badge" style="background:rgba(234,179,8,0.15);color:var(--mg-warning);"><?php echo $pr['rr_type'] === 'song' ? '곡' : '멘트'; ?></span>
+                        <span class="wl-nick"><?php echo htmlspecialchars($pr['mb_nick'] ?: $pr['mb_id']); ?></span>
+                        <span class="wl-main"><?php echo htmlspecialchars(mb_strimwidth($pr['rr_type'] === 'song' ? $pr['rr_title'] : $pr['rr_content'], 0, 25, '...')); ?></span>
+                        <span class="wl-sub"><?php echo mg_time_ago($pr['rr_created_at']); ?></span>
                     </li>
                     <?php } ?>
                 </ul>

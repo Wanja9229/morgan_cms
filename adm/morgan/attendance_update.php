@@ -21,10 +21,9 @@ if ($mode === 'fortune_add') {
     $gf_point = max(0, (int)$_POST['gf_point']);
 
     if ($gf_text) {
-        $gf_text_esc = sql_real_escape_string($gf_text);
         $max_sort = sql_fetch("SELECT IFNULL(MAX(gf_sort),0) as ms FROM {$g5['mg_game_fortune_table']}");
         $new_sort = ((int)$max_sort['ms']) + 1;
-        sql_query("INSERT INTO {$g5['mg_game_fortune_table']} (gf_star, gf_text, gf_point, gf_use, gf_sort) VALUES ($gf_star, '$gf_text_esc', $gf_point, 1, $new_sort)");
+        sql_query("INSERT INTO {$g5['mg_game_fortune_table']} (gf_star, gf_text, gf_point, gf_use, gf_sort) VALUES ($gf_star, '$gf_text', $gf_point, 1, $new_sort)");
     }
     goto_url('./attendance.php?tab=fortune');
 
@@ -35,8 +34,7 @@ if ($mode === 'fortune_add') {
     $gf_point = max(0, (int)$_POST['gf_point']);
 
     if ($gf_id && $gf_text) {
-        $gf_text_esc = sql_real_escape_string($gf_text);
-        sql_query("UPDATE {$g5['mg_game_fortune_table']} SET gf_star=$gf_star, gf_text='$gf_text_esc', gf_point=$gf_point WHERE gf_id=$gf_id");
+        sql_query("UPDATE {$g5['mg_game_fortune_table']} SET gf_star=$gf_star, gf_text='$gf_text', gf_point=$gf_point WHERE gf_id=$gf_id");
     }
     goto_url('./attendance.php?tab=fortune');
 
@@ -92,8 +90,7 @@ if ($mode === 'lottery_board') {
     $glp_point = max(0, (int)$_POST['glp_point']);
 
     if ($glp_name) {
-        $glp_name_esc = sql_real_escape_string($glp_name);
-        sql_query("INSERT INTO {$g5['mg_game_lottery_prize_table']} (glp_rank, glp_name, glp_count, glp_point, glp_use) VALUES ({$glp_rank}, '{$glp_name_esc}', {$glp_count}, {$glp_point}, 1)");
+        sql_query("INSERT INTO {$g5['mg_game_lottery_prize_table']} (glp_rank, glp_name, glp_count, glp_point, glp_use) VALUES ({$glp_rank}, '{$glp_name}', {$glp_count}, {$glp_point}, 1)");
     }
     goto_url('./attendance.php?tab=lottery');
 
@@ -105,8 +102,7 @@ if ($mode === 'lottery_board') {
     $glp_point = max(0, (int)$_POST['glp_point']);
 
     if ($glp_id && $glp_name) {
-        $glp_name_esc = sql_real_escape_string($glp_name);
-        sql_query("UPDATE {$g5['mg_game_lottery_prize_table']} SET glp_rank={$glp_rank}, glp_name='{$glp_name_esc}', glp_count={$glp_count}, glp_point={$glp_point} WHERE glp_id={$glp_id}");
+        sql_query("UPDATE {$g5['mg_game_lottery_prize_table']} SET glp_rank={$glp_rank}, glp_name='{$glp_name}', glp_count={$glp_count}, glp_point={$glp_point} WHERE glp_id={$glp_id}");
     }
     goto_url('./attendance.php?tab=lottery');
 

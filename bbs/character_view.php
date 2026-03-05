@@ -190,8 +190,12 @@ if ($profile_bg_id) {
                 <div>
                     <label class="block text-sm text-mg-text-secondary mb-1">내 캐릭터</label>
                     <select id="rr-from-ch" class="w-full bg-mg-bg-primary border border-mg-bg-tertiary rounded-lg px-3 py-2 text-sm text-mg-text-primary">
-                        <?php foreach ($my_approved_characters as $mc) { ?>
-                        <option value="<?php echo $mc['ch_id']; ?>"><?php echo htmlspecialchars($mc['ch_name']); ?></option>
+                        <?php foreach ($my_approved_characters as $mc) {
+                            $_rc = mg_get_relation_count($mc['ch_id']);
+                            $_rm = mg_get_max_relations($mc['ch_id']);
+                            $_full = ($_rc >= $_rm);
+                        ?>
+                        <option value="<?php echo $mc['ch_id']; ?>" <?php echo $_full ? 'disabled' : ''; ?>><?php echo htmlspecialchars($mc['ch_name']); ?> (<?php echo $_rc; ?>/<?php echo $_rm; ?>)<?php echo $_full ? ' - 슬롯 부족' : ''; ?></option>
                         <?php } ?>
                     </select>
                 </div>

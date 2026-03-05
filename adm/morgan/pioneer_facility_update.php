@@ -1,6 +1,6 @@
 <?php
 /**
- * Morgan Edition - 시설 관리 처리
+ * Morgan Edition - 개척지 관리 처리
  */
 
 $sub_menu = "801000";
@@ -47,7 +47,7 @@ if ($action === 'set_coords') {
     exit;
 }
 
-// 거점 이미지 삭제 (AJAX)
+// 개척지 이미지 삭제 (AJAX)
 if ($action === 'delete_base_image') {
     header('Content-Type: application/json; charset=utf-8');
     $old_map = mg_config('pioneer_map_image', '');
@@ -68,7 +68,7 @@ if ($w === 'config') {
     if (!in_array($view_mode, array('card', 'base'))) $view_mode = 'card';
     mg_set_config('pioneer_view_mode', $view_mode);
 
-    // 거점 이미지 처리
+    // 개척지 이미지 처리
     $upload_dir = MG_MORGAN_DATA_PATH;
     $upload_url = MG_MORGAN_DATA_URL;
     if (!is_dir($upload_dir)) @mkdir($upload_dir, 0755, true);
@@ -200,7 +200,7 @@ if ($w === 'complete' && $fc_id > 0) {
 // 추가/수정
 $fc_name = isset($_POST['fc_name']) ? clean_xss_tags($_POST['fc_name']) : '';
 $fc_icon = isset($_POST['fc_icon']) ? clean_xss_tags($_POST['fc_icon']) : '';
-$fc_desc = isset($_POST['fc_desc']) ? clean_xss_tags($_POST['fc_desc']) : '';
+$fc_desc = isset($_POST['fc_desc']) ? clean_xss_tags($_POST['fc_desc'], 0, 0, 0, 0) : '';
 $fc_order = isset($_POST['fc_order']) ? (int)$_POST['fc_order'] : 0;
 $fc_stamina_cost = isset($_POST['fc_stamina_cost']) ? (int)$_POST['fc_stamina_cost'] : 0;
 $fc_unlock_type = isset($_POST['fc_unlock_type']) ? clean_xss_tags($_POST['fc_unlock_type']) : '';
@@ -269,11 +269,11 @@ if (isset($_FILES['fc_icon_file']) && $_FILES['fc_icon_file']['tmp_name']) {
     $fc_icon = $old_icon;
 }
 
-$fc_name_esc = sql_real_escape_string($fc_name);
-$fc_icon_esc = sql_real_escape_string($fc_icon);
-$fc_desc_esc = sql_real_escape_string($fc_desc);
-$fc_unlock_type_esc = sql_real_escape_string($fc_unlock_type);
-$fc_unlock_target_esc = sql_real_escape_string($fc_unlock_target);
+$fc_name_esc = $fc_name;
+$fc_icon_esc = $fc_icon;
+$fc_desc_esc = $fc_desc;
+$fc_unlock_type_esc = $fc_unlock_type;
+$fc_unlock_target_esc = $fc_unlock_target;
 
 if ($w === 'u' && $fc_id > 0) {
     // 수정

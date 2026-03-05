@@ -110,6 +110,11 @@ function _cfg_radio($name, $configs, $default = '1', $labels = array('사용', '
                     <input type="number" name="max_characters" id="max_characters" value="<?php echo isset($mg_configs['max_characters']) ? $mg_configs['max_characters'] : '1'; ?>" class="mg-form-input" min="1" max="50">
                     <small style="color:var(--mg-text-muted);font-size:0.75rem;">회원당 기본 캐릭터 수 (상점에서 캐릭터 슬롯 구매 시 추가)</small>
                 </div>
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="max_relations">캐릭터당 기본 관계 수</label>
+                    <input type="number" name="max_relations" id="max_relations" value="<?php echo isset($mg_configs['max_relations']) ? $mg_configs['max_relations'] : '3'; ?>" class="mg-form-input" min="0" max="100">
+                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">캐릭터당 기본 관계 수 (상점에서 관계 슬롯 구매 시 추가)</small>
+                </div>
             </div>
 
             <hr style="border:0;border-top:1px solid var(--mg-bg-tertiary);margin:1.5rem 0;">
@@ -474,7 +479,7 @@ function removeLogo() {
                 <div class="mg-form-group">
                     <label class="mg-form-label">개척 시스템</label>
                     <?php echo _cfg_radio('pioneer_use', $mg_configs, '1'); ?>
-                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">뷰 모드·거점 이미지는 <a href="<?php echo G5_ADMIN_URL; ?>/morgan/pioneer_facility.php" style="color:var(--mg-accent);">시설 관리</a>에서 설정합니다.</small>
+                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">뷰 모드·개척지 이미지는 <a href="<?php echo G5_ADMIN_URL; ?>/morgan/pioneer_facility.php" style="color:var(--mg-accent);">개척지 관리</a>에서 설정합니다.</small>
                 </div>
             </div>
 
@@ -568,10 +573,10 @@ function removeLogo() {
 
             <h5 style="font-size:0.8rem;font-weight:600;margin:1.25rem 0 0.75rem;color:var(--mg-text-muted);">매칭</h5>
             <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem;">
-                <div class="mg-form-group">
+                <div class="mg-form-group" style="display:none">
                     <label class="mg-form-label" for="concierge_match_mode_allowed">허용 매칭 방식</label>
                     <select name="concierge_match_mode_allowed" id="concierge_match_mode_allowed" class="mg-form-input">
-                        <?php $_mma = isset($mg_configs['concierge_match_mode_allowed']) ? $mg_configs['concierge_match_mode_allowed'] : 'both'; ?>
+                        <?php $_mma = isset($mg_configs['concierge_match_mode_allowed']) ? $mg_configs['concierge_match_mode_allowed'] : 'lottery_only'; ?>
                         <option value="both" <?php echo $_mma === 'both' ? 'selected' : ''; ?>>둘 다 허용</option>
                         <option value="direct_only" <?php echo $_mma === 'direct_only' ? 'selected' : ''; ?>>직접선택만</option>
                         <option value="lottery_only" <?php echo $_mma === 'lottery_only' ? 'selected' : ''; ?>>추첨만</option>

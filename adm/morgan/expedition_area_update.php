@@ -22,7 +22,7 @@ if ($action === 'set_ui_mode') {
     exit;
 }
 
-// 파견 지도 이미지 업로드
+// 파견 이미지 업로드
 if ($action === 'upload_map_image') {
     $upload_dir = MG_EXPEDITION_DATA_PATH;
     if (!is_dir($upload_dir)) {
@@ -64,14 +64,14 @@ if ($action === 'upload_map_image') {
         @chmod($target_path, 0644);
         $new_url = MG_EXPEDITION_DATA_URL . '/' . $new_filename;
         mg_set_config('expedition_map_image', $new_url);
-        alert('파견 지도 이미지가 등록되었습니다.', G5_ADMIN_URL.'/morgan/expedition_area.php');
+        alert('파견 이미지가 등록되었습니다.', G5_ADMIN_URL.'/morgan/expedition_area.php');
     } else {
         alert('파일 업로드에 실패했습니다.');
     }
     exit; // 안전장치
 }
 
-// 파견 지도 이미지 삭제 (AJAX)
+// 파견 이미지 삭제 (AJAX)
 if ($action === 'delete_map_image') {
     header('Content-Type: application/json; charset=utf-8');
     $old_map = mg_config('expedition_map_image', '');
@@ -143,7 +143,7 @@ if ($w === 'd' && $ea_id > 0) {
 
 // 파라미터
 $ea_name = isset($_POST['ea_name']) ? clean_xss_tags($_POST['ea_name']) : '';
-$ea_desc = isset($_POST['ea_desc']) ? clean_xss_tags($_POST['ea_desc']) : '';
+$ea_desc = isset($_POST['ea_desc']) ? clean_xss_tags($_POST['ea_desc'], 0, 0, 0, 0) : '';
 $ea_icon = isset($_POST['ea_icon']) ? clean_xss_tags($_POST['ea_icon']) : '';
 $ea_stamina_cost = isset($_POST['ea_stamina_cost']) ? max(1, (int)$_POST['ea_stamina_cost']) : 2;
 $ea_duration = isset($_POST['ea_duration']) ? max(1, (int)$_POST['ea_duration']) : 60;
@@ -190,10 +190,10 @@ if ($icon_uploaded) {
     $ea_icon = $old_icon;
 }
 
-$ea_name_esc = sql_real_escape_string($ea_name);
-$ea_desc_esc = sql_real_escape_string($ea_desc);
-$ea_icon_esc = sql_real_escape_string($ea_icon);
-$ea_status_esc = sql_real_escape_string($ea_status);
+$ea_name_esc = $ea_name;
+$ea_desc_esc = $ea_desc;
+$ea_icon_esc = $ea_icon;
+$ea_status_esc = $ea_status;
 $ea_unlock_val = $ea_unlock_facility > 0 ? $ea_unlock_facility : 'NULL';
 $ea_map_x_val = $ea_map_x !== null ? $ea_map_x : 'NULL';
 $ea_map_y_val = $ea_map_y !== null ? $ea_map_y : 'NULL';

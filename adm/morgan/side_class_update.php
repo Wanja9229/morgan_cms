@@ -105,7 +105,7 @@ if (isset($_POST['btn_submit'])) {
         if (!$item_id) continue;
 
         $order = (int)($item_orders[$i] ?? 0);
-        $name = sql_real_escape_string(trim($item_names[$i] ?? ''));
+        $name = trim($item_names[$i] ?? '');
         $use = isset($item_uses[$item_id]) ? 1 : 0;
 
         // 아이콘 처리 (ID 키 기반)
@@ -146,11 +146,9 @@ if (isset($_POST['btn_submit'])) {
             }
         }
 
-        $icon_escaped = sql_real_escape_string($icon);
-
         $sql = "UPDATE {$table} SET
                     {$name_field} = '{$name}',
-                    {$icon_field} = '{$icon_escaped}',
+                    {$icon_field} = '{$icon}',
                     {$order_field} = {$order},
                     {$use_field} = {$use}";
 
@@ -169,7 +167,7 @@ if (isset($_POST['btn_submit'])) {
     if ($new_name) {
         $new_order = (int)($_POST['new_item_order'] ?? 0);
         $new_use = isset($_POST['new_item_use']) ? 1 : 0;
-        $new_name_escaped = sql_real_escape_string($new_name);
+        // $new_name already escaped by addslashes (common.php)
 
         // 아이콘 처리
         $new_icon = '';
@@ -193,15 +191,13 @@ if (isset($_POST['btn_submit'])) {
             $new_icon = isset($_POST['new_item_icon']) ? trim($_POST['new_item_icon']) : '';
         }
 
-        $new_icon_escaped = sql_real_escape_string($new_icon);
-
         if ($type === 'class') {
             $new_side_id = (int)($_POST['new_item_side_id'] ?? 0);
             sql_query("INSERT INTO {$table} ({$name_field}, {$icon_field}, side_id, {$order_field}, {$use_field})
-                        VALUES ('{$new_name_escaped}', '{$new_icon_escaped}', {$new_side_id}, {$new_order}, {$new_use})");
+                        VALUES ('{$new_name}', '{$new_icon}', {$new_side_id}, {$new_order}, {$new_use})");
         } else {
             sql_query("INSERT INTO {$table} ({$name_field}, {$icon_field}, {$order_field}, {$use_field})
-                        VALUES ('{$new_name_escaped}', '{$new_icon_escaped}', {$new_order}, {$new_use})");
+                        VALUES ('{$new_name}', '{$new_icon}', {$new_order}, {$new_use})");
         }
     }
 

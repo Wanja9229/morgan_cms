@@ -212,7 +212,7 @@ CREATE TABLE IF NOT EXISTS `mg_shop_item` (
     `si_desc` text COMMENT '설명',
     `si_image` varchar(500) DEFAULT NULL COMMENT '이미지',
     `si_price` int NOT NULL COMMENT '가격',
-    `si_type` enum('title','badge','nick_color','nick_effect','profile_border','equip','emoticon_set','emoticon_reg','furniture','material','seal_bg','seal_frame','seal_hover','profile_skin','profile_bg','char_slot','concierge_extra','title_prefix','title_suffix','etc') NOT NULL DEFAULT 'etc' COMMENT '타입',
+    `si_type` enum('title','badge','nick_color','nick_effect','profile_border','equip','emoticon_set','emoticon_reg','furniture','material','seal_bg','seal_frame','seal_hover','profile_skin','profile_bg','char_slot','concierge_extra','title_prefix','title_suffix','radio_song','radio_ment','relation_slot','concierge_direct_pick','etc') NOT NULL DEFAULT 'etc' COMMENT '타입',
     `si_effect` text COMMENT '효과 데이터 (JSON)',
     `si_stock` int NOT NULL DEFAULT -1 COMMENT '재고 (-1=무제한)',
     `si_stock_sold` int NOT NULL DEFAULT 0 COMMENT '판매 수량',
@@ -2328,5 +2328,161 @@ CREATE TABLE IF NOT EXISTS `mg_expedition_event_area` (
     INDEX `idx_ea_id` (`ea_id`),
     INDEX `idx_ee_id` (`ee_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='파견 이벤트-지역 매핑';
+
+-- ======================================
+-- 24. 라디오 위젯
+-- ======================================
+
+CREATE TABLE IF NOT EXISTS `mg_radio_config` (
+    `config_id`       INT PRIMARY KEY DEFAULT 1,
+    `is_active`       TINYINT NOT NULL DEFAULT 1,
+    `play_mode`       ENUM('sequential','random') NOT NULL DEFAULT 'sequential',
+    `weather_mode`    ENUM('api','manual') NOT NULL DEFAULT 'manual',
+    `weather_city`    VARCHAR(100) NULL,
+    `weather_api_key` VARCHAR(100) NULL,
+    `manual_temp`     INT NULL,
+    `manual_weather`  VARCHAR(20) NULL,
+    `ment_mode`       ENUM('sequential','random') NOT NULL DEFAULT 'sequential',
+    `ment_interval`   INT NOT NULL DEFAULT 12,
+    `weather_cache`   JSON NULL,
+    `weather_cached_at` DATETIME NULL,
+    `updated_at`      DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='라디오 설정';
+
+INSERT IGNORE INTO `mg_radio_config` (`config_id`) VALUES (1);
+
+CREATE TABLE IF NOT EXISTS `mg_radio_playlist` (
+    `track_id`    INT AUTO_INCREMENT PRIMARY KEY,
+    `youtube_url` VARCHAR(255) NOT NULL,
+    `youtube_vid` VARCHAR(20) NOT NULL,
+    `title`       VARCHAR(200) NOT NULL,
+    `sort_order`  INT NOT NULL DEFAULT 0,
+    `is_active`   TINYINT NOT NULL DEFAULT 1,
+    `expires_at`  DATETIME NULL DEFAULT NULL,
+    `created_at`  DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='라디오 플레이리스트';
+
+CREATE TABLE IF NOT EXISTS `mg_radio_ments` (
+    `ment_id`     INT AUTO_INCREMENT PRIMARY KEY,
+    `content`     VARCHAR(200) NOT NULL,
+    `sort_order`  INT NOT NULL DEFAULT 0,
+    `is_active`   TINYINT NOT NULL DEFAULT 1,
+    `expires_at`  DATETIME NULL DEFAULT NULL,
+    `created_at`  DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='라디오 멘트';
+
+CREATE TABLE IF NOT EXISTS `mg_radio_requests` (
+    `rr_id`         INT AUTO_INCREMENT PRIMARY KEY,
+    `rr_type`       ENUM('song','ment') NOT NULL,
+    `mb_id`         VARCHAR(255) NOT NULL,
+    `rr_title`      VARCHAR(200) NOT NULL DEFAULT '',
+    `rr_youtube_url` VARCHAR(500) DEFAULT NULL,
+    `rr_youtube_vid` VARCHAR(20) DEFAULT NULL,
+    `rr_content`    VARCHAR(200) DEFAULT NULL,
+    `rr_status`     ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+    `rr_duration_hours` INT NULL DEFAULT NULL,
+    `rr_created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `rr_updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX `idx_status` (`rr_status`),
+    INDEX `idx_mb` (`mb_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='라디오 신청';
+
+-- 24.1 이용권 카테고리
+INSERT INTO `mg_shop_category` (`sc_name`, `sc_desc`, `sc_icon`, `sc_order`) VALUES
+('이용권', '시스템 이용권', 'ticket', 6)
+ON DUPLICATE KEY UPDATE `sc_name` = VALUES(`sc_name`);
+
+-- 24.2 라디오 신청권 상품
+INSERT INTO `mg_shop_item` (`sc_id`, `si_name`, `si_desc`, `si_price`, `si_type`, `si_effect`, `si_stock`, `si_consumable`, `si_display`, `si_use`)
+SELECT (SELECT sc_id FROM mg_shop_category WHERE sc_name = '이용권' LIMIT 1),
+       '노래 신청권', '라디오에 원하는 곡을 신청할 수 있습니다. 관리자 승인 후 플레이리스트에 반영됩니다.', 100, 'radio_song', '{"duration_hours":72}', -1, 1, 1, 1
+FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_type = 'radio_song');
+
+INSERT INTO `mg_shop_item` (`sc_id`, `si_name`, `si_desc`, `si_price`, `si_type`, `si_effect`, `si_stock`, `si_consumable`, `si_display`, `si_use`)
+SELECT (SELECT sc_id FROM mg_shop_category WHERE sc_name = '이용권' LIMIT 1),
+       '라디오 멘트권', '라디오 멘트를 신청할 수 있습니다. 관리자 승인 후 반영됩니다. (200자 이내)', 100, 'radio_ment', '{"duration_hours":24}', -1, 1, 1, 1
+FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_type = 'radio_ment');
+
+INSERT INTO `mg_shop_item` (`sc_id`, `si_name`, `si_desc`, `si_price`, `si_type`, `si_effect`, `si_stock`, `si_consumable`, `si_display`, `si_use`)
+SELECT (SELECT sc_id FROM mg_shop_category WHERE sc_name = '이용권' LIMIT 1),
+       '관계 슬롯 확장권', '특정 캐릭터의 관계 슬롯을 1개 추가합니다. 인벤토리에서 사용 시 캐릭터를 선택하여 적용합니다. (영구, 해제 불가)', 200, 'relation_slot', '{"slots":1}', -1, 1, 1, 1
+FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_type = 'relation_slot');
+
+INSERT INTO `mg_shop_item` (`sc_id`, `si_name`, `si_desc`, `si_price`, `si_type`, `si_effect`, `si_stock`, `si_consumable`, `si_display`, `si_use`)
+SELECT (SELECT sc_id FROM mg_shop_category WHERE sc_name = '이용권' LIMIT 1),
+       '의뢰 지목권', '추첨 대신 지원자를 직접 선택할 수 있습니다 (1회 소모)', 300, 'concierge_direct_pick', '{}', -1, 1, 1, 1
+FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_type = 'concierge_direct_pick');
+
+-- ======================================
+-- 25. 히든 이벤트 시스템
+-- ======================================
+
+CREATE TABLE IF NOT EXISTS `mg_hidden_event` (
+    `event_id`        INT AUTO_INCREMENT PRIMARY KEY,
+    `title`           VARCHAR(100) NOT NULL,
+    `image_path`      VARCHAR(255) NOT NULL,
+    `reward_type`     ENUM('point','material') DEFAULT 'point',
+    `reward_id`       INT NULL COMMENT '재료 mt_id (reward_type=material)',
+    `reward_amount`   INT NOT NULL DEFAULT 100,
+    `probability`     DECIMAL(5,2) NOT NULL DEFAULT 5.00 COMMENT '출현 확률 (%)',
+    `daily_limit`     INT DEFAULT 1 COMMENT '이벤트별 유저당 일일 수령',
+    `daily_total`     INT DEFAULT 5 COMMENT '전체 일일 수령 한도',
+    `active_from`     DATETIME NULL,
+    `active_until`    DATETIME NULL,
+    `is_active`       TINYINT DEFAULT 1,
+    `created_at`      DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`      DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='히든 이벤트';
+
+CREATE TABLE IF NOT EXISTS `mg_event_token` (
+    `token_id`        VARCHAR(64) PRIMARY KEY,
+    `event_id`        INT NOT NULL,
+    `mb_id`           VARCHAR(50) NOT NULL,
+    `issued_at`       DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `expires_at`      DATETIME NOT NULL,
+    `claimed`         TINYINT DEFAULT 0,
+    `claimed_at`      DATETIME NULL,
+    INDEX `idx_mb_claimed` (`mb_id`, `claimed`),
+    INDEX `idx_expires` (`expires_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='이벤트 토큰';
+
+CREATE TABLE IF NOT EXISTS `mg_event_claim` (
+    `claim_id`        INT AUTO_INCREMENT PRIMARY KEY,
+    `mb_id`           VARCHAR(50) NOT NULL,
+    `event_id`        INT NOT NULL,
+    `reward_type`     VARCHAR(20) NOT NULL,
+    `reward_amount`   INT NOT NULL,
+    `claimed_at`      DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `ip_address`      VARCHAR(45),
+    INDEX `idx_mb_date` (`mb_id`, `claimed_at`),
+    INDEX `idx_event_date` (`event_id`, `claimed_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='이벤트 수령 로그';
+
+CREATE TABLE IF NOT EXISTS `mg_event_suspicious` (
+    `log_id`          INT AUTO_INCREMENT PRIMARY KEY,
+    `mb_id`           VARCHAR(50) NOT NULL,
+    `reason`          VARCHAR(100) NOT NULL,
+    `details`         TEXT NULL,
+    `created_at`      DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_mb` (`mb_id`),
+    INDEX `idx_date` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='이벤트 의심 행동 로그';
+
+-- ======================================
+-- 26. 사이드바 위젯 설정
+-- ======================================
+
+CREATE TABLE IF NOT EXISTS `mg_user_widget` (
+    `uw_id`           INT AUTO_INCREMENT PRIMARY KEY,
+    `mb_id`           VARCHAR(20) NOT NULL,
+    `widget_name`     VARCHAR(50) NOT NULL,
+    `widget_order`    INT NOT NULL DEFAULT 0,
+    `widget_visible`  TINYINT(1) NOT NULL DEFAULT 1,
+    `widget_config`   TEXT DEFAULT NULL,
+    `created_at`      DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`      DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY `uk_mb_widget` (`mb_id`, `widget_name`),
+    KEY `idx_mb_order` (`mb_id`, `widget_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='유저 위젯 설정';
 
 SET FOREIGN_KEY_CHECKS = 1;

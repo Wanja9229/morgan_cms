@@ -59,6 +59,8 @@ include_once(G5_THEME_PATH.'/head.php');
 .wiki-content p { margin-bottom: 0.5em; }
 .wiki-content h3 { font-size: 1.125rem; font-weight: 600; color: var(--mg-text-primary); margin: 1em 0 0.5em; }
 .wiki-content h4 { font-size: 1rem; font-weight: 600; color: var(--mg-text-primary); margin: 0.75em 0 0.375em; }
+.wiki-content h5 { font-size: 0.9375rem; font-weight: 600; color: var(--mg-text-primary); margin: 0.5em 0 0.25em; }
+.wiki-content h6 { font-size: 0.875rem; font-weight: 600; color: var(--mg-text-muted); margin: 0.5em 0 0.25em; }
 .wiki-content ul, .wiki-content ol { padding-left: 1.5em; margin-bottom: 0.75em; }
 .wiki-content li { margin-bottom: 0.25em; }
 .wiki-content a { color: var(--mg-accent); text-decoration: underline; }

@@ -20,10 +20,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // === POST 데이터 수집 ===
 $la_id = isset($_POST['la_id']) ? (int)$_POST['la_id'] : 0;
 $lc_id = (int)$_POST['lc_id'];
-$la_title = sql_real_escape_string(trim($_POST['la_title']));
-$la_subtitle = sql_real_escape_string(trim($_POST['la_subtitle']));
-$la_summary = sql_real_escape_string(trim($_POST['la_summary']));
-$la_thumbnail = sql_real_escape_string(trim($_POST['la_thumbnail']));
+$la_title = trim($_POST['la_title']);
+$la_subtitle = trim($_POST['la_subtitle']);
+$la_summary = trim($_POST['la_summary']);
+$la_thumbnail = trim($_POST['la_thumbnail']);
 $la_order = (int)$_POST['la_order'];
 $la_use = (int)$_POST['la_use'];
 
@@ -70,9 +70,9 @@ sql_query("DELETE FROM {$g5['mg_lore_section_table']} WHERE la_id = {$la_id}");
 $sections = isset($_POST['sections']) ? $_POST['sections'] : array();
 if (is_array($sections)) {
     foreach ($sections as $idx => $sec) {
-        $ls_name = sql_real_escape_string(trim($sec['name']));
+        $ls_name = trim($sec['name']);
         $ls_type = (isset($sec['type']) && $sec['type'] == 'image') ? 'image' : 'text';
-        $ls_content = sql_real_escape_string(trim($sec['content']));
+        $ls_content = trim($sec['content']);
         $ls_order = (int)$sec['order'];
 
         // 이미지 URL 처리
@@ -85,13 +85,13 @@ if (is_array($sections)) {
                 $ls_image = trim($sec['existing_image']);
             }
         }
-        $ls_image = sql_real_escape_string($ls_image);
+        // $ls_image already safe via addslashes (from $_POST)
 
-        $ls_image_caption = sql_real_escape_string(trim($sec['image_caption']));
+        $ls_image_caption = trim($sec['image_caption']);
 
         // 섹션명이 비어있으면 기본값
         if (!$ls_name) {
-            $ls_name = sql_real_escape_string('섹션 ' . ($idx + 1));
+            $ls_name = '섹션 ' . ($idx + 1);
         }
 
         sql_query("INSERT INTO {$g5['mg_lore_section_table']}

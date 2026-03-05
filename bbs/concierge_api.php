@@ -163,6 +163,37 @@ switch ($action) {
         echo json_encode($result);
         break;
 
+    // 지목권 사용 (추첨 → 직접선택 전환)
+    case 'use_direct_pick':
+        $cc_id = isset($_POST['cc_id']) ? (int)$_POST['cc_id'] : 0;
+        if (!$cc_id) {
+            echo json_encode(array('success' => false, 'message' => '잘못된 요청입니다.'));
+            exit;
+        }
+
+        $cc = sql_fetch("SELECT * FROM {$g5['mg_concierge_table']} WHERE cc_id = {$cc_id}");
+        if (!$cc || $cc['mb_id'] !== $mb_id) {
+            echo json_encode(array('success' => false, 'message' => '권한이 없습니다.'));
+            exit;
+        }
+        if ($cc['cc_status'] !== 'recruiting') {
+            echo json_encode(array('success' => false, 'message' => '모집 중인 의뢰만 가능합니다.'));
+            exit;
+        }
+        if ($cc['cc_match_mode'] !== 'lottery') {
+            echo json_encode(array('success' => false, 'message' => '이미 직접선택 모드입니다.'));
+            exit;
+        }
+
+        if (!mg_consume_direct_pick($mb_id)) {
+            echo json_encode(array('success' => false, 'message' => '지목권이 부족합니다.'));
+            exit;
+        }
+
+        sql_query("UPDATE {$g5['mg_concierge_table']} SET cc_match_mode = 'direct' WHERE cc_id = {$cc_id}");
+        echo json_encode(array('success' => true, 'message' => '지목권을 사용했습니다. 지원자를 직접 선택해주세요.'));
+        break;
+
     // 미이행 강제 종료
     case 'force_close':
         $cc_id = isset($_POST['cc_id']) ? (int)$_POST['cc_id'] : 0;

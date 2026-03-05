@@ -47,7 +47,7 @@ switch ($action) {
             exit;
         }
 
-        sql_query("UPDATE {$write_table} SET wr_2 = '".sql_real_escape_string($pos_x)."', wr_3 = '".sql_real_escape_string($pos_y)."' WHERE wr_id = {$wr_id}");
+        sql_query("UPDATE {$write_table} SET wr_2 = '{$pos_x}', wr_3 = '{$pos_y}' WHERE wr_id = {$wr_id}");
 
         echo json_encode(array('success' => true));
         break;
@@ -65,7 +65,7 @@ switch ($action) {
             exit;
         }
 
-        $board_row = sql_fetch("SELECT bo_table, bo_category_list FROM {$g5['board_table']} WHERE bo_table = '".sql_real_escape_string($bo_table)."'");
+        $board_row = sql_fetch("SELECT bo_table, bo_category_list FROM {$g5['board_table']} WHERE bo_table = '{$bo_table}'");
         if (!$board_row['bo_table']) {
             echo json_encode(array('error' => '존재하지 않는 게시판입니다.'));
             exit;
@@ -85,7 +85,7 @@ switch ($action) {
         $panels[] = $new_panel;
 
         $new_list = implode('|', $panels);
-        sql_query("UPDATE {$g5['board_table']} SET bo_use_category = 1, bo_category_list = '".sql_real_escape_string($new_list)."' WHERE bo_table = '".sql_real_escape_string($bo_table)."'");
+        sql_query("UPDATE {$g5['board_table']} SET bo_use_category = 1, bo_category_list = '".sql_real_escape_string($new_list)."' WHERE bo_table = '{$bo_table}'");
 
         echo json_encode(array('success' => true, 'panel' => $new_panel, 'panels' => $panels));
         break;

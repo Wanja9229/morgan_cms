@@ -30,14 +30,13 @@ switch ($action) {
         $image_path = mg_handle_icon_upload('event_image', 'event', 'he');
         if (!$image_path) alert('이벤트 이미지를 업로드하세요.');
 
-        $title_esc = sql_real_escape_string($title);
         $image_esc = sql_real_escape_string($image_path);
-        $from_sql = $active_from ? "'" . sql_real_escape_string($active_from) . "'" : 'NULL';
-        $until_sql = $active_until ? "'" . sql_real_escape_string($active_until) . "'" : 'NULL';
+        $from_sql = $active_from ? "'{$active_from}'" : 'NULL';
+        $until_sql = $active_until ? "'{$active_until}'" : 'NULL';
 
         sql_query("INSERT INTO {$g5['mg_hidden_event_table']}
             (title, image_path, reward_type, reward_id, reward_amount, probability, daily_limit, daily_total, active_from, active_until, is_active)
-            VALUES ('{$title_esc}', '{$image_esc}', '{$reward_type}', {$reward_id}, {$reward_amount}, {$probability}, {$daily_limit}, {$daily_total}, {$from_sql}, {$until_sql}, {$is_active})");
+            VALUES ('{$title}', '{$image_esc}', '{$reward_type}', {$reward_id}, {$reward_amount}, {$probability}, {$daily_limit}, {$daily_total}, {$from_sql}, {$until_sql}, {$is_active})");
 
         $redirect = './hidden_event.php?tab=list';
         break;
@@ -75,13 +74,12 @@ switch ($action) {
             $image_path = $old['image_path'];
         }
 
-        $title_esc = sql_real_escape_string($title);
         $image_esc = sql_real_escape_string($image_path);
-        $from_sql = $active_from ? "'" . sql_real_escape_string($active_from) . "'" : 'NULL';
-        $until_sql = $active_until ? "'" . sql_real_escape_string($active_until) . "'" : 'NULL';
+        $from_sql = $active_from ? "'{$active_from}'" : 'NULL';
+        $until_sql = $active_until ? "'{$active_until}'" : 'NULL';
 
         sql_query("UPDATE {$g5['mg_hidden_event_table']} SET
-            title = '{$title_esc}',
+            title = '{$title}',
             image_path = '{$image_esc}',
             reward_type = '{$reward_type}',
             reward_id = {$reward_id},

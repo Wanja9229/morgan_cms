@@ -73,15 +73,17 @@ include_once(G5_THEME_PATH.'/head.php');
     </div>
 
     <!-- 맵 영역 -->
-    <div id="lore-map-container" data-map-fullview style="position:relative;overflow:auto;border-radius:12px;border:1px solid var(--mg-bg-tertiary);background:var(--mg-bg-secondary);">
-        <img src="<?php echo htmlspecialchars($map_image); ?>" id="lore-map-image" style="display:block;width:100%;" alt="세계관 지도" draggable="false">
+    <div style="text-align:center;">
+    <div id="lore-map-container" style="position:relative;display:inline-block;max-width:100%;overflow:hidden;border:1px solid var(--mg-bg-tertiary);background:var(--mg-bg-secondary);">
+        <img src="<?php echo htmlspecialchars($map_image); ?>" id="lore-map-image" style="display:block;max-width:100%;height:auto;" alt="세계관 지도" draggable="false">
         <div id="lore-map-markers"></div>
         <div id="lore-map-popup" style="display:none;position:absolute;z-index:20;"></div>
+    </div>
     </div>
 </div>
 
 <style>
-.lore-marker { position:absolute; width:44px; height:44px; margin-left:-22px; margin-top:-44px; cursor:pointer; transition:transform 0.15s; z-index:5; user-select:none; display:flex; align-items:center; justify-content:center; }
+.lore-marker { position:absolute; cursor:pointer; transition:transform 0.15s; z-index:5; user-select:none; }
 .lore-marker:hover { transform:scale(1.2); z-index:10; }
 .lore-marker svg { width:100%; height:100%; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
 .lore-popup { width:280px; max-width:calc(100vw - 3rem); background:var(--mg-bg-secondary); border:1px solid var(--mg-bg-tertiary); border-radius:12px; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.4); position:relative; }
@@ -100,28 +102,37 @@ include_once(G5_THEME_PATH.'/head.php');
     var popupEl = document.getElementById('lore-map-popup');
     var container = document.getElementById('lore-map-container');
 
-    mgMapFullview(container);
-
     function getMarkerSVG(style, color, inner) {
         switch (style) {
             case 'circle':
-                return '<svg viewBox="0 0 28 28" width="40" height="40"><circle cx="14" cy="14" r="12" fill="'+color+'" stroke="'+inner+'" stroke-width="2.5"/><circle cx="14" cy="14" r="4" fill="'+inner+'"/></svg>';
+                return '<svg viewBox="0 0 28 28" width="28" height="28"><circle cx="14" cy="14" r="12" fill="'+color+'" stroke="'+inner+'" stroke-width="2.5"/><circle cx="14" cy="14" r="4" fill="'+inner+'"/></svg>';
             case 'diamond':
-                return '<svg viewBox="0 0 24 32" width="30" height="40"><path d="M12 1 L23 16 L12 31 L1 16 Z" fill="'+color+'" stroke="'+inner+'" stroke-width="1.5"/><circle cx="12" cy="16" r="3.5" fill="'+inner+'"/></svg>';
+                return '<svg viewBox="0 0 24 32" width="24" height="32"><path d="M12 1 L23 16 L12 31 L1 16 Z" fill="'+color+'" stroke="'+inner+'" stroke-width="1.5"/><circle cx="12" cy="16" r="3.5" fill="'+inner+'"/></svg>';
             case 'flag':
-                return '<svg viewBox="0 0 24 36" width="27" height="40"><rect x="10" y="6" width="2.5" height="26" rx="1" fill="'+color+'"/><path d="M12.5 6 L23 11 L12.5 16 Z" fill="'+color+'"/><circle cx="11.25" cy="4.5" r="2.5" fill="'+color+'"/></svg>';
+                return '<svg viewBox="0 0 24 36" width="24" height="36"><rect x="10" y="6" width="2.5" height="26" rx="1" fill="'+color+'"/><path d="M12.5 6 L23 11 L12.5 16 Z" fill="'+color+'"/><circle cx="11.25" cy="4.5" r="2.5" fill="'+color+'"/></svg>';
             default:
-                return '<svg viewBox="0 0 24 36" width="27" height="40"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0z" fill="'+color+'"/><circle cx="12" cy="12" r="5" fill="'+inner+'"/></svg>';
+                return '<svg viewBox="0 0 24 36" width="24" height="36"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0z" fill="'+color+'"/><circle cx="12" cy="12" r="5" fill="'+inner+'"/></svg>';
         }
+    }
+    function getMarkerSize(style) {
+        if (style === 'circle') return { w: 28, h: 28 };
+        if (style === 'diamond') return { w: 24, h: 32 };
+        return { w: 24, h: 36 }; // pin, flag
     }
 
     regions.forEach(function(region) {
+        var style = region.mr_marker_style || 'pin';
+        var sz = getMarkerSize(style);
         var marker = document.createElement('div');
         marker.className = 'lore-marker';
         marker.style.left = region.mr_map_x + '%';
         marker.style.top = region.mr_map_y + '%';
+        marker.style.width = sz.w + 'px';
+        marker.style.height = sz.h + 'px';
+        marker.style.marginLeft = (-sz.w / 2) + 'px';
+        marker.style.marginTop = (-sz.h) + 'px';
         marker.title = region.mr_name;
-        marker.innerHTML = getMarkerSVG(region.mr_marker_style || 'pin', 'var(--mg-accent)', 'var(--mg-bg-primary)');
+        marker.innerHTML = getMarkerSVG(style, 'var(--mg-accent)', 'var(--mg-bg-primary)');
 
         marker.onclick = function(e) {
             e.stopPropagation();
@@ -147,7 +158,7 @@ include_once(G5_THEME_PATH.'/head.php');
             imgHtml +
             '<div class="lore-popup-body">' +
                 '<div class="lore-popup-name">' + escHtml(region.mr_name) + '</div>' +
-                (region.mr_desc ? '<div class="lore-popup-desc">' + escHtml(region.mr_desc) + '</div>' : '') +
+                (region.mr_desc ? '<div class="lore-popup-desc">' + escHtml(region.mr_desc).replace(/\n/g, '<br>') + '</div>' : '') +
             '</div></div>';
 
         popupEl.style.display = 'block';
@@ -158,20 +169,18 @@ include_once(G5_THEME_PATH.'/head.php');
         var popupH = popupEl.firstChild.offsetHeight;
 
         // 마커 중앙 기준 위치 계산
-        var markerCX = markerRect.left - mapRect.left + container.scrollLeft + markerRect.width / 2;
-        var markerTopY = markerRect.top - mapRect.top + container.scrollTop;
+        var markerCX = markerRect.left - mapRect.left + markerRect.width / 2;
+        var markerTopY = markerRect.top - mapRect.top;
 
         var popupLeft = markerCX - popupW / 2;
         var popupTop = markerTopY - popupH - 10;
 
-        // 뷰포트 기준 클램핑 (현재 보이는 영역 내)
-        var visibleLeft = container.scrollLeft + 8;
-        var visibleRight = container.scrollLeft + container.clientWidth - 8;
-        if (popupLeft < visibleLeft) popupLeft = visibleLeft;
-        if (popupLeft + popupW > visibleRight) popupLeft = visibleRight - popupW;
+        // 좌우 경계 클램핑
+        if (popupLeft < 8) popupLeft = 8;
+        if (popupLeft + popupW > container.clientWidth - 8) popupLeft = container.clientWidth - popupW - 8;
 
         // 상단 넘침 → 마커 아래로
-        if (popupTop < container.scrollTop + 8) {
+        if (popupTop < 8) {
             popupTop = markerTopY + markerRect.height + 10;
         }
 

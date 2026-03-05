@@ -52,8 +52,8 @@ if ($mode == 'add') {
     if (!in_array($pm_status, array('draft', 'active'))) $pm_status = 'draft';
 
     // 날짜 처리
-    $start_sql = $pm_start_date ? "'".sql_real_escape_string($pm_start_date)."'" : 'NULL';
-    $end_sql = $pm_end_date ? "'".sql_real_escape_string($pm_end_date)."'" : 'NULL';
+    $start_sql = $pm_start_date ? "'{$pm_start_date}'" : 'NULL';
+    $end_sql = $pm_end_date ? "'{$pm_end_date}'" : 'NULL';
 
     // 배너 이미지 업로드
     $pm_banner = '';
@@ -66,12 +66,8 @@ if ($mode == 'add') {
         }
     }
 
-    $bo_esc = sql_real_escape_string($bo_table);
-    $title_esc = sql_real_escape_string($pm_title);
-    $content_esc = sql_real_escape_string($pm_content);
-    $tags_esc = sql_real_escape_string($pm_tags);
-    $banner_esc = sql_real_escape_string($pm_banner);
-    $admin_id = sql_real_escape_string($member['mb_id']);
+    $banner_esc = sql_real_escape_string($pm_banner);  // 파일 업로드 결과 (POST 아님)
+    $admin_id = sql_real_escape_string($member['mb_id']);  // DB $member (POST 아님)
     $material_id_sql = $pm_material_id > 0 ? $pm_material_id : 'NULL';
 
     sql_query("INSERT INTO {$g5['mg_prompt_table']}
@@ -79,10 +75,10 @@ if ($mode == 'add') {
          pm_point, pm_bonus_point, pm_bonus_count, pm_material_id, pm_material_qty,
          pm_min_chars, pm_max_entry, pm_banner, pm_tags, pm_status, pm_admin_id, pm_created)
         VALUES
-        ('{$bo_esc}', '{$title_esc}', '{$content_esc}', '{$pm_cycle}', '{$pm_mode}',
+        ('{$bo_table}', '{$pm_title}', '{$pm_content}', '{$pm_cycle}', '{$pm_mode}',
          {$start_sql}, {$end_sql},
          {$pm_point}, {$pm_bonus_point}, {$pm_bonus_count}, {$material_id_sql}, {$pm_material_qty},
-         {$pm_min_chars}, {$pm_max_entry}, '{$banner_esc}', '{$tags_esc}', '{$pm_status}', '{$admin_id}', NOW())");
+         {$pm_min_chars}, {$pm_max_entry}, '{$banner_esc}', '{$pm_tags}', '{$pm_status}', '{$admin_id}', NOW())");
 
     goto_url('./prompt.php');
 }
@@ -132,8 +128,8 @@ if ($mode == 'edit') {
     if (!in_array($pm_status, array('draft', 'active'))) $pm_status = $existing['pm_status'];
 
     // 날짜 처리
-    $start_sql = $pm_start_date ? "'".sql_real_escape_string($pm_start_date)."'" : 'NULL';
-    $end_sql = $pm_end_date ? "'".sql_real_escape_string($pm_end_date)."'" : 'NULL';
+    $start_sql = $pm_start_date ? "'{$pm_start_date}'" : 'NULL';
+    $end_sql = $pm_end_date ? "'{$pm_end_date}'" : 'NULL';
 
     // 배너 이미지 처리
     $pm_banner = $existing['pm_banner'];
@@ -173,17 +169,13 @@ if ($mode == 'edit') {
         }
     }
 
-    $bo_esc = sql_real_escape_string($bo_table);
-    $title_esc = sql_real_escape_string($pm_title);
-    $content_esc = sql_real_escape_string($pm_content);
-    $tags_esc = sql_real_escape_string($pm_tags);
-    $banner_esc = sql_real_escape_string($pm_banner);
+    $banner_esc = sql_real_escape_string($pm_banner);  // DB 기존값 또는 파일 업로드 결과 (POST 아님)
     $material_id_sql = $pm_material_id > 0 ? $pm_material_id : 'NULL';
 
     sql_query("UPDATE {$g5['mg_prompt_table']} SET
-        bo_table = '{$bo_esc}',
-        pm_title = '{$title_esc}',
-        pm_content = '{$content_esc}',
+        bo_table = '{$bo_table}',
+        pm_title = '{$pm_title}',
+        pm_content = '{$pm_content}',
         pm_cycle = '{$pm_cycle}',
         pm_mode = '{$pm_mode}',
         pm_start_date = {$start_sql},
@@ -196,7 +188,7 @@ if ($mode == 'edit') {
         pm_min_chars = {$pm_min_chars},
         pm_max_entry = {$pm_max_entry},
         pm_banner = '{$banner_esc}',
-        pm_tags = '{$tags_esc}',
+        pm_tags = '{$pm_tags}',
         pm_status = '{$pm_status}'
         WHERE pm_id = {$pm_id}");
 

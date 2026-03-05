@@ -45,7 +45,7 @@ if ($w === 'give') {
     }
 
     // 회원 확인
-    $member_check = sql_fetch("SELECT mb_id FROM {$g5['member_table']} WHERE mb_id = '".sql_real_escape_string($mb_id)."'");
+    $member_check = sql_fetch("SELECT mb_id FROM {$g5['member_table']} WHERE mb_id = '{$mb_id}'");
     if (!$member_check) {
         alert('존재하지 않는 회원입니다.');
     }
@@ -72,12 +72,12 @@ if ($w === 'stamina') {
     }
 
     // 회원 확인
-    $member_check = sql_fetch("SELECT mb_id FROM {$g5['member_table']} WHERE mb_id = '".sql_real_escape_string($mb_id)."'");
+    $member_check = sql_fetch("SELECT mb_id FROM {$g5['member_table']} WHERE mb_id = '{$mb_id}'");
     if (!$member_check) {
         alert('존재하지 않는 회원입니다.');
     }
 
-    $mb_id_esc = sql_real_escape_string($mb_id);
+    $mb_id_esc = $mb_id;
 
     // 스테미나 레코드가 없으면 생성
     mg_get_stamina($mb_id);
@@ -94,7 +94,7 @@ if ($w === 'stamina') {
 $mt_code = isset($_POST['mt_code']) ? clean_xss_tags($_POST['mt_code']) : '';
 $mt_name = isset($_POST['mt_name']) ? clean_xss_tags($_POST['mt_name']) : '';
 $mt_icon = isset($_POST['mt_icon']) ? clean_xss_tags($_POST['mt_icon']) : '';
-$mt_desc = isset($_POST['mt_desc']) ? clean_xss_tags($_POST['mt_desc']) : '';
+$mt_desc = isset($_POST['mt_desc']) ? clean_xss_tags($_POST['mt_desc'], 0, 0, 0, 0) : '';
 $mt_order = isset($_POST['mt_order']) ? (int)$_POST['mt_order'] : 0;
 $del_icon = isset($_POST['del_icon']) ? true : false;
 
@@ -160,10 +160,10 @@ if (isset($_FILES['mt_icon_file']) && $_FILES['mt_icon_file']['tmp_name']) {
     $mt_icon = $old_icon;
 }
 
-$mt_code_esc = sql_real_escape_string($mt_code);
-$mt_name_esc = sql_real_escape_string($mt_name);
-$mt_icon_esc = sql_real_escape_string($mt_icon);
-$mt_desc_esc = sql_real_escape_string($mt_desc);
+$mt_code_esc = $mt_code;
+$mt_name_esc = $mt_name;
+$mt_icon_esc = $mt_icon;
+$mt_desc_esc = $mt_desc;
 
 if ($w === 'u' && $mt_id > 0) {
     // 수정 (코드는 변경 불가)

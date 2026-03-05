@@ -1,7 +1,7 @@
 <?php
 /**
  * Morgan Edition - 개척 현황 목록 스킨
- * 카드뷰 + 거점뷰 (맵 마커), 시설 상세 모달 통합
+ * 카드 목록 + 이미지 모드 (맵 마커), 시설 상세 모달 통합
  */
 
 if (!defined('_GNUBOARD_')) exit;
@@ -69,18 +69,20 @@ unset($_fc);
 
     <?php if ($pioneer_view_mode === 'base') { ?>
     <!-- =============================== -->
-    <!-- 거점뷰 (맵 이미지 + 마커) -->
+    <!-- 이미지 모드 (맵 이미지 + 마커) -->
     <!-- =============================== -->
     <div id="pioneer-base-view">
-        <div id="pn-map-container" class="pn-map-container" data-map-fullview
-            <img src="<?php echo htmlspecialchars($pioneer_map_image); ?>" id="pn-map-image" class="pn-map-image" alt="거점 이미지" draggable="false">
-            <div id="pn-map-markers"></div>
+        <div style="text-align:center;">
+            <div id="pn-map-container" class="pn-map-container">
+                <img src="<?php echo htmlspecialchars($pioneer_map_image); ?>" id="pn-map-image" class="pn-map-image" alt="개척지 이미지" draggable="false">
+                <div id="pn-map-markers"></div>
+            </div>
         </div>
     </div>
 
     <?php } else { ?>
     <!-- =============================== -->
-    <!-- 카드뷰 -->
+    <!-- 카드 목록 -->
     <!-- =============================== -->
     <div class="pn-card-grid">
         <?php
@@ -128,7 +130,7 @@ unset($_fc);
                     </span>
                 </div>
 
-                <p class="pn-card-desc"><?php echo htmlspecialchars($facility['fc_desc']); ?></p>
+                <p class="pn-card-desc"><?php echo nl2br(htmlspecialchars($facility['fc_desc'])); ?></p>
 
                 <div class="pn-card-footer">
                     <?php if ($facility['fc_status'] === 'building') { ?>
@@ -302,7 +304,7 @@ unset($_fc);
 .pn-stat-locked .pn-stat-value { color: #6b7280; }
 
 /* ============================== */
-/* 카드뷰 */
+/* 카드 목록 */
 /* ============================== */
 .pn-card-grid {
     display: grid;
@@ -391,15 +393,13 @@ unset($_fc);
 }
 
 /* ============================== */
-/* 거점뷰 (맵) */
+/* 이미지 모드 (맵) */
 /* ============================== */
-.pn-map-container { position: relative; overflow: auto; border-radius: 12px; border: 1px solid var(--mg-bg-tertiary); background: var(--mg-bg-secondary); }
-.pn-map-image { display: block; width: 100%; min-width: 600px; user-select: none; }
+.pn-map-container { position: relative; display: inline-block; max-width: 100%; overflow: hidden; border: 1px solid var(--mg-bg-tertiary); background: var(--mg-bg-secondary); }
+.pn-map-image { display: block; max-width: 100%; height: auto; user-select: none; }
 
 .pn-marker {
-    position: absolute; width: 44px; height: 44px; margin-left: -22px; margin-top: -44px;
-    cursor: pointer; transition: transform 0.15s; z-index: 5; user-select: none;
-    display: flex; align-items: center; justify-content: center;
+    position: absolute; cursor: pointer; transition: transform 0.15s; z-index: 5; user-select: none;
 }
 .pn-marker:hover { transform: scale(1.2); z-index: 10; }
 .pn-marker svg { width: 100%; height: 100%; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
@@ -649,7 +649,7 @@ unset($_fc);
         html += '<span class="pn-m-name">' + esc(fc.fc_name) + '</span>';
         html += '<span class="pn-card-badge" style="color:' + statusColor + ';border-color:' + statusColor + '30;background:' + statusColor + '15;">' + statusLabel + '</span>';
         html += '</div>';
-        if (fc.fc_desc) html += '<div class="pn-m-desc">' + esc(fc.fc_desc) + '</div>';
+        if (fc.fc_desc) html += '<div class="pn-m-desc">' + esc(fc.fc_desc).replace(/\n/g, '<br>') + '</div>';
         html += '</div></div></div></div>';
 
         // 진행률 (건설 중)
@@ -822,14 +822,30 @@ unset($_fc);
         .catch(function() { alert('오류가 발생했습니다.'); });
     };
 
-    // === 거점뷰 마커 ===
+    // === 이미지 모드 마커 ===
     <?php if ($pioneer_view_mode === 'base') { ?>
     (function() {
-        mgMapFullview(document.getElementById('pn-map-container'));
         var markersEl = document.getElementById('pn-map-markers');
 
-        function getMarkerSVG(color, inner) {
-            return '<svg viewBox="0 0 24 36" width="27" height="40"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0z" fill="'+color+'"/><circle cx="12" cy="12" r="5" fill="'+inner+'"/></svg>';
+        var MARKER_STYLE = '<?php echo addslashes(mg_config('map_marker_style', 'pin')); ?>';
+
+        function getMarkerSVG(style, color, inner) {
+            switch (style) {
+                case 'circle':
+                    return '<svg viewBox="0 0 28 28" width="28" height="28"><circle cx="14" cy="14" r="12" fill="'+color+'" stroke="'+inner+'" stroke-width="2.5"/><circle cx="14" cy="14" r="4" fill="'+inner+'"/></svg>';
+                case 'diamond':
+                    return '<svg viewBox="0 0 24 32" width="24" height="32"><path d="M12 1 L23 16 L12 31 L1 16 Z" fill="'+color+'" stroke="'+inner+'" stroke-width="1.5"/><circle cx="12" cy="16" r="3.5" fill="'+inner+'"/></svg>';
+                case 'flag':
+                    return '<svg viewBox="0 0 24 36" width="24" height="36"><rect x="10" y="6" width="2.5" height="26" rx="1" fill="'+color+'"/><path d="M12.5 6 L23 11 L12.5 16 Z" fill="'+color+'"/><circle cx="11.25" cy="4.5" r="2.5" fill="'+color+'"/></svg>';
+                default:
+                    return '<svg viewBox="0 0 24 36" width="24" height="36"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0z" fill="'+color+'"/><circle cx="12" cy="12" r="5" fill="'+inner+'"/></svg>';
+            }
+        }
+
+        function getMarkerSize(style) {
+            if (style === 'circle') return { w: 28, h: 28 };
+            if (style === 'diamond') return { w: 24, h: 32 };
+            return { w: 24, h: 36 }; // pin, flag
         }
 
         facilitiesData.forEach(function(fc) {
@@ -838,12 +854,17 @@ unset($_fc);
             var color = locked ? '#6b7280' : (fc.fc_status === 'complete' ? '#10b981' : '#f59f0a');
             var inner = locked ? '#4b5563' : '#1e1f22';
 
+            var sz = getMarkerSize(MARKER_STYLE);
             var marker = document.createElement('div');
             marker.className = 'pn-marker' + (locked ? ' is-locked' : '');
             marker.style.left = fc.fc_map_x + '%';
             marker.style.top = fc.fc_map_y + '%';
+            marker.style.width = sz.w + 'px';
+            marker.style.height = sz.h + 'px';
+            marker.style.marginLeft = (-sz.w / 2) + 'px';
+            marker.style.marginTop = (-sz.h) + 'px';
             marker.title = fc.fc_name;
-            marker.innerHTML = getMarkerSVG(color, inner);
+            marker.innerHTML = getMarkerSVG(MARKER_STYLE, color, inner);
 
             if (!locked) {
                 marker.onclick = function(e) { e.stopPropagation(); openFacilityModal(fc.fc_id); };

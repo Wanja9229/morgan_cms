@@ -39,15 +39,14 @@ $btn_reject = isset($_POST['btn_reject']);
 // 반려 버튼 클릭 시
 if ($btn_reject) {
     if ($char['ch_state'] == 'pending') {
-        $reject_reason = isset($_POST['reject_reason']) ? trim(clean_xss_tags($_POST['reject_reason'])) : '';
+        $reject_reason = isset($_POST['reject_reason']) ? trim(clean_xss_tags($_POST['reject_reason'], 0, 0, 0, 0)) : '';
 
         // editing 상태로 되돌림
         sql_query("UPDATE {$g5['mg_character_table']} SET ch_state = 'editing', ch_update = NOW() WHERE ch_id = {$ch_id}");
 
         // 로그 기록
-        $reason_esc = sql_real_escape_string($reject_reason);
         sql_query("INSERT INTO {$g5['mg_character_log_table']} (ch_id, log_action, log_memo, admin_id)
-                   VALUES ({$ch_id}, 'reject', '{$reason_esc}', '{$member['mb_id']}')");
+                   VALUES ({$ch_id}, 'reject', '{$reject_reason}', '{$member['mb_id']}')");
 
         // 알림 발송
         if (function_exists('mg_notify')) {
@@ -153,7 +152,7 @@ if ($ch_main) {
 
 // 캐릭터 정보 업데이트
 $sql = "UPDATE {$g5['mg_character_table']} SET
-        ch_name = '".sql_real_escape_string($ch_name)."',
+        ch_name = '{$ch_name}',
         side_id = ".($side_id ? $side_id : 'NULL').",
         class_id = ".($class_id ? $class_id : 'NULL').",
         ch_state = '{$ch_state}',
@@ -243,9 +242,9 @@ foreach ($profile as $pf_id => $value) {
     $exists = sql_fetch("SELECT pv_id FROM {$g5['mg_profile_value_table']} WHERE ch_id = {$ch_id} AND pf_id = {$pf_id}");
 
     if ($exists['pv_id']) {
-        sql_query("UPDATE {$g5['mg_profile_value_table']} SET pv_value = '".sql_real_escape_string($value)."' WHERE pv_id = {$exists['pv_id']}");
+        sql_query("UPDATE {$g5['mg_profile_value_table']} SET pv_value = '{$value}' WHERE pv_id = {$exists['pv_id']}");
     } else {
-        sql_query("INSERT INTO {$g5['mg_profile_value_table']} (ch_id, pf_id, pv_value) VALUES ({$ch_id}, {$pf_id}, '".sql_real_escape_string($value)."')");
+        sql_query("INSERT INTO {$g5['mg_profile_value_table']} (ch_id, pf_id, pv_value) VALUES ({$ch_id}, {$pf_id}, '{$value}')");
     }
 }
 

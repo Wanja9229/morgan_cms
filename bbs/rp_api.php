@@ -95,7 +95,7 @@ switch ($action) {
             exit;
         }
 
-        sql_query("UPDATE {$g5['mg_rp_reply_table']} SET rr_content = '".sql_real_escape_string($rr_content)."' WHERE rr_id = {$rr_id}");
+        sql_query("UPDATE {$g5['mg_rp_reply_table']} SET rr_content = '{$rr_content}' WHERE rr_id = {$rr_id}");
 
         // 렌더링된 HTML 반환
         $content_html = htmlspecialchars($rr_content);

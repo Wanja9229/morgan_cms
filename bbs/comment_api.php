@@ -312,7 +312,7 @@ function _cmt_api_write($board, $write_table) {
     }
 
     // XSS 방지
-    $wr_content_escaped = sql_real_escape_string(clean_xss_tags($wr_content, 1));
+    $wr_content_escaped = clean_xss_tags($wr_content, 1);
     $mb_id_esc = sql_real_escape_string($member['mb_id']);
     $mb_nick_esc = sql_real_escape_string($board['bo_use_name'] ? $member['mb_name'] : $member['mb_nick']);
     $mb_email_esc = sql_real_escape_string($member['mb_email']);
@@ -443,7 +443,7 @@ function _cmt_api_edit($board, $write_table) {
         if ($cnt['cnt']) _cmt_api_error('답변댓글이 있어 수정할 수 없습니다.');
     }
 
-    $wr_content_escaped = sql_real_escape_string(clean_xss_tags($wr_content, 1));
+    $wr_content_escaped = clean_xss_tags($wr_content, 1);
     $sql_ip = $is_admin ? '' : ", wr_ip = '{$_SERVER['REMOTE_ADDR']}'";
 
     sql_query("UPDATE {$write_table}
