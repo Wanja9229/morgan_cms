@@ -221,6 +221,15 @@ if (isset($_POST['site_logo_action']) && $_POST['site_logo_action'] === '__DELET
     }
     sql_query("DELETE FROM {$g5['mg_config_table']} WHERE cf_key = 'site_logo'");
 }
+elseif (isset($_FILES['site_logo']) && $_FILES['site_logo']['error'] !== UPLOAD_ERR_OK && $_FILES['site_logo']['error'] !== UPLOAD_ERR_NO_FILE) {
+    $err_code = $_FILES['site_logo']['error'];
+    $php_max = ini_get('upload_max_filesize');
+    if ($err_code == UPLOAD_ERR_INI_SIZE || $err_code == UPLOAD_ERR_FORM_SIZE) {
+        alert('로고 업로드 실패: 서버 최대 업로드 용량('.$php_max.')을 초과했습니다.');
+    } else {
+        alert('로고 업로드 실패: PHP 에러 코드 '.$err_code);
+    }
+}
 elseif (isset($_FILES['site_logo']) && $_FILES['site_logo']['error'] === UPLOAD_ERR_OK) {
     $file = $_FILES['site_logo'];
     $allowed_ext = array('jpg', 'jpeg', 'png', 'gif', 'webp', 'svg');
@@ -279,6 +288,16 @@ if (isset($_POST['bg_image_url']) && $_POST['bg_image_url'] === '__DELETE__') {
     }
     // DB에서 삭제
     sql_query("DELETE FROM {$g5['mg_config_table']} WHERE cf_key = 'bg_image'");
+}
+// PHP 업로드 에러 (서버 upload_max_filesize 초과 등)
+elseif (isset($_FILES['bg_image']) && $_FILES['bg_image']['error'] !== UPLOAD_ERR_OK && $_FILES['bg_image']['error'] !== UPLOAD_ERR_NO_FILE) {
+    $err_code = $_FILES['bg_image']['error'];
+    $php_max = ini_get('upload_max_filesize');
+    if ($err_code == UPLOAD_ERR_INI_SIZE || $err_code == UPLOAD_ERR_FORM_SIZE) {
+        alert('배경 이미지 업로드 실패: 서버 최대 업로드 용량('.$php_max.')을 초과했습니다.');
+    } else {
+        alert('배경 이미지 업로드 실패: PHP 에러 코드 '.$err_code);
+    }
 }
 // 새 이미지 업로드인 경우
 elseif (isset($_FILES['bg_image']) && $_FILES['bg_image']['error'] === UPLOAD_ERR_OK) {
