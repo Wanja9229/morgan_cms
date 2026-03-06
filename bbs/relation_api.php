@@ -12,6 +12,12 @@ if (!$is_member) {
     exit;
 }
 
+// 개척 해금 체크
+if (function_exists('mg_is_unlocked') && !mg_is_unlocked('relation')) {
+    echo json_encode(array('success' => false, 'message' => '관계 기능이 아직 해금되지 않았습니다.'));
+    exit;
+}
+
 $action = isset($_POST['action']) ? $_POST['action'] : (isset($_GET['action']) ? $_GET['action'] : '');
 
 switch ($action) {

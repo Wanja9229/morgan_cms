@@ -175,7 +175,7 @@ unset($_fc);
                     <?php } else { ?>
                     <div class="pn-locked-footer">
                         <?php if ($facility['fc_unlock_type']) {
-                            $unlock_labels = array('board'=>'게시판','shop'=>'상점','gift'=>'선물함','achievement'=>'업적','history'=>'연대기','fountain'=>'분수대');
+                            $unlock_labels = array('board'=>'게시판','shop'=>'상점','gift'=>'선물함','achievement'=>'업적','history'=>'연대기','fountain'=>'분수대','expedition'=>'파견','concierge'=>'의뢰','seal'=>'인장','radio'=>'라디오','emoticon_create'=>'이모티콘 제작','relation'=>'관계');
                             $ul = isset($unlock_labels[$facility['fc_unlock_type']]) ? $unlock_labels[$facility['fc_unlock_type']] : $facility['fc_unlock_type'];
                         ?>
                         <span style="color:var(--mg-text-muted);font-size:0.75rem;">해금: <?php echo $ul; ?></span>

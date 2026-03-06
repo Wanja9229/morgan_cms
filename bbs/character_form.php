@@ -587,6 +587,14 @@ include_once(G5_THEME_PATH.'/head.php');
     <!-- 관계 탭 -->
     <div id="tab-relation" class="cf-tab-content" style="<?php echo $active_tab !== 'relation' ? 'display:none' : ''; ?>">
 
+        <?php if (function_exists('mg_is_unlocked') && !mg_is_unlocked('relation')) { ?>
+        <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary p-8 text-center">
+            <div style="font-size:2rem;margin-bottom:0.5rem;">🔒</div>
+            <p class="text-mg-text-muted text-sm">관계 기능이 아직 해금되지 않았습니다.</p>
+            <p class="text-mg-text-muted text-xs mt-1">개척 시설을 완공하면 이용할 수 있습니다.</p>
+        </div>
+        <?php } else { ?>
+
         <!-- 받은 신청 -->
         <div class="mb-6">
             <h2 class="text-lg font-bold text-mg-text-primary mb-3">
@@ -799,6 +807,7 @@ include_once(G5_THEME_PATH.'/head.php');
                 </div>
             </div>
         </div>
+    <?php } ?>
     </div>
     <?php } ?>
 </div>

@@ -196,7 +196,8 @@ $_marker_style = mg_config('map_marker_style', 'pin');
                                 'concierge' => '의뢰',
                                 'seal' => '인장',
                                 'radio' => '라디오',
-                                'emoticon_create' => '이모티콘 제작'
+                                'emoticon_create' => '이모티콘 제작',
+                                'relation' => '관계'
                             );
                             $label = isset($unlock_labels[$fc['fc_unlock_type']]) ? $unlock_labels[$fc['fc_unlock_type']] : $fc['fc_unlock_type'];
                         ?>
@@ -340,6 +341,7 @@ $_marker_style = mg_config('map_marker_style', 'pin');
                             <option value="seal">인장</option>
                             <option value="radio">라디오</option>
                             <option value="emoticon_create">이모티콘 제작</option>
+                            <option value="relation">관계</option>
                         </select>
                     </div>
                     <div class="mg-form-group" id="unlock_target_group">

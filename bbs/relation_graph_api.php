@@ -8,6 +8,12 @@ include_once(G5_PATH.'/plugin/morgan/morgan.php');
 
 header('Content-Type: application/json; charset=utf-8');
 
+// 개척 해금 체크
+if (function_exists('mg_is_unlocked') && !mg_is_unlocked('relation')) {
+    echo json_encode(array('nodes' => array(), 'edges' => array(), 'locked' => true));
+    exit;
+}
+
 $ch_id = isset($_GET['ch_id']) ? (int)$_GET['ch_id'] : 0;
 $depth = isset($_GET['depth']) ? (int)$_GET['depth'] : 2;
 $faction_id = isset($_GET['faction_id']) ? (int)$_GET['faction_id'] : 0;
