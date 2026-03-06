@@ -18,6 +18,12 @@ if (!$is_member) {
     exit;
 }
 
+// 의뢰 해금 체크
+if (!mg_is_concierge_unlocked()) {
+    echo json_encode(array('success' => false, 'message' => '의뢰 시설이 아직 건설되지 않았습니다.'));
+    exit;
+}
+
 $action = isset($_POST['action']) ? $_POST['action'] : (isset($_GET['action']) ? $_GET['action'] : '');
 $mb_id = $member['mb_id'];
 

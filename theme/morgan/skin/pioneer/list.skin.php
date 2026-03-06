@@ -22,7 +22,11 @@ unset($_fc);
     <!-- 탭 네비게이션 -->
     <div class="flex gap-2 mb-6 border-b border-mg-bg-tertiary pb-3">
         <a href="<?php echo G5_BBS_URL; ?>/pioneer.php" class="px-4 py-2 text-sm font-medium text-mg-accent bg-mg-accent/10 rounded-lg">시설 건설</a>
+        <?php if (mg_is_expedition_unlocked()) { ?>
         <a href="<?php echo G5_BBS_URL; ?>/pioneer.php?view=expedition" class="px-4 py-2 text-sm font-medium text-mg-text-secondary hover:text-mg-text-primary rounded-lg transition-colors">탐색 파견</a>
+        <?php } else { ?>
+        <span class="px-4 py-2 text-sm font-medium text-mg-text-muted rounded-lg cursor-not-allowed opacity-50" title="파견 시설 건설 필요">탐색 파견 🔒</span>
+        <?php } ?>
     </div>
 
     <!-- 헤더 -->

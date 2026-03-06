@@ -16,6 +16,11 @@ if (!mg_config('emoticon_use', '1') || !mg_config('emoticon_creator_use', '1')) 
     alert('이모티콘 제작 기능이 비활성화되어 있습니다.');
 }
 
+// 이모티콘 제작 해금 체크
+if (!mg_is_emoticon_create_unlocked()) {
+    alert('이모티콘 제작 시설이 아직 건설되지 않았습니다.');
+}
+
 $action = isset($_POST['action']) ? $_POST['action'] : '';
 $es_id = isset($_POST['es_id']) ? (int)$_POST['es_id'] : 0;
 

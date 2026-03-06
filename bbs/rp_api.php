@@ -275,6 +275,16 @@ switch ($action) {
         echo json_encode(array('success' => true, 'completions' => $completions, 'min_mutual' => $min_mutual));
         break;
 
+    case 'use_rp_pin':
+        $rt_id = isset($_POST['rt_id']) ? (int)$_POST['rt_id'] : 0;
+        if (!$rt_id) {
+            echo json_encode(array('success' => false, 'message' => '잘못된 요청입니다.'));
+            exit;
+        }
+        $result = mg_use_rp_pin($member['mb_id'], $rt_id);
+        echo json_encode($result);
+        break;
+
     default:
         echo json_encode(array('success' => false, 'message' => '알 수 없는 액션입니다.'));
 }

@@ -229,6 +229,11 @@ else
 {
     $write_min = (int)$board['bo_write_min'];
     $write_max = (int)$board['bo_write_max'];
+
+    // 글자수 확장권 보유 시 상한 확장
+    if ($write_max > 0 && function_exists('mg_has_write_expand') && mg_has_write_expand($member['mb_id'])) {
+        $write_max = max($write_max, 30000);
+    }
 }
 
 $g5['title'] = ((G5_IS_MOBILE && $board['bo_mobile_subject']) ? $board['bo_mobile_subject'] : $board['bo_subject']).' '.$title_msg;

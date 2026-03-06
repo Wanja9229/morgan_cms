@@ -212,7 +212,7 @@ CREATE TABLE IF NOT EXISTS `mg_shop_item` (
     `si_desc` text COMMENT '설명',
     `si_image` varchar(500) DEFAULT NULL COMMENT '이미지',
     `si_price` int NOT NULL COMMENT '가격',
-    `si_type` enum('title','badge','nick_color','nick_effect','profile_border','equip','emoticon_set','emoticon_reg','furniture','material','seal_bg','seal_frame','seal_hover','profile_skin','profile_bg','char_slot','concierge_extra','title_prefix','title_suffix','radio_song','radio_ment','relation_slot','concierge_direct_pick','etc') NOT NULL DEFAULT 'etc' COMMENT '타입',
+    `si_type` enum('title','badge','nick_color','nick_effect','profile_border','equip','emoticon_set','emoticon_reg','furniture','material','seal_bg','seal_frame','seal_hover','seal_effect','profile_skin','profile_bg','profile_effect','char_slot','concierge_extra','title_prefix','title_suffix','radio_song','radio_ment','relation_slot','concierge_direct_pick','rp_pin','expedition_time','expedition_reward','expedition_stamina','expedition_slot','write_expand','achievement_slot','concierge_boost','nick_bg','etc') NOT NULL DEFAULT 'etc' COMMENT '타입',
     `si_effect` text COMMENT '효과 데이터 (JSON)',
     `si_stock` int NOT NULL DEFAULT -1 COMMENT '재고 (-1=무제한)',
     `si_stock_sold` int NOT NULL DEFAULT 0 COMMENT '판매 수량',
@@ -386,6 +386,7 @@ CREATE TABLE IF NOT EXISTS `mg_rp_thread` (
     `rt_reply_count` int NOT NULL DEFAULT 0 COMMENT '이음 수',
     `rt_datetime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일',
     `rt_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '최근 활동일',
+    `rt_pinned_until` datetime DEFAULT NULL COMMENT '상단 노출 만료일시',
     PRIMARY KEY (`rt_id`),
     INDEX `idx_status` (`rt_status`),
     INDEX `idx_update` (`rt_update`),
@@ -1844,6 +1845,9 @@ CREATE TABLE IF NOT EXISTS `mg_user_achievement_display` (
     `slot_3` int DEFAULT NULL,
     `slot_4` int DEFAULT NULL,
     `slot_5` int DEFAULT NULL,
+    `slot_6` int DEFAULT NULL,
+    `slot_7` int DEFAULT NULL,
+    `slot_8` int DEFAULT NULL,
     PRIMARY KEY (`mb_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='업적 쇼케이스';
 
@@ -2090,6 +2094,7 @@ CREATE TABLE IF NOT EXISTS `mg_expedition_log` (
     `el_end` datetime NOT NULL COMMENT '파견 완료 예정 시각',
     `el_status` enum('active','complete','claimed','cancelled') NOT NULL DEFAULT 'active' COMMENT '상태',
     `el_rewards` text COMMENT '획득 보상 JSON',
+    `el_items_used` varchar(500) DEFAULT NULL COMMENT '사용된 소모품 JSON',
     PRIMARY KEY (`el_id`),
     INDEX `idx_expedition_mb` (`mb_id`, `el_status`),
     INDEX `idx_expedition_ch` (`ch_id`),
@@ -2412,6 +2417,52 @@ INSERT INTO `mg_shop_item` (`sc_id`, `si_name`, `si_desc`, `si_price`, `si_type`
 SELECT (SELECT sc_id FROM mg_shop_category WHERE sc_name = '이용권' LIMIT 1),
        '의뢰 지목권', '추첨 대신 지원자를 직접 선택할 수 있습니다 (1회 소모)', 300, 'concierge_direct_pick', '{}', -1, 1, 1, 1
 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_type = 'concierge_direct_pick');
+
+-- 24.3 신규 시스템 아이템 9종
+INSERT IGNORE INTO mg_shop_item (si_type, si_name, si_desc, si_price, si_image, si_effect, si_use, sc_id, si_consumable, si_display)
+SELECT 'rp_pin', '역극 상단 노출권 (3일)', '역극 목록에서 3일간 상단에 고정 노출됩니다.', 500, '', '{"duration_hours":72}', 1,
+ COALESCE((SELECT sc_id FROM mg_shop_category WHERE sc_name = '이용권' LIMIT 1), 0), 1, 1 FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_type = 'rp_pin');
+
+INSERT IGNORE INTO mg_shop_item (si_type, si_name, si_desc, si_price, si_image, si_effect, si_use, sc_id, si_consumable, si_display)
+SELECT 'expedition_time', '파견 시간 단축권', '파견 시간을 30% 단축합니다 (1회 소모)', 300, '', '{"reduce_percent":30}', 1,
+ COALESCE((SELECT sc_id FROM mg_shop_category WHERE sc_name = '이용권' LIMIT 1), 0), 1, 1 FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_type = 'expedition_time');
+
+INSERT IGNORE INTO mg_shop_item (si_type, si_name, si_desc, si_price, si_image, si_effect, si_use, sc_id, si_consumable, si_display)
+SELECT 'expedition_reward', '파견 보상 2배권', '파견 보상(포인트+재료)을 2배로 받습니다 (1회 소모)', 500, '', '{"reward_multi":2}', 1,
+ COALESCE((SELECT sc_id FROM mg_shop_category WHERE sc_name = '이용권' LIMIT 1), 0), 1, 1 FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_type = 'expedition_reward');
+
+INSERT IGNORE INTO mg_shop_item (si_type, si_name, si_desc, si_price, si_image, si_effect, si_use, sc_id, si_consumable, si_display)
+SELECT 'expedition_stamina', '스태미나 반감권', '파견 스태미나 소모를 50% 절감합니다 (1회 소모)', 400, '', '{"stamina_reduce_percent":50}', 1,
+ COALESCE((SELECT sc_id FROM mg_shop_category WHERE sc_name = '이용권' LIMIT 1), 0), 1, 1 FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_type = 'expedition_stamina');
+
+INSERT IGNORE INTO mg_shop_item (si_type, si_name, si_desc, si_price, si_image, si_effect, si_use, sc_id, si_consumable, si_display)
+SELECT 'expedition_slot', '파견 슬롯 추가권', '동시 파견 가능 수를 1개 추가합니다 (영구, 해제 불가)', 2000, '', '{"slots":1}', 1,
+ COALESCE((SELECT sc_id FROM mg_shop_category WHERE sc_name = '이용권' LIMIT 1), 0), 1, 1 FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_type = 'expedition_slot');
+
+INSERT IGNORE INTO mg_shop_item (si_type, si_name, si_desc, si_price, si_image, si_effect, si_use, sc_id, si_consumable, si_display)
+SELECT 'write_expand', '글자수 확장권', '게시글 글자 제한을 30000자로 확장합니다 (영구)', 1500, '', '{"max_chars":30000}', 1,
+ COALESCE((SELECT sc_id FROM mg_shop_category WHERE sc_name = '이용권' LIMIT 1), 0), 1, 1 FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_type = 'write_expand');
+
+INSERT IGNORE INTO mg_shop_item (si_type, si_name, si_desc, si_price, si_image, si_effect, si_use, sc_id, si_consumable, si_display)
+SELECT 'achievement_slot', '업적 쇼케이스 확장권', '업적 쇼케이스 슬롯을 1개 추가합니다 (영구, 최대 8개)', 1000, '', '{"slots":1}', 1,
+ COALESCE((SELECT sc_id FROM mg_shop_category WHERE sc_name = '이용권' LIMIT 1), 0), 1, 1 FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_type = 'achievement_slot');
+
+INSERT IGNORE INTO mg_shop_item (si_type, si_name, si_desc, si_price, si_image, si_effect, si_use, sc_id, si_consumable, si_display)
+SELECT 'concierge_boost', '의뢰 보상 부스터', '의뢰 완료 보상 포인트를 30% 추가로 받습니다 (1회 소모)', 400, '', '{"boost_percent":30}', 1,
+ COALESCE((SELECT sc_id FROM mg_shop_category WHERE sc_name = '이용권' LIMIT 1), 0), 1, 1 FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_type = 'concierge_boost');
+
+INSERT IGNORE INTO mg_shop_item (si_type, si_name, si_desc, si_price, si_image, si_effect, si_use, sc_id, si_consumable, si_display)
+SELECT 'nick_bg', '이름표 배경색 (앰버)', '닉네임에 배경색을 적용합니다', 300, '', '{"nick_bg":"#f59f0a","nick_bg_opacity":0.2}', 1,
+ COALESCE((SELECT sc_id FROM mg_shop_category WHERE sc_name = '이용권' LIMIT 1), 0), 0, 1 FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_type = 'nick_bg');
 
 -- ======================================
 -- 25. 히든 이벤트 시스템

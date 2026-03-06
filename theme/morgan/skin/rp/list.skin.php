@@ -31,6 +31,15 @@ if ($owner) {
     $owner_nick = $owner_row['mb_nick'] ?? $owner;
 }
 
+// 역극 상단 노출권 보유 수
+$rp_pin_count = 0;
+if ($is_member) {
+    $rp_pin_row = sql_fetch("SELECT SUM(iv.iv_count) as cnt FROM {$GLOBALS['g5']['mg_inventory_table']} iv
+                             JOIN {$GLOBALS['g5']['mg_shop_item_table']} si ON iv.si_id = si.si_id
+                             WHERE iv.mb_id = '".sql_real_escape_string($member['mb_id'])."' AND si.si_type = 'rp_pin' AND iv.iv_count > 0");
+    $rp_pin_count = (int)($rp_pin_row['cnt'] ?? 0);
+}
+
 // 기본 캐릭터 ID
 $default_ch_id = 0;
 foreach ($my_characters as $ch) {
@@ -162,6 +171,9 @@ function rp_time_ago($datetime) {
                         <!-- 제목 + 상태 -->
                         <div class="flex items-center gap-2 flex-wrap">
                             <h3 class="text-lg font-bold text-mg-text-primary"><?php echo htmlspecialchars($thread['rt_title']); ?></h3>
+                            <?php if (!empty($thread['rt_pinned_until']) && strtotime($thread['rt_pinned_until']) > time()) { ?>
+                            <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/20 text-amber-400" title="상단 노출 중">📌 노출</span>
+                            <?php } ?>
                             <?php if ($is_open) { ?>
                             <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-green-500/20 text-green-400">진행중</span>
                             <?php } else { ?>
@@ -181,6 +193,14 @@ function rp_time_ago($datetime) {
                 <div class="flex items-center gap-2 flex-shrink-0">
                     <!-- 전체 완결 버튼 (작성자 + open일 때만) -->
                     <?php if ($is_owner && $is_open) { ?>
+                    <?php
+                    $is_pinned = !empty($thread['rt_pinned_until']) && strtotime($thread['rt_pinned_until']) > time();
+                    if (!$is_pinned && $rp_pin_count > 0) { ?>
+                    <button type="button" onclick="useRpPin(<?php echo $thread['rt_id']; ?>)"
+                            class="text-xs px-3 py-1.5 rounded bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors" title="상단 노출권 사용 (<?php echo $rp_pin_count; ?>개 보유)">
+                        📌 상단 노출
+                    </button>
+                    <?php } ?>
                     <a href="<?php echo G5_BBS_URL; ?>/rp_close.php?rt_id=<?php echo $thread['rt_id']; ?>"
                        onclick="return confirm('모든 참여자를 완결 처리하고 역극을 종료하시겠습니까?\n(보상 조건 미충족 캐릭터는 보상 없이 완결됩니다)');"
                        class="text-xs px-3 py-1.5 rounded bg-mg-bg-tertiary text-mg-text-muted hover:bg-red-500/20 hover:text-red-400 transition-colors"
@@ -1018,6 +1038,22 @@ function rp_time_ago($datetime) {
                 }
             })
             .catch(function() { alert('삭제 중 오류가 발생했습니다.'); });
+    };
+
+    window.useRpPin = function(rtId) {
+        if (!confirm('역극 상단 노출권을 사용하시겠습니까? (1개 소모)')) return;
+
+        var formData = new FormData();
+        formData.append('action', 'use_rp_pin');
+        formData.append('rt_id', rtId);
+
+        fetch(RP_API_URL, { method: 'POST', body: formData })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                alert(data.message);
+                if (data.success) location.reload();
+            })
+            .catch(function() { alert('오류가 발생했습니다.'); });
     };
 
     // 글쓰기 폼 유효성 검사 (IIFE 내부에서 등록)

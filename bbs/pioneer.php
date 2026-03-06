@@ -23,6 +23,13 @@ if (!$_lv['allowed']) { alert_close("개척은 회원 레벨 {$_lv['required']} 
 $fc_id = isset($_GET['fc_id']) ? (int)$_GET['fc_id'] : 0;
 $view = isset($_GET['view']) ? clean_xss_tags($_GET['view']) : 'list';
 
+// 파견 탭 해금 체크
+if ($view === 'expedition' && !mg_is_expedition_unlocked()) {
+    $unlock_info = mg_get_unlock_info('expedition');
+    $fc_name = ($unlock_info && $unlock_info['fc_name']) ? $unlock_info['fc_name'] : '파견 사무소';
+    alert("탐색 파견은 '{$fc_name}' 건설 완료 후 이용 가능합니다.", G5_BBS_URL.'/pioneer.php');
+}
+
 // 유저 정보
 $my_stamina = mg_get_stamina($member['mb_id']);
 $my_materials = mg_get_materials($member['mb_id']);

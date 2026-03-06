@@ -18,6 +18,13 @@ if (!$is_member) {
     alert_close('로그인이 필요합니다.');
 }
 
+// 의뢰 해금 체크
+if (!mg_is_concierge_unlocked()) {
+    $unlock_info = mg_get_unlock_info('concierge');
+    $fc_name = ($unlock_info && $unlock_info['fc_name']) ? $unlock_info['fc_name'] : '중개소';
+    alert_close("의뢰는 '{$fc_name}' 건설 완료 후 이용 가능합니다.");
+}
+
 $tab = isset($_GET['tab']) ? clean_xss_tags($_GET['tab']) : 'market';
 if (!in_array($tab, array('market', 'my', 'results'))) $tab = 'market';
 

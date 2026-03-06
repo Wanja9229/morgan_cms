@@ -572,6 +572,15 @@ function mg_get_item_types() {
         'concierge_direct_pick' => array('name' => '의뢰 지목권', 'desc' => '추첨 대신 직접 선택 (소모품)', 'group' => 'system'),
         'radio_song' => array('name' => '노래 신청권', 'desc' => '라디오에 원하는 곡을 신청할 수 있습니다 (관리자 승인 후 반영)', 'group' => 'system'),
         'radio_ment' => array('name' => '라디오 멘트권', 'desc' => '라디오 멘트를 신청할 수 있습니다 (관리자 승인 후 반영)', 'group' => 'system'),
+        'rp_pin' => array('name' => '역극 상단 노출권', 'desc' => '역극 목록에서 상단에 노출됩니다 (기간제)', 'group' => 'system'),
+        'expedition_time' => array('name' => '파견 시간 단축권', 'desc' => '파견 시간을 단축합니다 (1회 소모)', 'group' => 'system'),
+        'expedition_reward' => array('name' => '파견 보상 2배권', 'desc' => '파견 보상을 2배로 받습니다 (1회 소모)', 'group' => 'system'),
+        'expedition_stamina' => array('name' => '스태미나 반감권', 'desc' => '스태미나 소모를 절감합니다 (1회 소모)', 'group' => 'system'),
+        'expedition_slot' => array('name' => '파견 슬롯 추가권', 'desc' => '동시 파견 가능 수를 추가합니다 (영구)', 'group' => 'system'),
+        'write_expand' => array('name' => '글자수 확장권', 'desc' => '게시글 글자 제한을 확장합니다 (영구)', 'group' => 'system'),
+        'achievement_slot' => array('name' => '업적 쇼케이스 확장권', 'desc' => '업적 쇼케이스 슬롯을 추가합니다 (영구)', 'group' => 'system'),
+        'concierge_boost' => array('name' => '의뢰 보상 부스터', 'desc' => '의뢰 보상을 추가로 받습니다 (1회 소모)', 'group' => 'system'),
+        'nick_bg' => array('name' => '이름표 배경색', 'desc' => '닉네임에 배경색을 적용합니다', 'group' => 'decor'),
         // 재료·가구·기타
         'material' => array('name' => '재료', 'desc' => '개척 시스템 재료 아이템', 'group' => 'material'),
         'furniture' => array('name' => '가구', 'desc' => '마이룸 가구', 'group' => 'furniture'),
@@ -584,7 +593,7 @@ function mg_get_item_types() {
  * 동시에 하나만 활성화 가능한 아이템 타입 목록
  */
 function mg_get_exclusive_types() {
-    return array('nick_color', 'nick_effect', 'seal_bg', 'seal_effect', 'seal_frame', 'seal_hover', 'profile_skin', 'profile_bg', 'profile_effect');
+    return array('nick_color', 'nick_effect', 'nick_bg', 'seal_bg', 'seal_effect', 'seal_frame', 'seal_hover', 'profile_skin', 'profile_bg', 'profile_effect');
 }
 
 // 타입별 라벨 (mg_get_item_types에서 자동 추출)
@@ -1816,6 +1825,37 @@ function mg_use_item($mb_id, $si_id, $ch_id = null) {
         return array('success' => true, 'message' => '관계 슬롯이 추가되었습니다.');
     }
 
+    // 파견 슬롯 추가권: 영구, 해제 불가
+    if ($item['si_type'] === 'expedition_slot') {
+        sql_query("INSERT INTO {$mg['item_active_table']} (mb_id, si_id, ia_type, ch_id)
+                   VALUES ('{$mb_id}', {$si_id}, 'expedition_slot', NULL)");
+        sql_query("UPDATE {$mg['inventory_table']} SET iv_count = iv_count - 1 WHERE mb_id = '{$mb_id}' AND si_id = {$si_id}");
+        sql_query("DELETE FROM {$mg['inventory_table']} WHERE mb_id = '{$mb_id}' AND si_id = {$si_id} AND iv_count <= 0");
+        return array('success' => true, 'message' => '파견 슬롯이 추가되었습니다.');
+    }
+
+    // 글자수 확장권: 영구, 해제 불가
+    if ($item['si_type'] === 'write_expand') {
+        sql_query("INSERT INTO {$mg['item_active_table']} (mb_id, si_id, ia_type, ch_id)
+                   VALUES ('{$mb_id}', {$si_id}, 'write_expand', NULL)");
+        sql_query("UPDATE {$mg['inventory_table']} SET iv_count = iv_count - 1 WHERE mb_id = '{$mb_id}' AND si_id = {$si_id}");
+        sql_query("DELETE FROM {$mg['inventory_table']} WHERE mb_id = '{$mb_id}' AND si_id = {$si_id} AND iv_count <= 0");
+        return array('success' => true, 'message' => '글자수 제한이 확장되었습니다.');
+    }
+
+    // 업적 쇼케이스 확장권: 영구, 해제 불가, 최대 8개(기본5+추가3)
+    if ($item['si_type'] === 'achievement_slot') {
+        $current = sql_num_rows(sql_query("SELECT ia_id FROM {$mg['item_active_table']} WHERE mb_id = '{$mb_id}' AND ia_type = 'achievement_slot'"));
+        if ($current >= 3) {
+            return array('success' => false, 'message' => '업적 쇼케이스 슬롯이 이미 최대(8개)입니다.');
+        }
+        sql_query("INSERT INTO {$mg['item_active_table']} (mb_id, si_id, ia_type, ch_id)
+                   VALUES ('{$mb_id}', {$si_id}, 'achievement_slot', NULL)");
+        sql_query("UPDATE {$mg['inventory_table']} SET iv_count = iv_count - 1 WHERE mb_id = '{$mb_id}' AND si_id = {$si_id}");
+        sql_query("DELETE FROM {$mg['inventory_table']} WHERE mb_id = '{$mb_id}' AND si_id = {$si_id} AND iv_count <= 0");
+        return array('success' => true, 'message' => '업적 쇼케이스 슬롯이 추가되었습니다.');
+    }
+
     // 이미 사용중인지 확인
     if (mg_is_item_active($mb_id, $si_id)) {
         return array('success' => false, 'message' => '이미 사용 중인 아이템입니다.');
@@ -1865,6 +1905,9 @@ function mg_unuse_item($mb_id, $si_id) {
     }
     if ($item && $item['si_type'] === 'relation_slot') {
         return array('success' => false, 'message' => '관계 슬롯은 해제할 수 없습니다.');
+    }
+    if ($item && in_array($item['si_type'], array('expedition_slot', 'write_expand', 'achievement_slot'))) {
+        return array('success' => false, 'message' => '이 아이템은 해제할 수 없습니다.');
     }
 
     sql_query("DELETE FROM {$mg['item_active_table']}
@@ -2388,6 +2431,19 @@ function _mg_get_nick_effects($mb_id) {
                     }
                 }
                 break;
+
+            case 'nick_bg':
+                if (isset($eff['nick_bg'])) {
+                    $opacity = isset($eff['nick_bg_opacity']) ? (float)$eff['nick_bg_opacity'] : 0.2;
+                    $hex = ltrim($eff['nick_bg'], '#');
+                    if (strlen($hex) === 6) {
+                        $r = hexdec(substr($hex, 0, 2));
+                        $g = hexdec(substr($hex, 2, 2));
+                        $b = hexdec(substr($hex, 4, 2));
+                        $style .= "background:rgba({$r},{$g},{$b},{$opacity});padding:1px 6px;border-radius:4px;";
+                    }
+                }
+                break;
         }
     }
 
@@ -2790,7 +2846,7 @@ function mg_get_rp_threads($status = 'all', $mb_id = '', $page = 1, $rows = 20) 
             LEFT JOIN {$g5['member_table']} m ON t.mb_id = m.mb_id
             LEFT JOIN {$mg['character_table']} c ON t.ch_id = c.ch_id
             {$where}
-            ORDER BY t.rt_update DESC
+            ORDER BY (t.rt_pinned_until IS NOT NULL AND t.rt_pinned_until > NOW()) DESC, t.rt_update DESC
             LIMIT {$offset}, {$rows}";
     $result = sql_query($sql);
 
@@ -4679,9 +4735,84 @@ function mg_get_active_expeditions($mb_id) {
 }
 
 /**
+ * 파견 최대 슬롯 수 (기본 설정 + 아이템 추가분)
+ */
+function mg_get_max_expedition_slots($mb_id) {
+    global $g5;
+    $base = (int)mg_config('expedition_max_slots', 1);
+    $extra_row = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_item_active_table']} WHERE mb_id = '".sql_real_escape_string($mb_id)."' AND ia_type = 'expedition_slot'");
+    return $base + (int)($extra_row['cnt'] ?? 0);
+}
+
+/**
+ * 업적 쇼케이스 슬롯 수 (기본 5 + 아이템 추가분)
+ */
+function mg_get_achievement_showcase_slots($mb_id) {
+    global $g5;
+    $base = 5;
+    $extra_row = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_item_active_table']} WHERE mb_id = '".sql_real_escape_string($mb_id)."' AND ia_type = 'achievement_slot'");
+    return $base + (int)($extra_row['cnt'] ?? 0);
+}
+
+/**
+ * 글자수 확장권 보유 여부
+ */
+function mg_has_write_expand($mb_id) {
+    global $g5;
+    $row = sql_fetch("SELECT ia_id FROM {$g5['mg_item_active_table']} WHERE mb_id = '".sql_real_escape_string($mb_id)."' AND ia_type = 'write_expand' LIMIT 1");
+    return !empty($row['ia_id']);
+}
+
+/**
+ * 역극 상단 노출권 사용
+ */
+function mg_use_rp_pin($mb_id, $rt_id) {
+    global $g5;
+    $mb_esc = sql_real_escape_string($mb_id);
+    $rt_id = (int)$rt_id;
+
+    // 스레드 확인 + 소유권
+    $thread = sql_fetch("SELECT * FROM {$g5['mg_rp_thread_table']} WHERE rt_id = {$rt_id}");
+    if (!$thread || !$thread['rt_id']) {
+        return array('success' => false, 'message' => '존재하지 않는 역극입니다.');
+    }
+    if ($thread['mb_id'] !== $mb_id) {
+        return array('success' => false, 'message' => '본인이 판장인 역극에만 사용할 수 있습니다.');
+    }
+    if ($thread['rt_status'] !== 'open') {
+        return array('success' => false, 'message' => '열린 역극에만 사용할 수 있습니다.');
+    }
+    // 이미 노출 중인지 확인
+    if (!empty($thread['rt_pinned_until']) && strtotime($thread['rt_pinned_until']) > time()) {
+        return array('success' => false, 'message' => '이미 상단 노출 중인 역극입니다.');
+    }
+
+    // 인벤토리에서 rp_pin 아이템 찾기
+    $inv = sql_fetch("SELECT iv.iv_id, iv.si_id, si.si_effect FROM {$g5['mg_inventory_table']} iv
+                      JOIN {$g5['mg_shop_item_table']} si ON iv.si_id = si.si_id
+                      WHERE iv.mb_id = '{$mb_esc}' AND si.si_type = 'rp_pin' AND iv.iv_count > 0
+                      ORDER BY iv.iv_id ASC LIMIT 1");
+    if (!$inv || !$inv['si_id']) {
+        return array('success' => false, 'message' => '역극 상단 노출권이 없습니다.');
+    }
+
+    $eff = json_decode($inv['si_effect'], true);
+    $hours = isset($eff['duration_hours']) ? (int)$eff['duration_hours'] : 72;
+
+    // 소모
+    sql_query("UPDATE {$g5['mg_inventory_table']} SET iv_count = iv_count - 1 WHERE mb_id = '{$mb_esc}' AND si_id = {$inv['si_id']}");
+    sql_query("DELETE FROM {$g5['mg_inventory_table']} WHERE mb_id = '{$mb_esc}' AND si_id = {$inv['si_id']} AND iv_count <= 0");
+
+    // 노출 기간 설정
+    sql_query("UPDATE {$g5['mg_rp_thread_table']} SET rt_pinned_until = DATE_ADD(NOW(), INTERVAL {$hours} HOUR) WHERE rt_id = {$rt_id}");
+
+    return array('success' => true, 'message' => "{$hours}시간 동안 상단에 노출됩니다.");
+}
+
+/**
  * 파견 시작
  */
-function mg_start_expedition($mb_id, $ch_id, $ea_id, $partner_ch_id = null) {
+function mg_start_expedition($mb_id, $ch_id, $ea_id, $partner_ch_id = null, $use_items = array()) {
     global $g5;
 
     $mb_id_esc = sql_real_escape_string($mb_id);
@@ -4703,7 +4834,7 @@ function mg_start_expedition($mb_id, $ch_id, $ea_id, $partner_ch_id = null) {
     }
 
     // 3. 동시 파견 수 제한
-    $max_slots = (int)mg_config('expedition_max_slots', 1);
+    $max_slots = mg_get_max_expedition_slots($mb_id);
     $active_row = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_expedition_log_table']}
                              WHERE mb_id = '{$mb_id_esc}' AND el_status IN ('active', 'complete')");
     $active_count = (int)$active_row['cnt'];
@@ -4762,25 +4893,49 @@ function mg_start_expedition($mb_id, $ch_id, $ea_id, $partner_ch_id = null) {
         }
     }
 
-    // 7. 스태미나 차감
-    if (!mg_use_stamina($mb_id, $area['ea_stamina_cost'])) {
-        return array('success' => false, 'message' => '스태미나가 부족합니다. (필요: ' . $area['ea_stamina_cost'] . ')');
+    // 7. 아이템 사용 처리
+    $items_used = array();
+    foreach ($use_items as $item_type => $use_si_id) {
+        if (!$use_si_id) continue;
+        $use_si_id = (int)$use_si_id;
+        if (mg_get_inventory_count($mb_id, $use_si_id) <= 0) continue;
+        $si = mg_get_shop_item($use_si_id);
+        if (!$si || $si['si_type'] !== $item_type) continue;
+        sql_query("UPDATE {$g5['mg_inventory_table']} SET iv_count = iv_count - 1 WHERE mb_id = '{$mb_id_esc}' AND si_id = {$use_si_id}");
+        sql_query("DELETE FROM {$g5['mg_inventory_table']} WHERE mb_id = '{$mb_id_esc}' AND si_id = {$use_si_id} AND iv_count <= 0");
+        $items_used[$item_type] = $si['si_effect'];
     }
 
-    // 8. 파견 기록 생성
+    // 8. 스태미나 차감 (반감권 적용)
+    $stamina_cost = (int)$area['ea_stamina_cost'];
+    if (!empty($items_used['expedition_stamina'])) {
+        $reduce = (int)($items_used['expedition_stamina']['stamina_reduce_percent'] ?? 50);
+        $stamina_cost = max(1, (int)ceil($stamina_cost * (100 - $reduce) / 100));
+    }
+    if (!mg_use_stamina($mb_id, $stamina_cost)) {
+        return array('success' => false, 'message' => '스태미나가 부족합니다. (필요: ' . $stamina_cost . ')');
+    }
+
+    // 9. 파견 기록 생성 (시간 단축권 적용)
     $now = date('Y-m-d H:i:s');
-    $end_time = date('Y-m-d H:i:s', time() + ($area['ea_duration'] * 60));
+    $duration_minutes = (int)$area['ea_duration'];
+    if (!empty($items_used['expedition_time'])) {
+        $reduce = (int)($items_used['expedition_time']['reduce_percent'] ?? 30);
+        $duration_minutes = max(1, (int)ceil($duration_minutes * (100 - $reduce) / 100));
+    }
+    $end_time = date('Y-m-d H:i:s', time() + ($duration_minutes * 60));
     $partner_mb_col = $partner_mb_id ? "'" . sql_real_escape_string($partner_mb_id) . "'" : 'NULL';
     $partner_ch_col = $partner_ch_id ? (int)$partner_ch_id : 'NULL';
+    $items_json = !empty($items_used) ? "'".sql_real_escape_string(json_encode($items_used))."'" : 'NULL';
 
     sql_query("INSERT INTO {$g5['mg_expedition_log_table']}
-               (mb_id, ch_id, partner_mb_id, partner_ch_id, ea_id, el_stamina_used, el_start, el_end, el_status)
+               (mb_id, ch_id, partner_mb_id, partner_ch_id, ea_id, el_stamina_used, el_start, el_end, el_status, el_items_used)
                VALUES ('{$mb_id_esc}', {$ch_id}, {$partner_mb_col}, {$partner_ch_col}, {$ea_id},
-                       {$area['ea_stamina_cost']}, '{$now}', '{$end_time}', 'active')");
+                       {$stamina_cost}, '{$now}', '{$end_time}', 'active', {$items_json})");
 
     $el_id = sql_insert_id();
 
-    // 9. 업적 트리거
+    // 10. 업적 트리거
     if (function_exists('mg_trigger_achievement')) {
         mg_trigger_achievement($mb_id, 'expedition_start_count');
     }
@@ -4861,9 +5016,24 @@ function mg_claim_expedition($mb_id, $el_id) {
         return array('success' => false, 'message' => '수령할 수 없는 상태입니다.');
     }
 
+    // 아이템 효과 확인
+    $items_used = !empty($log['el_items_used']) ? json_decode($log['el_items_used'], true) : array();
+    $reward_multi = 1;
+    if (!empty($items_used['expedition_reward'])) {
+        $reward_multi = (int)($items_used['expedition_reward']['reward_multi'] ?? 2);
+    }
+
     // 드롭 계산 (파트너 보너스 반영)
     $has_partner = !empty($log['partner_ch_id']);
     $drop_result = mg_calculate_drops((int)$log['ea_id'], $has_partner);
+
+    // 보상 2배 적용
+    if ($reward_multi > 1) {
+        foreach ($drop_result['items'] as &$drop_item) {
+            $drop_item['amount'] = (int)($drop_item['amount'] * $reward_multi);
+        }
+        unset($drop_item);
+    }
 
     // 재료 지급
     foreach ($drop_result['items'] as $item) {
@@ -4880,6 +5050,9 @@ function mg_claim_expedition($mb_id, $el_id) {
         $earned_point = mt_rand($point_min, $point_max);
         if ($has_partner && $earned_point > 0) {
             $earned_point = (int)ceil($earned_point * 1.2); // 파트너 보너스 +20%
+        }
+        if ($earned_point > 0 && $reward_multi > 1) {
+            $earned_point = (int)($earned_point * $reward_multi);
         }
         if ($earned_point > 0) {
             insert_point($mb_id, $earned_point,
@@ -5670,9 +5843,26 @@ function mg_complete_concierge($mb_id, $cc_id, $bo_table, $wr_id) {
         $fee = $fee_rate > 0 ? (int)floor($per_person * $fee_rate / 100) : 0;
         $actual_reward = $per_person - $fee;
 
+        // 의뢰 보상 부스터 적용
+        $boost_note = '';
+        $boost_inv = sql_fetch("SELECT iv.iv_id, iv.si_id, si.si_effect FROM {$g5['mg_inventory_table']} iv
+                                JOIN {$g5['mg_shop_item_table']} si ON iv.si_id = si.si_id
+                                WHERE iv.mb_id = '{$mb_id_esc}' AND si.si_type = 'concierge_boost' AND iv.iv_count > 0
+                                ORDER BY iv.iv_id ASC LIMIT 1");
+        if ($boost_inv && $boost_inv['si_id']) {
+            $boost_eff = json_decode($boost_inv['si_effect'], true);
+            $boost_pct = isset($boost_eff['boost_percent']) ? (int)$boost_eff['boost_percent'] : 30;
+            $boost_amount = (int)floor($actual_reward * $boost_pct / 100);
+            $actual_reward += $boost_amount;
+            $boost_note = " (부스터 +{$boost_pct}%)";
+            // 소모
+            sql_query("UPDATE {$g5['mg_inventory_table']} SET iv_count = iv_count - 1 WHERE mb_id = '{$mb_id_esc}' AND si_id = {$boost_inv['si_id']}");
+            sql_query("DELETE FROM {$g5['mg_inventory_table']} WHERE mb_id = '{$mb_id_esc}' AND si_id = {$boost_inv['si_id']} AND iv_count <= 0");
+        }
+
         if ($actual_reward > 0) {
             $fee_note = $fee > 0 ? " (수수료 {$fee}P)" : '';
-            insert_point($mb_id, $actual_reward, '의뢰 수행 보상: ' . $cc['cc_title'] . $fee_note,
+            insert_point($mb_id, $actual_reward, '의뢰 수행 보상: ' . $cc['cc_title'] . $fee_note . $boost_note,
                         'mg_concierge', $cc_id, '수행완료');
             mg_notify($mb_id, 'concierge_reward',
                      '의뢰 보상 지급',
@@ -6315,6 +6505,41 @@ function mg_is_gift_unlocked() {
 }
 
 /**
+ * 파견 시스템 해금 여부 체크
+ */
+function mg_is_expedition_unlocked() {
+    return mg_is_unlocked('expedition', '');
+}
+
+/**
+ * 의뢰 시스템 해금 여부 체크
+ */
+function mg_is_concierge_unlocked() {
+    return mg_is_unlocked('concierge', '');
+}
+
+/**
+ * 인장 시스템 해금 여부 체크
+ */
+function mg_is_seal_unlocked() {
+    return mg_is_unlocked('seal', '');
+}
+
+/**
+ * 라디오 시스템 해금 여부 체크
+ */
+function mg_is_radio_unlocked() {
+    return mg_is_unlocked('radio', '');
+}
+
+/**
+ * 이모티콘 자체 제작 해금 여부 체크
+ */
+function mg_is_emoticon_create_unlocked() {
+    return mg_is_unlocked('emoticon_create', '');
+}
+
+/**
  * 해금되지 않은 컨텐츠 접근 시 안내 메시지 반환
  *
  * @param string $type
@@ -6699,7 +6924,7 @@ function mg_get_achievement_display($mb_id)
     if (!$row || !$row['mb_id']) return array();
 
     $slots = array();
-    for ($i = 1; $i <= 5; $i++) {
+    for ($i = 1; $i <= 8; $i++) {
         $ac_id = (int)($row['slot_'.$i] ?? 0);
         if ($ac_id) {
             $ac = sql_fetch("SELECT a.*, at2.at_name AS tier_name, at2.at_icon AS tier_icon
@@ -6722,17 +6947,21 @@ function mg_save_achievement_display($mb_id, $slot_ids)
 {
     global $g5;
     $mb_esc = sql_real_escape_string($mb_id);
+    $max_slots = function_exists('mg_get_achievement_showcase_slots') ? mg_get_achievement_showcase_slots($mb_id) : 5;
     $slots = array();
-    for ($i = 0; $i < 5; $i++) {
+    for ($i = 0; $i < min($max_slots, 8); $i++) {
         $v = isset($slot_ids[$i]) ? (int)$slot_ids[$i] : 0;
         $slots[] = $v ? $v : 'NULL';
     }
+    while (count($slots) < 8) {
+        $slots[] = 'NULL';
+    }
     sql_query("INSERT INTO {$g5['mg_user_achievement_display_table']}
-        (mb_id, slot_1, slot_2, slot_3, slot_4, slot_5)
-        VALUES ('{$mb_esc}', {$slots[0]}, {$slots[1]}, {$slots[2]}, {$slots[3]}, {$slots[4]})
+        (mb_id, slot_1, slot_2, slot_3, slot_4, slot_5, slot_6, slot_7, slot_8)
+        VALUES ('{$mb_esc}', {$slots[0]}, {$slots[1]}, {$slots[2]}, {$slots[3]}, {$slots[4]}, {$slots[5]}, {$slots[6]}, {$slots[7]})
         ON DUPLICATE KEY UPDATE
         slot_1 = {$slots[0]}, slot_2 = {$slots[1]}, slot_3 = {$slots[2]},
-        slot_4 = {$slots[3]}, slot_5 = {$slots[4]}");
+        slot_4 = {$slots[3]}, slot_5 = {$slots[4]}, slot_6 = {$slots[5]}, slot_7 = {$slots[6]}, slot_8 = {$slots[7]}");
 }
 
 /**

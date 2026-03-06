@@ -188,9 +188,9 @@ function deleteMapImage() {
         <h3>마커 배치</h3>
         <span style="font-size:0.8rem;color:var(--mg-text-muted);">맵 클릭으로 지역 배치 · 마커 드래그로 위치 조정 · 마커 클릭 시 수정</span>
     </div>
-    <div class="mg-card-body" style="padding:0;">
-        <div id="map-editor" style="position:relative;cursor:crosshair;">
-            <img src="<?php echo htmlspecialchars($map_image); ?>" id="editor-map-img" style="display:block;width:100%;" alt="지도" draggable="false">
+    <div class="mg-card-body">
+        <div id="map-editor" style="position:relative;display:inline-block;max-width:100%;cursor:crosshair;border:2px solid var(--mg-bg-tertiary);border-radius:6px;overflow:hidden;">
+            <img src="<?php echo htmlspecialchars($map_image); ?>" id="editor-map-img" style="display:block;max-width:100%;height:auto;" alt="지도" draggable="false">
             <div id="editor-markers"></div>
         </div>
     </div>

@@ -14,6 +14,13 @@ if (!mg_config('seal_enable', 1)) {
     alert('인장 시스템이 비활성화되어 있습니다.');
 }
 
+// 인장 해금 체크
+if (!mg_is_seal_unlocked()) {
+    $unlock_info = mg_get_unlock_info('seal');
+    $fc_name = ($unlock_info && $unlock_info['fc_name']) ? $unlock_info['fc_name'] : '인장 공방';
+    alert("인장은 '{$fc_name}' 건설 완료 후 이용 가능합니다.", G5_BBS_URL.'/pioneer.php');
+}
+
 $_lv = mg_check_member_level('seal', $member['mb_level']);
 if (!$_lv['allowed']) { alert_close("인장은 회원 레벨 {$_lv['required']} 이상부터 이용 가능합니다."); }
 

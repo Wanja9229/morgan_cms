@@ -135,6 +135,15 @@ $relation_url = G5_BBS_URL . '/relation.php';
                 <div id="dm-partner-list" class="flex flex-wrap gap-2"></div>
             </div>
 
+            <!-- Step 3: 소모품 사용 -->
+            <div id="dm-step-items" class="mb-4" style="display:none;">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full" style="background:var(--mg-bg-tertiary);color:var(--mg-text-secondary);font-size:0.7rem;font-weight:700;">★</span>
+                    <span class="text-sm font-medium text-mg-text-primary">소모품 사용 <span class="text-mg-text-muted font-normal">(선택)</span></span>
+                </div>
+                <div id="dm-item-list" class="flex flex-wrap gap-2"></div>
+            </div>
+
             <!-- 파견 버튼 -->
             <button id="dm-dispatch-btn" onclick="submitDispatch()" class="btn btn-primary w-full" style="padding-top:0.75rem;padding-bottom:0.75rem;" disabled>캐릭터를 선택해주세요</button>
         </div>
@@ -212,6 +221,8 @@ $relation_url = G5_BBS_URL . '/relation.php';
         return { w: 24, h: 36 }; // pin, flag
     }
     var selected = { ch_id: 0, partner_ch_id: 0, ea_id: 0 };
+    var selectedItems = {}; // { expedition_time: si_id, expedition_reward: si_id, expedition_stamina: si_id }
+    var availableItems = []; // 파견 소모품 보유 목록
     var timerIntervals = [];
     var cachedAreas = null;
     var cachedCharacters = null;
@@ -248,6 +259,9 @@ $relation_url = G5_BBS_URL . '/relation.php';
             document.getElementById('slot-display').textContent = data.used_slots + ' / ' + data.max_slots;
 
             renderActive(data.active);
+
+            // 파견 소모품 캐시
+            availableItems = data.expedition_items || [];
 
             var notice = document.getElementById('slot-full-notice');
             if (data.used_slots >= data.max_slots) {
@@ -557,6 +571,10 @@ $relation_url = G5_BBS_URL . '/relation.php';
         document.getElementById('dm-step-partner').style.display = 'none';
         document.getElementById('dm-partner-list').innerHTML = '';
 
+        // 소모품 렌더
+        selectedItems = {};
+        renderItemSection();
+
         // 캐릭터 로드
         loadModalCharacters();
 
@@ -684,25 +702,76 @@ $relation_url = G5_BBS_URL . '/relation.php';
     }
 
     // === 파견 실행 ===
+    // === 소모품 렌더 ===
+    function renderItemSection() {
+        var wrap = document.getElementById('dm-step-items');
+        var container = document.getElementById('dm-item-list');
+        if (!availableItems || availableItems.length === 0) {
+            wrap.style.display = 'none';
+            return;
+        }
+        wrap.style.display = 'block';
+        var labels = { expedition_time: '⏱️ 시간 단축', expedition_reward: '💰 보상 2배', expedition_stamina: '⚡ 스태미나 반감' };
+        var html = '';
+        availableItems.forEach(function(item) {
+            var label = labels[item.si_type] || item.si_name;
+            html += '<button type="button" class="dm-item-btn px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors" '
+                  + 'data-type="' + item.si_type + '" data-si-id="' + item.si_id + '" '
+                  + 'style="border-color:var(--mg-bg-tertiary);background:var(--mg-bg-primary);color:var(--mg-text-secondary);" '
+                  + 'onclick="toggleExpItem(this)">'
+                  + label + ' <span class="text-mg-text-muted">x' + item.iv_count + '</span></button>';
+        });
+        container.innerHTML = html;
+    }
+
+    window.toggleExpItem = function(btn) {
+        var type = btn.getAttribute('data-type');
+        var siId = parseInt(btn.getAttribute('data-si-id'));
+        if (selectedItems[type]) {
+            delete selectedItems[type];
+            btn.style.borderColor = 'var(--mg-bg-tertiary)';
+            btn.style.background = 'var(--mg-bg-primary)';
+            btn.style.color = 'var(--mg-text-secondary)';
+        } else {
+            selectedItems[type] = siId;
+            btn.style.borderColor = 'var(--mg-accent)';
+            btn.style.background = 'rgba(245,159,10,0.15)';
+            btn.style.color = 'var(--mg-accent)';
+        }
+    };
+
     window.submitDispatch = function() {
         if (!selected.ch_id || !selected.ea_id) return;
 
         var area = cachedAreas ? cachedAreas.find(function(a) { return a.ea_id == selected.ea_id; }) : null;
         var areaName = area ? area.ea_name : '파견지';
         var cost = area ? area.ea_stamina_cost : 0;
+        var itemNames = [];
+        if (selectedItems.expedition_stamina) { cost = Math.max(1, Math.ceil(cost * 0.5)); itemNames.push('스태미나 반감'); }
+        if (selectedItems.expedition_time) itemNames.push('시간 단축');
+        if (selectedItems.expedition_reward) itemNames.push('보상 2배');
 
-        if (!confirm(areaName + ' 파견을 보내시겠습니까?\n(스테미나 ' + cost + ' 소모)')) return;
+        var msg = areaName + ' 파견을 보내시겠습니까?\n(스테미나 ' + cost + ' 소모)';
+        if (itemNames.length > 0) msg += '\n\n사용 소모품: ' + itemNames.join(', ');
 
-        api('start', {
+        if (!confirm(msg)) return;
+
+        var params = {
             ch_id: selected.ch_id,
             ea_id: selected.ea_id,
             partner_ch_id: selected.partner_ch_id || ''
-        }, 'POST').then(function(data) {
+        };
+        if (selectedItems.expedition_time) params.item_expedition_time = selectedItems.expedition_time;
+        if (selectedItems.expedition_reward) params.item_expedition_reward = selectedItems.expedition_reward;
+        if (selectedItems.expedition_stamina) params.item_expedition_stamina = selectedItems.expedition_stamina;
+
+        api('start', params, 'POST').then(function(data) {
             if (data.success) {
                 closeDispatchModal();
                 selected.ch_id = 0;
                 selected.partner_ch_id = 0;
                 selected.ea_id = 0;
+                selectedItems = {};
                 cachedCharacters = null;
                 loadStatus();
                 loadAreas();

@@ -70,6 +70,7 @@ foreach ($filtered as $ac) {
 }
 
 // 쇼케이스 데이터
+$showcase_max_slots = function_exists('mg_get_achievement_showcase_slots') ? mg_get_achievement_showcase_slots($mb_id) : 5;
 $display = mg_get_achievement_display($mb_id);
 $display_ids = array();
 foreach ($display as $d) {
@@ -145,7 +146,7 @@ include_once(G5_THEME_PATH.'/head.php');
         </div>
         <!-- 편집 UI -->
         <div id="showcase-edit" style="display:none;" class="mt-4">
-            <p class="text-sm text-mg-text-muted mb-2">프로필에 표시할 업적을 최대 5개 선택하세요.</p>
+            <p class="text-sm text-mg-text-muted mb-2">프로필에 표시할 업적을 최대 <?php echo $showcase_max_slots; ?>개 선택하세요.</p>
             <div class="flex flex-wrap gap-2 mb-3">
                 <?php foreach ($displayable as $ac) {
                     $checked = in_array($ac['ac_id'], $display_ids) ? 'checked' : '';
@@ -317,10 +318,11 @@ function toggleShowcaseEdit() {
 }
 
 function checkShowcaseLimit(cb) {
+    var maxSlots = <?php echo $showcase_max_slots; ?>;
     var checked = document.querySelectorAll('.showcase-check:checked');
-    if (checked.length > 5) {
+    if (checked.length > maxSlots) {
         cb.checked = false;
-        alert('최대 5개까지 선택할 수 있습니다.');
+        alert('최대 ' + maxSlots + '개까지 선택할 수 있습니다.');
     }
 }
 

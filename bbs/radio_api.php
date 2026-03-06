@@ -11,6 +11,12 @@ header('Content-Type: application/json; charset=utf-8');
 
 $action = isset($_GET['action']) ? $_GET['action'] : '';
 
+// 라디오 해금 체크
+if (!mg_is_radio_unlocked()) {
+    echo json_encode(array('success' => false, 'message' => '라디오 시설이 아직 건설되지 않았습니다.', 'not_unlocked' => true));
+    exit;
+}
+
 switch ($action) {
     case 'status':
         $cfg = sql_fetch("SELECT * FROM {$g5['mg_radio_config_table']} WHERE config_id = 1");

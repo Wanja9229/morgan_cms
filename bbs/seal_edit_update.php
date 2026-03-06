@@ -18,6 +18,12 @@ if (!mg_config('seal_enable', 1)) {
     exit;
 }
 
+// 인장 해금 체크
+if (!mg_is_seal_unlocked()) {
+    echo json_encode(array('success' => false, 'message' => '인장 시설이 아직 건설되지 않았습니다.'));
+    exit;
+}
+
 $mb_id = $member['mb_id'];
 $mb_esc = sql_real_escape_string($mb_id);
 

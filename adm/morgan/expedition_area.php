@@ -128,8 +128,8 @@ require_once __DIR__.'/_head.php';
                 <p style="font-size:0.8rem;color:var(--mg-text-muted);margin-top:0.25rem;">맵 마커 배치/편집은 PC에서 최적화되어 있습니다.</p>
             </div>
             <script>if(window.innerWidth<768)document.getElementById('map-mobile-notice').style.display='block';</script>
-            <div id="map-editor" style="position:relative;cursor:crosshair;">
-                <img src="<?php echo htmlspecialchars($map_image); ?>" id="map-editor-img" style="display:block;width:100%;" alt="파견 이미지" draggable="false">
+            <div id="map-editor" style="position:relative;display:inline-block;max-width:100%;cursor:crosshair;border:2px solid var(--mg-bg-tertiary);border-radius:6px;overflow:hidden;">
+                <img src="<?php echo htmlspecialchars($map_image); ?>" id="map-editor-img" style="display:block;max-width:100%;height:auto;" alt="파견 이미지" draggable="false">
                 <div id="map-editor-markers"></div>
             </div>
         </div>

@@ -279,7 +279,7 @@ if ($is_member) {
         <?php foreach ($inventory as $inv) {
             $item = $inv;
             $is_active = in_array($item['si_id'], $active_si_ids);
-            $is_usable = in_array($item['si_type'], ['title', 'badge', 'nick_color', 'nick_effect', 'profile_border', 'profile_skin', 'profile_bg', 'profile_effect', 'seal_bg', 'seal_effect', 'seal_frame', 'seal_hover', 'char_slot']);
+            $is_usable = in_array($item['si_type'], ['title', 'badge', 'nick_color', 'nick_effect', 'profile_border', 'profile_skin', 'profile_bg', 'profile_effect', 'seal_bg', 'seal_effect', 'seal_frame', 'seal_hover', 'char_slot', 'expedition_slot', 'write_expand', 'achievement_slot', 'nick_bg']);
         ?>
         <div class="card p-0 overflow-hidden <?php echo $is_active ? 'ring-2 ring-mg-accent' : ''; ?>">
             <!-- 이미지 -->
@@ -345,6 +345,18 @@ if ($is_member) {
                 <?php } elseif ($item['si_type'] === 'concierge_direct_pick') { ?>
                 <div style="display:flex;gap:0.25rem;align-items:center;">
                     <span class="text-xs text-mg-text-muted" style="flex:1;text-align:center;">추첨 시 사용 가능</span>
+                </div>
+                <?php } elseif ($item['si_type'] === 'rp_pin') { ?>
+                <div style="display:flex;gap:0.25rem;align-items:center;">
+                    <span class="text-xs text-mg-text-muted" style="flex:1;text-align:center;">역극 목록에서 사용</span>
+                </div>
+                <?php } elseif (in_array($item['si_type'], array('expedition_time', 'expedition_reward', 'expedition_stamina'))) { ?>
+                <div style="display:flex;gap:0.25rem;align-items:center;">
+                    <span class="text-xs text-mg-text-muted" style="flex:1;text-align:center;">파견 시 자동 선택</span>
+                </div>
+                <?php } elseif ($item['si_type'] === 'concierge_boost') { ?>
+                <div style="display:flex;gap:0.25rem;align-items:center;">
+                    <span class="text-xs text-mg-text-muted" style="flex:1;text-align:center;">의뢰 완료 시 자동 적용</span>
                 </div>
                 <?php } elseif ($item['si_type'] === 'relation_slot') { ?>
                 <button type="button" onclick="openRelSlotModal(<?php echo $item['si_id']; ?>, '<?php echo htmlspecialchars(addslashes($item['si_name']), ENT_QUOTES); ?>')" class="w-full btn-primary text-sm font-medium py-2 rounded-lg transition-colors">

@@ -191,7 +191,12 @@ $_marker_style = mg_config('map_marker_style', 'pin');
                                 'gift' => '선물함',
                                 'achievement' => '업적',
                                 'history' => '연대기',
-                                'fountain' => '분수대'
+                                'fountain' => '분수대',
+                                'expedition' => '파견',
+                                'concierge' => '의뢰',
+                                'seal' => '인장',
+                                'radio' => '라디오',
+                                'emoticon_create' => '이모티콘 제작'
                             );
                             $label = isset($unlock_labels[$fc['fc_unlock_type']]) ? $unlock_labels[$fc['fc_unlock_type']] : $fc['fc_unlock_type'];
                         ?>
@@ -323,6 +328,11 @@ $_marker_style = mg_config('map_marker_style', 'pin');
                             <option value="achievement">업적</option>
                             <option value="history">연대기</option>
                             <option value="fountain">분수대</option>
+                            <option value="expedition">파견</option>
+                            <option value="concierge">의뢰</option>
+                            <option value="seal">인장</option>
+                            <option value="radio">라디오</option>
+                            <option value="emoticon_create">이모티콘 제작</option>
                         </select>
                     </div>
                     <div class="mg-form-group" id="unlock_target_group">
@@ -436,7 +446,7 @@ function toggleUnlockTarget() {
     if (type === 'board') {
         boardSelect.style.display = 'block';
         helpText.textContent = '해금할 게시판을 선택하세요';
-    } else if (type === 'shop' || type === 'gift' || type === 'achievement' || type === 'fountain') {
+    } else if (type === 'shop' || type === 'gift' || type === 'achievement' || type === 'fountain' || type === 'expedition' || type === 'concierge' || type === 'seal' || type === 'radio' || type === 'emoticon_create') {
         // 대상 ID 불필요
         targetGroup.style.display = 'none';
         helpText.textContent = '';

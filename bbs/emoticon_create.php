@@ -16,6 +16,13 @@ if (!mg_config('emoticon_use', '1') || !mg_config('emoticon_creator_use', '1')) 
     alert('이모티콘 제작 기능이 비활성화되어 있습니다.');
 }
 
+// 이모티콘 제작 해금 체크
+if (!mg_is_emoticon_create_unlocked()) {
+    $unlock_info = mg_get_unlock_info('emoticon_create');
+    $fc_name = ($unlock_info && $unlock_info['fc_name']) ? $unlock_info['fc_name'] : '화방';
+    alert("이모티콘 제작은 '{$fc_name}' 건설 완료 후 이용 가능합니다.", G5_BBS_URL.'/pioneer.php');
+}
+
 // 수정 모드
 $es_id = isset($_GET['es_id']) ? (int)$_GET['es_id'] : 0;
 $is_edit = false;

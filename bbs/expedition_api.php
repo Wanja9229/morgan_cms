@@ -13,6 +13,12 @@ if (!$is_member) {
     exit;
 }
 
+// 파견 해금 체크
+if (!mg_is_expedition_unlocked()) {
+    echo json_encode(array('success' => false, 'message' => '파견 시설이 아직 건설되지 않았습니다.'));
+    exit;
+}
+
 $action = isset($_POST['action']) ? $_POST['action'] : (isset($_GET['action']) ? $_GET['action'] : '');
 $mb_id = $member['mb_id'];
 
@@ -22,7 +28,23 @@ switch ($action) {
     case 'status':
         $stamina = mg_get_stamina($mb_id);
         $active = mg_get_active_expeditions($mb_id);
-        $max_slots = (int)mg_config('expedition_max_slots', 1);
+        $max_slots = function_exists('mg_get_max_expedition_slots') ? mg_get_max_expedition_slots($mb_id) : (int)mg_config('expedition_max_slots', 1);
+
+        // 파견 소모품 보유 현황
+        $exp_items = array();
+        $exp_item_types = array('expedition_time', 'expedition_reward', 'expedition_stamina');
+        $inv_result = sql_query("SELECT si.si_id, si.si_name, si.si_type, si.si_effect, iv.iv_count
+                                 FROM {$g5['mg_inventory_table']} iv
+                                 JOIN {$g5['mg_shop_item_table']} si ON iv.si_id = si.si_id
+                                 WHERE iv.mb_id = '".sql_real_escape_string($mb_id)."'
+                                 AND si.si_type IN ('".implode("','", $exp_item_types)."')
+                                 AND iv.iv_count > 0");
+        if ($inv_result) {
+            while ($inv_row = sql_fetch_array($inv_result)) {
+                $inv_row['si_effect'] = json_decode($inv_row['si_effect'], true);
+                $exp_items[] = $inv_row;
+            }
+        }
 
         echo json_encode(array(
             'success' => true,
@@ -32,6 +54,7 @@ switch ($action) {
             'used_slots' => count($active),
             'ui_mode' => mg_config('expedition_ui_mode', 'list'),
             'map_image' => mg_config('expedition_map_image', ''),
+            'expedition_items' => $exp_items,
         ));
         break;
 
@@ -85,12 +108,20 @@ switch ($action) {
         $ea_id = isset($_POST['ea_id']) ? (int)$_POST['ea_id'] : 0;
         $partner_ch_id = isset($_POST['partner_ch_id']) ? (int)$_POST['partner_ch_id'] : 0;
 
+        // 소모품 아이템 (si_id 전달)
+        $use_items = array();
+        foreach (array('expedition_time', 'expedition_reward', 'expedition_stamina') as $_item_type) {
+            if (!empty($_POST['item_' . $_item_type])) {
+                $use_items[$_item_type] = (int)$_POST['item_' . $_item_type];
+            }
+        }
+
         if (!$ch_id || !$ea_id) {
             echo json_encode(array('success' => false, 'message' => '캐릭터와 파견지를 선택해주세요.'));
             exit;
         }
 
-        $result = mg_start_expedition($mb_id, $ch_id, $ea_id, $partner_ch_id ?: null);
+        $result = mg_start_expedition($mb_id, $ch_id, $ea_id, $partner_ch_id ?: null, $use_items);
         echo json_encode($result);
         break;
 
