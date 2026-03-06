@@ -15,6 +15,12 @@ if ($is_admin != 'super') {
 // Morgan 플러그인 로드
 include_once(G5_PATH.'/plugin/morgan/morgan.php');
 
+// post_max_size 초과 감지 — $_POST와 $_FILES가 통째로 비워짐
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && empty($_FILES)) {
+    $post_max = ini_get('post_max_size');
+    alert('업로드 실패: 서버의 최대 전송 용량('.$post_max.')을 초과했습니다. 더 작은 파일을 사용해주세요.');
+}
+
 /**
  * 배경 이미지 리사이즈 함수
  * @param string $source 원본 파일 경로
