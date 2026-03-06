@@ -719,6 +719,21 @@
 - [x] 토큰 per-wr_id 격리 (다중 아코디언 동시 사용 지원)
 - [ ] 브라우저 실사용 테스트 (클로즈 베타에서 검증 예정)
 
+### 프론트엔드 UX 통일 (브라우저 alert/confirm 제거)
+- [x] `mgToast(msg, type, duration)` 글로벌 함수 구현 (상단 중앙, 위→아래 슬라이드, 4타입)
+- [x] `mgConfirm(msg, onOk, onCancel)` 콜백 기반 확인 모달 구현
+- [x] PHP `alert()` → 쿠키 기반 플래시 토스트 (`bbs/alert.php`, `bbs/alert_close.php`)
+- [x] SPA 라우터 `mg:pageLoaded` 이벤트에 플래시 토스트 체크 연동
+- [x] 41개 파일 236건+ alert→mgToast, confirm→mgConfirm 일괄 전환
+- [x] 알림 토스트(`MgNoti.showToast`)와 시스템 토스트 디자인 통일
+- [x] JS 캐시 버스팅 버전 갱신 (G5_JS_VER/G5_CSS_VER)
+
+### 관리자 이미지 업로드 에러 피드백
+- [x] `config_update.php` — 로고/배경 업로드 실패 시 에러 메시지 추가
+- [x] `post_max_size` 초과 감지 (PHP가 $_POST/$_FILES 비우는 케이스)
+- [x] `upload_max_filesize` 초과 감지 (UPLOAD_ERR_INI_SIZE)
+- [x] 업로드 디렉토리 미존재 시 자동 생성 (`mkdir`)
+
 ### 개척 해금 타입 확장 (Phase 10 확장)
 > 1차 완료 후 늘어난 시스템들을 개척 시설 해금에 추가 연동.
 > 기존 패턴(`mg_is_unlocked()` + 진입점 체크)과 동일한 방식.
@@ -909,6 +924,7 @@ new_cms/
 | 2026-03-03 | 칭호 위치 수정 (캐릭터명 앞으로), 메모 아코디언 인라인 댓글 기능 (comment_api.php + JS) |
 | 2026-03-03 | 상태 변경: 1차 QA 완료 → 클로즈 베타 테스트 (멀티테넌트 운영) |
 | 2026-03-05 | 이중 이스케이프 수정 (~40파일), 지도 렌더링 통일 (3프론트+3관리자), 개척 해금 확장 계획 추가 |
+| 2026-03-06 | 브라우저 alert/confirm → mgToast/mgConfirm 전환 (41파일 236+건), 토스트 디자인 통일 (상단 중앙, 슬라이드), SPA 플래시 토스트 지원, 관리자 이미지 업로드 에러 피드백 추가, JS 캐시 버스팅 버전 갱신 |
 
 ---
 

@@ -15,17 +15,21 @@ if ($is_admin != 'super') {
 // Morgan 플러그인 로드
 include_once(G5_PATH.'/plugin/morgan/morgan.php');
 
-// 업로드 디버그 (임시)
-$_debug_upload = array(
-    'post_max_size' => ini_get('post_max_size'),
-    'upload_max_filesize' => ini_get('upload_max_filesize'),
-    'post_empty' => empty($_POST),
-    'files_empty' => empty($_FILES),
-    'bg_image_error' => isset($_FILES['bg_image']) ? $_FILES['bg_image']['error'] : 'NOT_SET',
-    'bg_image_size' => isset($_FILES['bg_image']) ? $_FILES['bg_image']['size'] : 'NOT_SET',
-    'content_length' => isset($_SERVER['CONTENT_LENGTH']) ? $_SERVER['CONTENT_LENGTH'] : 'NOT_SET',
-);
-alert('업로드 디버그: ' . json_encode($_debug_upload, JSON_UNESCAPED_UNICODE));
+// post_max_size 초과 감지 — $_POST와 $_FILES가 통째로 비워짐
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && empty($_FILES)) {
+    $post_max = ini_get('post_max_size');
+    alert('업로드 실패: 서버의 최대 전송 용량('.$post_max.')을 초과했습니다. 더 작은 파일을 사용해주세요.');
+}
+
+// upload_max_filesize 초과 감지 — $_POST는 있지만 파일 에러
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    foreach (array('site_logo', 'bg_image') as $_fk) {
+        if (isset($_FILES[$_fk]) && $_FILES[$_fk]['error'] === UPLOAD_ERR_INI_SIZE) {
+            $php_max = ini_get('upload_max_filesize');
+            alert($_fk === 'bg_image' ? '배경 이미지' : '로고' . ' 업로드 실패: 서버 최대 업로드 용량('.$php_max.')을 초과했습니다.');
+        }
+    }
+}
 
 /**
  * 배경 이미지 리사이즈 함수
