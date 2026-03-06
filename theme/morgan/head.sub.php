@@ -183,7 +183,6 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
             background-size: <?php echo htmlspecialchars($mg_theme_bg['size']); ?>;
             background-position: <?php echo htmlspecialchars($mg_theme_bg['position']); ?>;
             background-repeat: no-repeat;
-            background-attachment: fixed;
             opacity: <?php echo (100 - $mg_theme_bg['opacity']) / 100; ?>;
             pointer-events: none;
             z-index: -1; /* isolate 내에서 콘텐츠 뒤로 배치 */
