@@ -173,15 +173,28 @@ function _cfg_radio($name, $configs, $default = '1', $labels = array('사용', '
     <div class="mg-card" style="margin-top:1.5rem;">
         <div class="mg-card-header"><h3>파일 업로드 제한</h3></div>
         <div class="mg-card-body">
+            <?php
+            $server_upload_max = ini_get('upload_max_filesize');
+            $server_post_max = ini_get('post_max_size');
+            $server_limit_bytes = min(
+                (int)filter_var($server_upload_max, FILTER_SANITIZE_NUMBER_INT) * 1024,
+                (int)filter_var($server_post_max, FILTER_SANITIZE_NUMBER_INT) * 1024
+            );
+            $server_limit_kb = $server_limit_bytes;
+            ?>
+            <div style="padding:0.5rem 0.75rem;margin-bottom:1rem;border-radius:6px;background:var(--mg-bg-tertiary);font-size:0.8rem;color:var(--mg-text-secondary);">
+                ⚠️ 서버 PHP 설정 — <code>upload_max_filesize: <?php echo $server_upload_max; ?></code>, <code>post_max_size: <?php echo $server_post_max; ?></code>
+                &nbsp;→&nbsp;아래 값은 서버 제한(<?php echo $server_upload_max; ?>)을 초과할 수 없습니다.
+            </div>
             <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem;">
                 <div class="mg-form-group">
                     <label class="mg-form-label" for="upload_max_file">일반 파일 최대 크기 (KB)</label>
-                    <input type="number" name="upload_max_file" id="upload_max_file" value="<?php echo isset($mg_configs['upload_max_file']) ? $mg_configs['upload_max_file'] : '5120'; ?>" class="mg-form-input" min="512" max="51200">
+                    <input type="number" name="upload_max_file" id="upload_max_file" value="<?php echo isset($mg_configs['upload_max_file']) ? $mg_configs['upload_max_file'] : '5120'; ?>" class="mg-form-input" min="512" max="<?php echo $server_limit_kb; ?>">
                     <small style="color:var(--mg-text-muted);font-size:0.75rem;">이미지, 배너, 배경, 에디터 첨부 등 일반 파일 업로드에 적용 (기본 5120KB = 5MB)</small>
                 </div>
                 <div class="mg-form-group">
                     <label class="mg-form-label" for="upload_max_icon">아이콘 파일 최대 크기 (KB)</label>
-                    <input type="number" name="upload_max_icon" id="upload_max_icon" value="<?php echo isset($mg_configs['upload_max_icon']) ? $mg_configs['upload_max_icon'] : '2048'; ?>" class="mg-form-input" min="128" max="10240">
+                    <input type="number" name="upload_max_icon" id="upload_max_icon" value="<?php echo isset($mg_configs['upload_max_icon']) ? $mg_configs['upload_max_icon'] : '2048'; ?>" class="mg-form-input" min="128" max="<?php echo $server_limit_kb; ?>">
                     <small style="color:var(--mg-text-muted);font-size:0.75rem;">이모티콘, 뱃지 아이콘 등 소형 파일 업로드에 적용 (기본 2048KB = 2MB)</small>
                 </div>
             </div>
