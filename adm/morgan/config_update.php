@@ -26,7 +26,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     foreach (array('site_logo', 'bg_image') as $_fk) {
         if (isset($_FILES[$_fk]) && $_FILES[$_fk]['error'] === UPLOAD_ERR_INI_SIZE) {
             $php_max = ini_get('upload_max_filesize');
-            alert($_fk === 'bg_image' ? '배경 이미지' : '로고' . ' 업로드 실패: 서버 최대 업로드 용량('.$php_max.')을 초과했습니다.');
+            $label = ($_fk === 'bg_image') ? '배경 이미지' : '로고';
+            alert($label . ' 업로드 실패: 서버 최대 업로드 용량('.$php_max.')을 초과했습니다.');
         }
     }
 }
