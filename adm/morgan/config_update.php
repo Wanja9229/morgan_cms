@@ -235,6 +235,10 @@ elseif (isset($_FILES['site_logo']) && $_FILES['site_logo']['error'] === UPLOAD_
         $new_filename = 'logo_' . date('Ymd_His') . '.' . $ext;
         $target_path = $upload_dir . '/' . $new_filename;
 
+        if (!is_dir($upload_dir)) {
+            @mkdir($upload_dir, 0755, true);
+        }
+
         if (move_uploaded_file($file['tmp_name'], $target_path)) {
             @chmod($target_path, 0644);
             $new_url = $upload_url . '/' . $new_filename;
@@ -248,7 +252,12 @@ elseif (isset($_FILES['site_logo']) && $_FILES['site_logo']['error'] === UPLOAD_
             } else {
                 sql_query("INSERT INTO {$g5['mg_config_table']} (cf_key, cf_value) VALUES ('site_logo', '".sql_escape_string($new_url)."')");
             }
+        } else {
+            alert('로고 파일 저장에 실패했습니다. 서버 디렉토리 권한을 확인해주세요.');
         }
+    } else {
+        $max_mb = round(mg_upload_max_file() / 1024 / 1024, 1);
+        alert('로고 업로드 실패: 허용 확장자(jpg, jpeg, png, gif, webp, svg) 또는 용량 제한('.$max_mb.'MB)을 확인해주세요.');
     }
 }
 
@@ -290,6 +299,11 @@ elseif (isset($_FILES['bg_image']) && $_FILES['bg_image']['error'] === UPLOAD_ER
         $new_filename = 'bg_' . date('Ymd_His') . '.jpg';
         $target_path = $upload_dir . '/' . $new_filename;
 
+        // 업로드 디렉토리 존재 확인
+        if (!is_dir($upload_dir)) {
+            @mkdir($upload_dir, 0755, true);
+        }
+
         // 이미지 리사이즈 (최대 1920px, JPEG 85% 품질)
         $resized = mg_resize_background_image($file['tmp_name'], $target_path, 1920, 85);
 
@@ -307,7 +321,12 @@ elseif (isset($_FILES['bg_image']) && $_FILES['bg_image']['error'] === UPLOAD_ER
             } else {
                 sql_query("INSERT INTO {$g5['mg_config_table']} (cf_key, cf_value) VALUES ('bg_image', '".sql_escape_string($new_url)."')");
             }
+        } else {
+            alert('배경 이미지 처리에 실패했습니다. 서버의 GD 라이브러리 또는 디렉토리 권한을 확인해주세요.');
         }
+    } else {
+        $max_mb = round(mg_upload_max_file() / 1024 / 1024, 1);
+        alert('배경 이미지 업로드 실패: 허용 확장자(jpg, jpeg, png, gif, webp) 또는 용량 제한('.$max_mb.'MB)을 확인해주세요. (파일 크기: '.round($file['size']/1024/1024, 1).'MB)');
     }
 }
 
