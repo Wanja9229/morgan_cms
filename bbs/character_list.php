@@ -17,11 +17,18 @@ $side_id = isset($_GET['side_id']) ? (int)$_GET['side_id'] : 0;
 $class_id = isset($_GET['class_id']) ? (int)$_GET['class_id'] : 0;
 $sort = isset($_GET['sort']) ? clean_xss_tags($_GET['sort']) : 'newest';
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+$cat = isset($_GET['cat']) ? clean_xss_tags($_GET['cat']) : '';
 $per_page = 12;
 $offset = ($page - 1) * $per_page;
 
 // WHERE 조건 생성
 $where = "c.ch_state = 'approved'";
+
+if ($cat === 'npc') {
+    $where .= " AND c.ch_is_npc = 1";
+} else {
+    $where .= " AND c.ch_is_npc = 0";
+}
 
 if ($stx) {
     $stx_escaped = sql_real_escape_string($stx);
@@ -96,8 +103,9 @@ while ($row = sql_fetch_array($result)) {
 
 // 쿼리스트링 생성 함수
 function build_query($params = array()) {
-    global $sfl, $stx, $side_id, $class_id, $sort;
+    global $sfl, $stx, $side_id, $class_id, $sort, $cat;
     $defaults = array(
+        'cat' => $cat,
         'sfl' => $sfl,
         'stx' => $stx,
         'side_id' => $side_id,
@@ -117,7 +125,13 @@ include_once(G5_THEME_PATH.'/head.php');
     <!-- 페이지 헤더 -->
     <div class="mb-6">
         <h1 class="text-2xl font-bold text-mg-text-primary">캐릭터 목록</h1>
-        <p class="text-sm text-mg-text-muted mt-1">승인된 캐릭터 <?php echo number_format($total_count); ?>명</p>
+        <p class="text-sm text-mg-text-muted mt-1"><?php echo $cat === 'npc' ? 'NPC' : '승인된 캐릭터'; ?> <?php echo number_format($total_count); ?>명</p>
+    </div>
+
+    <!-- 카테고리 탭 -->
+    <div class="flex gap-2 mb-4 border-b border-mg-bg-tertiary pb-3">
+        <a href="?<?php echo build_query(['cat' => '', 'page' => 1]); ?>" class="px-4 py-2 text-sm font-medium rounded-lg transition-colors <?php echo $cat !== 'npc' ? 'text-mg-accent bg-mg-accent/10' : 'text-mg-text-secondary hover:text-mg-text-primary'; ?>">전체</a>
+        <a href="?<?php echo build_query(['cat' => 'npc', 'page' => 1]); ?>" class="px-4 py-2 text-sm font-medium rounded-lg transition-colors <?php echo $cat === 'npc' ? 'text-mg-accent bg-mg-accent/10' : 'text-mg-text-secondary hover:text-mg-text-primary'; ?>">NPC</a>
     </div>
 
     <!-- 검색/필터 -->

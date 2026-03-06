@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS `mg_character` (
     `ch_state` enum('editing','pending','approved','deleted') NOT NULL DEFAULT 'editing' COMMENT '상태',
     `ch_type` enum('main','sub','npc') NOT NULL DEFAULT 'main' COMMENT '유형',
     `ch_main` tinyint(1) NOT NULL DEFAULT 0 COMMENT '대표 캐릭터 여부',
+    `ch_is_npc` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'NPC 여부',
     `side_id` int DEFAULT NULL COMMENT '세력 ID',
     `class_id` int DEFAULT NULL COMMENT '종족 ID',
     `ch_thumb` varchar(500) DEFAULT NULL COMMENT '두상 이미지',

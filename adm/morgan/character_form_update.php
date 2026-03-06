@@ -30,6 +30,7 @@ $side_id = isset($_POST['side_id']) ? (int)$_POST['side_id'] : 0;
 $class_id = isset($_POST['class_id']) ? (int)$_POST['class_id'] : 0;
 $ch_state = isset($_POST['ch_state']) ? $_POST['ch_state'] : $char['ch_state'];
 $ch_main = isset($_POST['ch_main']) ? (int)$_POST['ch_main'] : 0;
+$ch_is_npc = isset($_POST['ch_is_npc']) ? (int)$_POST['ch_is_npc'] : 0;
 $profile = isset($_POST['profile']) ? $_POST['profile'] : array();
 
 $btn_save = isset($_POST['btn_save']);
@@ -157,6 +158,7 @@ $sql = "UPDATE {$g5['mg_character_table']} SET
         class_id = ".($class_id ? $class_id : 'NULL').",
         ch_state = '{$ch_state}',
         ch_main = {$ch_main},
+        ch_is_npc = {$ch_is_npc},
         ch_thumb = '".sql_real_escape_string($ch_thumb)."',
         ch_image = '".sql_real_escape_string($ch_image)."',
         ch_update = NOW()

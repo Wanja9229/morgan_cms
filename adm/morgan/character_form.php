@@ -143,6 +143,17 @@ require_once __DIR__.'/_head.php';
                             </label>
                         </div>
                     </div>
+
+                    <div class="mg-form-group">
+                        <label class="mg-form-label">NPC</label>
+                        <div style="padding-top:0.5rem;">
+                            <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                                <input type="checkbox" name="ch_is_npc" value="1" <?php echo !empty($char['ch_is_npc']) ? 'checked' : ''; ?>>
+                                <span>NPC 캐릭터</span>
+                            </label>
+                            <small style="display:block;color:var(--mg-text-muted);font-size:0.75rem;margin-top:0.25rem;">NPC는 전체 캐릭터 목록에 표시되지 않고, NPC 탭에서만 표시됩니다.</small>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="mg-form-group">
