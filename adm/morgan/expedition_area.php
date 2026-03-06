@@ -382,6 +382,13 @@ require_once __DIR__.'/_head.php';
     </div>
 </div>
 
+<!-- 마커 액션 팝업 (클릭 시) -->
+<div id="marker-action-popup" style="display:none;position:fixed;z-index:1200;background:var(--mg-bg-secondary);border:1px solid var(--mg-bg-tertiary);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.5);min-width:160px;overflow:hidden;">
+    <div id="marker-action-name" style="padding:8px 12px;font-size:0.8rem;color:var(--mg-text-muted);border-bottom:1px solid var(--mg-bg-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;"></div>
+    <button type="button" id="marker-action-edit" style="display:block;width:100%;text-align:left;padding:8px 12px;font-size:0.85rem;color:var(--mg-text-primary);background:none;border:none;cursor:pointer;" onmouseover="this.style.background='var(--mg-bg-tertiary)'" onmouseout="this.style.background='none'">✏️ 수정</button>
+    <button type="button" id="marker-action-remove" style="display:block;width:100%;text-align:left;padding:8px 12px;font-size:0.85rem;color:#ef4444;background:none;border:none;border-top:1px solid var(--mg-bg-tertiary);cursor:pointer;" onmouseover="this.style.background='var(--mg-bg-tertiary)'" onmouseout="this.style.background='none'">🗑️ 마커 삭제</button>
+</div>
+
 <!-- 맵 클릭 시 파견지 선택 팝업 -->
 <div id="map-place-popup" style="display:none; position:fixed; z-index:100; background:var(--mg-bg-secondary); border:1px solid var(--mg-bg-tertiary); border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,0.5); min-width:220px; max-width:280px; overflow:hidden;">
     <div style="padding:8px 12px; border-bottom:1px solid var(--mg-bg-tertiary); font-size:0.8rem; color:var(--mg-text-muted); display:flex; justify-content:space-between; align-items:center;">
@@ -430,6 +437,44 @@ function getMarkerSVG(style, color, inner) {
     }
 }
 
+// === 마커 액션 팝업 ===
+function showMarkerActionPopup(clientX, clientY, id, name) {
+    closeMarkerActionPopup();
+    var popup = document.getElementById('marker-action-popup');
+    document.getElementById('marker-action-name').textContent = name;
+    document.getElementById('marker-action-edit').onclick = function() { closeMarkerActionPopup(); editArea(id); };
+    document.getElementById('marker-action-remove').onclick = function() { closeMarkerActionPopup(); clearMarkerCoords(id); };
+    popup.style.display = 'block';
+    var pw = popup.offsetWidth, ph = popup.offsetHeight;
+    var left = clientX + 8, top = clientY - 10;
+    if (left + pw > window.innerWidth - 10) left = clientX - pw - 8;
+    if (top + ph > window.innerHeight - 10) top = window.innerHeight - ph - 10;
+    if (top < 10) top = 10;
+    popup.style.left = left + 'px';
+    popup.style.top = top + 'px';
+}
+function closeMarkerActionPopup() { document.getElementById('marker-action-popup').style.display = 'none'; }
+document.addEventListener('mousedown', function(e) {
+    var popup = document.getElementById('marker-action-popup');
+    if (popup.style.display !== 'none' && !popup.contains(e.target)) closeMarkerActionPopup();
+});
+function clearMarkerCoords(ea_id) {
+    var area = areas.find(function(a) { return a.ea_id == ea_id; });
+    if (!area) return;
+    if (!confirm('"' + area.ea_name + '" 마커를 지도에서 제거하시겠습니까?\n(파견지 데이터는 유지됩니다)')) return;
+    var fd = new FormData();
+    fd.append('action', 'set_coords');
+    fd.append('ea_id', ea_id);
+    fd.append('ea_map_x', '');
+    fd.append('ea_map_y', '');
+    fetch(UPDATE_URL, { method: 'POST', body: fd })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) { area.ea_map_x = null; area.ea_map_y = null; renderMapMarkers(); }
+            else alert(data.message || '실패');
+        });
+}
+
 // === 마커 드래그+클릭 인터랙션 ===
 function setupMarkerInteraction(marker, area) {
     var isDragging = false, hasMoved = false;
@@ -471,7 +516,7 @@ function setupMarkerInteraction(marker, area) {
                     if (data.success) { area.ea_map_x = newX; area.ea_map_y = newY; }
                 });
         } else {
-            editArea(area.ea_id);
+            showMarkerActionPopup(startX, startY, area.ea_id, area.ea_name);
         }
     }
 

@@ -244,6 +244,13 @@ function deleteMapImage() {
     </div>
 </div>
 
+<!-- 마커 액션 팝업 (클릭 시) -->
+<div id="marker-action-popup" style="display:none;position:fixed;z-index:1200;background:var(--mg-bg-secondary);border:1px solid var(--mg-bg-tertiary);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.5);min-width:160px;overflow:hidden;">
+    <div id="marker-action-name" style="padding:8px 12px;font-size:0.8rem;color:var(--mg-text-muted);border-bottom:1px solid var(--mg-bg-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;"></div>
+    <button type="button" id="marker-action-edit" style="display:block;width:100%;text-align:left;padding:8px 12px;font-size:0.85rem;color:var(--mg-text-primary);background:none;border:none;cursor:pointer;" onmouseover="this.style.background='var(--mg-bg-tertiary)'" onmouseout="this.style.background='none'">✏️ 수정</button>
+    <button type="button" id="marker-action-remove" style="display:block;width:100%;text-align:left;padding:8px 12px;font-size:0.85rem;color:#ef4444;background:none;border:none;border-top:1px solid var(--mg-bg-tertiary);cursor:pointer;" onmouseover="this.style.background='var(--mg-bg-tertiary)'" onmouseout="this.style.background='none'">🗑️ 마커 삭제</button>
+</div>
+
 <!-- 맵 클릭 시 지역 선택 팝업 -->
 <div id="map-place-popup" style="display:none; position:fixed; z-index:1100; background:var(--mg-bg-secondary); border:1px solid var(--mg-bg-tertiary); border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,0.5); min-width:220px; max-width:280px; overflow:hidden;">
     <div style="padding:8px 12px; border-bottom:1px solid var(--mg-bg-tertiary); font-size:0.8rem; color:var(--mg-text-muted); display:flex; justify-content:space-between; align-items:center;">
@@ -355,6 +362,42 @@ function escHtml(str) {
     var d = document.createElement('div');
     d.textContent = str;
     return d.innerHTML;
+}
+
+// === 마커 액션 팝업 ===
+function showMarkerActionPopup(clientX, clientY, id, name) {
+    closeMarkerActionPopup();
+    var popup = document.getElementById('marker-action-popup');
+    document.getElementById('marker-action-name').textContent = name;
+    document.getElementById('marker-action-edit').onclick = function() { closeMarkerActionPopup(); editRegion(id); };
+    document.getElementById('marker-action-remove').onclick = function() { closeMarkerActionPopup(); clearMarkerCoords(id); };
+    popup.style.display = 'block';
+    var pw = popup.offsetWidth, ph = popup.offsetHeight;
+    var left = clientX + 8, top = clientY - 10;
+    if (left + pw > window.innerWidth - 10) left = clientX - pw - 8;
+    if (top + ph > window.innerHeight - 10) top = window.innerHeight - ph - 10;
+    if (top < 10) top = 10;
+    popup.style.left = left + 'px';
+    popup.style.top = top + 'px';
+}
+function closeMarkerActionPopup() { document.getElementById('marker-action-popup').style.display = 'none'; }
+document.addEventListener('mousedown', function(e) {
+    var popup = document.getElementById('marker-action-popup');
+    if (popup.style.display !== 'none' && !popup.contains(e.target)) closeMarkerActionPopup();
+});
+function clearMarkerCoords(mr_id) {
+    var r = regionsData.find(function(r) { return r.mr_id == mr_id; });
+    if (!r) return;
+    if (!confirm('"' + r.mr_name + '" 마커를 지도에서 제거하시겠습니까?\n(지역 데이터는 유지됩니다)')) return;
+    var fd = new FormData();
+    fd.append('mode', 'region_remove_coords');
+    fd.append('mr_id', mr_id);
+    fetch(UPDATE_URL, { method: 'POST', body: fd })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.success) { r.mr_map_x = null; r.mr_map_y = null; renderEditorMarkers(); }
+            else alert(data.message || '실패');
+        });
 }
 
 // === 팝업 기반 지역 배치 ===
@@ -538,8 +581,8 @@ function setupMarkerInteraction(marker, region) {
                     if (data.success) { region.mr_map_x = newX; region.mr_map_y = newY; }
                 });
         } else {
-            // 클릭 → 수정 모달 열기
-            editRegion(region.mr_id);
+            // 클릭 → 액션 팝업
+            showMarkerActionPopup(startX, startY, region.mr_id, region.mr_name);
         }
     }
 
