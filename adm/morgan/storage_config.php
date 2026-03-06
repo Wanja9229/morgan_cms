@@ -77,62 +77,52 @@ function _sc($key, $configs, $default = '') {
             <h3>Cloudflare R2 설정</h3>
         </div>
         <div class="mg-card-body">
-            <table class="mg-table-form">
-                <tr>
-                    <th style="width:180px;">Account ID</th>
-                    <td>
-                        <input type="text" name="mg_r2_account_id" class="mg-input" style="width:400px;"
-                            value="<?php echo _sc('mg_r2_account_id', $mg_configs); ?>"
-                            placeholder="Cloudflare 대시보드에서 확인">
-                        <p class="mg-help">Cloudflare 대시보드 우측 하단의 Account ID</p>
-                    </td>
-                </tr>
-                <tr>
-                    <th>Access Key ID</th>
-                    <td>
-                        <input type="text" name="mg_r2_access_key_id" class="mg-input" style="width:400px;"
-                            value="<?php echo _sc('mg_r2_access_key_id', $mg_configs); ?>"
-                            placeholder="R2 API 토큰의 Access Key ID">
-                    </td>
-                </tr>
-                <tr>
-                    <th>Secret Access Key</th>
-                    <td>
-                        <input type="password" name="mg_r2_secret_access_key" class="mg-input" style="width:400px;"
-                            value="<?php echo _sc('mg_r2_secret_access_key', $mg_configs); ?>"
-                            placeholder="R2 API 토큰의 Secret Access Key">
-                        <p class="mg-help">보안을 위해 마스킹 처리됩니다</p>
-                    </td>
-                </tr>
-                <tr>
-                    <th>Bucket Name</th>
-                    <td>
-                        <input type="text" name="mg_r2_bucket_name" class="mg-input" style="width:300px;"
-                            value="<?php echo _sc('mg_r2_bucket_name', $mg_configs); ?>"
-                            placeholder="예: morgan-storage">
-                    </td>
-                </tr>
-                <tr>
-                    <th>Endpoint URL</th>
-                    <td>
-                        <input type="text" name="mg_r2_endpoint" class="mg-input" style="width:500px;"
-                            value="<?php echo _sc('mg_r2_endpoint', $mg_configs); ?>"
-                            placeholder="비워두면 Account ID로 자동 생성">
-                        <p class="mg-help">비워두면 <code>https://{Account ID}.r2.cloudflarestorage.com</code> 사용</p>
-                    </td>
-                </tr>
-                <tr>
-                    <th>Public URL</th>
-                    <td>
-                        <input type="text" name="mg_r2_public_url" class="mg-input" style="width:500px;"
-                            value="<?php echo _sc('mg_r2_public_url', $mg_configs); ?>"
-                            placeholder="예: https://cdn.example.com">
-                        <p class="mg-help">R2 버킷의 퍼블릭 접근 URL 또는 커스텀 도메인</p>
-                    </td>
-                </tr>
-            </table>
+            <div class="mg-form-group">
+                <label class="mg-form-label" for="mg_r2_account_id">Account ID</label>
+                <input type="text" name="mg_r2_account_id" id="mg_r2_account_id" class="mg-form-input" style="max-width:400px;"
+                    value="<?php echo _sc('mg_r2_account_id', $mg_configs); ?>"
+                    placeholder="Cloudflare 대시보드에서 확인">
+                <small style="display:block;color:var(--mg-text-muted);font-size:0.75rem;margin-top:0.25rem;">Cloudflare 대시보드 우측 하단의 Account ID</small>
+            </div>
 
-            <!-- 연결 테스트 -->
+            <div class="mg-form-group">
+                <label class="mg-form-label" for="mg_r2_access_key_id">Access Key ID</label>
+                <input type="text" name="mg_r2_access_key_id" id="mg_r2_access_key_id" class="mg-form-input" style="max-width:400px;"
+                    value="<?php echo _sc('mg_r2_access_key_id', $mg_configs); ?>"
+                    placeholder="R2 API 토큰의 Access Key ID">
+            </div>
+
+            <div class="mg-form-group">
+                <label class="mg-form-label" for="mg_r2_secret_access_key">Secret Access Key</label>
+                <input type="password" name="mg_r2_secret_access_key" id="mg_r2_secret_access_key" class="mg-form-input" style="max-width:400px;"
+                    value="<?php echo _sc('mg_r2_secret_access_key', $mg_configs); ?>"
+                    placeholder="R2 API 토큰의 Secret Access Key">
+                <small style="display:block;color:var(--mg-text-muted);font-size:0.75rem;margin-top:0.25rem;">보안을 위해 마스킹 처리됩니다</small>
+            </div>
+
+            <div class="mg-form-group">
+                <label class="mg-form-label" for="mg_r2_bucket_name">Bucket Name</label>
+                <input type="text" name="mg_r2_bucket_name" id="mg_r2_bucket_name" class="mg-form-input" style="max-width:300px;"
+                    value="<?php echo _sc('mg_r2_bucket_name', $mg_configs); ?>"
+                    placeholder="예: morgan-storage">
+            </div>
+
+            <div class="mg-form-group">
+                <label class="mg-form-label" for="mg_r2_endpoint">Endpoint URL</label>
+                <input type="text" name="mg_r2_endpoint" id="mg_r2_endpoint" class="mg-form-input" style="max-width:500px;"
+                    value="<?php echo _sc('mg_r2_endpoint', $mg_configs); ?>"
+                    placeholder="비워두면 Account ID로 자동 생성">
+                <small style="display:block;color:var(--mg-text-muted);font-size:0.75rem;margin-top:0.25rem;">비워두면 <code>https://{Account ID}.r2.cloudflarestorage.com</code> 사용</small>
+            </div>
+
+            <div class="mg-form-group">
+                <label class="mg-form-label" for="mg_r2_public_url">Public URL</label>
+                <input type="text" name="mg_r2_public_url" id="mg_r2_public_url" class="mg-form-input" style="max-width:500px;"
+                    value="<?php echo _sc('mg_r2_public_url', $mg_configs); ?>"
+                    placeholder="예: https://cdn.example.com">
+                <small style="display:block;color:var(--mg-text-muted);font-size:0.75rem;margin-top:0.25rem;">R2 버킷의 퍼블릭 접근 URL 또는 커스텀 도메인</small>
+            </div>
+
             <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--mg-bg-tertiary);">
                 <button type="button" id="btn-test-connection" class="mg-btn mg-btn-secondary" onclick="testConnection()">
                     연결 테스트
@@ -154,7 +144,7 @@ function _sc($key, $configs, $default = '') {
 function toggleR2Fields() {
     var driver = document.querySelector('input[name="mg_storage_driver"]:checked').value;
     var r2Section = document.getElementById('r2-settings');
-    var inputs = r2Section.querySelectorAll('input[type="text"], input[type="password"]');
+    var inputs = r2Section.querySelectorAll('.mg-form-input');
 
     if (driver === 'r2') {
         r2Section.style.opacity = '1';

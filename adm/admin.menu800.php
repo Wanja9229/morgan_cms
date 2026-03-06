@@ -15,7 +15,6 @@ $menu["menu800"] = array(
     array('800100', '기본 설정', $mg_admin_url . '/config.php', 'mg_config'),
     array('800102', '스토리지 설정', $mg_admin_url . '/storage_config.php', 'mg_storage'),
     array('800060', '스태프 관리', $mg_admin_url . '/staff.php', 'mg_staff'),
-    array('800120', '콘텐츠 페이지', $mg_admin_url . '/content_page.php?co_id=provision', 'mg_config'),
     array('800150', '디자인 관리', $mg_admin_url . '/design.php', 'mg_main_builder'),
     // 세계관
     array('800160', '위키 관리', $mg_admin_url . '/lore_wiki.php', 'mg_lore', '세계관'),
