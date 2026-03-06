@@ -36,6 +36,7 @@ if ($mode == 'board_reward') {
     if (!in_array($br_mode, array('auto', 'request', 'off'))) $br_mode = 'off';
 
     $br_point = max(0, (int)($_POST['br_point'] ?? 0));
+    $br_stamina = max(0, (int)($_POST['br_stamina'] ?? 0));
     $br_material_use = ($_POST['br_material_use'] ?? '0') == '1' ? 1 : 0;
     $br_material_chance = max(0, min(100, (int)($_POST['br_material_chance'] ?? 30)));
     // 글 작성 재료 보상 (JSON)
@@ -60,16 +61,17 @@ if ($mode == 'board_reward') {
     }
 
     $sql = "INSERT INTO {$g5['mg_board_reward_table']}
-            (bo_table, br_mode, br_point, br_bonus_500, br_bonus_1000, br_bonus_image,
+            (bo_table, br_mode, br_point, br_stamina, br_bonus_500, br_bonus_1000, br_bonus_image,
              br_material_use, br_material_chance, br_material_list, br_material_comment, br_daily_limit, br_like_use,
              br_dice_use, br_dice_once, br_dice_max)
             VALUES
-            ('{$bo_table}', '{$br_mode}', {$br_point}, 0, 0, 0,
+            ('{$bo_table}', '{$br_mode}', {$br_point}, {$br_stamina}, 0, 0, 0,
              {$br_material_use}, {$br_material_chance}, '{$br_material_list}', '{$br_material_comment}', {$br_daily_limit}, {$br_like_use},
              {$br_dice_use}, {$br_dice_once}, {$br_dice_max})
             ON DUPLICATE KEY UPDATE
             br_mode = '{$br_mode}',
             br_point = {$br_point},
+            br_stamina = {$br_stamina},
             br_bonus_500 = 0,
             br_bonus_1000 = 0,
             br_bonus_image = 0,

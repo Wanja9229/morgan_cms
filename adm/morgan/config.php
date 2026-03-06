@@ -481,6 +481,11 @@ function removeLogo() {
                     <?php echo _cfg_radio('pioneer_use', $mg_configs, '1'); ?>
                     <small style="color:var(--mg-text-muted);font-size:0.75rem;">뷰 모드·개척지 이미지는 <a href="<?php echo G5_ADMIN_URL; ?>/morgan/pioneer_facility.php" style="color:var(--mg-accent);">개척지 관리</a>에서 설정합니다.</small>
                 </div>
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="stamina_daily_recover_limit">일일 스태미나 회복 상한</label>
+                    <input type="number" name="stamina_daily_recover_limit" id="stamina_daily_recover_limit" value="<?php echo isset($mg_configs['stamina_daily_recover_limit']) ? $mg_configs['stamina_daily_recover_limit'] : '50'; ?>" class="mg-form-input" min="0" max="9999">
+                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">아이템·보상으로 하루에 회복 가능한 최대 스태미나 (0=무제한). 일일 자연 리셋은 별도.</small>
+                </div>
             </div>
 
             <hr style="border:0;border-top:1px solid var(--mg-bg-tertiary);margin:1.5rem 0;">

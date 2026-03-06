@@ -161,6 +161,11 @@ switch ($action) {
         if ($tk['reward_type'] === 'point') {
             insert_point($mb_id, $tk['reward_amount'], '히든 이벤트: ' . $tk['event_title'], 'mg_hidden_event', $tk['event_id'], 'claim_' . $tk['token_id']);
             $reward_name = $tk['reward_amount'] . ' 포인트';
+        } elseif ($tk['reward_type'] === 'stamina') {
+            if (function_exists('mg_recover_stamina')) {
+                $stam_result = mg_recover_stamina($mb_id, (int)$tk['reward_amount'], true);
+                $reward_name = ($stam_result['recovered'] ?? $tk['reward_amount']) . ' 스태미나';
+            }
         } else {
             if (function_exists('mg_add_material') && $tk['reward_id'] > 0) {
                 mg_add_material($mb_id, $tk['reward_id'], $tk['reward_amount']);

@@ -58,9 +58,9 @@ if ($result) while ($row = sql_fetch_array($result)) $events[] = $row;
             </thead>
             <tbody>
                 <?php foreach ($events as $ev) {
-                    $reward_label = $ev['reward_type'] === 'point'
-                        ? $ev['reward_amount'] . 'P'
-                        : $ev['reward_amount'] . '개 (재료)';
+                    if ($ev['reward_type'] === 'point') $reward_label = $ev['reward_amount'] . 'P';
+                    elseif ($ev['reward_type'] === 'stamina') $reward_label = $ev['reward_amount'] . ' 스태미나';
+                    else $reward_label = $ev['reward_amount'] . '개 (재료)';
                 ?>
                 <tr style="<?php echo !$ev['is_active'] ? 'opacity:0.5;' : ''; ?>">
                     <td>
@@ -147,6 +147,7 @@ $is_edit = $ev ? true : false;
                 <select name="reward_type" class="mg-form-select" onchange="toggleRewardType(this.value)">
                     <option value="point" <?php echo ($ev['reward_type'] ?? 'point') == 'point' ? 'selected' : ''; ?>>포인트</option>
                     <option value="material" <?php echo ($ev['reward_type'] ?? '') == 'material' ? 'selected' : ''; ?>>재료</option>
+                    <option value="stamina" <?php echo ($ev['reward_type'] ?? '') == 'stamina' ? 'selected' : ''; ?>>스태미나</option>
                 </select>
             </div>
 
@@ -276,7 +277,7 @@ if ($result) while ($row = sql_fetch_array($result)) $logs[] = $row;
                     <td style="font-size:0.8rem;"><?php echo substr($log['claimed_at'], 0, 16); ?></td>
                     <td><?php echo htmlspecialchars($log['mb_id']); ?></td>
                     <td><?php echo htmlspecialchars($log['event_title'] ?? '(삭제됨)'); ?></td>
-                    <td><?php echo $log['reward_type'] === 'point' ? '포인트' : '재료'; ?></td>
+                    <td><?php echo $log['reward_type'] === 'point' ? '포인트' : ($log['reward_type'] === 'stamina' ? '스태미나' : '재료'); ?></td>
                     <td><?php echo number_format($log['reward_amount']); ?></td>
                     <td style="font-size:0.75rem;color:var(--mg-text-muted);"><?php echo htmlspecialchars($log['ip_address'] ?? ''); ?></td>
                 </tr>

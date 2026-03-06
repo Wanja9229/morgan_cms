@@ -212,7 +212,7 @@ CREATE TABLE IF NOT EXISTS `mg_shop_item` (
     `si_desc` text COMMENT '설명',
     `si_image` varchar(500) DEFAULT NULL COMMENT '이미지',
     `si_price` int NOT NULL COMMENT '가격',
-    `si_type` enum('title','badge','nick_color','nick_effect','profile_border','equip','emoticon_set','emoticon_reg','furniture','material','seal_bg','seal_frame','seal_hover','seal_effect','profile_skin','profile_bg','profile_effect','char_slot','concierge_extra','title_prefix','title_suffix','radio_song','radio_ment','relation_slot','concierge_direct_pick','rp_pin','expedition_time','expedition_reward','expedition_stamina','expedition_slot','write_expand','achievement_slot','concierge_boost','nick_bg','etc') NOT NULL DEFAULT 'etc' COMMENT '타입',
+    `si_type` enum('title','badge','nick_color','nick_effect','profile_border','equip','emoticon_set','emoticon_reg','furniture','material','seal_bg','seal_frame','seal_hover','seal_effect','profile_skin','profile_bg','profile_effect','char_slot','concierge_extra','title_prefix','title_suffix','radio_song','radio_ment','relation_slot','concierge_direct_pick','rp_pin','expedition_time','expedition_reward','expedition_stamina','expedition_slot','write_expand','achievement_slot','concierge_boost','nick_bg','stamina_recover','etc') NOT NULL DEFAULT 'etc' COMMENT '타입',
     `si_effect` text COMMENT '효과 데이터 (JSON)',
     `si_stock` int NOT NULL DEFAULT -1 COMMENT '재고 (-1=무제한)',
     `si_stock_sold` int NOT NULL DEFAULT 0 COMMENT '판매 수량',
@@ -1573,6 +1573,7 @@ CREATE TABLE IF NOT EXISTS `mg_user_stamina` (
     `mb_id` varchar(20) NOT NULL COMMENT '회원 ID',
     `us_current` int(11) NOT NULL DEFAULT 10 COMMENT '현재 노동력',
     `us_max` int(11) NOT NULL DEFAULT 10 COMMENT '일일 최대',
+    `us_recovered_today` int(11) NOT NULL DEFAULT 0 COMMENT '오늘 회복한 스태미나',
     `us_last_reset` date DEFAULT NULL COMMENT '마지막 리셋 날짜',
     PRIMARY KEY (`us_id`),
     UNIQUE KEY `mb_id` (`mb_id`)
@@ -1660,6 +1661,7 @@ CREATE TABLE IF NOT EXISTS `mg_board_reward` (
     `bo_table` varchar(20) NOT NULL,
     `br_mode` enum('auto','request','off') NOT NULL DEFAULT 'off',
     `br_point` int NOT NULL DEFAULT 0 COMMENT '기본 포인트',
+    `br_stamina` int NOT NULL DEFAULT 0 COMMENT '스태미나 회복',
     `br_bonus_500` int NOT NULL DEFAULT 0 COMMENT '500자 이상 보너스',
     `br_bonus_1000` int NOT NULL DEFAULT 0 COMMENT '1000자 이상 보너스',
     `br_bonus_image` int NOT NULL DEFAULT 0 COMMENT '이미지 첨부 보너스',
@@ -2464,6 +2466,12 @@ SELECT 'nick_bg', '이름표 배경색 (앰버)', '닉네임에 배경색을 적
  COALESCE((SELECT sc_id FROM mg_shop_category WHERE sc_name = '이용권' LIMIT 1), 0), 0, 1 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_type = 'nick_bg');
 
+-- 스태미나 회복 물약
+INSERT IGNORE INTO mg_shop_item (si_type, si_name, si_desc, si_price, si_image, si_effect, si_use, sc_id, si_consumable, si_display)
+SELECT 'stamina_recover', '스태미나 회복 물약', '스태미나를 풀 충전합니다 (일일 상한 적용)', 500, '', '{}', 1,
+ COALESCE((SELECT sc_id FROM mg_shop_category WHERE sc_name = '이용권' LIMIT 1), 0), 1, 1 FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_type = 'stamina_recover' AND si_name = '스태미나 회복 물약');
+
 -- ======================================
 -- 25. 히든 이벤트 시스템
 -- ======================================
@@ -2472,7 +2480,7 @@ CREATE TABLE IF NOT EXISTS `mg_hidden_event` (
     `event_id`        INT AUTO_INCREMENT PRIMARY KEY,
     `title`           VARCHAR(100) NOT NULL,
     `image_path`      VARCHAR(255) NOT NULL,
-    `reward_type`     ENUM('point','material') DEFAULT 'point',
+    `reward_type`     ENUM('point','material','stamina') DEFAULT 'point',
     `reward_id`       INT NULL COMMENT '재료 mt_id (reward_type=material)',
     `reward_amount`   INT NOT NULL DEFAULT 100,
     `probability`     DECIMAL(5,2) NOT NULL DEFAULT 5.00 COMMENT '출현 확률 (%)',

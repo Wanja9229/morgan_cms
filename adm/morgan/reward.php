@@ -37,7 +37,7 @@ if (isset($_GET['ajax_types'])) {
 // 게시판 목록 + 보상 설정 조인
 $boards = array();
 $sql = "SELECT b.bo_table, b.bo_subject, b.bo_write_point, b.bo_comment_point,
-               r.br_id, r.br_mode, r.br_point, r.br_bonus_500, r.br_bonus_1000,
+               r.br_id, r.br_mode, r.br_point, r.br_stamina, r.br_bonus_500, r.br_bonus_1000,
                r.br_material_use, r.br_material_chance,
                r.br_material_list, r.br_material_comment, r.br_daily_limit, r.br_like_use
         FROM {$g5['board_table']} b
@@ -361,6 +361,11 @@ require_once __DIR__.'/_head.php';
                                 <input type="number" name="br_point" id="f_br_point" class="mg-form-input" value="0" min="0">
                             </div>
                             <div class="mg-form-group">
+                                <label class="mg-form-label">스태미나 회복</label>
+                                <input type="number" name="br_stamina" id="f_br_stamina" class="mg-form-input" value="0" min="0">
+                                <small style="color:var(--mg-text-muted);font-size:0.75rem;">글 작성 시 회복할 스태미나 (0=미지급, 일일 상한 적용)</small>
+                            </div>
+                            <div class="mg-form-group">
                                 <label class="mg-form-label">일일 제한 (0=무제한)</label>
                                 <input type="number" name="br_daily_limit" id="f_br_daily_limit" class="mg-form-input" value="0" min="0">
                             </div>
@@ -548,6 +553,7 @@ function editReward(bo_table) {
     document.querySelector('input[name="br_mode"][value="' + mode + '"]').checked = true;
 
     document.getElementById('f_br_point').value = b.br_point || 0;
+    document.getElementById('f_br_stamina').value = b.br_stamina || 0;
     document.getElementById('f_br_daily_limit').value = b.br_daily_limit || 0;
     document.getElementById('f_br_like_use').checked = (b.br_like_use == null || b.br_like_use == 1);
 

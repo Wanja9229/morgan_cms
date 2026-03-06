@@ -40,6 +40,13 @@ if ($my_count <= 0) {
     exit;
 }
 
+// 스태미나 회복 사전 확인
+if ($action == 'stamina_check') {
+    $info = function_exists('mg_get_stamina_recover_info') ? mg_get_stamina_recover_info($member['mb_id']) : null;
+    echo json_encode(['success' => true, 'info' => $info]);
+    exit;
+}
+
 // 사용/해제 처리
 if ($action == 'use') {
     $result = mg_use_item($member['mb_id'], $si_id, $ch_id);

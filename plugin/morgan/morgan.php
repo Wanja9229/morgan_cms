@@ -580,6 +580,7 @@ function mg_get_item_types() {
         'write_expand' => array('name' => '글자수 확장권', 'desc' => '게시글 글자 제한을 확장합니다 (영구)', 'group' => 'system'),
         'achievement_slot' => array('name' => '업적 쇼케이스 확장권', 'desc' => '업적 쇼케이스 슬롯을 추가합니다 (영구)', 'group' => 'system'),
         'concierge_boost' => array('name' => '의뢰 보상 부스터', 'desc' => '의뢰 보상을 추가로 받습니다 (1회 소모)', 'group' => 'system'),
+        'stamina_recover' => array('name' => '스태미나 회복 물약', 'desc' => '스태미나를 풀 충전합니다 (일일 상한 적용, 소모품)', 'group' => 'system'),
         'nick_bg' => array('name' => '이름표 배경색', 'desc' => '닉네임에 배경색을 적용합니다', 'group' => 'decor'),
         // 재료·가구·기타
         'material' => array('name' => '재료', 'desc' => '개척 시스템 재료 아이템', 'group' => 'material'),
@@ -1841,6 +1842,25 @@ function mg_use_item($mb_id, $si_id, $ch_id = null) {
         sql_query("UPDATE {$mg['inventory_table']} SET iv_count = iv_count - 1 WHERE mb_id = '{$mb_id}' AND si_id = {$si_id}");
         sql_query("DELETE FROM {$mg['inventory_table']} WHERE mb_id = '{$mb_id}' AND si_id = {$si_id} AND iv_count <= 0");
         return array('success' => true, 'message' => '글자수 제한이 확장되었습니다.');
+    }
+
+    // 스태미나 회복 물약: 즉시 소모 → 풀 충전 (일일 상한 적용)
+    if ($item['si_type'] === 'stamina_recover') {
+        $info = mg_get_stamina_recover_info($mb_id);
+        if ($info['deficit'] <= 0) {
+            return array('success' => false, 'message' => '스태미나가 이미 최대입니다.');
+        }
+        if ($info['daily_limit'] > 0 && $info['remaining_limit'] <= 0) {
+            return array('success' => false, 'message' => '일일 스태미나 회복 상한에 도달했습니다.');
+        }
+        $result = mg_recover_stamina($mb_id, 0, true); // 풀 충전
+        if (!$result['success']) {
+            return $result;
+        }
+        // 인벤토리에서 차감
+        sql_query("UPDATE {$mg['inventory_table']} SET iv_count = iv_count - 1 WHERE mb_id = '{$mb_id}' AND si_id = {$si_id}");
+        sql_query("DELETE FROM {$mg['inventory_table']} WHERE mb_id = '{$mb_id}' AND si_id = {$si_id} AND iv_count <= 0");
+        return array('success' => true, 'message' => "스태미나가 {$result['recovered']} 회복되었습니다. ({$result['current']}/{$result['max']})");
     }
 
     // 업적 쇼케이스 확장권: 영구, 해제 불가, 최대 8개(기본5+추가3)
@@ -4020,7 +4040,7 @@ function mg_get_stamina($mb_id) {
     // 패시브 리셋: 날짜가 지났으면 리셋
     if ($row['us_last_reset'] < $today) {
         sql_query("UPDATE {$mg['user_stamina_table']}
-                   SET us_current = us_max, us_last_reset = '{$today}'
+                   SET us_current = us_max, us_recovered_today = 0, us_last_reset = '{$today}'
                    WHERE mb_id = '{$mb_id_esc}'");
         return ['current' => (int)$row['us_max'], 'max' => (int)$row['us_max']];
     }
@@ -4051,6 +4071,93 @@ function mg_use_stamina($mb_id, $amount) {
                WHERE mb_id = '{$mb_id_esc}' AND us_current >= {$amount}");
 
     return sql_affected_rows() > 0;
+}
+
+/**
+ * 유저 스태미나 회복 (아이템/보상용)
+ * 일일 회복 상한을 적용하여 실제 회복량을 제한
+ *
+ * @param string $mb_id 회원 ID
+ * @param int $amount 회복량 (0 = 풀 충전)
+ * @param bool $check_limit 일일 상한 체크 여부
+ * @return array ['success' => bool, 'recovered' => int, 'current' => int, 'max' => int, 'remaining_limit' => int, 'message' => string]
+ */
+function mg_recover_stamina($mb_id, $amount = 0, $check_limit = true) {
+    global $mg;
+
+    $mb_id_esc = sql_real_escape_string($mb_id);
+    $stamina = mg_get_stamina($mb_id);
+    $deficit = $stamina['max'] - $stamina['current'];
+
+    if ($deficit <= 0) {
+        return array('success' => false, 'recovered' => 0, 'current' => $stamina['current'], 'max' => $stamina['max'], 'remaining_limit' => 0, 'message' => '스태미나가 이미 최대입니다.');
+    }
+
+    // 풀 충전이면 부족분 전체
+    $want = $amount > 0 ? min($amount, $deficit) : $deficit;
+
+    // 일일 회복 상한 체크
+    if ($check_limit) {
+        $daily_limit = (int)mg_config('stamina_daily_recover_limit', 0);
+        if ($daily_limit > 0) {
+            $row = sql_fetch("SELECT us_recovered_today FROM {$mg['user_stamina_table']} WHERE mb_id = '{$mb_id_esc}'");
+            $recovered_today = (int)($row['us_recovered_today'] ?? 0);
+            $remaining = max(0, $daily_limit - $recovered_today);
+
+            if ($remaining <= 0) {
+                return array('success' => false, 'recovered' => 0, 'current' => $stamina['current'], 'max' => $stamina['max'], 'remaining_limit' => 0, 'message' => '일일 스태미나 회복 상한에 도달했습니다.');
+            }
+
+            $want = min($want, $remaining);
+        }
+    }
+
+    if ($want <= 0) {
+        return array('success' => false, 'recovered' => 0, 'current' => $stamina['current'], 'max' => $stamina['max'], 'remaining_limit' => 0, 'message' => '회복할 스태미나가 없습니다.');
+    }
+
+    sql_query("UPDATE {$mg['user_stamina_table']}
+               SET us_current = LEAST(us_max, us_current + {$want}),
+                   us_recovered_today = us_recovered_today + {$want}
+               WHERE mb_id = '{$mb_id_esc}'");
+
+    $new_stamina = mg_get_stamina($mb_id);
+    $daily_limit = (int)mg_config('stamina_daily_recover_limit', 0);
+    $row2 = sql_fetch("SELECT us_recovered_today FROM {$mg['user_stamina_table']} WHERE mb_id = '{$mb_id_esc}'");
+    $remaining_limit = $daily_limit > 0 ? max(0, $daily_limit - (int)($row2['us_recovered_today'] ?? 0)) : -1;
+
+    return array('success' => true, 'recovered' => $want, 'current' => $new_stamina['current'], 'max' => $new_stamina['max'], 'remaining_limit' => $remaining_limit, 'message' => "스태미나가 {$want} 회복되었습니다.");
+}
+
+/**
+ * 스태미나 회복 가능량 조회 (UI 확인용)
+ */
+function mg_get_stamina_recover_info($mb_id) {
+    global $mg;
+
+    $mb_id_esc = sql_real_escape_string($mb_id);
+    $stamina = mg_get_stamina($mb_id);
+    $deficit = $stamina['max'] - $stamina['current'];
+    $daily_limit = (int)mg_config('stamina_daily_recover_limit', 0);
+
+    $row = sql_fetch("SELECT us_recovered_today FROM {$mg['user_stamina_table']} WHERE mb_id = '{$mb_id_esc}'");
+    $recovered_today = (int)($row['us_recovered_today'] ?? 0);
+    $remaining_limit = $daily_limit > 0 ? max(0, $daily_limit - $recovered_today) : -1;
+
+    $recoverable = $deficit;
+    if ($daily_limit > 0) {
+        $recoverable = min($deficit, max(0, $daily_limit - $recovered_today));
+    }
+
+    return array(
+        'current' => $stamina['current'],
+        'max' => $stamina['max'],
+        'deficit' => $deficit,
+        'daily_limit' => $daily_limit,
+        'recovered_today' => $recovered_today,
+        'remaining_limit' => $remaining_limit,
+        'recoverable' => $recoverable,
+    );
 }
 
 /**
@@ -6411,6 +6518,12 @@ function mg_apply_board_reward($mb_id, $bo_table, $wr_id) {
         insert_point($mb_id, $point, "{$bo_subject} {$wr_id} 글쓰기", $bo_table, $wr_id, '쓰기');
     }
 
+    // 스태미나 회복
+    $br_stamina = (int)($br['br_stamina'] ?? 0);
+    if ($br_stamina > 0) {
+        mg_recover_stamina($mb_id, $br_stamina, true);
+    }
+
     // 재료 드롭 (새 JSON 형식 우선, 레거시 폴백)
     if (!empty($br['br_material_list']) && $br['br_material_list'][0] === '{') {
         mg_reward_material_from_config($mb_id, $br['br_material_list']);
@@ -7155,6 +7268,13 @@ function mg_achievement_give_reward($mb_id, $ac, $tier = null)
                         sql_query("INSERT INTO {$g5['mg_inventory_table']} (mb_id, si_id, iv_count, iv_datetime)
                             VALUES ('{$mb_esc}', {$si_id}, 1, NOW())");
                     }
+                }
+                break;
+
+            case 'stamina':
+                $stam_amount = (int)($r['amount'] ?? 0);
+                if ($stam_amount > 0) {
+                    mg_recover_stamina($mb_id, $stam_amount, true);
                 }
                 break;
         }

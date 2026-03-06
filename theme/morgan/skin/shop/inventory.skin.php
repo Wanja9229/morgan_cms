@@ -338,6 +338,10 @@ if ($is_member) {
                 <div style="display:flex;gap:0.25rem;align-items:center;">
                     <a href="<?php echo G5_BBS_URL; ?>/emoticon_create.php" class="text-xs text-mg-accent hover:underline" style="flex:1;text-align:center;">이모티콘 등록하기</a>
                 </div>
+                <?php } elseif ($item['si_type'] === 'stamina_recover') { ?>
+                <button type="button" onclick="useStaminaRecover(<?php echo $item['si_id']; ?>)" class="w-full btn-primary text-sm font-medium py-2 rounded-lg transition-colors">
+                    ⚡ 스태미나 회복
+                </button>
                 <?php } elseif ($item['si_type'] === 'concierge_extra') { ?>
                 <div style="display:flex;gap:0.25rem;align-items:center;">
                     <span class="text-xs text-mg-text-muted" style="flex:1;text-align:center;">의뢰 등록 시 자동 사용</span>
@@ -621,6 +625,52 @@ function unuseItem(si_id) {
 
 // 선물 모달
 var _giftSiId = 0;
+// 스태미나 회복 물약 사용
+function useStaminaRecover(si_id) {
+    fetch('<?php echo G5_BBS_URL; ?>/inventory_use.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'action=stamina_check&si_id=' + si_id
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (!data.success && data.info) {
+            // 상한 도달 경고
+            var info = data.info;
+            if (info.remaining_limit === 0) {
+                alert('일일 스태미나 회복 상한에 도달했습니다.');
+                return;
+            }
+            if (info.deficit <= 0) {
+                alert('스태미나가 이미 최대입니다.');
+                return;
+            }
+        }
+        // 정상 또는 부분 회복 안내
+        var info = data.info || {};
+        var msg = '스태미나 회복 물약을 사용하시겠습니까?\n';
+        msg += '현재 스태미나: ' + (info.current || '?') + '/' + (info.max || '?') + '\n';
+        if (info.daily_limit > 0 && info.recoverable < info.deficit) {
+            msg += '⚠️ 일일 회복 상한으로 ' + info.recoverable + '만 회복 가능합니다.\n';
+            msg += '(일일 상한: ' + info.daily_limit + ', 오늘 사용: ' + info.recovered_today + ')';
+        } else {
+            msg += '풀 충전됩니다. (회복량: ' + info.deficit + ')';
+        }
+        if (!confirm(msg)) return;
+
+        fetch('<?php echo G5_BBS_URL; ?>/inventory_use.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'action=use&si_id=' + si_id
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(result) {
+            alert(result.message || '사용 완료');
+            if (result.success) location.reload();
+        });
+    });
+}
+
 var _giftCheckTimer = null;
 
 function openGiftModal(si_id, itemName) {

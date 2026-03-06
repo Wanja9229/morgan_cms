@@ -141,6 +141,7 @@ $config_keys = array(
     'concierge_penalty_days',
     // 개척 설정
     'pioneer_use',
+    'stamina_daily_recover_limit',
     // 회원 레벨 설정
     'rp_min_level',
     'concierge_min_level',
