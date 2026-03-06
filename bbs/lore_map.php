@@ -86,6 +86,7 @@ include_once(G5_THEME_PATH.'/head.php');
 .lore-marker { position:absolute; cursor:pointer; transition:transform 0.15s; z-index:5; user-select:none; }
 .lore-marker:hover { transform:scale(1.2); z-index:10; }
 .lore-marker svg { width:100%; height:100%; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
+.lore-marker .marker-label { position:absolute; top:100%; left:50%; transform:translateX(-50%); white-space:nowrap; font-size:11px; color:var(--mg-text-primary); background:rgba(0,0,0,0.7); padding:1px 6px; border-radius:4px; margin-top:2px; pointer-events:none; }
 .lore-popup { width:280px; max-width:calc(100vw - 3rem); background:var(--mg-bg-secondary); border:1px solid var(--mg-bg-tertiary); border-radius:12px; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.4); position:relative; }
 .lore-popup-close { position:absolute; top:6px; right:6px; width:28px; height:28px; border-radius:50%; background:rgba(0,0,0,0.5); color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:2; font-size:14px; line-height:1; }
 .lore-popup-close:hover { background:rgba(0,0,0,0.7); }
@@ -132,7 +133,8 @@ include_once(G5_THEME_PATH.'/head.php');
         marker.style.marginLeft = (-sz.w / 2) + 'px';
         marker.style.marginTop = (-sz.h) + 'px';
         marker.title = region.mr_name;
-        marker.innerHTML = getMarkerSVG(style, 'var(--mg-accent)', 'var(--mg-bg-primary)');
+        marker.innerHTML = getMarkerSVG(style, 'var(--mg-accent)', 'var(--mg-bg-primary)') +
+            '<div class="marker-label">' + escHtml(region.mr_name) + '</div>';
 
         marker.onclick = function(e) {
             e.stopPropagation();

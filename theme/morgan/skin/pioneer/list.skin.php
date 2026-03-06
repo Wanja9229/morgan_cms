@@ -416,6 +416,7 @@ unset($_fc);
 .pn-marker svg { width: 100%; height: 100%; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
 .pn-marker.is-locked { cursor: pointer; }
 .pn-marker.is-locked:hover { transform: scale(1.2); z-index: 10; }
+.pn-marker .marker-label { position:absolute; top:100%; left:50%; transform:translateX(-50%); white-space:nowrap; font-size:11px; color:var(--mg-text-primary); background:rgba(0,0,0,0.7); padding:1px 6px; border-radius:4px; margin-top:2px; pointer-events:none; }
 
 /* ============================== */
 /* 시설 상세 모달 */
@@ -909,7 +910,8 @@ unset($_fc);
             marker.style.marginLeft = (-sz.w / 2) + 'px';
             marker.style.marginTop = (-sz.h) + 'px';
             marker.title = fc.fc_name;
-            marker.innerHTML = getMarkerSVG(MARKER_STYLE, color, inner);
+            marker.innerHTML = getMarkerSVG(MARKER_STYLE, color, inner) +
+                '<div class="marker-label">' + esc(fc.fc_name) + '</div>';
 
             marker.onclick = function(e) {
                 e.stopPropagation();

@@ -181,6 +181,7 @@ $relation_url = G5_BBS_URL . '/relation.php';
 .map-marker { position:absolute; cursor:pointer; transition:transform 0.15s; z-index:5; user-select:none; }
 .map-marker:hover { transform:scale(1.2); z-index:10; }
 .map-marker svg { width:100%; height:100%; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
+.map-marker .marker-label { position:absolute; top:100%; left:50%; transform:translateX(-50%); white-space:nowrap; font-size:11px; color:var(--mg-text-primary); background:rgba(0,0,0,0.7); padding:1px 6px; border-radius:4px; margin-top:2px; pointer-events:none; }
 .map-marker.is-locked { opacity:0.4; cursor:default; }
 .map-marker.is-locked:hover { transform:none; }
 .map-popup { width:280px; background:var(--mg-bg-secondary); border:1px solid var(--mg-bg-tertiary); border-radius:12px; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
@@ -440,7 +441,8 @@ $relation_url = G5_BBS_URL . '/relation.php';
 
             var pinColor = locked ? '#6b7280' : 'var(--mg-accent)';
             var pinInner = locked ? '#4b5563' : 'var(--mg-bg-primary)';
-            marker.innerHTML = getMarkerSVG(MARKER_STYLE, pinColor, pinInner);
+            marker.innerHTML = getMarkerSVG(MARKER_STYLE, pinColor, pinInner) +
+                '<div class="marker-label">' + escHtml(area.ea_name) + '</div>';
 
             if (!locked) {
                 marker.onclick = function(e) {
