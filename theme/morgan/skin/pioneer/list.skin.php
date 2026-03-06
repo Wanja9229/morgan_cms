@@ -832,7 +832,6 @@ unset($_fc);
         }
         html += '<div style="padding:0.75rem 1rem;background:rgba(0,0,0,0.2);border:1px solid var(--mg-bg-tertiary);border-radius:8px;">';
         html += '<p style="font-size:0.85rem;color:var(--mg-text-muted);">아직 개척할 수 없는 시설입니다.</p>';
-        html += '<p style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;">선행 시설을 완공하면 건설을 시작할 수 있습니다.</p>';
         html += '</div></div>';
 
         document.getElementById('pn-locked-content').innerHTML = html;
