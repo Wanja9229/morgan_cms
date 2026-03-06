@@ -112,11 +112,10 @@ unset($_fc);
                     $border_color = 'var(--mg-bg-tertiary)';
             }
 
-            $is_clickable = $facility['fc_status'] !== 'locked';
         ?>
         <div class="pn-card <?php echo $facility['fc_status'] === 'building' ? 'pn-card-building' : ''; ?> <?php echo $facility['fc_status'] === 'locked' ? 'pn-card-locked' : ''; ?>"
              style="border-top-color:<?php echo $border_color; ?>;"
-             <?php if ($is_clickable) { ?>onclick="openFacilityModal(<?php echo $facility['fc_id']; ?>)"<?php } ?>>
+             onclick="<?php echo $facility['fc_status'] === 'locked' ? 'openLockedModal('.$facility['fc_id'].')' : 'openFacilityModal('.$facility['fc_id'].')'; ?>">
             <?php if ($facility['fc_status'] === 'building') { ?>
             <div class="pn-card-stripes"></div>
             <?php } ?>
@@ -200,6 +199,14 @@ unset($_fc);
 <!-- =============================== -->
 <!-- 시설 상세 모달 -->
 <!-- =============================== -->
+<!-- 잠금 시설 안내 모달 -->
+<div id="pn-locked-overlay" class="pn-modal-overlay" style="display:none;" onclick="if(event.target===this)closeLockedModal()">
+    <div class="pn-modal-panel" style="max-width:420px;">
+        <button class="pn-modal-close" onclick="closeLockedModal()" type="button">&times;</button>
+        <div id="pn-locked-content"></div>
+    </div>
+</div>
+
 <div id="pn-modal-overlay" class="pn-modal-overlay" style="display:none;" onclick="if(event.target===this)closeFacilityModal()">
     <div class="pn-modal-panel">
         <button class="pn-modal-close" onclick="closeFacilityModal()" type="button">&times;</button>
@@ -330,8 +337,8 @@ unset($_fc);
     clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
 }
 .pn-card:hover { transform: translateY(-2px); border-color: var(--mg-text-muted); }
-.pn-card.pn-card-locked { opacity: 0.5; cursor: default; }
-.pn-card.pn-card-locked:hover { transform: none; border-color: var(--mg-bg-tertiary); }
+.pn-card.pn-card-locked { cursor: pointer; }
+.pn-card.pn-card-locked:hover { border-color: var(--mg-text-muted); }
 
 .pn-card-stripes {
     position: absolute; inset: 0; pointer-events: none; z-index: 0;
@@ -407,8 +414,8 @@ unset($_fc);
 }
 .pn-marker:hover { transform: scale(1.2); z-index: 10; }
 .pn-marker svg { width: 100%; height: 100%; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
-.pn-marker.is-locked { opacity: 0.35; cursor: default; }
-.pn-marker.is-locked:hover { transform: none; }
+.pn-marker.is-locked { cursor: pointer; }
+.pn-marker.is-locked:hover { transform: scale(1.2); z-index: 10; }
 
 /* ============================== */
 /* 시설 상세 모달 */
@@ -628,8 +635,9 @@ unset($_fc);
 
     // ESC 키로 닫기
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && document.getElementById('pn-modal-overlay').style.display === 'flex') {
-            closeFacilityModal();
+        if (e.key === 'Escape') {
+            if (document.getElementById('pn-locked-overlay').style.display === 'flex') closeLockedModal();
+            else if (document.getElementById('pn-modal-overlay').style.display === 'flex') closeFacilityModal();
         }
     });
 
@@ -803,6 +811,40 @@ unset($_fc);
         });
     };
 
+    // === 잠금 시설 모달 ===
+    window.openLockedModal = function(fcId) {
+        var fc = facilitiesData.find(function(f){ return f.fc_id == fcId; });
+        if (!fc) return;
+
+        var unlock_labels = <?php echo json_encode(array('board'=>'게시판','shop'=>'상점','gift'=>'선물함','achievement'=>'업적','history'=>'연대기','fountain'=>'분수대','expedition'=>'파견','concierge'=>'의뢰','seal'=>'인장','radio'=>'라디오','emoticon_create'=>'이모티콘 제작','relation'=>'관계')); ?>;
+
+        var html = '';
+        html += '<div style="padding:2rem 1.5rem;text-align:center;">';
+        html += '<div style="display:flex;align-items:center;justify-content:center;gap:0.5rem;margin-bottom:1rem;">';
+        if (fc.fc_icon_html) html += '<span>' + fc.fc_icon_html + '</span>';
+        html += '<span style="font-size:1.15rem;font-weight:700;color:var(--mg-text-primary);">' + esc(fc.fc_name) + '</span>';
+        html += '</div>';
+        if (fc.fc_desc) {
+            html += '<p style="font-size:0.85rem;color:var(--mg-text-secondary);line-height:1.6;margin-bottom:1.25rem;">' + esc(fc.fc_desc).replace(/\n/g, '<br>') + '</p>';
+        }
+        if (fc.fc_unlock_type && unlock_labels[fc.fc_unlock_type]) {
+            html += '<p style="font-size:0.75rem;color:var(--mg-text-muted);margin-bottom:1rem;">해금: ' + esc(unlock_labels[fc.fc_unlock_type]) + '</p>';
+        }
+        html += '<div style="padding:0.75rem 1rem;background:rgba(0,0,0,0.2);border:1px solid var(--mg-bg-tertiary);border-radius:8px;">';
+        html += '<p style="font-size:0.85rem;color:var(--mg-text-muted);">아직 개척할 수 없는 시설입니다.</p>';
+        html += '<p style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;">선행 시설을 완공하면 건설을 시작할 수 있습니다.</p>';
+        html += '</div></div>';
+
+        document.getElementById('pn-locked-content').innerHTML = html;
+        document.getElementById('pn-locked-overlay').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    };
+
+    window.closeLockedModal = function() {
+        document.getElementById('pn-locked-overlay').style.display = 'none';
+        document.body.style.overflow = '';
+    };
+
     // === 자원 투입 ===
     window.pnContribute = function(fcId, type, mtId) {
         var inputId = type === 'stamina' ? 'pnm-stamina' : 'pnm-mat-' + mtId;
@@ -870,9 +912,11 @@ unset($_fc);
             marker.title = fc.fc_name;
             marker.innerHTML = getMarkerSVG(MARKER_STYLE, color, inner);
 
-            if (!locked) {
-                marker.onclick = function(e) { e.stopPropagation(); openFacilityModal(fc.fc_id); };
-            }
+            marker.onclick = function(e) {
+                e.stopPropagation();
+                if (locked) openLockedModal(fc.fc_id);
+                else openFacilityModal(fc.fc_id);
+            };
             markersEl.appendChild(marker);
         });
     })();
