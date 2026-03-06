@@ -830,31 +830,34 @@ function ccApply(id) {
     var msg = document.getElementById('cc-apm-' + id);
     if (!ch) return;
     _post({ action: 'apply', cc_id: id, ch_id: ch.value, ca_message: msg ? msg.value : '' })
-        .then(function(d) { alert(d.message); if (d.success) location.reload(); });
+        .then(function(d) { mgToast(d.message, d.success ? 'success' : 'error'); if (d.success) location.reload(); });
 }
 
 // ── 매칭 (직접선택) ──
 function ccMatch(id) {
     var cbs = document.querySelectorAll('#cc-detail-' + id + ' .cc-sel-chk:checked');
-    if (cbs.length === 0) { alert('선정할 지원자를 선택해주세요.'); return; }
+    if (cbs.length === 0) { mgToast('선정할 지원자를 선택해주세요.', 'warning'); return; }
     var ids = []; cbs.forEach(function(c) { ids.push(parseInt(c.value)); });
-    if (!confirm(ids.length + '명을 선정하시겠습니까?')) return;
-    _post({ action: 'match', cc_id: id, selected_ca_ids: JSON.stringify(ids) })
-        .then(function(d) { alert(d.message); if (d.success) location.reload(); });
+    mgConfirm(ids.length + '명을 선정하시겠습니까?', function() {
+        _post({ action: 'match', cc_id: id, selected_ca_ids: JSON.stringify(ids) })
+            .then(function(d) { mgToast(d.message, d.success ? 'success' : 'error'); if (d.success) location.reload(); });
+    });
 }
 
 // ── 추첨 ──
 function ccLottery(id) {
-    if (!confirm('추첨을 실행하시겠습니까?')) return;
-    _post({ action: 'lottery', cc_id: id })
-        .then(function(d) { alert(d.message); if (d.success) location.reload(); });
+    mgConfirm('추첨을 실행하시겠습니까?', function() {
+        _post({ action: 'lottery', cc_id: id })
+            .then(function(d) { mgToast(d.message, d.success ? 'success' : 'error'); if (d.success) location.reload(); });
+    });
 }
 
 // ── 지목권 사용 ──
 function ccDirectPick(id) {
-    if (!confirm('지목권을 사용하시겠습니까? (1개 소모)\n사용 후 지원자를 직접 선택할 수 있습니다.')) return;
-    _post({ action: 'use_direct_pick', cc_id: id })
-        .then(function(d) { alert(d.message); if (d.success) location.reload(); });
+    mgConfirm('지목권을 사용하시겠습니까? (1개 소모)\n사용 후 지원자를 직접 선택할 수 있습니다.', function() {
+        _post({ action: 'use_direct_pick', cc_id: id })
+            .then(function(d) { mgToast(d.message, d.success ? 'success' : 'error'); if (d.success) location.reload(); });
+    });
 }
 
 // ── 정산 완료 ──
@@ -862,23 +865,26 @@ function ccSettle(id, force) {
     var msg = force
         ? '강제 완료하시겠습니까?\n미제출 수행자의 보상은 의뢰자에게 환불됩니다.\n(관리자에게 기록됩니다)'
         : '의뢰를 완료하시겠습니까?\n미제출 수행자의 보상은 환불됩니다.';
-    if (!confirm(msg)) return;
-    _post({ action: 'settle', cc_id: id, force: force ? '1' : '0' })
-        .then(function(d) { alert(d.message); if (d.success) location.reload(); });
+    mgConfirm(msg, function() {
+        _post({ action: 'settle', cc_id: id, force: force ? '1' : '0' })
+            .then(function(d) { mgToast(d.message, d.success ? 'success' : 'error'); if (d.success) location.reload(); });
+    });
 }
 
 // ── 취소 ──
 function ccCancel(id) {
-    if (!confirm('의뢰를 취소하시겠습니까?\n보상 포인트가 환불됩니다.')) return;
-    _post({ action: 'cancel', cc_id: id })
-        .then(function(d) { alert(d.message); if (d.success) location.reload(); });
+    mgConfirm('의뢰를 취소하시겠습니까?\n보상 포인트가 환불됩니다.', function() {
+        _post({ action: 'cancel', cc_id: id })
+            .then(function(d) { mgToast(d.message, d.success ? 'success' : 'error'); if (d.success) location.reload(); });
+    });
 }
 
 // ── 미이행 종료 ──
 function ccForceClose(id) {
-    if (!confirm('미이행으로 강제 종료하시겠습니까?\n수행자에게 페널티가 부여되고 포인트가 환불됩니다.')) return;
-    _post({ action: 'force_close', cc_id: id })
-        .then(function(d) { alert(d.message); if (d.success) location.reload(); });
+    mgConfirm('미이행으로 강제 종료하시겠습니까?\n수행자에게 페널티가 부여되고 포인트가 환불됩니다.', function() {
+        _post({ action: 'force_close', cc_id: id })
+            .then(function(d) { mgToast(d.message, d.success ? 'success' : 'error'); if (d.success) location.reload(); });
+    });
 }
 
 // ── 모달 ──
@@ -980,8 +986,8 @@ function ccSubmitModal() {
     if (editId > 0) data.cc_id = editId;
     _post(data).then(function(d) {
         if (d.success) { ccCloseModal(); location.reload(); }
-        else alert(d.message);
-    }).catch(function() { alert('네트워크 오류'); });
+        else mgToast(d.message, 'error');
+    }).catch(function() { mgToast('네트워크 오류', 'error'); });
 }
 
 function ccEdit(id) { ccOpenModal(id); }

@@ -406,7 +406,7 @@ document.querySelectorAll('.ranking-tab').forEach(function(tab) {
 // 스테미나 투입
 function contributeStamina() {
     var amount = parseInt(document.getElementById('stamina_amount').value) || 0;
-    if (amount < 1) { alert('투입량을 입력해주세요.'); return; }
+    if (amount < 1) { mgToast('투입량을 입력해주세요.', 'warning'); return; }
 
     var formData = new FormData();
     formData.append('fc_id', '<?php echo $fc_id; ?>');
@@ -416,17 +416,16 @@ function contributeStamina() {
     fetch('<?php echo G5_BBS_URL; ?>/pioneer_contribute.php', { method: 'POST', body: formData })
     .then(function(res) { return res.json(); })
     .then(function(data) {
-        if (typeof showToast === 'function') showToast(data.message, data.success ? 'success' : 'error');
-        else alert(data.message);
+        mgToast(data.message, data.success ? 'success' : 'error');
         if (data.success) location.reload();
     })
-    .catch(function() { alert('오류가 발생했습니다.'); });
+    .catch(function() { mgToast('오류가 발생했습니다.', 'error'); });
 }
 
 // 재료 투입
 function contributeMaterial(mt_id) {
     var amount = parseInt(document.getElementById('mat_amount_' + mt_id).value) || 0;
-    if (amount < 1) { alert('투입량을 입력해주세요.'); return; }
+    if (amount < 1) { mgToast('투입량을 입력해주세요.', 'warning'); return; }
 
     var formData = new FormData();
     formData.append('fc_id', '<?php echo $fc_id; ?>');
@@ -437,10 +436,9 @@ function contributeMaterial(mt_id) {
     fetch('<?php echo G5_BBS_URL; ?>/pioneer_contribute.php', { method: 'POST', body: formData })
     .then(function(res) { return res.json(); })
     .then(function(data) {
-        if (typeof showToast === 'function') showToast(data.message, data.success ? 'success' : 'error');
-        else alert(data.message);
+        mgToast(data.message, data.success ? 'success' : 'error');
         if (data.success) location.reload();
     })
-    .catch(function() { alert('오류가 발생했습니다.'); });
+    .catch(function() { mgToast('오류가 발생했습니다.', 'error'); });
 }
 </script>

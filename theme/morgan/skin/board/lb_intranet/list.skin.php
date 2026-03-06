@@ -311,7 +311,7 @@ function lbSubmitComment(btn, parentId) {
         .then(function(r) { return r.json(); })
         .then(function(d) {
             btn.disabled = false;
-            if (d.error) { alert(d.error); return; }
+            if (d.error) { mgToast(d.error, 'error'); return; }
             var card = btn.closest('.intel-card');
             var addendum = card.querySelector('.intel-addendum');
             if (!addendum) {
@@ -326,6 +326,6 @@ function lbSubmitComment(btn, parentId) {
             addendum.appendChild(row);
             input.value = '';
         })
-        .catch(function() { btn.disabled = false; alert('네트워크 오류'); });
+        .catch(function() { btn.disabled = false; mgToast('네트워크 오류', 'error'); });
 }
 </script>

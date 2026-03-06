@@ -554,7 +554,7 @@ include_once(G5_THEME_PATH.'/head.php');
                 })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
-                    alert(data.success ? '칭호가 저장되었습니다.' : (data.message || '저장에 실패했습니다.'));
+                    mgToast(data.success ? '칭호가 저장되었습니다.' : (data.message || '저장에 실패했습니다.'), data.success ? 'success' : 'error');
                 });
             }
             </script>
@@ -838,7 +838,7 @@ setupImagePreview('ch_image', 'body-preview');
 setupImagePreview('ch_header', 'header-preview');
 // 캐릭터 삭제
 function deleteCharacter() {
-    if (confirm('정말 이 캐릭터를 삭제하시겠습니까?\n삭제된 캐릭터는 복구할 수 없습니다.')) {
+    mgConfirm('정말 이 캐릭터를 삭제하시겠습니까?\n삭제된 캐릭터는 복구할 수 없습니다.', function() {
         var form = document.getElementById('fcharform');
         var input = document.createElement('input');
         input.type = 'hidden';
@@ -846,7 +846,7 @@ function deleteCharacter() {
         input.value = '1';
         form.appendChild(input);
         form.submit();
-    }
+    });
 }
 
 <?php if ($is_edit) { ?>
@@ -888,23 +888,24 @@ window.cfSubmitAccept = function() {
     fetch(CF_REL_API, { method: 'POST', body: data })
         .then(function(r) { return r.json(); })
         .then(function(res) {
-            alert(res.message);
+            mgToast(res.message, res.success ? 'success' : 'error');
             if (res.success) location.reload();
         });
 };
 
 // 거절
 window.cfRejectRelation = function(crId) {
-    if (!confirm('이 관계 신청을 거절하시겠습니까?')) return;
-    var data = new FormData();
-    data.append('action', 'reject');
-    data.append('cr_id', crId);
-    fetch(CF_REL_API, { method: 'POST', body: data })
-        .then(function(r) { return r.json(); })
-        .then(function(res) {
-            alert(res.message);
-            if (res.success) location.reload();
-        });
+    mgConfirm('이 관계 신청을 거절하시겠습니까?', function() {
+        var data = new FormData();
+        data.append('action', 'reject');
+        data.append('cr_id', crId);
+        fetch(CF_REL_API, { method: 'POST', body: data })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                mgToast(res.message, res.success ? 'success' : 'error');
+                if (res.success) location.reload();
+            });
+    });
 };
 
 // 수정 모달
@@ -928,38 +929,40 @@ window.cfSubmitEdit = function() {
     fetch(CF_REL_API, { method: 'POST', body: data })
         .then(function(r) { return r.json(); })
         .then(function(res) {
-            alert(res.message);
+            mgToast(res.message, res.success ? 'success' : 'error');
             if (res.success) location.reload();
         });
 };
 
 // 해제
 window.cfCancelRequest = function(crId, myChId) {
-    if (!confirm('보낸 신청을 취소하시겠습니까?')) return;
-    var data = new FormData();
-    data.append('action', 'delete');
-    data.append('cr_id', crId);
-    data.append('my_ch_id', myChId);
-    fetch(CF_REL_API, { method: 'POST', body: data })
-        .then(function(r) { return r.json(); })
-        .then(function(res) {
-            alert(res.message);
-            if (res.success) location.reload();
-        });
+    mgConfirm('보낸 신청을 취소하시겠습니까?', function() {
+        var data = new FormData();
+        data.append('action', 'delete');
+        data.append('cr_id', crId);
+        data.append('my_ch_id', myChId);
+        fetch(CF_REL_API, { method: 'POST', body: data })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                mgToast(res.message, res.success ? 'success' : 'error');
+                if (res.success) location.reload();
+            });
+    });
 };
 
 window.cfDeleteRelation = function(crId, myChId) {
-    if (!confirm('이 관계를 해제하시겠습니까?')) return;
-    var data = new FormData();
-    data.append('action', 'delete');
-    data.append('cr_id', crId);
-    data.append('my_ch_id', myChId);
-    fetch(CF_REL_API, { method: 'POST', body: data })
-        .then(function(r) { return r.json(); })
-        .then(function(res) {
-            alert(res.message);
-            if (res.success) location.reload();
-        });
+    mgConfirm('이 관계를 해제하시겠습니까?', function() {
+        var data = new FormData();
+        data.append('action', 'delete');
+        data.append('cr_id', crId);
+        data.append('my_ch_id', myChId);
+        fetch(CF_REL_API, { method: 'POST', body: data })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                mgToast(res.message, res.success ? 'success' : 'error');
+                if (res.success) location.reload();
+            });
+    });
 };
 
 // 모달 외부 클릭 닫기

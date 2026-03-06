@@ -142,21 +142,22 @@ function handleNewFiles(files) {
 }
 
 function markDelete(emId) {
-    if (!confirm('이 이모티콘을 삭제하시겠습니까?')) return;
-    deleteEmIds.push(emId);
-    document.getElementById('deleteEmIds').value = deleteEmIds.join(',');
-    var el = document.getElementById('em_' + emId);
-    if (el) el.style.display = 'none';
+    mgConfirm('이 이모티콘을 삭제하시겠습니까?', function() {
+        deleteEmIds.push(emId);
+        document.getElementById('deleteEmIds').value = deleteEmIds.join(',');
+        var el = document.getElementById('em_' + emId);
+        if (el) el.style.display = 'none';
+    });
 }
 
 function submitForReview() {
-    if (!confirm('심사를 요청하시겠습니까?\n<?php if (!$is_edit || $set['es_status'] === 'draft') echo '이모티콘 등록권 1개가 소모됩니다.'; ?>')) return;
-
-    var form = document.getElementById('femoticoncreate');
-    // 먼저 저장한 후 심사 요청
-    var actionInput = form.querySelector('input[name="action"]');
-    actionInput.value = 'submit';
-    form.submit();
+    mgConfirm('심사를 요청하시겠습니까?\n<?php if (!$is_edit || $set['es_status'] === 'draft') echo '이모티콘 등록권 1개가 소모됩니다.'; ?>', function() {
+        var form = document.getElementById('femoticoncreate');
+        // 먼저 저장한 후 심사 요청
+        var actionInput = form.querySelector('input[name="action"]');
+        actionInput.value = 'submit';
+        form.submit();
+    });
 }
 
 function previewThumb(input) {

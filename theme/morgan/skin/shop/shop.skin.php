@@ -363,14 +363,13 @@ function closeSetDetail() {
 }
 
 function buyEmoticonSet(esId) {
-    if (!confirm('이모티콘 셋을 구매하시겠습니까?')) return;
-
-    var xhr = new XMLHttpRequest();
+    mgConfirm('이모티콘 셋을 구매하시겠습니까?', function() {
+        var xhr = new XMLHttpRequest();
     xhr.open('POST', '<?php echo G5_BBS_URL; ?>/emoticon_buy.php', true);
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhr.onload = function() {
         var res = JSON.parse(xhr.responseText);
-        alert(res.message);
+        mgToast(res.message, res.success ? 'success' : 'error');
         if (res.success) {
             // 피커 캐시 무효화 (SPA 전환 시에도 반영되도록)
             if (typeof MgEmoticonPicker !== 'undefined') MgEmoticonPicker.clearCache();
@@ -380,6 +379,7 @@ function buyEmoticonSet(esId) {
         }
     };
     xhr.send('es_id=' + esId);
+    });
 }
 
 function escHtml(str) {

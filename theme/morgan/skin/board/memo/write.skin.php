@@ -144,7 +144,7 @@ function fwrite_submit(f) {
     if (_fwrite_submitting) return true;
 
     if (!f.wr_subject.value.trim()) {
-        alert('제목을 입력해주세요.');
+        mgToast('제목을 입력해주세요.', 'warning');
         f.wr_subject.focus();
         return false;
     }
@@ -157,13 +157,13 @@ function fwrite_submit(f) {
     xhr.onload = function() {
         try {
             var data = JSON.parse(xhr.responseText);
-            if (data.error) { alert(data.error); return; }
+            if (data.error) { mgToast(data.error, 'error'); return; }
             f.token.value = data.token;
             _fwrite_submitting = true;
             f.submit();
-        } catch(e) { alert('토큰 발급 오류'); }
+        } catch(e) { mgToast('토큰 발급 오류', 'error'); }
     };
-    xhr.onerror = function() { alert('토큰 발급 네트워크 오류'); };
+    xhr.onerror = function() { mgToast('토큰 발급 네트워크 오류', 'error'); };
     xhr.send('bo_table=<?php echo $bo_table; ?>');
     return false;
 }

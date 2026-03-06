@@ -677,7 +677,7 @@ class MG_Game_Lottery extends MG_Game_Base {
                 board.classList.remove('busy');
                 busy = false;
                 if (hint) hint.textContent = '뽑고 싶은 종이를 선택하세요';
-                alert(result.message);
+                mgToast(result.message, 'error');
                 return;
             }
 

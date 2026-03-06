@@ -301,7 +301,7 @@ class MG_Game_Fortune extends MG_Game_Base {
         .then(function(r) { return r.json(); })
         .then(function(result) {
             if (!result.success) {
-                alert(result.message);
+                mgToast(result.message, 'error');
                 btnPlay.disabled = false;
                 btnPlay.textContent = '운세 뽑기';
                 return;

@@ -283,9 +283,8 @@ function buyItem(si_id) {
     var confirmMsg = isTitle
         ? '칭호 뽑기를 진행하시겠습니까?\n\n가격: <?php echo mg_point_format($item['si_price']); ?>\n(이미 보유한 칭호가 나올 수 있습니다)'
         : '이 상품을 구매하시겠습니까?\n\n가격: <?php echo mg_point_format($item['si_price']); ?>';
-    if (!confirm(confirmMsg)) return;
-
-    fetch('<?php echo G5_BBS_URL; ?>/shop_buy.php', {
+    mgConfirm(confirmMsg, function() {
+        fetch('<?php echo G5_BBS_URL; ?>/shop_buy.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: 'si_id=' + si_id
@@ -295,13 +294,14 @@ function buyItem(si_id) {
         if (data.success && data.title_draw) {
             showTitleGacha(data.title_draw, data.new_point);
         } else if (data.success) {
-            alert(data.message + '\n\n남은 포인트: ' + data.new_point + 'P');
+            mgToast(data.message + ' (남은 포인트: ' + data.new_point + 'P)', 'success');
             location.reload();
         } else {
-            alert(data.message);
+            mgToast(data.message, 'error');
         }
     })
-    .catch(function(e) { alert('오류가 발생했습니다.'); console.error(e); });
+    .catch(function(e) { mgToast('오류가 발생했습니다.', 'error'); console.error(e); });
+    });
 }
 
 // 칭호 뽑기 슬롯 연출
@@ -424,15 +424,15 @@ function sendGift(e) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert(data.message);
+            mgToast(data.message, 'success');
             closeGiftModal();
             location.reload();
         } else {
-            alert(data.message);
+            mgToast(data.message, 'error');
         }
     })
     .catch(error => {
-        alert('오류가 발생했습니다.');
+        mgToast('오류가 발생했습니다.', 'error');
         console.error(error);
     });
 }

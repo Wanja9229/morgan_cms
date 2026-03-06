@@ -338,4 +338,99 @@
     } else {
         MgNoti.init();
     }
+
+    // 플래시 토스트: 쿠키에 저장된 메시지가 있으면 표시 (PHP alert() 리다이렉트 후)
+    function checkFlashToast() {
+        var match = document.cookie.match(/mg_flash_toast=([^;]+)/);
+        if (!match) return;
+        // 쿠키 즉시 삭제
+        document.cookie = 'mg_flash_toast=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+        try {
+            var data = JSON.parse(decodeURIComponent(match[1]));
+            if (data.msg && typeof mgToast === 'function') {
+                mgToast(data.msg.replace(/\\n/g, '\n'), data.type || 'info', 3000);
+            }
+        } catch(e) {}
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', checkFlashToast);
+    } else {
+        checkFlashToast();
+    }
 })();
+
+/**
+ * mgToast — alert() 대체용 간단 토스트
+ * @param {string} message
+ * @param {string} type  'info' | 'success' | 'error' | 'warning'
+ * @param {number} duration  자동 닫힘 ms (기본 3000)
+ */
+window.mgToast = function(message, type, duration) {
+    type = type || 'info';
+    duration = duration || 3000;
+    var icons = {
+        success: '<svg width="16" height="16" fill="none" stroke="#22c55e" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>',
+        error:   '<svg width="16" height="16" fill="none" stroke="#ef4444" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>',
+        warning: '<svg width="16" height="16" fill="none" stroke="#eab308" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M12 3l9.5 16.5H2.5L12 3z"/></svg>',
+        info:    '<svg width="16" height="16" fill="none" stroke="#60a5fa" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01"/><circle cx="12" cy="12" r="10" stroke-width="2"/></svg>'
+    };
+    var bgs = { success:'rgba(34,197,94,0.15)', error:'rgba(239,68,68,0.15)', warning:'rgba(234,179,8,0.15)', info:'rgba(96,165,250,0.15)' };
+    var container = document.getElementById('mg-toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'mg-toast-container';
+        container.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);z-index:99999;display:flex;flex-direction:column;gap:8px;pointer-events:none;max-width:400px;width:calc(100% - 32px);';
+        document.body.appendChild(container);
+    }
+    var toast = document.createElement('div');
+    toast.style.cssText = 'pointer-events:auto;width:100%;opacity:0;transform:translateY(-20px);transition:all 0.3s ease;';
+    toast.innerHTML =
+        '<div style="background:var(--mg-bg-secondary,#2b2d31);border:1px solid var(--mg-bg-tertiary,#313338);border-radius:12px;padding:14px 16px;box-shadow:0 8px 24px rgba(0,0,0,0.3);display:flex;align-items:center;gap:12px;">' +
+            '<div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:' + (bgs[type]||bgs.info) + ';">' + (icons[type]||icons.info) + '</div>' +
+            '<p style="flex:1;font-size:13px;color:var(--mg-text-primary,#f2f3f5);margin:0;line-height:1.5;word-break:break-word;">' + String(message).replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>') + '</p>' +
+            '<button type="button" style="flex-shrink:0;padding:2px;color:var(--mg-text-muted,#949ba4);background:none;border:none;cursor:pointer;line-height:1;" data-mg-toast-close>' +
+                '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>' +
+            '</button>' +
+        '</div>';
+    toast.querySelector('[data-mg-toast-close]').addEventListener('click', function() { dismiss(); });
+    container.appendChild(toast);
+    requestAnimationFrame(function() { toast.style.opacity='1'; toast.style.transform='translateY(0)'; });
+    var timer = setTimeout(function() { dismiss(); }, duration);
+    function dismiss() {
+        clearTimeout(timer);
+        toast.style.opacity='0'; toast.style.transform='translateY(-20px)';
+        setTimeout(function() { if(toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
+    }
+    return { dismiss: dismiss };
+};
+
+/**
+ * mgConfirm — confirm() 대체용 모달
+ * @param {string} message
+ * @param {function} onOk
+ * @param {function} [onCancel]
+ */
+window.mgConfirm = function(message, onOk, onCancel) {
+    var overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99999;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s ease;';
+    overlay.innerHTML =
+        '<div style="background:var(--mg-bg-secondary,#2b2d31);border:1px solid var(--mg-bg-tertiary,#313338);border-radius:12px;padding:24px;max-width:400px;width:calc(100% - 48px);box-shadow:0 16px 48px rgba(0,0,0,0.4);transform:scale(0.95);transition:transform 0.2s ease;">' +
+            '<p style="color:var(--mg-text-primary,#f2f3f5);font-size:14px;margin:0 0 20px;line-height:1.5;word-break:break-word;">' + String(message).replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>') + '</p>' +
+            '<div style="display:flex;gap:8px;justify-content:flex-end;">' +
+                '<button type="button" data-action="cancel" style="padding:8px 16px;border-radius:8px;border:1px solid var(--mg-bg-tertiary,#313338);background:var(--mg-bg-tertiary,#313338);color:var(--mg-text-secondary,#b5bac1);cursor:pointer;font-size:13px;">취소</button>' +
+                '<button type="button" data-action="ok" style="padding:8px 16px;border-radius:8px;border:none;background:var(--mg-button,#f59f0a);color:var(--mg-button-text,#fff);cursor:pointer;font-size:13px;">확인</button>' +
+            '</div>' +
+        '</div>';
+    document.body.appendChild(overlay);
+    requestAnimationFrame(function() {
+        overlay.style.opacity='1';
+        overlay.querySelector('div').style.transform='scale(1)';
+    });
+    function close() {
+        overlay.style.opacity='0';
+        setTimeout(function() { if(overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 200);
+    }
+    overlay.querySelector('[data-action="ok"]').addEventListener('click', function() { close(); if(onOk) onOk(); });
+    overlay.querySelector('[data-action="cancel"]').addEventListener('click', function() { close(); if(onCancel) onCancel(); });
+    overlay.addEventListener('click', function(e) { if(e.target===overlay) { close(); if(onCancel) onCancel(); } });
+};

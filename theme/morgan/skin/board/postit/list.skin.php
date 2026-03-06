@@ -431,8 +431,8 @@ if ($is_anonymous_board) { ?>
                             <?php if ($can_edit) { ?>
                             <button type="button" onclick="event.stopPropagation(); openEditPostit(<?php echo $row['wr_id']; ?>);"
                                style="background:#8b6914; color:#fff; padding:0.25rem 0.75rem; border-radius:3px; font-size:0.75rem; border:none; cursor:pointer;">수정</button>
-                            <a href="<?php echo G5_BBS_URL; ?>/delete.php?bo_table=<?php echo $bo_table; ?>&amp;wr_id=<?php echo $row['wr_id']; ?>"
-                               onclick="event.stopPropagation(); return confirm('이 포스트잇을 삭제하시겠습니까?');"
+                            <a href="javascript:void(0)"
+                               onclick="event.stopPropagation(); mgConfirm('이 포스트잇을 삭제하시겠습니까?', function(){ location.href='<?php echo G5_BBS_URL; ?>/delete.php?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $row['wr_id']; ?>'; });"
                                style="background:#d32f2f; color:#fff; padding:0.25rem 0.75rem; border-radius:3px; font-size:0.75rem; text-decoration:none;">삭제</a>
                             <?php } ?>
                             <button type="button" onclick="closePostit(<?php echo $row['wr_id']; ?>)" style="background:rgba(0,0,0,0.08); color:#37474f; padding:0.25rem 0.75rem; border-radius:3px; font-size:0.75rem; border:none; cursor:pointer;">닫기</button>
@@ -647,20 +647,20 @@ function saveCorkPosition(wrId, posX, posY) {
 
 // 새 판 열기
 function createNewPanel() {
-    if (!confirm('새 판을 열겠습니까? 현재 판은 유지됩니다.')) return;
+    mgConfirm('새 판을 열겠습니까? 현재 판은 유지됩니다.', function() {
+        var fd = new FormData();
+        fd.append('action', 'new_panel');
+        fd.append('bo_table', _cork_bo_table);
 
-    var fd = new FormData();
-    fd.append('action', 'new_panel');
-    fd.append('bo_table', _cork_bo_table);
-
-    fetch(_cork_api_url, { method: 'POST', body: fd })
-        .then(function(r) { return r.json(); })
-        .then(function(d) {
-            if (d.error) { alert(d.error); return; }
-            // 새 판으로 이동
-            location.href = '<?php echo G5_BBS_URL; ?>/board.php?bo_table=' + _cork_bo_table + '&sca=' + encodeURIComponent(d.panel);
-        })
-        .catch(function() { alert('네트워크 오류'); });
+        fetch(_cork_api_url, { method: 'POST', body: fd })
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                if (d.error) { mgToast(d.error, 'error'); return; }
+                // 새 판으로 이동
+                location.href = '<?php echo G5_BBS_URL; ?>/board.php?bo_table=' + _cork_bo_table + '&sca=' + encodeURIComponent(d.panel);
+            })
+            .catch(function() { mgToast('네트워크 오류', 'error'); });
+    });
 }
 
 // 모달 열기/닫기
@@ -696,7 +696,7 @@ var _fpostit_submitting = false;
 function fpostit_submit(f) {
     if (_fpostit_submitting) return true;
     if (!f.wr_content.value.trim()) {
-        alert('내용을 입력해주세요.');
+        mgToast('내용을 입력해주세요.', 'warning');
         f.wr_content.focus();
         return false;
     }
@@ -706,13 +706,13 @@ function fpostit_submit(f) {
     xhr.onload = function() {
         try {
             var data = JSON.parse(xhr.responseText);
-            if (data.error) { alert(data.error); return; }
+            if (data.error) { mgToast(data.error, 'error'); return; }
             f.token.value = data.token;
             _fpostit_submitting = true;
             f.submit();
-        } catch(e) { alert('토큰 발급 오류'); }
+        } catch(e) { mgToast('토큰 발급 오류', 'error'); }
     };
-    xhr.onerror = function() { alert('토큰 발급 네트워크 오류'); };
+    xhr.onerror = function() { mgToast('토큰 발급 네트워크 오류', 'error'); };
     xhr.send('bo_table=<?php echo $bo_table; ?>');
     return false;
 }
@@ -724,10 +724,10 @@ function openEditPostit(wrId) {
 
     // 카드에서 data-edit JSON 읽기
     var card = document.querySelector('.cork-card[data-wr-id="' + wrId + '"]');
-    if (!card || !card.dataset.edit) { alert('수정 데이터를 찾을 수 없습니다.'); return; }
+    if (!card || !card.dataset.edit) { mgToast('수정 데이터를 찾을 수 없습니다.', 'warning'); return; }
 
     var d;
-    try { d = JSON.parse(card.dataset.edit); } catch(e) { alert('수정 데이터 파싱 오류'); return; }
+    try { d = JSON.parse(card.dataset.edit); } catch(e) { mgToast('수정 데이터 파싱 오류', 'warning'); return; }
 
     // 폼 필드 채우기
     document.getElementById('edit_wr_id').value = d.wr_id;
@@ -759,7 +759,7 @@ var _fpostit_edit_submitting = false;
 function fpostit_edit_submit(f) {
     if (_fpostit_edit_submitting) return true;
     if (!f.wr_content.value.trim()) {
-        alert('내용을 입력해주세요.');
+        mgToast('내용을 입력해주세요.', 'warning');
         f.wr_content.focus();
         return false;
     }
@@ -769,13 +769,13 @@ function fpostit_edit_submit(f) {
     xhr.onload = function() {
         try {
             var data = JSON.parse(xhr.responseText);
-            if (data.error) { alert(data.error); return; }
+            if (data.error) { mgToast(data.error, 'error'); return; }
             f.token.value = data.token;
             _fpostit_edit_submitting = true;
             f.submit();
-        } catch(e) { alert('토큰 발급 오류'); }
+        } catch(e) { mgToast('토큰 발급 오류', 'error'); }
     };
-    xhr.onerror = function() { alert('토큰 발급 네트워크 오류'); };
+    xhr.onerror = function() { mgToast('토큰 발급 네트워크 오류', 'error'); };
     xhr.send('bo_table=<?php echo $bo_table; ?>');
     return false;
 }
@@ -999,8 +999,8 @@ document.addEventListener('keydown', function(e) {
                                 <a href="<?php echo G5_BBS_URL; ?>/write.php?w=u&amp;bo_table=<?php echo $bo_table; ?>&amp;wr_id=<?php echo $row['wr_id']; ?>"
                                    onclick="event.stopPropagation();"
                                    class="btn btn-secondary text-xs py-1 px-3">수정</a>
-                                <a href="<?php echo G5_BBS_URL; ?>/delete.php?bo_table=<?php echo $bo_table; ?>&amp;wr_id=<?php echo $row['wr_id']; ?>"
-                                   onclick="event.stopPropagation(); return confirm('이 포스트잇을 삭제하시겠습니까?');"
+                                <a href="javascript:void(0)"
+                                   onclick="event.stopPropagation(); mgConfirm('이 포스트잇을 삭제하시겠습니까?', function(){ location.href='<?php echo G5_BBS_URL; ?>/delete.php?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $row['wr_id']; ?>'; });"
                                    class="btn btn-secondary text-xs py-1 px-3 text-mg-error hover:bg-mg-error/20">삭제</a>
                                 <?php } ?>
                                 <button type="button" onclick="closePostit(<?php echo $row['wr_id']; ?>)" class="btn btn-secondary text-xs py-1 px-3">닫기</button>
@@ -1072,7 +1072,7 @@ var _fpostit_submitting = false;
 function fpostit_submit(f) {
     if (_fpostit_submitting) return true;
     if (!f.wr_content.value.trim()) {
-        alert('내용을 입력해주세요.');
+        mgToast('내용을 입력해주세요.', 'warning');
         f.wr_content.focus();
         return false;
     }
@@ -1082,13 +1082,13 @@ function fpostit_submit(f) {
     xhr.onload = function() {
         try {
             var data = JSON.parse(xhr.responseText);
-            if (data.error) { alert(data.error); return; }
+            if (data.error) { mgToast(data.error, 'error'); return; }
             f.token.value = data.token;
             _fpostit_submitting = true;
             f.submit();
-        } catch(e) { alert('토큰 발급 오류'); }
+        } catch(e) { mgToast('토큰 발급 오류', 'error'); }
     };
-    xhr.onerror = function() { alert('토큰 발급 네트워크 오류'); };
+    xhr.onerror = function() { mgToast('토큰 발급 네트워크 오류', 'error'); };
     xhr.send('bo_table=<?php echo $bo_table; ?>');
     return false;
 }

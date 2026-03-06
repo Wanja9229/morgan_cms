@@ -322,7 +322,7 @@ function checkShowcaseLimit(cb) {
     var checked = document.querySelectorAll('.showcase-check:checked');
     if (checked.length > maxSlots) {
         cb.checked = false;
-        alert('최대 ' + maxSlots + '개까지 선택할 수 있습니다.');
+        mgToast('최대 ' + maxSlots + '개까지 선택할 수 있습니다.', 'warning');
     }
 }
 
@@ -341,10 +341,10 @@ function saveShowcase() {
         if (data.success) {
             location.reload();
         } else {
-            alert('저장 실패');
+            mgToast('저장 실패', 'error');
         }
     })
-    .catch(function() { alert('요청 실패'); });
+    .catch(function() { mgToast('요청 실패', 'error'); });
 }
 </script>
 

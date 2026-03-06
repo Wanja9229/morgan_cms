@@ -212,7 +212,7 @@ $_mg_comment_cnt = isset($view['wr_comment']) ? (int)$view['wr_comment'] : 0;
                     </a>
                     <?php } ?>
                     <?php if ($delete_href) { ?>
-                    <a href="<?php echo $delete_href; ?>" onclick="return confirm('정말 삭제하시겠습니까?');" class="inline-flex items-center px-4 py-2.5 text-sm font-medium rounded-lg transition-all" style="background:color-mix(in srgb, var(--mg-error) 10%, var(--mg-bg-primary));border:1px solid color-mix(in srgb, var(--mg-error) 30%, transparent);color:var(--mg-error);">
+                    <a href="javascript:void(0)" onclick="mgConfirm('정말 삭제하시겠습니까?', function(){ location.href='<?php echo $delete_href; ?>'; });" class="inline-flex items-center px-4 py-2.5 text-sm font-medium rounded-lg transition-all" style="background:color-mix(in srgb, var(--mg-error) 10%, var(--mg-bg-primary));border:1px solid color-mix(in srgb, var(--mg-error) 30%, transparent);color:var(--mg-error);">
                         삭제
                     </a>
                     <?php } ?>
@@ -268,7 +268,7 @@ function good_choice(f, good) {
         .then(function(res) { return res.json(); })
         .then(function(data) {
             if (data.error) {
-                alert(data.error);
+                mgToast(data.error, 'error');
                 return;
             }
             var btn = f.parentNode.querySelector(good === 'good' ? '[style*="mg-success"] + .font-medium, span[style*="mg-success"]' : 'span[style*="mg-error"]');

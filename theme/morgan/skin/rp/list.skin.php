@@ -201,10 +201,9 @@ function rp_time_ago($datetime) {
                         📌 상단 노출
                     </button>
                     <?php } ?>
-                    <a href="<?php echo G5_BBS_URL; ?>/rp_close.php?rt_id=<?php echo $thread['rt_id']; ?>"
-                       onclick="return confirm('모든 참여자를 완결 처리하고 역극을 종료하시겠습니까?\n(보상 조건 미충족 캐릭터는 보상 없이 완결됩니다)');"
-                       class="text-xs px-3 py-1.5 rounded bg-mg-bg-tertiary text-mg-text-muted hover:bg-red-500/20 hover:text-red-400 transition-colors"
-                       data-no-spa>
+                    <a href="javascript:void(0)"
+                       onclick="mgConfirm('모든 참여자를 완결 처리하고 역극을 종료하시겠습니까?\n(보상 조건 미충족 캐릭터는 보상 없이 완결됩니다)', function(){ location.href='<?php echo G5_BBS_URL; ?>/rp_close.php?rt_id=<?php echo $thread['rt_id']; ?>'; });"
+                       class="text-xs px-3 py-1.5 rounded bg-mg-bg-tertiary text-mg-text-muted hover:bg-red-500/20 hover:text-red-400 transition-colors">
                         전체 완결
                     </a>
                     <?php } ?>
@@ -763,11 +762,11 @@ function rp_time_ago($datetime) {
                     appendReplyToMessenger(rtId, data.reply, form);
                     updateParticipantCount(rtId, data.reply.ch_id);
                 } else {
-                    alert(data.message || '오류가 발생했습니다.');
+                    mgToast(data.message || '오류가 발생했습니다.', 'error');
                 }
             })
             .catch(function() {
-                alert('전송 중 오류가 발생했습니다.');
+                mgToast('전송 중 오류가 발생했습니다.', 'error');
             })
             .finally(function() {
                 submitBtn.disabled = false;
@@ -979,89 +978,89 @@ function rp_time_ago($datetime) {
                         contentEl.innerHTML = data.rr_content_html;
                         if (actionsEl) actionsEl.style.display = '';
                     } else {
-                        alert(data.message || '수정 실패');
+                        mgToast(data.message || '수정 실패', 'error');
                     }
                 })
-                .catch(function() { alert('수정 중 오류가 발생했습니다.'); });
+                .catch(function() { mgToast('수정 중 오류가 발생했습니다.', 'error'); });
         });
     };
 
     // === 댓글 삭제 ===
     window.deleteReply = function(btn, rrId) {
-        if (!confirm('이 댓글을 삭제하시겠습니까?')) return;
+        mgConfirm('이 댓글을 삭제하시겠습니까?', function() {
+            var item = btn.closest('.rp-reply-item');
+            var formData = new FormData();
+            formData.append('action', 'delete_reply');
+            formData.append('rr_id', rrId);
 
-        var item = btn.closest('.rp-reply-item');
-        var formData = new FormData();
-        formData.append('action', 'delete_reply');
-        formData.append('rr_id', rrId);
-
-        var card = item.closest('.card');
-        fetch(RP_API_URL, { method: 'POST', body: formData })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                if (data.success) {
-                    item.remove();
-                    // 참여자 댓글 수 감소
-                    if (data.ch_id && card) {
-                        var participant = card.querySelector('.rp-participant[data-ch-id="' + data.ch_id + '"]');
-                        if (participant) {
-                            var countEl = participant.querySelector('.rp-reply-count');
-                            if (countEl) {
-                                var num = parseInt(countEl.textContent.replace(/[^0-9]/g, '')) || 0;
-                                countEl.textContent = '(댓글 ' + Math.max(0, num - 1) + '개)';
+            var card = item.closest('.card');
+            fetch(RP_API_URL, { method: 'POST', body: formData })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        item.remove();
+                        // 참여자 댓글 수 감소
+                        if (data.ch_id && card) {
+                            var participant = card.querySelector('.rp-participant[data-ch-id="' + data.ch_id + '"]');
+                            if (participant) {
+                                var countEl = participant.querySelector('.rp-reply-count');
+                                if (countEl) {
+                                    var num = parseInt(countEl.textContent.replace(/[^0-9]/g, '')) || 0;
+                                    countEl.textContent = '(댓글 ' + Math.max(0, num - 1) + '개)';
+                                }
                             }
                         }
+                    } else {
+                        mgToast(data.message || '삭제 실패', 'error');
                     }
-                } else {
-                    alert(data.message || '삭제 실패');
-                }
-            })
-            .catch(function() { alert('삭제 중 오류가 발생했습니다.'); });
+                })
+                .catch(function() { mgToast('삭제 중 오류가 발생했습니다.', 'error'); });
+        });
     };
 
     // === 판 삭제 (관리자) ===
     window.deleteThread = function(rtId) {
-        if (!confirm('이 역극을 완전히 삭제하시겠습니까?\n(모든 댓글과 참여 기록이 삭제됩니다)')) return;
+        mgConfirm('이 역극을 완전히 삭제하시겠습니까?\n(모든 댓글과 참여 기록이 삭제됩니다)', function() {
+            var formData = new FormData();
+            formData.append('action', 'delete_thread');
+            formData.append('rt_id', rtId);
 
-        var formData = new FormData();
-        formData.append('action', 'delete_thread');
-        formData.append('rt_id', rtId);
-
-        fetch(RP_API_URL, { method: 'POST', body: formData })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                if (data.success) {
-                    var card = document.getElementById('rp-thread-' + rtId);
-                    if (card) card.remove();
-                } else {
-                    alert(data.message || '삭제 실패');
-                }
-            })
-            .catch(function() { alert('삭제 중 오류가 발생했습니다.'); });
+            fetch(RP_API_URL, { method: 'POST', body: formData })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        var card = document.getElementById('rp-thread-' + rtId);
+                        if (card) card.remove();
+                    } else {
+                        mgToast(data.message || '삭제 실패', 'error');
+                    }
+                })
+                .catch(function() { mgToast('삭제 중 오류가 발생했습니다.', 'error'); });
+        });
     };
 
     window.useRpPin = function(rtId) {
-        if (!confirm('역극 상단 노출권을 사용하시겠습니까? (1개 소모)')) return;
+        mgConfirm('역극 상단 노출권을 사용하시겠습니까? (1개 소모)', function() {
+            var formData = new FormData();
+            formData.append('action', 'use_rp_pin');
+            formData.append('rt_id', rtId);
 
-        var formData = new FormData();
-        formData.append('action', 'use_rp_pin');
-        formData.append('rt_id', rtId);
-
-        fetch(RP_API_URL, { method: 'POST', body: formData })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                alert(data.message);
-                if (data.success) location.reload();
-            })
-            .catch(function() { alert('오류가 발생했습니다.'); });
+            fetch(RP_API_URL, { method: 'POST', body: formData })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    mgToast(data.message, data.success ? 'success' : 'error');
+                    if (data.success) location.reload();
+                })
+                .catch(function() { mgToast('오류가 발생했습니다.', 'error'); });
+        });
     };
 
     // 글쓰기 폼 유효성 검사 (IIFE 내부에서 등록)
     window.frp_write_submit = function(f) {
-        if (!f.rt_title.value.trim()) { alert('제목을 입력해주세요.'); f.rt_title.focus(); return false; }
-        if (!f.rt_content.value.trim()) { alert('내용을 입력해주세요.'); f.rt_content.focus(); return false; }
+        if (!f.rt_title.value.trim()) { mgToast('제목을 입력해주세요.', 'warning'); f.rt_title.focus(); return false; }
+        if (!f.rt_content.value.trim()) { mgToast('내용을 입력해주세요.', 'warning'); f.rt_content.focus(); return false; }
         var ch = f.querySelector('input[name="ch_id"]:checked');
-        if (!ch) { alert('캐릭터를 선택해주세요.'); return false; }
+        if (!ch) { mgToast('캐릭터를 선택해주세요.', 'warning'); return false; }
         return true;
     };
 
@@ -1124,7 +1123,7 @@ function rp_time_ago($datetime) {
         if (input.files && input.files[0]) {
             var file = input.files[0];
             if (file.size > MG_UPLOAD_MAX) {
-                alert('이미지 파일 크기는 ' + Math.round(MG_UPLOAD_MAX / 1024 / 1024) + 'MB 이하만 가능합니다.');
+                mgToast('이미지 파일 크기는 ' + Math.round(MG_UPLOAD_MAX / 1024 / 1024) + 'MB 이하만 가능합니다.', 'warning');
                 input.value = '';
                 preview.innerHTML = '';
                 preview.classList.add('hidden');
@@ -1233,7 +1232,7 @@ function rp_time_ago($datetime) {
                 }
             } else if (data.need_confirm) {
                 // 보상 조건 미충족 - 확인 필요
-                if (confirm(charName + ' 캐릭터의 상호 이음이 부족합니다. (' + data.mutual_count + '/' + data.min_mutual + '회)\n보상 없이 완결 처리하시겠습니까?')) {
+                mgConfirm(charName + ' 캐릭터의 상호 이음이 부족합니다. (' + data.mutual_count + '/' + data.min_mutual + '회)\n보상 없이 완결 처리하시겠습니까?', function() {
                     // force=1로 재시도
                     var fd = new FormData();
                     fd.append('action', 'complete_character');
@@ -1244,14 +1243,14 @@ function rp_time_ago($datetime) {
                     .then(function(r) { return r.json(); })
                     .then(function(d) {
                         if (d.success) { location.reload(); }
-                        else { alert(d.message || '오류가 발생했습니다.'); }
+                        else { mgToast(d.message || '오류가 발생했습니다.', 'error'); }
                     });
-                }
+                });
             } else {
-                alert(data.message || '오류가 발생했습니다.');
+                mgToast(data.message || '오류가 발생했습니다.', 'error');
             }
         })
-        .catch(function() { alert('요청 중 오류가 발생했습니다.'); });
+        .catch(function() { mgToast('요청 중 오류가 발생했습니다.', 'error'); });
     };
 
     // URL hash로 스크롤

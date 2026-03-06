@@ -640,31 +640,32 @@ $ach_rarity_colors = array(
                 if (parts.length > 0) preview += '<span class="mg-title">\u300C' + parts.join(' ') + '\u300D</span> ';
                 preview += NICK;
                 document.getElementById('titlePreview').innerHTML = preview;
-                alert('프로필 칭호가 저장되었습니다.');
+                mgToast('프로필 칭호가 저장되었습니다.', 'success');
             } else {
-                alert(data.message || '저장에 실패했습니다.');
+                mgToast(data.message || '저장에 실패했습니다.', 'error');
             }
         })
-        .catch(function(e) { console.error(e); alert('오류가 발생했습니다.'); });
+        .catch(function(e) { console.error(e); mgToast('오류가 발생했습니다.', 'error'); });
     };
 
     window.deleteTitle = function(tpId, name) {
-        if (!confirm('\u300C' + name + '\u300D 칭호를 삭제하시겠습니까?\n현재 설정된 곳에서도 해제됩니다.')) return;
-        fetch(TITLE_API, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: 'action=delete&tp_id=' + tpId
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            if (data.success) {
-                alert('칭호가 삭제되었습니다.');
-                location.reload();
-            } else {
-                alert(data.message || '삭제에 실패했습니다.');
-            }
-        })
-        .catch(function(e) { console.error(e); alert('오류가 발생했습니다.'); });
+        mgConfirm('\u300C' + name + '\u300D 칭호를 삭제하시겠습니까?\n현재 설정된 곳에서도 해제됩니다.', function() {
+            fetch(TITLE_API, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'action=delete&tp_id=' + tpId
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    mgToast('칭호가 삭제되었습니다.', 'success');
+                    location.reload();
+                } else {
+                    mgToast(data.message || '삭제에 실패했습니다.', 'error');
+                }
+            })
+            .catch(function(e) { console.error(e); mgToast('오류가 발생했습니다.', 'error'); });
+        });
     };
 
     function _e(s) { var d = document.createElement('div'); d.appendChild(document.createTextNode(s)); return d.innerHTML; }
@@ -679,7 +680,7 @@ $ach_rarity_colors = array(
             // 클라이언트 3개 제한 체크
             var checked = document.querySelectorAll('.widget-toggle:checked');
             if (checked.length > MAX_WIDGETS) {
-                alert('최대 ' + MAX_WIDGETS + '개까지 선택할 수 있습니다.');
+                mgToast('최대 ' + MAX_WIDGETS + '개까지 선택할 수 있습니다.', 'warning');
                 this.checked = false;
                 return;
             }
@@ -699,7 +700,7 @@ $ach_rarity_colors = array(
             on.push(cb.dataset.widget);
         });
         if (on.length > MAX_WIDGETS) {
-            alert('최대 ' + MAX_WIDGETS + '개까지 선택할 수 있습니다.');
+            mgToast('최대 ' + MAX_WIDGETS + '개까지 선택할 수 있습니다.', 'warning');
             return;
         }
         var body = on.map(function(w) { return 'on[]=' + encodeURIComponent(w); }).join('&');
@@ -714,10 +715,10 @@ $ach_rarity_colors = array(
             if (data.success) {
                 location.reload();
             } else {
-                alert(data.error || '저장에 실패했습니다.');
+                mgToast(data.error || '저장에 실패했습니다.', 'error');
             }
         })
-        .catch(function() { alert('오류가 발생했습니다.'); });
+        .catch(function() { mgToast('오류가 발생했습니다.', 'error'); });
     };
 })();
 </script>

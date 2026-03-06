@@ -365,13 +365,13 @@ function fwrite_submit(f) {
     // 미션 선택 필수 체크
     var pmId = pmSelect ? parseInt(pmSelect.value) : 0;
     if (!pmId) {
-        alert('미션을 선택해주세요.');
+        mgToast('미션을 선택해주세요.', 'warning');
         if (pmSelect) pmSelect.focus();
         return false;
     }
 
     if (!f.wr_subject.value.trim()) {
-        alert('제목을 입력해주세요.');
+        mgToast('제목을 입력해주세요.', 'warning');
         f.wr_subject.focus();
         return false;
     }
@@ -380,14 +380,14 @@ function fwrite_submit(f) {
     if (pmId && promptData[pmId] && promptData[pmId].min_chars > 0) {
         var len = getContentLength();
         if (len < promptData[pmId].min_chars) {
-            alert('미션 최소 글자 수(' + promptData[pmId].min_chars + '자)를 충족하지 못했습니다.\n현재 ' + len + '자 입력되었습니다.');
+            mgToast('미션 최소 글자 수(' + promptData[pmId].min_chars + '자)를 충족하지 못했습니다. 현재 ' + len + '자 입력되었습니다.', 'warning');
             return false;
         }
     }
 
     // 제출 횟수 초과 체크
     if (pmId && promptData[pmId] && promptData[pmId].my_count >= promptData[pmId].max_entry) {
-        alert('이 미션의 최대 참여 횟수(' + promptData[pmId].max_entry + '회)를 이미 초과했습니다.');
+        mgToast('이 미션의 최대 참여 횟수(' + promptData[pmId].max_entry + '회)를 이미 초과했습니다.', 'warning');
         return false;
     }
 
@@ -398,13 +398,13 @@ function fwrite_submit(f) {
     xhr.onload = function() {
         try {
             var data = JSON.parse(xhr.responseText);
-            if (data.error) { alert(data.error); return; }
+            if (data.error) { mgToast(data.error, 'error'); return; }
             f.token.value = data.token;
             _fwrite_submitting = true;
             f.submit();
-        } catch(e) { alert('토큰 발급 오류'); }
+        } catch(e) { mgToast('토큰 발급 오류', 'error'); }
     };
-    xhr.onerror = function() { alert('토큰 발급 네트워크 오류'); };
+    xhr.onerror = function() { mgToast('토큰 발급 네트워크 오류', 'error'); };
     xhr.send('bo_table=<?php echo $bo_table; ?>');
     return false;
 }

@@ -157,7 +157,7 @@ var g5_check_mb_nick = false;
 function check_mb_id() {
     var mb_id = document.getElementById('reg_mb_id').value.trim();
     if (!mb_id) {
-        alert('아이디를 입력해주세요.');
+        mgToast('아이디를 입력해주세요.', 'warning');
         return;
     }
 
@@ -188,7 +188,7 @@ function check_mb_id() {
 function check_mb_nick() {
     var mb_nick = document.getElementById('reg_mb_nick').value.trim();
     if (!mb_nick) {
-        alert('닉네임을 입력해주세요.');
+        mgToast('닉네임을 입력해주세요.', 'warning');
         return;
     }
 
@@ -221,7 +221,7 @@ function check_mb_nick() {
 function fregister_submit(f) {
     <?php if (!$is_update) { ?>
     if (!g5_check_mb_id) {
-        alert('아이디 중복확인을 해주세요.');
+        mgToast('아이디 중복확인을 해주세요.', 'warning');
         return false;
     }
     <?php } ?>
@@ -230,11 +230,11 @@ function fregister_submit(f) {
         // 수정 모드에서 닉네임을 변경하지 않은 경우 패스
         <?php if ($is_update) { ?>
         if (f.mb_nick.value !== '<?php echo addslashes($member['mb_nick']); ?>') {
-            alert('닉네임 중복확인을 해주세요.');
+            mgToast('닉네임 중복확인을 해주세요.', 'warning');
             return false;
         }
         <?php } else { ?>
-        alert('닉네임 중복확인을 해주세요.');
+        mgToast('닉네임 중복확인을 해주세요.', 'warning');
         return false;
         <?php } ?>
     }
@@ -243,7 +243,7 @@ function fregister_submit(f) {
     var pw_re = f.mb_password_re.value;
 
     if (pw && pw !== pw_re) {
-        alert('비밀번호가 일치하지 않습니다.');
+        mgToast('비밀번호가 일치하지 않습니다.', 'warning');
         f.mb_password_re.focus();
         return false;
     }

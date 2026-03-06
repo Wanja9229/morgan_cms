@@ -692,7 +692,7 @@ class MG_Game_Dice extends MG_Game_Base {
             if (!result.success) {
                 rollIntervals.forEach(function(iv) { clearInterval(iv); });
                 resetUI();
-                alert(result.message);
+                mgToast(result.message, 'error');
                 return;
             }
 
@@ -717,7 +717,7 @@ class MG_Game_Dice extends MG_Game_Base {
         }).catch(function(err) {
             rollIntervals.forEach(function(iv) { clearInterval(iv); });
             resetUI();
-            alert('오류가 발생했습니다. 다시 시도해주세요.');
+            mgToast('오류가 발생했습니다. 다시 시도해주세요.', 'error');
         });
     });
 
@@ -726,7 +726,7 @@ class MG_Game_Dice extends MG_Game_Base {
         btnReroll.addEventListener('click', function() {
             if (phase !== 'hold' || rerollsLeft <= 0) return;
             var rerollCount = rerollMask.filter(function(r) { return r; }).length;
-            if (rerollCount === 0) { alert('다시 굴릴 주사위를 선택하세요.'); return; }
+            if (rerollCount === 0) { mgToast('다시 굴릴 주사위를 선택하세요.', 'warning'); return; }
             phase = 'rolling';
             btnReroll.disabled = true;
             btnFinalize.disabled = true;
@@ -752,7 +752,7 @@ class MG_Game_Dice extends MG_Game_Base {
                     phase = 'hold';
                     btnReroll.disabled = false;
                     btnFinalize.disabled = false;
-                    alert(result.message);
+                    mgToast(result.message, 'error');
                     return;
                 }
 
@@ -806,7 +806,7 @@ class MG_Game_Dice extends MG_Game_Base {
                 phase = 'hold';
                 btnReroll.disabled = false;
                 btnFinalize.disabled = false;
-                alert('오류가 발생했습니다.');
+                mgToast('오류가 발생했습니다.', 'error');
             });
         });
     }
@@ -826,13 +826,13 @@ class MG_Game_Dice extends MG_Game_Base {
 
         apiCall('finalize', {}).then(function(result) {
             if (!result.success) {
-                alert(result.message);
+                mgToast(result.message, 'error');
                 resetUI();
                 return;
             }
             showFinalResult(result);
         }).catch(function(err) {
-            alert('오류가 발생했습니다.');
+            mgToast('오류가 발생했습니다.', 'error');
             resetUI();
         });
     }

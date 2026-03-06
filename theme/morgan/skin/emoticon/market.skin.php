@@ -159,9 +159,8 @@ function closeSetDetail() {
 }
 
 function buyEmoticonSet(esId) {
-    if (!confirm('이모티콘 셋을 구매하시겠습니까?')) return;
-
-    var meta = document.querySelector('meta[name="mg-bbs-url"]');
+    mgConfirm('이모티콘 셋을 구매하시겠습니까?', function() {
+        var meta = document.querySelector('meta[name="mg-bbs-url"]');
     var bbs = meta ? meta.content : '/bbs';
 
     var xhr = new XMLHttpRequest();
@@ -169,13 +168,14 @@ function buyEmoticonSet(esId) {
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhr.onload = function() {
         var res = JSON.parse(xhr.responseText);
-        alert(res.message);
+        mgToast(res.message, res.success ? 'success' : 'error');
         if (res.success) {
             closeSetDetail();
             location.reload();
         }
     };
     xhr.send('es_id=' + esId);
+    });
 }
 
 function escHtml(str) {

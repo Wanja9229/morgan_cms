@@ -1026,8 +1026,8 @@ function uploadSealImage(input, prefix) {
                 SD.seal_image = d.url;
                 updatePreview();
                 refreshWidget('image');
-            } else alert(d.message||'업로드 실패');
-        }).catch(function(){alert('업로드 중 오류가 발생했습니다.');});
+            } else mgToast(d.message||'업로드 실패', 'error');
+        }).catch(function(){mgToast('업로드 중 오류가 발생했습니다.', 'error');});
     input.value = '';
 }
 
@@ -1474,13 +1474,14 @@ document.querySelectorAll('#seal-palette .seal-pal-btn[data-type]').forEach(func
 var resetBtn = $('btn-reset-layout');
 if (resetBtn) {
     resetBtn.addEventListener('click', function() {
-        if (!confirm('기본 레이아웃으로 되돌리시겠습니까? 현재 배치가 초기화됩니다.')) return;
-        grid.removeAll();
-        _elementStyles = {};
-        hidePropPanel();
-        DEFAULT_LAYOUT.forEach(function(el) { addToGrid(el); });
-        updatePalette();
-        updatePreview();
+        mgConfirm('기본 레이아웃으로 되돌리시겠습니까? 현재 배치가 초기화됩니다.', function() {
+            grid.removeAll();
+            _elementStyles = {};
+            hidePropPanel();
+            DEFAULT_LAYOUT.forEach(function(el) { addToGrid(el); });
+            updatePalette();
+            updatePreview();
+        });
     });
 }
 
@@ -1702,9 +1703,9 @@ function toggleSealItem(type, siId, btnClass) {
                 }
                 updatePreview();
             } else {
-                alert(d.message || '처리 실패');
+                mgToast(d.message || '처리 실패', 'error');
             }
-        }).catch(function(){ alert('오류가 발생했습니다.'); });
+        }).catch(function(){ mgToast('오류가 발생했습니다.', 'error'); });
 }
 
 document.querySelectorAll('.seal-frame-item-btn').forEach(function(btn) {
@@ -1748,8 +1749,8 @@ $('seal-form').addEventListener('submit', function(e) {
         .then(function(r){return r.json();})
         .then(function(d){
             if(d.success) location.reload();
-            else alert(d.message||'저장 실패');
-        }).catch(function(){alert('저장 중 오류가 발생했습니다.');});
+            else mgToast(d.message||'저장 실패', 'error');
+        }).catch(function(){mgToast('저장 중 오류가 발생했습니다.', 'error');});
 });
 
 })();

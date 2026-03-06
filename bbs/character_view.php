@@ -257,7 +257,7 @@ if ($profile_bg_id) {
         var color = document.getElementById('rr-color').value;
         var memo = document.getElementById('rr-memo').value.trim();
 
-        if (!label) { alert('관계명을 입력해주세요.'); return; }
+        if (!label) { mgToast('관계명을 입력해주세요.', 'warning'); return; }
 
         var data = new FormData();
         data.append('action', 'request');
@@ -270,7 +270,7 @@ if ($profile_bg_id) {
         fetch(REL_API, { method: 'POST', body: data })
             .then(function(r) { return r.json(); })
             .then(function(res) {
-                alert(res.message);
+                mgToast(res.message, res.success ? 'success' : 'error');
                 if (res.success) location.reload();
             });
     };
@@ -464,7 +464,7 @@ if ($profile_bg_id) {
                         saveBtn.textContent = '저장됨';
                         setTimeout(function() { saveBtn.textContent = '배치 저장'; }, 1500);
                     } else {
-                        alert(res.message);
+                        mgToast(res.message, 'error');
                     }
                 });
         });

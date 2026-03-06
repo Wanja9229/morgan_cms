@@ -126,11 +126,11 @@ function lbInitEditor() {
                 xhr.open('POST', _lb_upload_url);
                 xhr.onload = function() {
                     if (xhr.status === 200) {
-                        try { var res = JSON.parse(xhr.responseText); if (res.url) callback(res.url, blob.name || 'image'); else alert('이미지 업로드 실패'); }
-                        catch(e) { alert('이미지 업로드 오류'); }
-                    } else { alert('이미지 업로드 실패 ('+xhr.status+')'); }
+                        try { var res = JSON.parse(xhr.responseText); if (res.url) callback(res.url, blob.name || 'image'); else mgToast('이미지 업로드 실패', 'error'); }
+                        catch(e) { mgToast('이미지 업로드 오류', 'error'); }
+                    } else { mgToast('이미지 업로드 실패 ('+xhr.status+')', 'error'); }
                 };
-                xhr.onerror = function() { alert('네트워크 오류'); };
+                xhr.onerror = function() { mgToast('네트워크 오류', 'error'); };
                 xhr.send(fd);
             }
         }
@@ -162,19 +162,19 @@ var _lb_submitting = false;
 function lbSubmitPost(f) {
     if (_lb_submitting) return false;
 
-    if (!f.wr_subject.value.trim()) { alert('제목을 입력해주세요.'); f.wr_subject.focus(); return false; }
+    if (!f.wr_subject.value.trim()) { mgToast('제목을 입력해주세요.', 'warning'); f.wr_subject.focus(); return false; }
 
     // 에디터 내용 동기화
     if (_lb_editor) {
         var html = _lb_editor.getHTML();
         if (!html || (html.replace(/<[^>]*>/g,'').trim() === '' && html.indexOf('<img') === -1)) {
-            alert('내용을 입력해주세요.');
+            mgToast('내용을 입력해주세요.', 'warning');
             _lb_editor.focus();
             return false;
         }
         f.wr_content.value = html;
     } else if (!f.wr_content.value.trim()) {
-        alert('내용을 입력해주세요.'); return false;
+        mgToast('내용을 입력해주세요.', 'warning'); return false;
     }
 
     var xhr = new XMLHttpRequest();
@@ -183,7 +183,7 @@ function lbSubmitPost(f) {
     xhr.onload = function() {
         try {
             var data = JSON.parse(xhr.responseText);
-            if (data.error) { alert(data.error); _lb_submitting = false; return; }
+            if (data.error) { mgToast(data.error, 'error'); _lb_submitting = false; return; }
             f.token.value = data.token;
             _lb_submitting = true;
 
@@ -201,12 +201,12 @@ function lbSubmitPost(f) {
                 f.token.value = '';
                 location.reload();
             }).catch(function() {
-                alert('등록 오류');
+                mgToast('등록 오류', 'error');
                 _lb_submitting = false;
             });
-        } catch(e) { alert('토큰 발급 오류'); _lb_submitting = false; }
+        } catch(e) { mgToast('토큰 발급 오류', 'error'); _lb_submitting = false; }
     };
-    xhr.onerror = function() { alert('네트워크 오류'); };
+    xhr.onerror = function() { mgToast('네트워크 오류', 'error'); };
     xhr.send('bo_table=' + _lb_bo_table);
     return false;
 }

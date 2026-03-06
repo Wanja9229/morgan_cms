@@ -235,16 +235,16 @@ function acceptGift(gf_id) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert(data.message);
+            mgToast(data.message, 'success');
             document.getElementById('gift-' + gf_id).remove();
             // 선물 카운트 업데이트
             location.reload();
         } else {
-            alert(data.message);
+            mgToast(data.message, 'error');
         }
     })
     .catch(error => {
-        alert('오류가 발생했습니다.');
+        mgToast('오류가 발생했습니다.', 'error');
         console.error(error);
     });
 }
@@ -253,11 +253,8 @@ function rejectGift(gf_id) {
     var giftEl = document.getElementById('gift-' + gf_id);
     var isInv = giftEl && giftEl.querySelector('[data-gift-type="inventory"]');
     var msg = isInv ? '이 선물을 거절하시겠습니까?\n거절 시 아이템이 보낸 사람에게 반환됩니다.' : '이 선물을 거절하시겠습니까?\n거절 시 보낸 사람에게 포인트가 환불됩니다.';
-    if (!confirm(msg)) {
-        return;
-    }
-
-    fetch('<?php echo G5_BBS_URL; ?>/gift_action.php', {
+    mgConfirm(msg, function() {
+        fetch('<?php echo G5_BBS_URL; ?>/gift_action.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: 'action=reject&gf_id=' + gf_id
@@ -265,16 +262,17 @@ function rejectGift(gf_id) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert(data.message);
+            mgToast(data.message, 'success');
             document.getElementById('gift-' + gf_id).remove();
             location.reload();
         } else {
-            alert(data.message);
+            mgToast(data.message, 'error');
         }
     })
     .catch(error => {
-        alert('오류가 발생했습니다.');
+        mgToast('오류가 발생했습니다.', 'error');
         console.error(error);
+    });
     });
 }
 </script>

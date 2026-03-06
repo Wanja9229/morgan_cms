@@ -114,7 +114,7 @@ if (!empty($list)) {
                     <button type="button" onclick="comment_edit('<?php echo $row['wr_id']; ?>');" class="text-xs text-mg-text-muted hover:text-mg-text-primary">수정</button>
                     <?php } ?>
                     <?php if ($row['is_del']) { ?>
-                    <a href="<?php echo $row['del_link']; ?>" onclick="return confirm('댓글을 삭제하시겠습니까?');" class="text-xs text-mg-text-muted hover:text-mg-error">삭제</a>
+                    <a href="javascript:void(0)" onclick="mgConfirm('댓글을 삭제하시겠습니까?', function(){ location.href='<?php echo $row['del_link']; ?>'; });" class="text-xs text-mg-text-muted hover:text-mg-error">삭제</a>
                     <?php } ?>
                 </div>
                 <?php } ?>
@@ -204,7 +204,7 @@ if (!empty($list)) {
 <script>
 function fcomment_submit(f) {
     if (!f.wr_content.value.trim()) {
-        alert('댓글 내용을 입력해주세요.');
+        mgToast('댓글 내용을 입력해주세요.', 'warning');
         f.wr_content.focus();
         return false;
     }
@@ -302,10 +302,10 @@ function comment_edit_cancel(cmt_id) {
 
 <?php if ($is_member && $mg_dice_enabled) { ?>
 function rollDice() {
-    if (!confirm('주사위를 굴리시겠습니까?')) return;
-    var btn = document.querySelector('[onclick="rollDice()"]');
-    btn.disabled = true;
-    btn.textContent = '...';
+    mgConfirm('주사위를 굴리시겠습니까?', function() {
+        var btn = document.querySelector('[onclick="rollDice()"]');
+        btn.disabled = true;
+        btn.textContent = '...';
     fetch('<?php echo G5_BBS_URL; ?>/comment_dice.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -314,18 +314,19 @@ function rollDice() {
     .then(function(r) { return r.json(); })
     .then(function(data) {
         if (data.success) {
-            alert('[주사위] ' + data.dice_value + ' (0~' + data.dice_max + ')');
+            mgToast('[주사위] ' + data.dice_value + ' (0~' + data.dice_max + ')', 'info');
             location.reload();
         } else {
-            alert(data.message || '주사위 굴리기 실패');
+            mgToast(data.message || '주사위 굴리기 실패', 'error');
             btn.disabled = false;
             btn.innerHTML = '<svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="3" stroke-width="2"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/></svg>';
         }
     })
     .catch(function() {
-        alert('요청 실패');
+        mgToast('요청 실패', 'error');
         btn.disabled = false;
         btn.innerHTML = '<svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="3" stroke-width="2"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/></svg>';
+    });
     });
 }
 <?php } ?>

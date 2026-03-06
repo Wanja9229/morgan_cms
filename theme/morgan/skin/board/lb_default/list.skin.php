@@ -543,7 +543,7 @@ function lbSubmitComment(btn, parentId) {
         .then(function(r) { return r.json(); })
         .then(function(d) {
             btn.disabled = false;
-            if (d.error) { alert(d.error); return; }
+            if (d.error) { mgToast(d.error, 'error'); return; }
             var card = btn.closest('.lb-def-card');
             var comments = card.querySelector('.lb-def-comments');
             if (!comments) {
@@ -559,6 +559,6 @@ function lbSubmitComment(btn, parentId) {
             comments.appendChild(cmt);
             input.value = '';
         })
-        .catch(function() { btn.disabled = false; alert('네트워크 오류'); });
+        .catch(function() { btn.disabled = false; mgToast('네트워크 오류', 'error'); });
 }
 </script>

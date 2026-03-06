@@ -40,7 +40,7 @@ if (!defined('_GNUBOARD_')) exit;
 <script>
 function fmember_confirm_submit(f) {
     if (!f.mb_password.value.trim()) {
-        alert('비밀번호를 입력해주세요.');
+        mgToast('비밀번호를 입력해주세요.', 'warning');
         f.mb_password.focus();
         return false;
     }

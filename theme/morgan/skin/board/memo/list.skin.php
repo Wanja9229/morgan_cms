@@ -195,7 +195,7 @@ if (function_exists('mg_get_board_reward')) {
                                     </a>
                                     <?php } ?>
                                     <?php if (!empty($row['delete_href'])) { ?>
-                                    <a href="<?php echo $row['delete_href']; ?>" onclick="return confirm('정말 삭제하시겠습니까?');" class="btn btn-secondary text-xs px-3 py-1 text-red-400 hover:text-red-300">
+                                    <a href="javascript:void(0)" onclick="mgConfirm('정말 삭제하시겠습니까?', function(){ location.href='<?php echo $row['delete_href']; ?>'; });" class="btn btn-secondary text-xs px-3 py-1 text-red-400 hover:text-red-300">
                                         삭제
                                     </a>
                                     <?php } ?>
@@ -421,7 +421,7 @@ function mcRenderForm(wrId, data) {
 function mcSubmit(wrId) {
     var ta = document.getElementById('mc_ta_' + wrId);
     var content = ta.value.trim();
-    if (!content) { alert('댓글 내용을 입력해주세요.'); ta.focus(); return; }
+    if (!content) { mgToast('댓글 내용을 입력해주세요.', 'warning'); ta.focus(); return; }
 
     var fd = new FormData();
     fd.append('action', 'write');
@@ -444,11 +444,11 @@ function mcSubmit(wrId) {
             mcLoad(wrId);
             _mcUpdateCnt(wrId, 1);
         } else {
-            alert(data.message || '댓글 등록 실패');
+            mgToast(data.message || '댓글 등록 실패', 'error');
             if (data.message && data.message.indexOf('토큰') >= 0) mcLoad(wrId);
         }
     })
-    .catch(function() { alert('요청 실패'); });
+    .catch(function() { mgToast('요청 실패', 'error'); });
 }
 
 // 답글 폼 토글
@@ -476,7 +476,7 @@ function mcReply(wrId, cmtId) {
 function mcSubmitReply(wrId, cmtId) {
     var ta = document.getElementById('mc_ta_reply_' + cmtId);
     var content = ta.value.trim();
-    if (!content) { alert('답글 내용을 입력해주세요.'); ta.focus(); return; }
+    if (!content) { mgToast('답글 내용을 입력해주세요.', 'warning'); ta.focus(); return; }
 
     var fd = new FormData();
     fd.append('action', 'write');
@@ -496,11 +496,11 @@ function mcSubmitReply(wrId, cmtId) {
             mcLoad(wrId);
             _mcUpdateCnt(wrId, 1);
         } else {
-            alert(data.message || '답글 등록 실패');
+            mgToast(data.message || '답글 등록 실패', 'error');
             if (data.message && data.message.indexOf('토큰') >= 0) mcLoad(wrId);
         }
     })
-    .catch(function() { alert('요청 실패'); });
+    .catch(function() { mgToast('요청 실패', 'error'); });
 }
 
 // 수정 폼 토글
@@ -531,7 +531,7 @@ function mcEdit(wrId, cmtId) {
 function mcSaveEdit(wrId, cmtId) {
     var ta = document.getElementById('mc_ta_edit_' + cmtId);
     var content = ta.value.trim();
-    if (!content) { alert('내용을 입력해주세요.'); ta.focus(); return; }
+    if (!content) { mgToast('내용을 입력해주세요.', 'warning'); ta.focus(); return; }
 
     var fd = new FormData();
     fd.append('action', 'edit');
@@ -547,42 +547,41 @@ function mcSaveEdit(wrId, cmtId) {
         if (data.success) {
             mcLoad(wrId);
         } else {
-            alert(data.message || '수정 실패');
+            mgToast(data.message || '수정 실패', 'error');
             if (data.message && data.message.indexOf('토큰') >= 0) mcLoad(wrId);
         }
     })
-    .catch(function() { alert('요청 실패'); });
+    .catch(function() { mgToast('요청 실패', 'error'); });
 }
 
 // 댓글 삭제
 function mcDel(wrId, cmtId) {
-    if (!confirm('댓글을 삭제하시겠습니까?')) return;
+    mgConfirm('댓글을 삭제하시겠습니까?', function() {
+        var fd = new FormData();
+        fd.append('action', 'delete');
+        fd.append('bo_table', MC.bo);
+        fd.append('comment_id', cmtId);
+        fd.append('token', MC.delTokens[cmtId] || '');
 
-    var fd = new FormData();
-    fd.append('action', 'delete');
-    fd.append('bo_table', MC.bo);
-    fd.append('comment_id', cmtId);
-    fd.append('token', MC.delTokens[cmtId] || '');
-
-    fetch(MC.api, { method: 'POST', body: fd })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-        if (data.success) {
-            mcLoad(wrId);
-            _mcUpdateCnt(wrId, -1);
-        } else {
-            alert(data.message || '삭제 실패');
-            if (data.message && data.message.indexOf('토큰') >= 0) mcLoad(wrId);
-        }
-    })
-    .catch(function() { alert('요청 실패'); });
+        fetch(MC.api, { method: 'POST', body: fd })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                mcLoad(wrId);
+                _mcUpdateCnt(wrId, -1);
+            } else {
+                mgToast(data.message || '삭제 실패', 'error');
+                if (data.message && data.message.indexOf('토큰') >= 0) mcLoad(wrId);
+            }
+        })
+        .catch(function() { mgToast('요청 실패', 'error'); });
+    });
 }
 
 // 주사위 굴리기
 function mcDice(wrId) {
-    if (!confirm('주사위를 굴리시겠습니까?')) return;
-
-    fetch(MC.diceUrl, {
+    mgConfirm('주사위를 굴리시겠습니까?', function() {
+        fetch(MC.diceUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: 'bo_table=' + encodeURIComponent(MC.bo) + '&wr_id=' + wrId
@@ -590,14 +589,15 @@ function mcDice(wrId) {
     .then(function(r) { return r.json(); })
     .then(function(data) {
         if (data.success) {
-            alert('[주사위] ' + data.dice_value + ' (0~' + data.dice_max + ')');
+            mgToast('[주사위] ' + data.dice_value + ' (0~' + data.dice_max + ')', 'info');
             mcLoad(wrId);
             _mcUpdateCnt(wrId, 1);
         } else {
-            alert(data.message || '주사위 굴리기 실패');
+            mgToast(data.message || '주사위 굴리기 실패', 'error');
         }
     })
-    .catch(function() { alert('요청 실패'); });
+    .catch(function() { mgToast('요청 실패', 'error'); });
+    });
 }
 
 // 헤더 댓글 수 배지 갱신

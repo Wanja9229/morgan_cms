@@ -196,8 +196,11 @@
 
             // 토스트 메시지
             toast(message, type = 'info') {
-                // TODO: 토스트 UI 구현
-                console.log(`[${type}] ${message}`);
+                if (typeof mgToast === 'function') {
+                    mgToast(message, type);
+                } else {
+                    console.log(`[${type}] ${message}`);
+                }
             }
         },
 

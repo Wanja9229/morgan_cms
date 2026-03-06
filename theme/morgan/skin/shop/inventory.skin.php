@@ -568,19 +568,19 @@ if ($is_member) {
 <script>
 function toggleSale(esId, newUse) {
     var action = newUse ? '판매를 시작하시겠습니까?' : '판매를 중지하시겠습니까?';
-    if (!confirm(action)) return;
-
-    var xhr = new XMLHttpRequest();
+    mgConfirm(action, function() {
+        var xhr = new XMLHttpRequest();
     xhr.open('POST', '<?php echo G5_BBS_URL; ?>/emoticon_create_update.php', true);
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhr.onload = function() {
         if (xhr.status === 200) {
             location.reload();
         } else {
-            alert('오류가 발생했습니다.');
+            mgToast('오류가 발생했습니다.', 'error');
         }
     };
     xhr.send('action=toggle_sale&es_id=' + esId + '&es_use=' + newUse);
+    });
 }
 
 function useItem(si_id) {
@@ -594,11 +594,11 @@ function useItem(si_id) {
         if (data.success) {
             location.reload();
         } else {
-            alert(data.message);
+            mgToast(data.message, 'error');
         }
     })
     .catch(error => {
-        alert('오류가 발생했습니다.');
+        mgToast('오류가 발생했습니다.', 'error');
         console.error(error);
     });
 }
@@ -614,11 +614,11 @@ function unuseItem(si_id) {
         if (data.success) {
             location.reload();
         } else {
-            alert(data.message);
+            mgToast(data.message, 'error');
         }
     })
     .catch(error => {
-        alert('오류가 발생했습니다.');
+        mgToast('오류가 발생했습니다.', 'error');
         console.error(error);
     });
 }
@@ -638,11 +638,11 @@ function useStaminaRecover(si_id) {
             // 상한 도달 경고
             var info = data.info;
             if (info.remaining_limit === 0) {
-                alert('일일 스태미나 회복 상한에 도달했습니다.');
+                mgToast('일일 스태미나 회복 상한에 도달했습니다.', 'warning');
                 return;
             }
             if (info.deficit <= 0) {
-                alert('스태미나가 이미 최대입니다.');
+                mgToast('스태미나가 이미 최대입니다.', 'warning');
                 return;
             }
         }
@@ -656,17 +656,17 @@ function useStaminaRecover(si_id) {
         } else {
             msg += '풀 충전됩니다. (회복량: ' + info.deficit + ')';
         }
-        if (!confirm(msg)) return;
-
-        fetch('<?php echo G5_BBS_URL; ?>/inventory_use.php', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: 'action=use&si_id=' + si_id
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(result) {
-            alert(result.message || '사용 완료');
-            if (result.success) location.reload();
+        mgConfirm(msg, function() {
+            fetch('<?php echo G5_BBS_URL; ?>/inventory_use.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: 'action=use&si_id=' + si_id
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(result) {
+                mgToast(result.message || '사용 완료', 'success');
+                if (result.success) location.reload();
+            });
         });
     });
 }
@@ -753,7 +753,7 @@ function submitRadioSong() {
     var url = document.getElementById('rs-youtube-url').value.trim();
     var title = document.getElementById('rs-title').value.trim();
     if (!url || !title) {
-        alert('YouTube URL과 곡 제목을 모두 입력해주세요.');
+        mgToast('YouTube URL과 곡 제목을 모두 입력해주세요.', 'warning');
         return;
     }
     var btn = document.getElementById('rs-submit-btn');
@@ -768,17 +768,17 @@ function submitRadioSong() {
     .then(function(r) { return r.json(); })
     .then(function(data) {
         if (data.success) {
-            alert(data.message);
+            mgToast(data.message, 'success');
             closeRadioModal('song');
             location.reload();
         } else {
-            alert(data.message);
+            mgToast(data.message, 'error');
             btn.disabled = false;
             btn.textContent = '신청하기';
         }
     })
     .catch(function() {
-        alert('오류가 발생했습니다.');
+        mgToast('오류가 발생했습니다.', 'error');
         btn.disabled = false;
         btn.textContent = '신청하기';
     });
@@ -787,7 +787,7 @@ function submitRadioSong() {
 function submitRadioMent() {
     var content = document.getElementById('rm-content').value.trim();
     if (!content) {
-        alert('멘트 내용을 입력해주세요.');
+        mgToast('멘트 내용을 입력해주세요.', 'warning');
         return;
     }
     var btn = document.getElementById('rm-submit-btn');
@@ -802,17 +802,17 @@ function submitRadioMent() {
     .then(function(r) { return r.json(); })
     .then(function(data) {
         if (data.success) {
-            alert(data.message);
+            mgToast(data.message, 'success');
             closeRadioModal('ment');
             location.reload();
         } else {
-            alert(data.message);
+            mgToast(data.message, 'error');
             btn.disabled = false;
             btn.textContent = '신청하기';
         }
     })
     .catch(function() {
-        alert('오류가 발생했습니다.');
+        mgToast('오류가 발생했습니다.', 'error');
         btn.disabled = false;
         btn.textContent = '신청하기';
     });
@@ -850,7 +850,7 @@ document.getElementById('relslot-modal').addEventListener('click', function(e) {
 function submitRelSlot() {
     var selected = document.querySelector('input[name="relslot_ch_id"]:checked');
     if (!selected) {
-        alert('캐릭터를 선택해주세요.');
+        mgToast('캐릭터를 선택해주세요.', 'warning');
         return;
     }
     var btn = document.getElementById('relslot-submit-btn');
@@ -865,17 +865,17 @@ function submitRelSlot() {
     .then(function(r) { return r.json(); })
     .then(function(data) {
         if (data.success) {
-            alert(data.message);
+            mgToast(data.message, 'success');
             closeRelSlotModal();
             location.reload();
         } else {
-            alert(data.message);
+            mgToast(data.message, 'error');
             btn.disabled = false;
             btn.textContent = '사용';
         }
     })
     .catch(function() {
-        alert('오류가 발생했습니다.');
+        mgToast('오류가 발생했습니다.', 'error');
         btn.disabled = false;
         btn.textContent = '사용';
     });
@@ -886,7 +886,7 @@ function submitGift() {
     var message = document.getElementById('gift-message').value.trim();
 
     if (!mbIdTo) {
-        alert('받는 사람의 회원 아이디를 입력해주세요.');
+        mgToast('받는 사람의 회원 아이디를 입력해주세요.', 'warning');
         return;
     }
     if (!_giftSiId) return;
@@ -903,17 +903,17 @@ function submitGift() {
     .then(function(r) { return r.json(); })
     .then(function(data) {
         if (data.success) {
-            alert(data.message);
+            mgToast(data.message, 'success');
             closeGiftModal();
             location.reload();
         } else {
-            alert(data.message);
+            mgToast(data.message, 'error');
             btn.disabled = false;
             btn.textContent = '선물 보내기';
         }
     })
     .catch(function(error) {
-        alert('오류가 발생했습니다.');
+        mgToast('오류가 발생했습니다.', 'error');
         btn.disabled = false;
         btn.textContent = '선물 보내기';
         console.error(error);

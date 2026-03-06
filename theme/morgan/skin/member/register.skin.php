@@ -52,12 +52,12 @@ if (!defined('_GNUBOARD_')) exit;
 <script>
 function fregisterform_check(f) {
     if (!f.agree.checked) {
-        alert("이용약관에 동의해 주세요.");
+        mgToast("이용약관에 동의해 주세요.", "warning");
         f.agree.focus();
         return false;
     }
     if (!f.agree2.checked) {
-        alert("개인정보 처리방침에 동의해 주세요.");
+        mgToast("개인정보 처리방침에 동의해 주세요.", "warning");
         f.agree2.focus();
         return false;
     }

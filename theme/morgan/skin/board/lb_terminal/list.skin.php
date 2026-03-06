@@ -284,7 +284,7 @@ function lbSubmitComment(btn, parentId) {
         .then(function(r) { return r.json(); })
         .then(function(d) {
             btn.disabled = false;
-            if (d.error) { alert(d.error); return; }
+            if (d.error) { mgToast(d.error, 'error'); return; }
             var block = btn.closest('.console-log-block');
             var replies = block.querySelector('.log-replies');
             if (!replies) {
@@ -298,6 +298,6 @@ function lbSubmitComment(btn, parentId) {
             replies.appendChild(line);
             input.value = '';
         })
-        .catch(function() { btn.disabled = false; alert('네트워크 오류'); });
+        .catch(function() { btn.disabled = false; mgToast('네트워크 오류', 'error'); });
 }
 </script>

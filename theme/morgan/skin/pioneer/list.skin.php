@@ -859,7 +859,7 @@ unset($_fc);
         var inputId = type === 'stamina' ? 'pnm-stamina' : 'pnm-mat-' + mtId;
         var input = document.getElementById(inputId);
         var amount = parseInt(input ? input.value : 0) || 0;
-        if (amount < 1) { alert('투입량을 입력해주세요.'); return; }
+        if (amount < 1) { mgToast('투입량을 입력해주세요.', 'warning'); return; }
 
         var formData = new FormData();
         formData.append('fc_id', fcId);
@@ -870,11 +870,10 @@ unset($_fc);
         fetch(CONTRIBUTE_URL, { method: 'POST', body: formData })
         .then(function(res) { return res.json(); })
         .then(function(data) {
-            if (typeof showToast === 'function') showToast(data.message, data.success ? 'success' : 'error');
-            else alert(data.message);
+            mgToast(data.message, data.success ? 'success' : 'error');
             if (data.success) location.reload();
         })
-        .catch(function() { alert('오류가 발생했습니다.'); });
+        .catch(function() { mgToast('오류가 발생했습니다.', 'error'); });
     };
 
     // === 이미지 모드 마커 ===

@@ -137,14 +137,14 @@ function fwrite_submit(f) {
     <?php if (!$is_edit) { ?>
     var cc_sel = document.getElementById('mg_concierge_id');
     if (cc_sel && !cc_sel.value) {
-        alert('연결할 의뢰를 선택해주세요.');
+        mgToast('연결할 의뢰를 선택해주세요.', 'warning');
         cc_sel.focus();
         return false;
     }
     <?php } ?>
 
     if (!f.wr_subject.value.trim()) {
-        alert('제목을 입력해주세요.');
+        mgToast('제목을 입력해주세요.', 'warning');
         f.wr_subject.focus();
         return false;
     }
@@ -157,13 +157,13 @@ function fwrite_submit(f) {
     xhr.onload = function() {
         try {
             var data = JSON.parse(xhr.responseText);
-            if (data.error) { alert(data.error); return; }
+            if (data.error) { mgToast(data.error, 'error'); return; }
             f.token.value = data.token;
             _fwrite_submitting = true;
             f.submit();
-        } catch(e) { alert('토큰 발급 오류'); }
+        } catch(e) { mgToast('토큰 발급 오류', 'error'); }
     };
-    xhr.onerror = function() { alert('토큰 발급 네트워크 오류'); };
+    xhr.onerror = function() { mgToast('토큰 발급 네트워크 오류', 'error'); };
     xhr.send('bo_table=<?php echo $bo_table; ?>');
     return false;
 }

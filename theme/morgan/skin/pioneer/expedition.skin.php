@@ -756,30 +756,30 @@ $relation_url = G5_BBS_URL . '/relation.php';
         var msg = areaName + ' 파견을 보내시겠습니까?\n(스테미나 ' + cost + ' 소모)';
         if (itemNames.length > 0) msg += '\n\n사용 소모품: ' + itemNames.join(', ');
 
-        if (!confirm(msg)) return;
+        mgConfirm(msg, function() {
+            var params = {
+                ch_id: selected.ch_id,
+                ea_id: selected.ea_id,
+                partner_ch_id: selected.partner_ch_id || ''
+            };
+            if (selectedItems.expedition_time) params.item_expedition_time = selectedItems.expedition_time;
+            if (selectedItems.expedition_reward) params.item_expedition_reward = selectedItems.expedition_reward;
+            if (selectedItems.expedition_stamina) params.item_expedition_stamina = selectedItems.expedition_stamina;
 
-        var params = {
-            ch_id: selected.ch_id,
-            ea_id: selected.ea_id,
-            partner_ch_id: selected.partner_ch_id || ''
-        };
-        if (selectedItems.expedition_time) params.item_expedition_time = selectedItems.expedition_time;
-        if (selectedItems.expedition_reward) params.item_expedition_reward = selectedItems.expedition_reward;
-        if (selectedItems.expedition_stamina) params.item_expedition_stamina = selectedItems.expedition_stamina;
-
-        api('start', params, 'POST').then(function(data) {
-            if (data.success) {
-                closeDispatchModal();
-                selected.ch_id = 0;
-                selected.partner_ch_id = 0;
-                selected.ea_id = 0;
-                selectedItems = {};
-                cachedCharacters = null;
-                loadStatus();
-                loadAreas();
-                loadHistory();
-            }
-            alert(data.message);
+            api('start', params, 'POST').then(function(data) {
+                if (data.success) {
+                    closeDispatchModal();
+                    selected.ch_id = 0;
+                    selected.partner_ch_id = 0;
+                    selected.ea_id = 0;
+                    selectedItems = {};
+                    cachedCharacters = null;
+                    loadStatus();
+                    loadAreas();
+                    loadHistory();
+                }
+                mgToast(data.message, 'success');
+            });
         });
     };
 
@@ -791,21 +791,21 @@ $relation_url = G5_BBS_URL . '/relation.php';
                 loadStatus();
                 loadHistory();
             } else {
-                alert(data.message);
+                mgToast(data.message, 'error');
             }
         });
     };
 
     // === 파견 취소 ===
     window.cancelExpedition = function(el_id) {
-        if (!confirm('파견을 취소하시겠습니까?\n스테미나는 반환되지 않습니다.')) return;
-
-        api('cancel', { el_id: el_id }, 'POST').then(function(data) {
-            alert(data.message);
-            if (data.success) {
-                loadStatus();
-                loadHistory();
-            }
+        mgConfirm('파견을 취소하시겠습니까?\n스테미나는 반환되지 않습니다.', function() {
+            api('cancel', { el_id: el_id }, 'POST').then(function(data) {
+                mgToast(data.message, data.success ? 'success' : 'error');
+                if (data.success) {
+                    loadStatus();
+                    loadHistory();
+                }
+            });
         });
     };
 
