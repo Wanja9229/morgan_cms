@@ -247,8 +247,8 @@ function deleteMapImage() {
 <!-- 마커 액션 팝업 (클릭 시) -->
 <div id="marker-action-popup" style="display:none;position:fixed;z-index:1200;background:var(--mg-bg-secondary);border:1px solid var(--mg-bg-tertiary);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.5);min-width:160px;overflow:hidden;">
     <div id="marker-action-name" style="padding:8px 12px;font-size:0.8rem;color:var(--mg-text-muted);border-bottom:1px solid var(--mg-bg-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;"></div>
-    <button type="button" id="marker-action-edit" style="display:block;width:100%;text-align:left;padding:8px 12px;font-size:0.85rem;color:var(--mg-text-primary);background:none;border:none;cursor:pointer;" onmouseover="this.style.background='var(--mg-bg-tertiary)'" onmouseout="this.style.background='none'">✏️ 수정</button>
-    <button type="button" id="marker-action-remove" style="display:block;width:100%;text-align:left;padding:8px 12px;font-size:0.85rem;color:#ef4444;background:none;border:none;border-top:1px solid var(--mg-bg-tertiary);cursor:pointer;" onmouseover="this.style.background='var(--mg-bg-tertiary)'" onmouseout="this.style.background='none'">🗑️ 마커 삭제</button>
+    <button type="button" id="marker-action-edit" style="display:block;width:100%;text-align:left;padding:8px 12px;font-size:0.85rem;color:var(--mg-text-primary);background:none;border:none;cursor:pointer;" onmouseover="this.style.background='var(--mg-bg-tertiary)'" onmouseout="this.style.background='none'">수정</button>
+    <button type="button" id="marker-action-remove" style="display:block;width:100%;text-align:left;padding:8px 12px;font-size:0.85rem;color:#ef4444;background:none;border:none;border-top:1px solid var(--mg-bg-tertiary);cursor:pointer;" onmouseover="this.style.background='var(--mg-bg-tertiary)'" onmouseout="this.style.background='none'">마커 삭제</button>
 </div>
 
 <!-- 맵 클릭 시 지역 선택 팝업 -->
