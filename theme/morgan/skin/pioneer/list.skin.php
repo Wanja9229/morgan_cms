@@ -651,9 +651,18 @@ unset($_fc);
 
         var html = '';
 
+        // 건설 중이면 모달 패널에 빗금 배경 적용
+        var panel = document.querySelector('#pn-modal-overlay .pn-modal-panel');
+        if (panel) {
+            if (isBuilding) {
+                panel.style.backgroundImage = 'repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(245,159,10,0.04) 10px, rgba(245,159,10,0.04) 20px)';
+            } else {
+                panel.style.backgroundImage = '';
+            }
+        }
+
         // 헤더
         html += '<div class="pn-m-header" style="border-top:2px solid ' + statusColor + ';">';
-        if (isBuilding) html += '<div class="pn-m-header-stripes"></div>';
         html += '<div class="pn-m-header-inner">';
         html += '<div style="display:flex;align-items:flex-start;gap:0.75rem;">';
         html += '<div class="pn-m-icon">' + (fc.fc_icon_html || '<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>') + '</div>';
