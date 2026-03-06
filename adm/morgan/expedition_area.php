@@ -216,7 +216,7 @@ require_once __DIR__.'/_head.php';
                     </td>
                     <td style="text-align:center;font-size:0.8rem;">
                         <?php if ($area['ea_map_x'] !== null && $area['ea_map_y'] !== null) { ?>
-                        <span style="color:var(--mg-accent);" title="X:<?php echo round($area['ea_map_x'],1); ?>% Y:<?php echo round($area['ea_map_y'],1); ?>%"><svg style="display:inline-block;width:14px;height:14px;vertical-align:middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg></span>
+                        <span style="color:var(--mg-accent);"><svg style="display:inline-block;width:14px;height:14px;vertical-align:middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg> <?php echo round($area['ea_map_x'],1); ?>, <?php echo round($area['ea_map_y'],1); ?></span>
                         <?php } else { ?>
                         <span style="color:var(--mg-text-muted);">-</span>
                         <?php } ?>
