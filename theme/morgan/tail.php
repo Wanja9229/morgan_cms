@@ -413,7 +413,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
             $_mg_rcfg = sql_fetch("SELECT is_active FROM {$g5['mg_radio_config_table']} WHERE config_id = 1");
             if ($_mg_rcfg && $_mg_rcfg['is_active']) $_mg_radio_on = true;
         }
-        if ($_mg_radio_on) {
+        if ($_mg_radio_on && (!function_exists('mg_is_unlocked') || mg_is_unlocked('radio'))) {
             ob_start(); ?>
         <div class="card mb-4" id="mg-radio-widget">
             <!-- 날씨 -->
