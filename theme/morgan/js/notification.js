@@ -237,11 +237,11 @@
         // === 토스트 알림 ===
 
         createToastContainer: function() {
-            this.toastContainer = document.getElementById('mg-toast-container');
+            this.toastContainer = document.getElementById('mg-noti-toast-container');
             if (!this.toastContainer) {
                 this.toastContainer = document.createElement('div');
-                this.toastContainer.id = 'mg-toast-container';
-                this.toastContainer.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column-reverse;gap:8px;pointer-events:none;';
+                this.toastContainer.id = 'mg-noti-toast-container';
+                this.toastContainer.style.cssText = 'display:none;';
                 document.body.appendChild(this.toastContainer);
             }
         },
@@ -265,59 +265,31 @@
         },
 
         showToast: function(item) {
-            if (!this.toastContainer) return;
+            if (typeof mgToast !== 'function') return;
 
-            var icon = this.getTypeIcon(item.noti_type);
+            var title = this.escHtml(item.noti_title);
+            var content = item.noti_content ? this.escHtml(item.noti_content) : '';
+            var msg = content ? title + '\n' + content : title;
             var url = item.noti_url || '';
             var notiId = item.noti_id;
 
-            var toast = document.createElement('div');
-            toast.style.cssText = 'pointer-events:auto;max-width:360px;width:100%;opacity:0;transform:translateX(100%);transition:all 0.3s ease;';
-            toast.innerHTML =
-                '<div style="background:var(--mg-bg-secondary);border:1px solid var(--mg-bg-tertiary);border-radius:12px;padding:14px 16px;box-shadow:0 8px 24px rgba(0,0,0,0.3);display:flex;align-items:flex-start;gap:12px;cursor:' + (url ? 'pointer' : 'default') + ';">' +
-                    '<div style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;" class="' + icon.bg + '">' + icon.svg + '</div>' +
-                    '<div style="flex:1;min-width:0;">' +
-                        '<p style="font-size:13px;color:var(--mg-text-primary);margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + this.escHtml(item.noti_title) + '</p>' +
-                        (item.noti_content ? '<p style="font-size:12px;color:var(--mg-text-muted);margin:3px 0 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + this.escHtml(item.noti_content) + '</p>' : '') +
-                    '</div>' +
-                    '<button type="button" style="flex-shrink:0;padding:2px;color:var(--mg-text-muted);background:none;border:none;cursor:pointer;line-height:1;" data-toast-close="1">' +
-                        '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>' +
-                    '</button>' +
-                '</div>';
+            // mgToast로 통일 표시
+            var t = mgToast(msg, 'info', 5000);
 
-            // 클릭 시 이동
-            if (url) {
-                toast.addEventListener('click', function(e) {
-                    if (e.target.closest('[data-toast-close]')) return;
-                    MgNoti.markAndGo(e, notiId, url);
-                    dismissToast();
-                });
-            }
-
-            // 닫기 버튼
-            toast.querySelector('[data-toast-close]').addEventListener('click', function(e) {
-                e.stopPropagation();
-                dismissToast();
-            });
-
-            this.toastContainer.appendChild(toast);
-
-            // 등장 애니메이션
-            requestAnimationFrame(function() {
-                toast.style.opacity = '1';
-                toast.style.transform = 'translateX(0)';
-            });
-
-            // 5초 후 자동 퇴장
-            var autoTimer = setTimeout(function() { dismissToast(); }, 5000);
-
-            function dismissToast() {
-                clearTimeout(autoTimer);
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(100%)';
-                setTimeout(function() {
-                    if (toast.parentNode) toast.parentNode.removeChild(toast);
-                }, 300);
+            // 알림 토스트는 클릭 시 URL 이동 + 읽음 처리
+            if (url && t.dismiss) {
+                var container = document.getElementById('mg-toast-container');
+                if (container) {
+                    var lastToast = container.lastElementChild;
+                    if (lastToast) {
+                        lastToast.style.cursor = 'pointer';
+                        lastToast.addEventListener('click', function(e) {
+                            if (e.target.closest('[data-mg-toast-close]')) return;
+                            MgNoti.markAndGo(e, notiId, url);
+                            t.dismiss();
+                        });
+                    }
+                }
             }
         },
 
@@ -357,6 +329,8 @@
     } else {
         checkFlashToast();
     }
+    // SPA 네비게이션 후에도 플래시 토스트 체크
+    window.addEventListener('mg:pageLoaded', checkFlashToast);
 })();
 
 /**
