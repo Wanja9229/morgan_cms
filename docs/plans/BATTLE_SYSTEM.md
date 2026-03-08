@@ -1,0 +1,975 @@
+# 전투 시스템 (Battle System)
+
+> 확산성 밀리언 아서 스타일 — 협동 레이드 전투
+> 탐사 이벤트에서 몬스터/보스 발견 → 커뮤니티 전체 알림 → 참여자들이 스테미나를 소모해 공격
+
+---
+
+## 1. 개요
+
+### 핵심 컨셉
+- **비동기 협동 레이드**: 실시간 동기화 없이, 각자 스테미나가 있을 때 전투 페이지에서 행동
+- **스테미나 게이팅**: 전투 전용 스테미나가 시간에 따라 충전 → 행동 빈도 자연 제한
+- **탐사 연동**: 기존 탐사 시스템의 이벤트로 전투 조우 발생
+- **참여 제한 없음**: 스테미나가 자연적 분산 장치 → 인원 제한 불필요
+- **동시 다발 레이드**: 바쁜 시간대 3~5개 레이드 동시 진행 → 유저가 골라서 참여
+- **커뮤니티 소통 기반 전략**: 유저들이 오너게시판/메모란에서 어떤 보스에 집중할지 상의
+- **서버 권위**: 모든 계산은 서버에서 수행, 클라이언트는 결과 표시만
+
+### 실시간 불필요 근거
+| 요소 | 이유 |
+|------|------|
+| 스테미나 | 30분~1시간에 1 충전 → 분당 행동 수 극소 |
+| 비동기 | 각자 여유 있을 때 행동, 동시 조작 불필요 |
+| 반격 | 공격 시 즉시 반격 계산 → 턴 대기 없음 |
+| 상태 갱신 | 전투 페이지 30초 폴링이면 충분 |
+| 소통 | 게시판에서 전략 논의 → 각자 판단 후 행동 |
+
+### 동시 다발 레이드 & 자원 배분
+
+```
+바쁜 시간대: 레이드 A, B, C, D, E 동시 진행
+유저 30명 활동 중, 각자 스테미나 3~5 보유
+
+→ 30명이 5개 레이드에 흩어짐
+→ 스테미나 없는 유저는 어차피 행동 불가
+→ "한정된 스테미나를 어떤 보스에 쓸까" = 핵심 전략
+
+소통 예시 (오너게시판):
+  "B보스 HP 70% 남았는데 시간 얼마 안 남음, 여기 집중합시다"
+  "A보스는 HP 낮으니까 2~3명이면 충분할 듯"
+  "C보스는 포기하고 A, B에 집중!"
+```
+
+### 디자인 원칙: 단순 시작, 필요 시 확장
+- 탱커/서포터 역할이 밸런스상 안 맞으면 → 전원 딜러 체제로 전환 가능
+- 스킬/장비 확장은 기본 시스템 검증 후 점진적으로
+
+---
+
+## 2. 스탯 시스템
+
+### 2.1 기본 스탯 (4종)
+
+| 스탯 | 코드 | 역할 | 스케일링 대상 |
+|------|------|------|-------------|
+| 체력 | `hp` | 생존 / 탱커 | 최대 HP. 많이 찍으면 오래 살아서 더 많이 행동 가능 |
+| 근력 | `str` | 물리 딜러 | 일반공격(1소모) 데미지. 스테미나 효율 빌드 |
+| 솜씨 | `dex` | 스킬 딜러 | 공격 스킬(2소모) 데미지. 한방 빌드 |
+| 지력 | `int` | 서포터 | 힐량, 버프 효과, 디버프 효과 |
+
+### 2.2 파생 수치 (스탯 + 장비에서 계산)
+
+| 수치 | 공식 (예시) | 설명 |
+|------|------------|------|
+| 최대 HP | `base_hp + (hp * 10) + 장비HP` | 전투 중 HP 상한 |
+| 물리 공격력 | `str * 2 + 무기ATK` | 일반공격/강타 기반 데미지 |
+| 스킬 공격력 | `dex * 2 + 무기SATK` | 공격 스킬 기반 데미지 |
+| 서포트 위력 | `int * 2` | 힐량, 버프/디버프 효과 기반 |
+| 방어력 | `(hp + str) / 4 + 방어구DEF` | 피격 시 데미지 감소 |
+| 크리티컬률 | 장비 옵션에서만 획득 | 기본 5% + 장비 보정 |
+| 크리티컬 배율 | 150% 고정 + 장비 보정 | 크리티컬 시 데미지 배율 |
+| 회피율 | 장비 옵션에서만 획득 | 기본 0% + 장비 보정 |
+
+> 크리/회피는 스탯이 아닌 **장비 옵션**으로만 획득 → 장비 선택에 깊이 부여
+> 구체적 수식은 밸런스 테스트 시 조정. 여기서는 방향만 제시.
+
+### 2.3 빌드 다양성
+
+| 빌드 | 주스탯 | 플레이스타일 |
+|------|--------|------------|
+| 물리 딜러 | STR (+HP) | 일반공격(1소모) 위주, 스테미나 효율 좋음 |
+| 스킬 딜러 | DEX (+HP) | 공격 스킬(2소모) 위주, 한방 강함 |
+| 탱커 | HP (+INT) | 도발로 반격 흡수, 여유 시 힐/버프 |
+| 서포터 | INT (+HP) | 힐+버프+디버프로 팀 생존 지원 |
+| 하이브리드 | 분산 배분 | 상황 대응 유연 |
+
+> STR vs DEX의 핵심 트레이드오프: "적게 써서 꾸준히(1소모)" vs "많이 써서 세게(2소모)"
+> 스테미나가 제한 자원이므로 이 선택이 실제 의미를 가짐
+
+### 2.4 스탯 포인트 배분
+
+- 캐릭터 생성 시 **초기 스탯 포인트** 지급 (관리자 설정, 기본 20)
+- 4개 스탯에 자유 배분
+- **스탯 초기화 아이템**: 상점에서 판매, 사용 시 배분 포인트 전부 회수 → 재배분 가능
+- 추후: 레벨업/업적으로 추가 포인트 획득 확장 가능
+
+### 2.5 TRPG 스탯 시스템과의 관계
+
+기존 `mg_trpg_*` 테이블은 TRPG 시트(CoC, D&D 등) 용도로 유지.
+전투 시스템은 **별도 `mg_battle_stat` 테이블** 사용 — 목적과 복잡도가 다름.
+
+---
+
+## 3. 장비 시스템
+
+### 3.1 장비 슬롯 (3종)
+
+| 슬롯 | 코드 | 주요 효과 |
+|------|------|----------|
+| 무기 | `weapon` | ATK(물리공격력), SATK(스킬공격력) 보정 |
+| 방어구 | `armor` | DEF(방어력), HP 보정 |
+| 장신구 | `accessory` | 특수 효과 (크리티컬+, 회피+, 스테미나 회복+ 등) |
+
+> 크리/회피는 스탯이 아닌 장비에서만 획득 → 장비 선택의 의미 강화
+
+### 3.2 장비 데이터 구조
+
+기존 `mg_shop_item`의 `si_type`에 전투 장비 타입 추가:
+- `battle_weapon` — 무기
+- `battle_armor` — 방어구
+- `battle_accessory` — 장신구
+- `battle_consumable` — 전투 소모품 (회복약, 부활, 스테미나 충전 등)
+- `battle_skill_book` — 스킬북 (스킬 해금)
+
+`si_effect` JSON 예시:
+```json
+// 무기 — 물리 특화
+{"slot": "weapon", "atk": 20, "satk": 5}
+
+// 무기 — 스킬 특화
+{"slot": "weapon", "atk": 5, "satk": 20}
+
+// 무기 — 밸런스
+{"slot": "weapon", "atk": 12, "satk": 12}
+
+// 방어구
+{"slot": "armor", "def": 10, "hp": 50}
+
+// 장신구 — 크리 특화
+{"slot": "accessory", "crit_rate": 8, "crit_mult": 20}
+
+// 장신구 — 회피 특화
+{"slot": "accessory", "evasion": 10}
+
+// 장신구 — 서포터용
+{"slot": "accessory", "support_power": 15}
+
+// 소모품 — 부활 아이템
+{"type": "revive", "hp_percent": 50}
+
+// 소모품 — HP 회복
+{"type": "heal", "hp_amount": 100}
+
+// 소모품 — 스테미나 충전
+{"type": "stamina", "amount": 3}
+```
+
+### 3.3 장비 획득 경로
+
+| 경로 | 설명 |
+|------|------|
+| 상점 구매 | 포인트로 기본 장비 구매 (주요 경로) |
+| 전투 드랍 | 보스/몬스터 처치 시 확률 드랍 |
+| 탐사 보상 | 탐사 이벤트 보상으로 장비 획득 |
+| 업적 보상 | 특정 업적 달성 시 고급 장비 지급 |
+| 개척 순위 | 개척 공헌도 상위 보상 |
+| 미션 당선 | 미션 당선작 보상 |
+| 의뢰 보상 | 운영진 의뢰 완료 보상 |
+
+> 모든 경로가 결국 `mg_inventory`에 INSERT → 장비 장착은 전투 세팅에서 수행
+
+### 3.4 장비 등급 (선택적 확장)
+
+| 등급 | 코드 | 색상 | 스탯 보정 |
+|------|------|------|----------|
+| 일반 | `common` | 회색 | x1.0 |
+| 고급 | `uncommon` | 초록 | x1.3 |
+| 희귀 | `rare` | 파랑 | x1.6 |
+| 영웅 | `epic` | 보라 | x2.0 |
+| 전설 | `legendary` | 주황 | x2.5 |
+
+> 초기 구현 시 등급 없이 진행해도 무방. `si_effect`에 수치만 다르게 설정하면 됨.
+
+---
+
+## 4. 스테미나 시스템
+
+### 4.1 기본 설정 (관리자 조정 가능)
+
+| 항목 | 기본값 | 설명 |
+|------|--------|------|
+| 최대 스테미나 | 10 | 상한 |
+| 충전 간격 | 1800초 (30분) | 1 스테미나 충전 시간 |
+| 초기 지급 | 5 | 시스템 첫 사용 시 |
+
+### 4.2 서버사이드 계산 (크론/데몬 불필요)
+
+```
+현재 스테미나 = min(
+    저장값 + floor((now - last_charge_at) / 충전간격),
+    최대치
+)
+```
+
+- 행동 시 서버에서 계산 → 차감 → `last_charge_at` 갱신
+- 클라이언트는 다음 충전까지 남은 시간만 표시 (카운트다운)
+
+### 4.3 HP 자동회복
+
+스테미나 충전 타이밍에 연동하여 참여 중인 전투의 HP도 소량 회복:
+
+```
+스테미나 1 충전 시 → 참여 중인 전투의 current_hp += max_hp * 회복률(%)
+```
+
+| 항목 | 기본값 | 설명 |
+|------|--------|------|
+| 자동회복률 | 5% | max_hp 대비 회복량 (관리자 설정) |
+| 주기 | 스테미나 충전과 동일 (30분) | 별도 타이머 불필요 |
+
+**의도된 긴장 곡선:**
+```
+전투 초반: 스테미나가 병목 (HP 넉넉, 스테미나 기다림)
+전투 중반: 양쪽 다 부족 (HP 깎이고, 스테미나도 아낌)
+전투 후반: HP가 병목 (스테미나 있어도 체력 부족)
+         → 포션 구매(포인트 소모) 또는 힐러 의존(소통) 필요
+```
+
+**HP 회복 3단계 (효율순):**
+
+| 방식 | 효율 | 소모 | 역할 |
+|------|------|------|------|
+| 자동회복 | 최하 | 무료 (시간만) | 반격 1회 복구에 1~4시간 |
+| 포션 | 중간 | 포인트 (상점 구매) | 즉시 회복, 경제 소모 유도 |
+| 힐러 | 최상 | 힐러의 스테미나 | 소통 유도, 협동의 핵심 |
+
+### 4.4 스테미나 소모
+
+| 행동 | 소모량 |
+|------|--------|
+| 일반공격 | 1 |
+| 스킬 (2소모 계열) | 2 |
+| 고급 스킬 (전체공격, 전체힐, 수호) | 3 |
+
+### 4.5 스테미나 충전 아이템
+
+상점에서 `battle_consumable` 타입으로 판매. 사용 시 즉시 충전.
+
+---
+
+## 5. 스킬 시스템
+
+### 5.1 기본 커맨드
+
+| 커맨드 | 코드 | 소모 | 대상 | 기반 스탯 | 설명 |
+|--------|------|------|------|----------|------|
+| 일반공격 | `attack` | 1 | 적 1체 | STR | 기본 물리 공격 |
+| 강타 | `power_attack` | 2 | 적 1체 | STR | 강화 물리 공격 (1.5배) |
+| 스킬공격 | `skill_attack` | 2 | 적 1체 | DEX | 스킬 데미지 |
+| 전체공격 | `aoe_attack` | 3 | 적 전체 | DEX | 전체 데미지 (0.6배, 다중 몬스터 전용) |
+| 힐링 | `heal` | 2 | 아군 3명 선택 | INT | HP 회복 (1인당 INT*2) |
+| 전체힐 | `aoe_heal` | 3 | 아군 전체 | INT | 전체 HP 회복 (1인당 0.4배) |
+| 버프 | `buff` | 2 | 아군 1명 | INT | 대상의 ATK 또는 SATK 일시 증가 |
+| 디버프 | `debuff` | 2 | 적 1체 | INT | 대상의 ATK 또는 DEF 일시 감소 |
+| 도발 | `taunt` | 2 | 자신 | — | 이후 N회 행동 동안 모든 반격이 나에게 집중 |
+| 수호 | `guard` | 3 | 자신 | — | 도발 + 받는 데미지 30% 감소 |
+
+> **힐링이 3명 타겟인 이유**: 1명 힐로는 10명 전원 커버에 스테미나 20 필요 (비현실적).
+> 3명 힐이면 4회(스테미나 8)로 전원 커버 가능. 힐러도 남는 스테미나로 다른 행동 가능하지만,
+> 힐만 전담해도 기여도 가중치가 높아 MVP 경쟁에 충분히 참여 가능.
+
+### 5.2 스킬 슬롯
+
+- 각 캐릭터는 **스킬 슬롯 3개** 보유 (일반공격은 기본 장착, 슬롯 불필요)
+- 사용 가능한 스킬 목록에서 선택하여 장착
+- 스킬 해금: 기본 제공 + 상점 구매 + 전투 보상 + 업적
+
+### 5.3 스킬 해금 & 확장 (추후)
+
+| 방식 | 설명 |
+|------|------|
+| 기본 제공 | 강타, 스킬공격, 힐링은 모든 캐릭터 기본 보유 |
+| 상점 구매 | 전체공격, 전체힐, 도발, 수호, 버프, 디버프 등 고급 스킬 |
+| 전투 보상 | 보스 처치 시 확률적 스킬북 드랍 |
+| 업적 | 전투 업적 달성 시 해금 |
+
+### 5.4 버프/디버프/도발 지속
+
+- **버프/디버프**: 해당 전투 내 **N회 행동** 동안 유지 (기본 3회)
+  - "N회 행동" = 해당 인카운터에서 발생하는 다음 N번의 행동 (누구의 행동이든)
+  - 중첩 불가 — 같은 타입 재사용 시 갱신 (남은 횟수 리셋)
+- **도발/수호**: 해당 전투 내 **N회 행동** 동안 유지 (기본 5회)
+  - 도발자가 전사하면 즉시 해제
+- 전투 종료 시 모든 버프/디버프/도발 초기화
+
+---
+
+## 6. 전투 조우 (인카운터)
+
+### 6.1 발생 조건
+
+기존 `mg_expedition_event`에 **전투 이벤트 타입** 추가:
+
+```
+ee_effect_type = 'battle_encounter'
+ee_effect = {
+    "encounter_template_id": 5,    // 몬스터 템플릿 참조
+    "encounter_type": "boss"       // boss | mob_group
+}
+```
+
+탐사 완료 시 이벤트 판정 → `battle_encounter` 당첨 시:
+1. `mg_battle_encounter` 레코드 생성
+2. 발견자 자동 참여 (슬롯 1)
+3. **전체 알림 발송** (`mg_notification` + 헤더 배너)
+
+### 6.2 몬스터 템플릿
+
+관리자가 미리 등록해둔 몬스터 정보:
+
+| 필드 | 설명 |
+|------|------|
+| 이름 | 표시 이름 |
+| 이미지 | 몬스터 일러스트 |
+| 유형 | `boss` (1체, 대형) / `mob` (3~5체, 소형) |
+| HP | 총 체력 (보스: 수천~수만, 몹: 수백) |
+| ATK | 공격력 (반격 데미지 기반) |
+| DEF | 방어력 (받는 데미지 감소) |
+| 제한 시간 | 첫 액션 이후 격퇴 제한 시간 (초) |
+| 보상 포인트 | 처치 시 기본 포인트 |
+| 보상 드랍 | 드랍 테이블 (아이템 ID + 확률) |
+
+### 6.3 다중 몬스터 (mob_group)
+
+- 3~5체가 한 인카운터에 등장
+- 각 몬스터는 개별 HP 보유
+- 플레이어가 **타겟 선택** 후 행동
+- 전체공격(`aoe_attack`) 사용 시 모든 생존 몬스터에 데미지
+- 모든 몬스터 처치 시 인카운터 완료
+
+### 6.4 참여 시스템
+
+**참여 인원 무제한** — 스테미나가 자연적 분산 장치 역할:
+- 동시 다발 레이드에서 유저가 스테미나를 나눠 써야 함
+- 한 보스에 몰려도 스테미나 총량이 제한되어 순간 DPS 폭주 없음
+- "자리 없음" 불만 제거 → 밀리언 아서처럼 누구나 때릴 수 있는 구조
+
+```
+참여 구조:
+├── 발견자: 자동 참여 + 우선 알림 발송 권한
+├── 초대: 발견자가 관계 캐릭터 1~2명에게 개인 알림 (자리 예약 아님)
+└── 자유 참여: 전체 알림 보고 누구나 참여 가능
+```
+
+**초대 = 우선 알림:**
+1. 발견자에게 "알릴 캐릭터 선택" UI 표시
+2. `mg_relation`에서 발견자 캐릭터와 `active` 관계인 캐릭터 목록 조회
+3. 최대 2명 선택 → 해당 유저에게 개인 알림 ("같이 하자!")
+4. 슬롯 예약 아님, 빨리 와서 함께 전투하자는 의미
+
+**자유 참여:**
+1. 전체 알림 또는 전투 목록에서 레이드 확인
+2. 전투 페이지 접속 → "참여하기" 버튼
+3. 참여 즉시 전투 가능 (입장 시 max_hp로 시작)
+
+**전투 목록 페이지의 역할:**
+- 진행 중인 모든 레이드를 한 눈에 표시
+- 보스별: 이름, HP바, 남은 시간, 참여자 수
+- 유저가 "어디에 스테미나를 쓸지" 판단하는 핵심 UI
+
+---
+
+## 7. 전투 진행
+
+### 7.1 전투 상태 흐름
+
+```
+discovered (발견됨, 대기 중)
+  → active (발견자 첫 액션 시 → 타이머 시작)
+  → cleared (모든 몬스터 처치 → 보상 분배)
+  → failed (제한시간 초과 → 몬스터 도주 처리)
+  → expired (발견 후 일정시간 내 첫 액션 없음 → 자동 소멸)
+```
+
+### 7.2 행동 처리 (핵심 로직)
+
+**요청 → 서버 처리 → 응답** 1회의 HTTP 요청:
+
+```
+1. 트랜잭션 시작
+2. 유효성 검증
+   - 전투 상태 == active (또는 discovered → 첫 액션이면 active로 전환)?
+   - 참여자인가?
+   - 스테미나 >= 필요량?
+   - 내 HP > 0? (전사 상태 아닌가?)
+   - 대상 몬스터 HP > 0? (적 대상 스킬 시)
+   - 대상 아군 존재? (아군 대상 스킬 시)
+3. 스테미나 서버사이드 재계산 + 차감
+4. 데미지/효과 계산
+   - 일반공격/강타: ATK = str * 2 + 무기ATK - 몬스터DEF
+   - 스킬공격: SATK = dex * 2 + 무기SATK - 몬스터DEF
+   - 힐링: HEAL = int * 2 * 배율
+   - 버프/디버프: 효과량 = int 기반
+   - 도발/수호: 스탯 무관 (상태 적용)
+   - 크리티컬 판정: rand(0,100) < crit_rate(장비) → 배율 적용
+   - 활성 버프/디버프 보정 적용
+5. 효과 적용
+   - 공격: 몬스터 HP 차감 (SELECT ... FOR UPDATE → UPDATE)
+   - 힐: 대상 아군 HP 회복 (max_hp 초과 불가)
+   - 버프/디버프: 대상에 효과 기록
+   - 도발/수호: 인카운터에 도발 상태 기록
+6. 몬스터 반격
+   ┌─ 도발 활성? → 반격 대상 = 도발자
+   └─ 도발 없음  → 반격 대상 = 행동자
+   - 수호 중이면: 반격 데미지 * 0.7
+   - 반격 데미지 = 몬스터ATK * (0.8~1.2 랜덤) - 대상 방어력
+   - 회피 판정: rand(0,100) < evasion_rate(장비) → 회피 성공
+   - 대상 HP 차감
+   - HP <= 0 → 전사 처리 (도발자 전사 시 도발 즉시 해제)
+   - 도발 잔여 횟수 -1 (0이면 해제)
+7. 행동 로그 기록 (mg_battle_log)
+8. 몬스터 사망 체크
+   - 해당 몬스터 HP <= 0 → 사망 처리
+   - 모든 몬스터 사망 → 인카운터 cleared → 보상 분배
+9. 트랜잭션 커밋
+10. JSON 응답 반환
+```
+
+### 7.3 반격 메커니즘
+
+- 유저가 행동할 때마다 몬스터가 반격
+- **도발 미적용 시**: 행동한 유저에게 반격
+- **도발 적용 시**: 도발자에게 반격 (행동자 보호)
+- 반격 데미지 = `monster_atk * (0.8~1.2 랜덤) - player_def`
+- 최소 데미지 보장: 1 (방어력이 아무리 높아도)
+- 수호 스킬 적용 중이면 반격 데미지 30% 감소
+
+### 7.4 도발 시스템
+
+```
+도발 사용 (스테미나 2)
+  → 인카운터에 taunt_ch_id, taunt_remaining 기록
+  → 이후 모든 행동의 반격이 도발자에게 집중
+  → 행동 N회 소진 시 자동 해제
+  → 도발자 전사 시 즉시 해제
+
+수호 사용 (스테미나 3)
+  → 도발과 동일 + 받는 데미지 30% 감소
+  → 도발보다 비싸지만 더 오래 버팀
+
+커뮤니티 연동 활용 예시:
+  탱커유저 (오너게시판): "도발 5턴 걸었습니다, 지금 공격해주세요!"
+  딜러유저: "스킬 2발 넣겠습니다"
+  서포터유저: "탱커님 HP 반 이하인데 힐 넣을게요"
+```
+
+### 7.5 전사 & 부활
+
+- HP가 0 이하 → **전사 상태** (`slot_status = 'dead'`)
+- 전사 시 해당 전투에서 더 이상 행동 불가
+- **부활 아이템** (상점 소모품) 사용 시:
+  - HP를 `max_hp * 부활비율%`로 회복
+  - 전사 상태 해제
+  - 해당 전투에서 다시 행동 가능
+
+### 7.6 타이머
+
+- **시작 조건**: 발견자의 첫 번째 행동 (`battle_started_at` 기록)
+- **제한 시간**: 몬스터 템플릿별 설정 (예: 보스 6시간, 일반몹 2시간)
+- **만료 처리**: 크론 또는 다음 행동 시 서버에서 체크
+  - 시간 초과 → `status = 'failed'`
+  - 참여자에게 "격퇴 실패" 알림
+  - 보상 없음 (또는 위로 보상 소량 지급 — 관리자 설정)
+- **미시작 만료**: 발견 후 일정 시간(예: 2시간) 내 첫 액션 없으면 자동 소멸
+
+---
+
+## 8. 보상 시스템
+
+### 8.1 보상 배분
+
+| 보상 | 기준 | 비고 |
+|------|------|------|
+| 기본 포인트 | 참여자 전원 균등 | 몬스터 템플릿에 설정된 기본값 |
+| MVP 보너스 | 총 기여도 1위 | 기본 포인트의 50% 추가 |
+| 발견자 보너스 | 발견자 | 기본 포인트의 30% 추가 |
+| 아이템 드랍 | 확률 기반, 기여도 비례 | 기여도 높을수록 드랍 확률 상승 |
+
+### 8.2 기여도 계산
+
+```
+기여도 = 총 딜량
+       + (힐량 * 1.0)
+       + (버프 사용 횟수 * 50)
+       + (디버프 사용 횟수 * 50)
+       + (도발 흡수 반격 횟수 * 80)
+
+기여율 = 내 기여도 / 전체 기여도 합계
+```
+
+> **힐량 1:1 환산**: 힐러가 힐만 전담해도 딜러와 대등한 기여도를 얻도록 설계.
+> 힐러는 3명 타겟 힐(2소모) × 5회 = 스테미나 10으로 최대 15명분 회복 가능.
+> 총 힐량이 자연스럽게 쌓여 딜러의 총 딜량과 비슷한 수준이 됨.
+> 도발 흡수도 높은 가중치(80/회) → 탱커/힐러/딜러 모두 MVP 후보 가능.
+
+### 8.3 드랍 테이블
+
+몬스터 템플릿에 JSON으로 정의:
+
+```json
+{
+    "drops": [
+        {"item_id": 101, "chance": 30, "count": 1},
+        {"item_id": 102, "chance": 10, "count": 1},
+        {"item_id": 103, "chance": 3,  "count": 1}
+    ]
+}
+```
+
+- 각 참여자별로 독립 판정 (한 명이 먹는다고 다른 사람 못 먹는 게 아님)
+- `chance`에 기여율 보정 적용
+- 장비의 드랍률 보너스 옵션이 있으면 추가 보정
+
+### 8.4 전사 패널티
+
+- 전사 상태로 전투 종료 시: 보상 포인트 **50% 감소**
+- 부활 후 생존으로 종료 시: 정상 보상
+- 관리자 설정으로 패널티 비율 조정 가능
+
+---
+
+## 9. 관리자 설정
+
+### 9.1 전투 글로벌 설정 (`mg_config` 확장)
+
+| 키 | 기본값 | 설명 |
+|----|--------|------|
+| `battle_stamina_max` | `10` | 최대 스테미나 |
+| `battle_stamina_interval` | `1800` | 충전 간격 (초) |
+| `battle_stamina_initial` | `5` | 초기 스테미나 |
+| `battle_stat_points` | `20` | 초기 스탯 포인트 |
+| `battle_base_hp` | `100` | 기본 HP (스탯 보정 전) |
+| `battle_hp_regen_pct` | `5` | 자동회복률 (max_hp의 %, 스테미나 충전 시) |
+| `battle_base_crit_rate` | `5` | 기본 크리티컬률 (%) |
+| `battle_base_crit_mult` | `150` | 기본 크리티컬 배율 (%) |
+| `battle_invite_max` | `2` | 발견자 우선 알림 인원 |
+| `battle_expire_no_start` | `7200` | 미시작 시 소멸 시간 (초) |
+| `battle_death_penalty` | `50` | 전사 패널티 (보상 감소 %) |
+| `battle_encounter_rate` | `10` | 탐사 시 전투 발생 확률 (%) |
+| `battle_taunt_turns` | `5` | 도발 기본 지속 횟수 |
+| `battle_guard_turns` | `5` | 수호 기본 지속 횟수 |
+| `battle_guard_reduction` | `30` | 수호 데미지 감소율 (%) |
+| `battle_use` | `1` | 전투 시스템 사용 여부 |
+
+### 9.2 몬스터 관리 (관리자 전용 페이지)
+
+- CRUD: 몬스터 템플릿 생성/수정/삭제
+- 필드: 이름, 이미지, 유형(boss/mob), HP, ATK, DEF, 참여상한, 제한시간
+- 보상 설정: 기본 포인트, 드랍 테이블 (아이템 선택 UI)
+- 출현 지역: 어떤 탐사 지역에서 나올 수 있는지 매핑
+- 활성/비활성 토글
+
+### 9.3 스킬 관리 (관리자 전용 페이지)
+
+- 스킬 목록 관리 (커스텀 스킬 추가 가능)
+- 스킬별: 이름, 아이콘, 스테미나 소모, 대상, 공식, 해금 조건
+- 활성/비활성 토글
+
+---
+
+## 10. 알림 & UI
+
+### 10.1 전투 발견 알림
+
+**헤더 배너** (홈페이지 전체):
+- `mg_battle_encounter`에 active/discovered 상태 전투가 있으면
+- 상단에 배너 표시: "[보스명] 출현! (HP 73%) — 참여자 8명"
+- 클릭 → 전투 페이지 이동
+- CSS 애니메이션으로 주의 환기 (깜빡임 or 슬라이드)
+
+**개인 알림** (`mg_notification`):
+- 발견 시 전체 알림: "탐사에서 [보스명]이(가) 발견되었습니다!"
+- 초대 시 개인 알림: "[발견자 캐릭터]가 [보스명] 전투에 초대합니다"
+- 전투 종료 시: "전투 승리! 보상: [포인트] 포인트, [아이템명]"
+
+### 10.2 전투 페이지 구성
+
+```
+┌─────────────────────────────────────────────┐
+│  [보스 이미지]                                │
+│  ████████████░░░░ HP 3,847 / 10,000         │
+│  제한시간: 02:34:17                           │
+│  활성 디버프: DEF-15% (2회 남음)               │
+│  도발 중: 탱커캐릭 (3회 남음)                   │  ← 도발 상태 표시
+│                                              │
+│  [타겟 선택: 몬스터A ● | 몬스터B | 몬스터C]     │  ← 다중 몬스터 시
+├─────────────────────────────────────────────┤
+│  내 상태                                      │
+│  HP ████████░░ 180/250                       │
+│  스테미나: ⚡⚡⚡⚡⚡⚡○○○○ (6/10)              │
+│  다음 충전: 14:32                             │
+│  활성 버프: ATK+20% (2회 남음)                 │
+│                                              │
+│  [⚔ 일반공격] [💥 강타] [🎯 스킬공격] [💚 힐링] │
+│  ↑ 장착 스킬 버튼 (비활성=스테미나 부족)         │
+├─────────────────────────────────────────────┤
+│  참여자 (12명)                                 │
+│  ♥ 발견자캐릭 ████████ 250/250  기여도: 1,203  │
+│  🛡 탱커캐릭   ██████░░ 180/350  기여도: 847   │  ← 도발 중 표시
+│    참여캐릭A  ████░░░░ 100/250  기여도: 623   │
+│  💀 참여캐릭B  ░░░░░░░░   0/250  기여도: 412   │  ← 전사
+│  💚 힐러캐릭   ████████ 200/200  기여도: 580   │  ← 힐 전담
+│    참여캐릭C  ██████░░ 160/200  기여도: 290   │
+│    ...                                       │
+├─────────────────────────────────────────────┤
+│  전투 로그 (최근순)                             │
+│  14:25 탱커캐릭 → 도발! (5회)                  │
+│  14:23 참여캐릭C → 일반공격 → 보스 -87         │
+│  14:23 보스 → 반격 → 탱커캐릭 -34 (도발 흡수)   │
+│  14:21 발견자캐릭 → 힐링 → 참여캐릭B +120       │
+│  14:20 초대캐릭A → 디버프 → 보스 DEF-15%       │
+│  ...                                         │
+└─────────────────────────────────────────────┘
+```
+
+### 10.3 전투 목록 페이지 (레이드 선택의 핵심)
+
+```
+┌─────────────────────────────────────────────────────┐
+│  ⚔ 진행 중인 전투                                     │
+├─────────────────────────────────────────────────────┤
+│  🔴 [BOSS] 심연의 드래곤                               │
+│     HP ██████░░░░ 6,230 / 10,000 (62%)              │
+│     ⏱ 남은 시간: 03:12:45  👥 참여자: 8명              │
+│     [참여하기]                                        │
+├─────────────────────────────────────────────────────┤
+│  🟡 [MOB x3] 어둠의 늑대 무리                          │
+│     ♦A ████░░ 312/500  ♦B ██░░░░ 180/500  ♦C 처치!  │
+│     ⏱ 남은 시간: 01:05:30  👥 참여자: 5명              │
+│     [참여하기]                                        │
+├─────────────────────────────────────────────────────┤
+│  🟢 [BOSS] 고대 골렘  ← HP 낮음! 집중 추천             │
+│     HP ██░░░░░░░░ 1,847 / 8,000 (23%)               │
+│     ⏱ 남은 시간: 00:47:12  👥 참여자: 11명             │
+│     [참여하기]                                        │
+├─────────────────────────────────────────────────────┤
+│  내 스테미나: ⚡⚡⚡○○○○○○○ (3/10)                     │
+│  다음 충전: 18:32                                     │
+└─────────────────────────────────────────────────────┘
+```
+
+- HP 비율에 따라 색상 표시 (🔴 >50%, 🟡 20~50%, 🟢 <20%)
+- 유저가 "어디에 스테미나를 쓸지" 한 눈에 판단 가능
+- 내 스테미나 현황 항상 표시
+
+### 10.4 폴링
+
+- 전투 페이지 진입 시 30초 간격 AJAX 폴링
+- 응답: 몬스터 HP, 도발 상태, 참여자 HP, 최근 로그, 전투 상태
+- 전투 종료(cleared/failed) 감지 시 → 결과 화면 전환
+
+---
+
+## 11. DB 스키마
+
+### 11.1 신규 테이블 (7개)
+
+```sql
+-- 1) 전투 스탯 (캐릭터당 1개)
+CREATE TABLE mg_battle_stat (
+    bs_id           int AUTO_INCREMENT PRIMARY KEY,
+    ch_id           int NOT NULL,               -- FK → mg_character
+    mb_id           varchar(20) NOT NULL,        -- FK → g5_member (빠른 조회용)
+    stat_hp         int DEFAULT 5,               -- 체력 투자 포인트
+    stat_str        int DEFAULT 5,               -- 근력
+    stat_dex        int DEFAULT 5,               -- 솜씨
+    stat_int        int DEFAULT 5,               -- 지력
+    stat_points     int DEFAULT 0,               -- 미배분 포인트
+    equip_weapon    int DEFAULT 0,               -- 장착 무기 (si_id, 0=미장착)
+    equip_armor     int DEFAULT 0,               -- 장착 방어구 (si_id)
+    equip_accessory int DEFAULT 0,               -- 장착 장신구 (si_id)
+    skill_slot_1    int DEFAULT 0,               -- 장착 스킬 1 (sk_id, 0=비어있음)
+    skill_slot_2    int DEFAULT 0,               -- 장착 스킬 2
+    skill_slot_3    int DEFAULT 0,               -- 장착 스킬 3
+    bs_created      datetime DEFAULT CURRENT_TIMESTAMP,
+    bs_updated      datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY (ch_id),
+    KEY (mb_id)
+);
+
+-- 2) 스테미나 (회원당 1개 — 캐릭터가 아닌 유저 단위)
+CREATE TABLE mg_battle_stamina (
+    bst_id          int AUTO_INCREMENT PRIMARY KEY,
+    mb_id           varchar(20) NOT NULL,        -- FK → g5_member
+    current_stamina int DEFAULT 5,               -- 현재 스테미나 (마지막 저장 시점)
+    max_stamina     int DEFAULT 10,              -- 최대치
+    last_charge_at  datetime DEFAULT CURRENT_TIMESTAMP,  -- 마지막 충전 시각
+    UNIQUE KEY (mb_id)
+);
+
+-- 3) 몬스터 템플릿 (관리자 등록)
+CREATE TABLE mg_battle_monster (
+    bm_id           int AUTO_INCREMENT PRIMARY KEY,
+    bm_name         varchar(100) NOT NULL,       -- 몬스터명
+    bm_image        varchar(500) DEFAULT '',     -- 이미지 경로
+    bm_type         enum('boss','mob') DEFAULT 'mob',  -- 유형
+    bm_hp           int DEFAULT 1000,            -- 최대 HP
+    bm_atk          int DEFAULT 50,              -- 공격력
+    bm_def          int DEFAULT 10,              -- 방어력
+    bm_time_limit   int DEFAULT 7200,            -- 제한 시간 (초)
+    bm_reward_point int DEFAULT 500,             -- 기본 보상 포인트
+    bm_reward_drops text,                        -- 드랍 테이블 (JSON)
+    bm_areas        text,                        -- 출현 가능 지역 (JSON: [ea_id, ...])
+    bm_mob_count    int DEFAULT 1,               -- mob 유형일 때 등장 수 (1~5)
+    bm_use          tinyint(1) DEFAULT 1,        -- 활성 여부
+    bm_order        int DEFAULT 0,               -- 정렬
+    bm_created      datetime DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 4) 전투 인카운터 (발견된 전투 인스턴스)
+CREATE TABLE mg_battle_encounter (
+    be_id           int AUTO_INCREMENT PRIMARY KEY,
+    bm_id           int NOT NULL,                -- FK → mg_battle_monster (템플릿)
+    be_type         enum('boss','mob_group') DEFAULT 'boss',
+    be_status       enum('discovered','active','cleared','failed','expired')
+                    DEFAULT 'discovered',
+    be_monsters     text,                        -- 몬스터 인스턴스 (JSON)
+                                                 -- [{idx:0, name:"...", hp:1000, max_hp:1000, atk:50, def:10}, ...]
+    be_time_limit   int DEFAULT 7200,            -- 제한 시간 (초)
+    be_reward_point int DEFAULT 500,             -- 기본 보상 포인트
+    be_reward_drops text,                        -- 드랍 테이블 (JSON, 템플릿에서 복사)
+    -- 도발 상태 (인카운터 레벨)
+    taunt_ch_id     int DEFAULT 0,               -- 도발 중인 캐릭터 ID (0=없음)
+    taunt_remaining int DEFAULT 0,               -- 도발 잔여 횟수
+    taunt_is_guard  tinyint(1) DEFAULT 0,        -- 수호 여부 (데미지 감소 적용)
+    -- 발견자 정보
+    discoverer_mb_id varchar(20) NOT NULL,       -- 발견자 회원 ID
+    discoverer_ch_id int NOT NULL,               -- 발견자 캐릭터 ID
+    ea_id           int DEFAULT 0,               -- 발견 지역 (FK → mg_expedition_area)
+    el_id           int DEFAULT 0,               -- 발견 탐사 로그 (FK → mg_expedition_log)
+    -- 타임스탬프
+    be_discovered_at datetime DEFAULT CURRENT_TIMESTAMP,
+    be_started_at   datetime DEFAULT NULL,       -- 첫 액션 시각 (타이머 시작)
+    be_ended_at     datetime DEFAULT NULL,       -- 종료 시각
+    KEY (be_status),
+    KEY (discoverer_mb_id)
+);
+
+-- 5) 참여자 슬롯
+CREATE TABLE mg_battle_slot (
+    bsl_id          int AUTO_INCREMENT PRIMARY KEY,
+    be_id           int NOT NULL,                -- FK → mg_battle_encounter
+    mb_id           varchar(20) NOT NULL,        -- 참여자 회원 ID
+    ch_id           int NOT NULL,                -- 참여 캐릭터 ID
+    slot_role       enum('discoverer','participant') DEFAULT 'participant',
+    slot_status     enum('active','dead','retreated') DEFAULT 'active',
+    current_hp      int DEFAULT 0,               -- 현재 HP
+    max_hp          int DEFAULT 0,               -- 최대 HP (입장 시 계산)
+    -- 기여도 추적
+    total_damage    int DEFAULT 0,               -- 누적 딜량
+    total_heal      int DEFAULT 0,               -- 누적 힐량
+    buff_count      int DEFAULT 0,               -- 버프 사용 횟수
+    debuff_count    int DEFAULT 0,               -- 디버프 사용 횟수
+    taunt_absorb    int DEFAULT 0,               -- 도발로 흡수한 반격 횟수
+    action_count    int DEFAULT 0,               -- 총 행동 횟수
+    -- 활성 상태 효과
+    buffs_active    text,                        -- 활성 버프 (JSON: [{type, stat, value, remaining}, ...])
+    bsl_joined_at   datetime DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY (be_id, ch_id),
+    KEY (be_id, slot_status),
+    KEY (mb_id)
+);
+
+-- 6) 전투 로그
+CREATE TABLE mg_battle_log (
+    bl_id           int AUTO_INCREMENT PRIMARY KEY,
+    be_id           int NOT NULL,                -- FK → mg_battle_encounter
+    mb_id           varchar(20) NOT NULL,        -- 행동자
+    ch_id           int NOT NULL,                -- 행동 캐릭터
+    bl_action       varchar(30) NOT NULL,        -- 행동 코드 (attack, heal, buff, taunt, ...)
+    bl_target_type  enum('monster','player','self') DEFAULT 'monster',
+    bl_target_id    int DEFAULT 0,               -- 대상 몬스터 인스턴스 idx 또는 ch_id
+    bl_damage       int DEFAULT 0,               -- 가한 데미지
+    bl_heal         int DEFAULT 0,               -- 회복량
+    bl_counter      int DEFAULT 0,               -- 반격 데미지
+    bl_counter_target_ch int DEFAULT 0,          -- 반격 받은 캐릭터 ID (도발 시 행동자≠피격자)
+    bl_is_crit      tinyint(1) DEFAULT 0,        -- 크리티컬 여부
+    bl_is_evade     tinyint(1) DEFAULT 0,        -- 반격 회피 여부
+    bl_detail       text,                        -- 상세 정보 (JSON)
+    bl_datetime     datetime DEFAULT CURRENT_TIMESTAMP,
+    KEY (be_id, bl_datetime),
+    KEY (mb_id)
+);
+
+-- 7) 스킬 정의
+CREATE TABLE mg_battle_skill (
+    sk_id           int AUTO_INCREMENT PRIMARY KEY,
+    sk_code         varchar(30) NOT NULL,        -- 코드 (power_attack, skill_attack, ...)
+    sk_name         varchar(50) NOT NULL,        -- 표시명
+    sk_desc         varchar(200) DEFAULT '',     -- 설명
+    sk_icon         varchar(100) DEFAULT '',     -- 아이콘 (이모지 or 이미지)
+    sk_type         enum('damage','heal','buff','debuff','taunt') NOT NULL,
+    sk_stamina      int DEFAULT 2,               -- 소모 스테미나
+    sk_target       enum('enemy_single','enemy_all','ally_multi','ally_all','self') NOT NULL,
+    sk_target_count int DEFAULT 1,               -- ally_multi일 때 대상 수 (기본 3)
+    sk_base_stat    enum('str','dex','int','none') DEFAULT 'dex',  -- 기반 스탯
+    sk_multiplier   decimal(3,2) DEFAULT 1.50,   -- 데미지/힐 배율
+    sk_buff_stat    varchar(20) DEFAULT '',       -- 버프/디버프 대상 (atk, satk, def)
+    sk_buff_value   int DEFAULT 0,               -- 버프/디버프 수치 (%)
+    sk_buff_turns   int DEFAULT 3,               -- 지속 횟수
+    sk_guard_reduction int DEFAULT 0,            -- 수호 시 데미지 감소율 (%)
+    sk_unlock_type  enum('default','shop','drop','achievement') DEFAULT 'default',
+    sk_unlock_ref   int DEFAULT 0,               -- 해금 참조 ID (si_id 또는 achievement_id)
+    sk_use          tinyint(1) DEFAULT 1,        -- 활성
+    sk_order        int DEFAULT 0                -- 정렬
+);
+```
+
+### 11.2 기존 테이블 수정
+
+```sql
+-- mg_expedition_event.ee_effect_type에 'battle_encounter' 추가
+-- (enum 확장 또는 varchar로 변경)
+ALTER TABLE mg_expedition_event
+    MODIFY ee_effect_type varchar(30) DEFAULT 'point_bonus';
+
+-- mg_shop_item.si_type에 전투 관련 타입 추가
+-- (이미 varchar라면 값만 추가하면 됨)
+-- 새 si_type 값: battle_weapon, battle_armor, battle_accessory, battle_consumable, battle_skill_book
+```
+
+### 11.3 기본 스킬 시드 데이터
+
+```sql
+INSERT INTO mg_battle_skill (sk_code, sk_name, sk_desc, sk_icon, sk_type, sk_stamina, sk_target, sk_base_stat, sk_multiplier, sk_buff_stat, sk_buff_value, sk_buff_turns, sk_guard_reduction, sk_unlock_type, sk_order) VALUES
+-- 물리 계열 (STR)
+('power_attack',  '강타',     'STR 기반 강화 물리 공격',     '💥', 'damage', 2, 'enemy_single', 'str', 1.50, '', 0, 0, 0, 'default', 1),
+-- 스킬 계열 (DEX)
+('skill_attack',  '스킬공격',  'DEX 기반 스킬 데미지',       '🎯', 'damage', 2, 'enemy_single', 'dex', 1.50, '', 0, 0, 0, 'default', 2),
+('aoe_attack',    '전체공격',  '모든 적에게 DEX 기반 데미지',  '🌀', 'damage', 3, 'enemy_all',    'dex', 0.60, '', 0, 0, 0, 'shop',    3),
+-- 서포트 계열 (INT)
+('heal',          '힐링',     '아군 3명 HP 회복',            '💚', 'heal',   2, 'ally_multi',   'int', 1.00, '', 0, 0, 0, 'default', 4),
+('aoe_heal',      '전체힐',   '모든 아군 HP 회복 (0.4배)',    '💖', 'heal',   3, 'ally_all',     'int', 0.40, '', 0, 0, 0, 'shop',    5),
+('buff',          '버프',     '아군 공격력 일시 증가',         '⬆️', 'buff',   2, 'ally_single',  'int', 0.00, 'atk', 20, 3, 0, 'shop',  6),
+('debuff',        '디버프',   '적 방어력 일시 감소',           '⬇️', 'debuff', 2, 'enemy_single', 'int', 0.00, 'def', 20, 3, 0, 'shop',  7),
+-- 탱커 계열
+('taunt',         '도발',     '모든 반격이 나에게 집중',       '🛡️', 'taunt',  2, 'self',         'none', 0.00, '', 0, 5, 0,  'shop',  8),
+('guard',         '수호',     '도발 + 받는 데미지 30% 감소',   '🏰', 'taunt',  3, 'self',         'none', 0.00, '', 0, 5, 30, 'shop',  9);
+```
+
+---
+
+## 12. 페이지 & API
+
+### 12.1 프론트 페이지
+
+| 파일 | 설명 |
+|------|------|
+| `theme/morgan/skin/battle/list.skin.php` | 진행중/완료 전투 목록 |
+| `theme/morgan/skin/battle/view.skin.php` | 전투 페이지 (메인 UI) |
+| `theme/morgan/skin/battle/result.skin.php` | 전투 결과 화면 |
+| `theme/morgan/skin/battle/stat.skin.php` | 내 전투 스탯/장비/스킬 세팅 |
+
+### 12.2 백엔드 API
+
+| 파일 | 메서드 | 설명 |
+|------|--------|------|
+| `plugin/morgan/battle/battle.php` | — | 전투 시스템 함수 모음 |
+| `plugin/morgan/battle/action.php` | POST | 전투 행동 처리 (공격/스킬/아이템) |
+| `plugin/morgan/battle/join.php` | POST | 전투 참여 |
+| `plugin/morgan/battle/invite.php` | POST | 초대 수락/거절 |
+| `plugin/morgan/battle/poll.php` | GET | 전투 상태 폴링 (JSON) |
+| `plugin/morgan/battle/stat_update.php` | POST | 스탯 배분/초기화 |
+| `plugin/morgan/battle/equip.php` | POST | 장비/스킬 장착 |
+| `plugin/morgan/battle/use_item.php` | POST | 소모품 사용 (부활, 회복 등) |
+
+### 12.3 관리자 페이지
+
+| 파일 | 설명 |
+|------|------|
+| `adm/morgan/battle_config.php` | 전투 글로벌 설정 |
+| `adm/morgan/battle_monster.php` | 몬스터 목록 |
+| `adm/morgan/battle_monster_form.php` | 몬스터 생성/편집 |
+| `adm/morgan/battle_skill.php` | 스킬 목록 |
+| `adm/morgan/battle_skill_form.php` | 스킬 생성/편집 |
+| `adm/morgan/battle_log.php` | 전투 기록/통계 |
+
+---
+
+## 13. 연동 포인트
+
+| 기존 시스템 | 연동 방식 |
+|------------|----------|
+| 탐사 (expedition) | 탐사 완료 시 `battle_encounter` 확률 발생 |
+| 상점 (shop) | 장비/소모품/스킬북 구매 |
+| 인벤토리 (inventory) | 장비 보유, 소모품 차감 |
+| 알림 (notification) | 전투 발견/초대/종료 알림 |
+| 포인트 (point) | 보상 포인트 지급 (`insert_point()`) |
+| 캐릭터 (character) | 스탯 연결 (`ch_id`), 프로필 표시 |
+| 캐릭터 관계 (relation) | 초대 대상 조회 |
+| 업적 (achievement) | 전투 업적 트리거 (첫 전투, MVP, 보스 처치 등) |
+| 사이드바 (head.php) | 전투 메뉴 + 활성 전투 뱃지 |
+| 헤더 배너 | 활성 전투 있을 때 상단 알림 배너 |
+| 게시판 (오너란/메모란) | 전략 소통 채널 (시스템 연동은 아님, 유저 자발적 활용) |
+
+---
+
+## 14. 구현 순서
+
+| 단계 | 내용 | 의존성 |
+|------|------|--------|
+| 1 | DB 테이블 7개 생성 + 기존 테이블 수정 | — |
+| 2 | 스탯/스테미나 시스템 + 세팅 페이지 | 1 |
+| 3 | 몬스터 관리자 CRUD | 1 |
+| 4 | 스킬 관리자 CRUD + 기본 스킬 시드 | 1 |
+| 5 | 전투 조우 생성 + 탐사 연동 | 1, 3 |
+| 6 | 전투 페이지 UI + 참여 시스템 | 2, 5 |
+| 7 | 행동 처리 로직 (핵심 전투 엔진 — 도발 포함) | 2, 4, 6 |
+| 8 | 보상 분배 | 7 |
+| 9 | 알림 + 헤더 배너 | 5, 8 |
+| 10 | 장비 상점 연동 + 소모품 | 2, 7 |
+| 11 | 사이드바 메뉴 추가 | 6 |
+| 12 | 밸런스 테스트 + 조정 | 전체 |
+
+---
+
+## 15. 밸런스 노트
+
+### 참고 수치 (초기 세팅)
+
+| 항목 | 값 | 근거 |
+|------|-----|------|
+| 일반몹 HP | 500~1,500 | 10명이 평균 데미지 50씩 10~30회 공격 |
+| 보스 HP | 5,000~20,000 | 10명이 수 시간에 걸쳐 공략 |
+| 몬스터 ATK | 20~80 | 플레이어 HP(200~400) 대비 5~15% |
+| 플레이어 평균 HP | 200~400 | stat_hp 5~15 + 장비 보정 |
+| 평균 일반공격 데미지 | 30~80 | str 5~15 → ATK 10~30 + 무기 |
+| 스킬 데미지 | 50~150 | 일반공격의 1.5~2배 |
+| 힐량 | 50~120 | 반격 2~3회분 |
+| 도발 탱커 HP | 400~700 | HP 몰빵 → 반격 10~15회 견딤 |
+| 동시 레이드 수 | 3~5개 | 탐사 발생률 + 제한시간으로 조절 |
+| 레이드당 평균 참여 | 5~15명 | 유저 30명 기준, 스테미나 분산 |
+
+### STR vs DEX 밸런스 기준
+
+```
+STR 딜러: 일반공격(1소모) * 10회 = str*2*10 = 20str 만큼의 누적 데미지
+DEX 딜러: 스킬공격(2소모) * 5회  = dex*2*1.5*5 = 15dex 만큼의 누적 데미지
+
+→ 같은 스테미나 10을 쓸 때:
+  STR 20포인트 = 누적 400
+  DEX 20포인트 = 누적 300 (크리 장비로 보완)
+→ STR이 효율적이지만, DEX는 크리 장비와 시너지 + 전체공격 가능
+```
+
+### 힐러 효율 분석
+
+```
+INT 20 힐러, 스테미나 10 전부 힐에 투입:
+  힐링(3명, 2소모) × 5회 = 15명분 회복
+  1인당 회복량 = int*2*1.0 = 40
+  총 힐량 = 40 * 15 = 600 → 기여도 600
+
+STR 20 딜러, 스테미나 10 전부 일반공격:
+  일반공격(1소모) × 10회
+  1회 데미지 = str*2 + 무기 - 몬스터DEF ≈ 50
+  총 딜량 = 500 → 기여도 500
+
+→ 힐 전담 힐러의 기여도가 딜러와 동등하거나 약간 높음
+→ 힐러가 힐만 해도 보상에서 불이익 없음
+```
+
+> 실제 밸런스는 테스트 플레이 후 조정.
+> `mg_config`로 주요 계수를 관리자 설정 가능하게 두면 코드 수정 없이 조정 가능.
+> 탱커/서포터 역할이 밸런스에 안 맞으면 도발/힐 스킬을 비활성화하고 전원 딜러 체제 전환 가능.
