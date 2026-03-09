@@ -56,7 +56,7 @@ include_once('./_head.php');
 
 // 현재 설정값 로드
 $cfg = array(
-    'battle_use'                    => mg_config('battle_use', '0'),
+    'battle_use'                    => mg_config('battle_use', '1'),
     'battle_energy_max'             => mg_config('battle_energy_max', '10'),
     'battle_energy_interval'        => mg_config('battle_energy_interval', '1800'),
     'battle_energy_initial'         => mg_config('battle_energy_initial', '5'),

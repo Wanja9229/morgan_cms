@@ -11,7 +11,7 @@ include_once(G5_PATH.'/plugin/morgan/morgan.php');
 
 header('Content-Type: application/json; charset=utf-8');
 
-if (mg_config('battle_use', '0') != '1') {
+if (mg_config('battle_use', '1') != '1') {
     echo json_encode(array('success' => false, 'message' => '전투 기능이 비활성화되어 있습니다.'));
     exit;
 }

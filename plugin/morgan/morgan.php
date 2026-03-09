@@ -5126,7 +5126,7 @@ function mg_reward_material_from_config($mb_id, $config) {
  * @return bool
  */
 function mg_pioneer_enabled() {
-    return mg_config('pioneer_enabled', '1') === '1';
+    return mg_config('pioneer_use', '1') === '1';
 }
 
 // ======================================

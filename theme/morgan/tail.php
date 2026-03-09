@@ -656,7 +656,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
 
         <?php
         // ─── 활성 전투 위젯 (하단 고정) ───
-        if ($is_member && function_exists('mg_config') && mg_config('battle_use', '0') === '1') {
+        if ($is_member && function_exists('mg_config') && mg_config('battle_use', '1') === '1') {
             $_battle_encounters = array();
             $_be_res = sql_query("SELECT e.be_id, e.be_status, e.be_time_limit, e.be_started_at, e.be_monsters,
                                          m.bm_name, m.bm_image, a.ea_name

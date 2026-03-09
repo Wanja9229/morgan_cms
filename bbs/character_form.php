@@ -551,7 +551,7 @@ include_once(G5_THEME_PATH.'/head.php');
 
             <?php
             // 전투 스탯 분배 UI (전투 기능 활성화 시)
-            $_battle_use = function_exists('mg_config') ? mg_config('battle_use', '0') : '0';
+            $_battle_use = function_exists('mg_config') ? mg_config('battle_use', '1') : '0';
             if ($_battle_use == '1') {
                 $_stat_base = (int)mg_config('battle_stat_base', '5');
                 $_stat_bonus = (int)mg_config('battle_stat_bonus_points', '15');

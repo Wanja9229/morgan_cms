@@ -11,7 +11,7 @@ include_once('./_common.php');
 include_once(G5_PATH.'/plugin/morgan/morgan.php');
 include_once(G5_PATH.'/plugin/morgan/training.php');
 
-if (mg_config('battle_use', '0') != '1' || mg_config('battle_training_use', '0') != '1') {
+if (mg_config('battle_use', '1') != '1' || mg_config('battle_training_use', '1') != '1') {
     alert_close('수업 스케줄 기능이 비활성화되어 있습니다.');
 }
 if (!$is_member) {

@@ -131,16 +131,28 @@ if (!empty($profile_bg_color) && $profile_bg_color !== '#f59f0a') {
 
 // 전투 스탯 조회
 $battle_stat = null;
-$_battle_use = function_exists('mg_config') ? mg_config('battle_use', '0') : '0';
+$_battle_use = function_exists('mg_config') ? mg_config('battle_use', '1') : '1';
 if ($_battle_use == '1') {
     $battle_stat = sql_fetch("SELECT * FROM {$g5['mg_battle_stat_table']} WHERE ch_id = {$ch_id}");
+    // 스탯 데이터 없으면 기본값으로 생성
+    if (!$battle_stat || !$battle_stat['bs_id']) {
+        $_stat_base = (int)mg_config('battle_stat_base', '5');
+        $battle_stat = array(
+            'bs_id' => 0,
+            'stat_hp' => $_stat_base,
+            'stat_str' => $_stat_base,
+            'stat_dex' => $_stat_base,
+            'stat_int' => $_stat_base,
+            'stat_stress' => 0,
+        );
+    }
 }
 
 // 프로필 템플릿 렌더링
 include($skin_template);
 
-// 전투 스탯 표시 (전투 기능 활성화 + 스탯 존재 시)
-if ($_battle_use == '1' && $battle_stat && $battle_stat['bs_id']) {
+// 전투 스탯 표시 (전투 기능 활성화 시)
+if ($_battle_use == '1' && $battle_stat) {
     $_stat_base = (int)mg_config('battle_stat_base', '5');
     $_stat_labels = array(
         'stat_hp'  => array('HP', '체력'),

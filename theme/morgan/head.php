@@ -87,8 +87,8 @@ $_current_la_id = ($_current_script === 'lore_view.php' && isset($_GET['la_id'])
 $_show_rp = function_exists('mg_config') ? mg_config('rp_use', '1') : '1';
 $_show_mission = function_exists('mg_config') ? mg_config('prompt_enable', '1') : '1';
 $_show_concierge = function_exists('mg_config') ? mg_config('concierge_use', '1') : '1';
-$_show_battle = function_exists('mg_config') ? mg_config('battle_use', '0') : '0';
-$_show_training = ($_show_battle === '1' && (function_exists('mg_config') ? mg_config('battle_training_use', '0') : '0') === '1');
+$_show_battle = function_exists('mg_config') ? mg_config('battle_use', '1') : '1';
+$_show_training = ($_show_battle === '1' && (function_exists('mg_config') ? mg_config('battle_training_use', '1') : '1') === '1');
 
 // 개척 시스템: 유저 스테미나
 $_user_stamina = null;

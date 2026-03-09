@@ -401,7 +401,7 @@ foreach ($profile as $pf_id => $pv_value) {
 }
 
 // 전투 스탯 저장
-$_battle_use = function_exists('mg_config') ? mg_config('battle_use', '0') : '0';
+$_battle_use = function_exists('mg_config') ? mg_config('battle_use', '1') : '0';
 if ($_battle_use == '1' && isset($_POST['battle_stat']) && is_array($_POST['battle_stat'])) {
     $_stat_base = (int)mg_config('battle_stat_base', '5');
     $_stat_bonus = (int)mg_config('battle_stat_bonus_points', '15');

@@ -11,7 +11,7 @@
 include_once('./_common.php');
 include_once(G5_PATH.'/plugin/morgan/morgan.php');
 
-if (mg_config('battle_use', '0') != '1') {
+if (mg_config('battle_use', '1') != '1') {
     alert_close('전투 기능이 비활성화되어 있습니다.');
 }
 if (!$is_member) {
@@ -115,7 +115,7 @@ $api_url = G5_BBS_URL . '/battle_api.php';
 
 <?php
 $map_image = mg_config('expedition_map_image', '');
-$_training_use = mg_config('battle_training_use', '0');
+$_training_use = mg_config('battle_training_use', '1');
 ?>
 <?php if ($mode === 'list') { ?>
 <!-- ═══════════════════════════════════

@@ -9,7 +9,7 @@ include_once(G5_PATH.'/plugin/morgan/training.php');
 
 header('Content-Type: application/json; charset=utf-8');
 
-if (mg_config('battle_use', '0') != '1' || mg_config('battle_training_use', '0') != '1') {
+if (mg_config('battle_use', '1') != '1' || mg_config('battle_training_use', '1') != '1') {
     echo json_encode(array('success' => false, 'message' => '수업 스케줄 기능이 비활성화되어 있습니다.'));
     exit;
 }
