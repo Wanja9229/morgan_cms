@@ -50,4 +50,8 @@ $menu["menu800"] = array(
     array('801110', '파견지 관리', $mg_admin_url . '/expedition_area.php', 'mg_expedition'),
     array('801115', '파견 이벤트', $mg_admin_url . '/expedition_event.php', 'mg_expedition_event'),
     array('801120', '파견 기록', $mg_admin_url . '/expedition_log.php', 'mg_expedition_log'),
+    // 전투
+    array('801900', '전투 설정', $mg_admin_url . '/battle_config.php', 'mg_battle', '전투'),
+    array('801910', '몬스터 관리', $mg_admin_url . '/battle_monster.php', 'mg_battle_monster'),
+    array('801920', '스킬 관리', $mg_admin_url . '/battle_skill.php', 'mg_battle_skill'),
 );
