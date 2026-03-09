@@ -27,6 +27,11 @@
             this.initSearch();
             this.initMobileMenu();
             this.router.init();
+
+            // Lucide 아이콘 렌더링
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
         },
 
         // 사이드바 토글 (모바일)
@@ -358,6 +363,11 @@
                     // 새 콘텐츠의 스크립트 실행
                     this.executeScripts();
 
+                    // Lucide 아이콘 재렌더링
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                    }
+
                     console.log('SPA: Loaded', url);
 
                     // 히든 이벤트 체크 트리거
@@ -446,6 +456,10 @@
                         activeId = 'pioneer';
                     } else if (script === 'concierge.php' || script === 'concierge_view.php' || script === 'concierge_write.php') {
                         activeId = 'concierge';
+                    } else if (script === 'battle.php') {
+                        activeId = 'battle';
+                    } else if (script === 'training.php') {
+                        activeId = 'training';
                     }
 
                     var isLore = (activeId === 'lore');

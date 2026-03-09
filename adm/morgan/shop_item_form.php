@@ -206,7 +206,7 @@ require_once __DIR__.'/_head.php';
                             <div style="display:flex;gap:1rem;margin-bottom:0.5rem;">
                                 <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
                                     <input type="radio" name="badge_icon_type" value="text" <?php echo !$badge_is_image ? 'checked' : ''; ?> onchange="toggleBadgeIconInput();">
-                                    <span>Heroicons 이름</span>
+                                    <span>Lucide Icons 이름</span>
                                 </label>
                                 <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
                                     <input type="radio" name="badge_icon_type" value="file" <?php echo $badge_is_image ? 'checked' : ''; ?> onchange="toggleBadgeIconInput();">
@@ -214,8 +214,8 @@ require_once __DIR__.'/_head.php';
                                 </label>
                             </div>
                             <div id="badge_icon_text" style="<?php echo $badge_is_image ? 'display:none;' : ''; ?>">
-                                <input type="text" name="effect[badge_icon]" id="effect_badge_icon" value="<?php echo htmlspecialchars(!$badge_is_image ? $badge_icon : ''); ?>" class="mg-form-input" placeholder="예: star, heart, shield">
-                                <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;">Heroicons 아이콘명 입력</div>
+                                <input type="text" name="effect[badge_icon]" id="effect_badge_icon" value="<?php echo htmlspecialchars(!$badge_is_image ? $badge_icon : ''); ?>" class="mg-form-input" placeholder="예: star, heart, shield (lucide.dev/icons)">
+                                <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-top:0.25rem;">Lucide Icons 아이콘명 입력 (<a href="https://lucide.dev/icons/" target="_blank" style="color:var(--mg-accent);">lucide.dev/icons</a>)</div>
                             </div>
                             <div id="badge_icon_file" style="<?php echo !$badge_is_image ? 'display:none;' : ''; ?>">
                                 <?php if ($badge_is_image) { ?>

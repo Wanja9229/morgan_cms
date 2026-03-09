@@ -77,6 +77,8 @@ $_is_notification_page = ($_current_script === 'notification.php');
 $_is_inventory_page = ($_current_script === 'inventory.php');
 $_is_concierge_page = in_array($_current_script, array('concierge.php', 'concierge_view.php', 'concierge_write.php')) || $_is_concierge_result;
 $_is_pioneer_page = ($_current_script === 'pioneer.php');
+$_is_battle_page = ($_current_script === 'battle.php');
+$_is_training_page = ($_current_script === 'training.php');
 $_is_mypage = in_array($_current_script, array('mypage.php', 'seal_edit.php'));
 $_is_lore_page = in_array($_current_script, array('lore.php', 'lore_view.php', 'lore_timeline.php', 'lore_map.php'));
 $_current_la_id = ($_current_script === 'lore_view.php' && isset($_GET['la_id'])) ? (int)$_GET['la_id'] : 0;
@@ -85,6 +87,8 @@ $_current_la_id = ($_current_script === 'lore_view.php' && isset($_GET['la_id'])
 $_show_rp = function_exists('mg_config') ? mg_config('rp_use', '1') : '1';
 $_show_mission = function_exists('mg_config') ? mg_config('prompt_enable', '1') : '1';
 $_show_concierge = function_exists('mg_config') ? mg_config('concierge_use', '1') : '1';
+$_show_battle = function_exists('mg_config') ? mg_config('battle_use', '0') : '0';
+$_show_training = ($_show_battle === '1' && (function_exists('mg_config') ? mg_config('battle_training_use', '0') : '0') === '1');
 
 // 개척 시스템: 유저 스테미나
 $_user_stamina = null;
@@ -223,9 +227,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
             ?>
             <div class="relative" id="mg-noti-wrap">
                 <button type="button" id="mg-noti-toggle" class="relative text-mg-text-secondary hover:text-mg-text-primary transition-colors p-1.5" title="알림">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                    </svg>
+                    <i data-lucide="bell" class="w-5 h-5"></i>
                     <span id="mg-noti-badge" class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-mg-error text-white text-[10px] font-bold rounded-full flex items-center justify-center <?php echo $mg_noti_count > 0 ? '' : 'hidden'; ?>"><?php echo $mg_noti_count > 99 ? '99+' : $mg_noti_count; ?></span>
                 </button>
 
@@ -250,9 +252,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
             </a>
             <!-- 우측 사이드바 토글 (모바일/태블릿) -->
             <button id="widget-toggle" class="lg:hidden text-mg-text-secondary hover:text-mg-text-primary p-1.5" type="button" aria-label="내 정보">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                </svg>
+                <i data-lucide="user" class="w-5 h-5"></i>
             </button>
         <?php } else { ?>
             <!-- 비로그인 상태 -->
@@ -264,9 +264,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
             </a>
             <!-- 우측 사이드바 토글 (모바일/태블릿) -->
             <button id="widget-toggle" class="lg:hidden text-mg-text-secondary hover:text-mg-text-primary p-1.5" type="button" aria-label="메뉴">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                </svg>
+                <i data-lucide="user" class="w-5 h-5"></i>
             </button>
         <?php } ?>
     </nav>
@@ -301,9 +299,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
     <aside id="sidebar" class="w-14 bg-mg-bg-secondary fixed left-0 top-12 bottom-0 hidden lg:flex flex-col items-center py-3 gap-2 border-r border-mg-bg-tertiary z-40 overflow-y-auto">
         <!-- 홈 -->
         <a href="<?php echo G5_URL; ?>" class="sidebar-icon group <?php echo $_is_home ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="홈" data-sidebar-id="home">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-            </svg>
+            <i data-lucide="home" class="w-6 h-6"></i>
         </a>
 
         <div class="w-8 h-px bg-mg-bg-tertiary my-1"></div>
@@ -311,77 +307,67 @@ if (isset($is_ajax_request) && $is_ajax_request) {
         <!-- 세계관 위키 (2뎁스) -->
         <?php if (mg_config('lore_use', '1') == '1') { ?>
         <button id="sidebar-lore-toggle" class="sidebar-icon group <?php echo $_is_lore_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="세계관 위키" type="button" data-sidebar-id="lore">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-            </svg>
+            <i data-lucide="book-open" class="w-6 h-6"></i>
         </button>
         <?php } ?>
 
         <!-- 캐릭터 목록 -->
         <a href="<?php echo G5_BBS_URL; ?>/character_list.php" class="sidebar-icon group <?php echo $_is_character_list_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="캐릭터 목록" data-sidebar-id="character_list">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-            </svg>
+            <i data-lucide="users" class="w-6 h-6"></i>
         </a>
 
         <div class="w-8 h-px bg-mg-bg-tertiary my-1"></div>
 
         <!-- 게시판 메뉴 (2뎁스) -->
         <button id="sidebar-board-toggle" class="sidebar-icon group <?php echo $_is_community_section ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="게시판" type="button" data-sidebar-id="board">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-            </svg>
+            <i data-lucide="square-pen" class="w-6 h-6"></i>
         </button>
 
         <!-- 역극 -->
         <?php if ($_show_rp == '1') { ?>
         <a href="<?php echo G5_BBS_URL; ?>/rp_list.php" class="sidebar-icon group <?php echo $_is_rp_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="역극" data-sidebar-id="rp">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-            </svg>
+            <i data-lucide="message-circle" class="w-6 h-6"></i>
         </a>
         <?php } ?>
 
         <!-- 미션 -->
         <?php if ($_show_mission == '1') { ?>
         <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=mission" class="sidebar-icon group <?php echo $_is_mission_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="미션" data-sidebar-id="mission">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-            </svg>
+            <i data-lucide="clipboard-check" class="w-6 h-6"></i>
         </a>
         <?php } ?>
 
         <!-- 의뢰 -->
         <?php if ($_show_concierge == '1') { ?>
         <a href="<?php echo G5_BBS_URL; ?>/concierge.php" class="sidebar-icon group <?php echo $_is_concierge_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="의뢰" data-sidebar-id="concierge">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-            </svg>
+            <i data-lucide="briefcase" class="w-6 h-6"></i>
         </a>
         <?php } ?>
 
-        <div class="w-8 h-px bg-mg-bg-tertiary my-1"></div>
-
         <!-- 상점 -->
         <a href="<?php echo G5_BBS_URL; ?>/shop.php" class="sidebar-icon group <?php echo $_is_shop_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="상점" data-sidebar-id="shop">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-            </svg>
+            <i data-lucide="shopping-bag" class="w-6 h-6"></i>
         </a>
 
-        <!-- 알림 -->
-        <a href="<?php echo G5_BBS_URL; ?>/notification.php" class="sidebar-icon group <?php echo $_is_notification_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="알림" data-sidebar-id="notification">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-            </svg>
+        <div class="w-8 h-px bg-mg-bg-tertiary my-1"></div>
+
+        <!-- 전투 -->
+        <?php if ($_show_battle == '1') { ?>
+        <a href="<?php echo G5_BBS_URL; ?>/battle.php" class="sidebar-icon group <?php echo $_is_battle_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="전투" data-sidebar-id="battle">
+            <i data-lucide="swords" class="w-6 h-6"></i>
         </a>
+        <?php } ?>
+        <!-- 수업 스케줄 -->
+        <?php if ($_show_training) { ?>
+        <a href="<?php echo G5_BBS_URL; ?>/training.php" class="sidebar-icon group <?php echo $_is_training_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="수업 스케줄" data-sidebar-id="training">
+            <i data-lucide="graduation-cap" class="w-6 h-6"></i>
+        </a>
+        <?php } ?>
 
         <!-- 개척 -->
         <?php if ($is_member && $_user_stamina) { ?>
         <a href="<?php echo G5_BBS_URL; ?>/pioneer.php" class="sidebar-icon group relative <?php echo $_is_pioneer_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="개척 (스테미나: <?php echo $_user_stamina['current']; ?>/<?php echo $_user_stamina['max']; ?>)" data-sidebar-id="pioneer">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-            </svg>
+            <i data-lucide="landmark" class="w-6 h-6"></i>
             <?php if ($_user_stamina['current'] > 0) { ?>
             <span class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-mg-success text-white text-[9px] font-bold rounded-full flex items-center justify-center"><?php echo $_user_stamina['current']; ?></span>
             <?php } ?>
@@ -391,13 +377,17 @@ if (isset($is_ajax_request) && $is_ajax_request) {
         <!-- 구분선 -->
         <div class="flex-1"></div>
 
+        <div class="w-8 h-px bg-mg-bg-tertiary my-1"></div>
+
+        <!-- 알림 -->
+        <a href="<?php echo G5_BBS_URL; ?>/notification.php" class="sidebar-icon group <?php echo $_is_notification_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="알림" data-sidebar-id="notification">
+            <i data-lucide="bell" class="w-6 h-6"></i>
+        </a>
+
         <!-- 설정 (관리자만) -->
         <?php if ($is_admin) { ?>
         <a href="<?php echo G5_ADMIN_URL; ?>/morgan/config.php" class="sidebar-icon group" title="관리자">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-            </svg>
+            <i data-lucide="settings" class="w-6 h-6"></i>
         </a>
         <?php } ?>
     </aside>

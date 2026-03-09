@@ -137,9 +137,7 @@ include_once(G5_THEME_PATH.'/head.php');
     <!-- 페이지 헤더 -->
     <div class="mb-6">
         <a href="<?php echo G5_BBS_URL; ?>/character.php" class="inline-flex items-center gap-1 text-sm text-mg-text-muted hover:text-mg-accent transition-colors mb-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-            </svg>
+            <i data-lucide="chevron-left" class="w-4 h-4"></i>
             <span>내 캐릭터</span>
         </a>
         <h1 class="text-2xl font-bold text-mg-text-primary"><?php echo $is_edit ? '캐릭터 수정' : '새 캐릭터 만들기'; ?></h1>
@@ -154,9 +152,7 @@ include_once(G5_THEME_PATH.'/head.php');
     ?>
     <div class="rounded-lg p-4 mb-4" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);">
         <div class="flex items-start gap-3">
-            <svg class="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-            </svg>
+            <i data-lucide="alert-triangle" class="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5"></i>
             <div>
                 <p class="font-medium text-red-400">캐릭터가 반려되었습니다</p>
                 <?php if ($reject_log['log_memo']) { ?>
@@ -307,9 +303,7 @@ include_once(G5_THEME_PATH.'/head.php');
                                 <img id="thumb-preview" src="<?php echo MG_CHAR_IMAGE_URL.'/'.$char['ch_thumb']; ?>" alt="" class="w-full h-full object-cover">
                                 <?php } else { ?>
                                 <div id="thumb-preview" class="w-full h-full flex items-center justify-center text-mg-text-muted">
-                                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                    </svg>
+                                    <i data-lucide="image" class="w-10 h-10"></i>
                                 </div>
                                 <?php } ?>
                             </div>
@@ -336,9 +330,7 @@ include_once(G5_THEME_PATH.'/head.php');
                                 <img id="body-preview" src="<?php echo MG_CHAR_IMAGE_URL.'/'.$char['ch_image']; ?>" alt="" class="w-full h-full object-cover">
                                 <?php } else { ?>
                                 <div id="body-preview" class="w-full h-full flex items-center justify-center text-mg-text-muted">
-                                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                    </svg>
+                                    <i data-lucide="image" class="w-10 h-10"></i>
                                 </div>
                                 <?php } ?>
                             </div>
@@ -365,9 +357,7 @@ include_once(G5_THEME_PATH.'/head.php');
                                 <img id="header-preview" src="<?php echo MG_CHAR_IMAGE_URL.'/'.$char['ch_header']; ?>" alt="" class="w-full h-full object-cover">
                                 <?php } else { ?>
                                 <div id="header-preview" class="w-full h-full flex items-center justify-center text-mg-text-muted">
-                                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                    </svg>
+                                    <i data-lucide="image" class="w-10 h-10"></i>
                                 </div>
                                 <?php } ?>
                             </div>
@@ -542,6 +532,95 @@ include_once(G5_THEME_PATH.'/head.php');
             </div>
             <?php } ?>
 
+            <?php
+            // 전투 스탯 분배 UI (전투 기능 활성화 시)
+            $_battle_use = function_exists('mg_config') ? mg_config('battle_use', '0') : '0';
+            if ($_battle_use == '1') {
+                $_stat_base = (int)mg_config('battle_stat_base', '5');
+                $_stat_bonus = (int)mg_config('battle_stat_bonus_points', '15');
+
+                // 수정 모드: 기존 스탯 로드
+                $_stat_values = array('stat_hp' => $_stat_base, 'stat_str' => $_stat_base, 'stat_dex' => $_stat_base, 'stat_int' => $_stat_base, 'stat_con' => $_stat_base, 'stat_luk' => $_stat_base);
+                $_stat_used = 0;
+                $_stat_locked = 0;
+                if ($is_edit) {
+                    $bs_row = sql_fetch("SELECT * FROM {$g5['mg_battle_stat_table']} WHERE ch_id = {$ch_id}");
+                    if ($bs_row) {
+                        $_stat_locked = (int)($bs_row['stat_locked'] ?? 0);
+                        foreach ($_stat_values as $k => $v) {
+                            $_stat_values[$k] = (int)($bs_row[$k] ?? $_stat_base);
+                            $_stat_used += max(0, $_stat_values[$k] - $_stat_base);
+                        }
+                    }
+                }
+                $_stat_remaining = $_stat_bonus - $_stat_used;
+
+                $_stat_labels = array(
+                    'stat_hp' => array('HP', '체력', '최대 HP에 영향'),
+                    'stat_str' => array('STR', '힘', '물리 공격력에 영향'),
+                    'stat_dex' => array('DEX', '민첩', '명중/회피에 영향'),
+                    'stat_int' => array('INT', '지능', '마법 공격력에 영향'),
+                    'stat_con' => array('CON', '근성', '방어력에 영향'),
+                    'stat_luk' => array('LUK', '행운', '치명타/드롭에 영향'),
+                );
+            ?>
+            <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
+                <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary">
+                    <h2 class="font-medium text-mg-text-primary flex items-center gap-2">
+                        전투 스탯
+                        <?php if ($_stat_locked) { ?>
+                        <span class="text-xs text-mg-text-muted flex items-center gap-1">
+                            <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                            확정됨
+                        </span>
+                        <?php } else { ?>
+                        <span id="stat-remaining" class="text-sm font-bold text-mg-accent">(잔여 포인트: <span id="stat-remaining-val"><?php echo $_stat_remaining; ?></span>)</span>
+                        <?php } ?>
+                    </h2>
+                </div>
+                <div class="p-4">
+                    <?php if ($_stat_locked) { ?>
+                    <p class="text-xs text-mg-text-muted mb-4">스탯이 확정되었습니다. 스탯 초기화 아이템을 사용하면 재분배할 수 있습니다.</p>
+                    <div class="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                        <?php foreach ($_stat_labels as $skey => $slabel) { ?>
+                        <div class="text-center p-2 rounded-lg bg-mg-bg-primary/50">
+                            <div class="text-xs font-bold text-mg-accent" style="font-family:'Bebas Neue',monospace;letter-spacing:0.1em;"><?php echo $slabel[0]; ?></div>
+                            <div class="text-lg font-bold text-mg-text-primary"><?php echo $_stat_values[$skey]; ?></div>
+                            <div class="text-[10px] text-mg-text-muted"><?php echo $slabel[1]; ?></div>
+                        </div>
+                        <?php } ?>
+                    </div>
+                    <?php } else { ?>
+                    <p class="text-xs text-mg-text-muted mb-4">
+                        기본값 <?php echo $_stat_base; ?> / 자유 분배 포인트 <?php echo $_stat_bonus; ?>. 기본값 이하로는 낮출 수 없습니다.<br>
+                        <strong class="text-mg-accent">저장하면 스탯이 확정됩니다.</strong> 이후 변경은 초기화 아이템이 필요합니다.
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <?php foreach ($_stat_labels as $skey => $slabel) { ?>
+                        <div class="flex items-center gap-3 p-2 rounded-lg bg-mg-bg-primary/50">
+                            <div style="min-width:56px;">
+                                <span class="text-xs font-bold text-mg-accent" style="font-family:'Bebas Neue',monospace; letter-spacing:0.1em;"><?php echo $slabel[0]; ?></span>
+                                <span class="text-xs text-mg-text-muted ml-1"><?php echo $slabel[1]; ?></span>
+                            </div>
+                            <div class="flex items-center gap-1.5 ml-auto">
+                                <button type="button" onclick="statAdjust('<?php echo $skey; ?>', -1)"
+                                        class="stat-btn-minus w-7 h-7 flex items-center justify-center rounded bg-mg-bg-tertiary text-mg-text-muted hover:bg-red-500/20 hover:text-red-400 transition-colors text-sm font-bold">-</button>
+                                <input type="number" name="battle_stat[<?php echo $skey; ?>]" id="bs_<?php echo $skey; ?>"
+                                       value="<?php echo $_stat_values[$skey]; ?>" readonly
+                                       class="w-12 text-center bg-mg-bg-primary border border-mg-bg-tertiary rounded text-sm font-bold text-mg-text-primary py-1"
+                                       data-base="<?php echo $_stat_base; ?>">
+                                <button type="button" onclick="statAdjust('<?php echo $skey; ?>', 1)"
+                                        class="stat-btn-plus w-7 h-7 flex items-center justify-center rounded bg-mg-bg-tertiary text-mg-text-muted hover:bg-mg-accent/20 hover:text-mg-accent transition-colors text-sm font-bold">+</button>
+                            </div>
+                            <span class="text-[10px] text-mg-text-muted" style="min-width:90px;"><?php echo $slabel[2]; ?></span>
+                        </div>
+                        <?php } ?>
+                    </div>
+                    <?php } ?>
+                </div>
+            </div>
+            <?php } // end battle_use ?>
+
             <?php if ($is_edit) { ?>
             <script>
             function saveCharTitle() {
@@ -694,10 +773,10 @@ include_once(G5_THEME_PATH.'/head.php');
                         </div>
                         <div class="flex-shrink-0 flex gap-1">
                             <button type="button" onclick="openCfEditModal(<?php echo $rel['cr_id']; ?>, <?php echo $ch_id; ?>, <?php echo htmlspecialchars(json_encode($my_label), ENT_QUOTES); ?>, <?php echo htmlspecialchars(json_encode($my_memo ?: ''), ENT_QUOTES); ?>, <?php echo htmlspecialchars(json_encode($rel['cr_color'] ?: '#95a5a6'), ENT_QUOTES); ?>)" class="text-xs text-mg-text-muted hover:text-mg-text-primary px-2 py-1 rounded hover:bg-mg-bg-tertiary transition-colors" title="수정">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                <i data-lucide="pencil" class="w-4 h-4"></i>
                             </button>
                             <button type="button" onclick="cfDeleteRelation(<?php echo $rel['cr_id']; ?>, <?php echo $ch_id; ?>)" class="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-mg-bg-tertiary transition-colors" title="해제">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                <i data-lucide="x" class="w-4 h-4"></i>
                             </button>
                         </div>
                     </div>
@@ -1003,6 +1082,56 @@ window.cfDeleteRelation = function(crId, myChId) {
     sideSelect.addEventListener('change', filterClasses);
     // 페이지 로드 시 초기 필터링
     filterClasses();
+})();
+
+// ── 전투 스탯 분배 ──
+(function() {
+    var remainEl = document.getElementById('stat-remaining-val');
+    if (!remainEl) return; // 전투 비활성화 시 요소 없음
+
+    var statKeys = ['stat_hp', 'stat_str', 'stat_dex', 'stat_int', 'stat_con', 'stat_luk'];
+    var totalBonus = <?php echo isset($_stat_bonus) ? $_stat_bonus : 0; ?>;
+
+    function getUsed() {
+        var used = 0;
+        statKeys.forEach(function(key) {
+            var input = document.getElementById('bs_' + key);
+            if (input) {
+                var base = parseInt(input.getAttribute('data-base')) || 0;
+                var val = parseInt(input.value) || 0;
+                used += Math.max(0, val - base);
+            }
+        });
+        return used;
+    }
+
+    function updateRemaining() {
+        var remaining = totalBonus - getUsed();
+        remainEl.textContent = remaining;
+        remainEl.style.color = remaining === 0 ? 'var(--mg-success)' : (remaining < 0 ? 'var(--mg-error)' : '');
+    }
+
+    window.statAdjust = function(key, delta) {
+        var input = document.getElementById('bs_' + key);
+        if (!input) return;
+        var base = parseInt(input.getAttribute('data-base')) || 0;
+        var val = parseInt(input.value) || 0;
+        var newVal = val + delta;
+
+        // 기본값 이하로 못 낮춤
+        if (newVal < base) return;
+
+        // 올릴 때: 잔여 포인트 체크
+        if (delta > 0) {
+            var remaining = totalBonus - getUsed();
+            if (remaining <= 0) return;
+        }
+
+        input.value = newVal;
+        updateRemaining();
+    };
+
+    updateRemaining();
 })();
 </script>
 

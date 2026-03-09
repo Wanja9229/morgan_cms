@@ -166,7 +166,7 @@ if (!in_array($ea_status, array('active', 'hidden', 'locked'))) {
     $ea_status = 'active';
 }
 
-// 아이콘 처리 (Heroicons명 or 이미지 업로드)
+// 아이콘 처리 (Lucide Icons명 or 이미지 업로드)
 $old_icon = '';
 if ($w === 'u' && $ea_id > 0) {
     $old_row = sql_fetch("SELECT ea_icon FROM {$g5['mg_expedition_area_table']} WHERE ea_id = {$ea_id}");

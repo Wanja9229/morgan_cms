@@ -400,6 +400,65 @@ foreach ($profile as $pf_id => $pv_value) {
     }
 }
 
+// 전투 스탯 저장
+$_battle_use = function_exists('mg_config') ? mg_config('battle_use', '0') : '0';
+if ($_battle_use == '1' && isset($_POST['battle_stat']) && is_array($_POST['battle_stat'])) {
+    $_stat_base = (int)mg_config('battle_stat_base', '5');
+    $_stat_bonus = (int)mg_config('battle_stat_bonus_points', '15');
+
+    // 이미 확정된 스탯은 수정 불가
+    $existing_stat = sql_fetch("SELECT bs_id, stat_locked FROM {$g5['mg_battle_stat_table']} WHERE ch_id = {$ch_id}");
+    if (!$existing_stat || !(int)($existing_stat['stat_locked'] ?? 0)) {
+        $stat_keys = array('stat_hp', 'stat_str', 'stat_dex', 'stat_int', 'stat_con', 'stat_luk');
+        $stat_vals = array();
+        $total_used = 0;
+
+        foreach ($stat_keys as $sk) {
+            $v = isset($_POST['battle_stat'][$sk]) ? (int)$_POST['battle_stat'][$sk] : $_stat_base;
+            if ($v < $_stat_base) $v = $_stat_base;
+            $stat_vals[$sk] = $v;
+            $total_used += ($v - $_stat_base);
+        }
+
+        // 분배 초과 방지
+        if ($total_used > $_stat_bonus) {
+            $over = $total_used - $_stat_bonus;
+            foreach (array_reverse($stat_keys) as $sk) {
+                $excess = $stat_vals[$sk] - $_stat_base;
+                if ($excess > 0 && $over > 0) {
+                    $cut = min($excess, $over);
+                    $stat_vals[$sk] -= $cut;
+                    $over -= $cut;
+                }
+            }
+            $total_used = $_stat_bonus;
+        }
+
+        $remaining = $_stat_bonus - $total_used;
+        if ($remaining < 0) $remaining = 0;
+
+        // 스탯 확정 (locked = 1)
+        if ($existing_stat && $existing_stat['bs_id']) {
+            sql_query("UPDATE {$g5['mg_battle_stat_table']} SET
+                stat_hp = {$stat_vals['stat_hp']},
+                stat_str = {$stat_vals['stat_str']},
+                stat_dex = {$stat_vals['stat_dex']},
+                stat_int = {$stat_vals['stat_int']},
+                stat_con = {$stat_vals['stat_con']},
+                stat_luk = {$stat_vals['stat_luk']},
+                stat_points = {$remaining},
+                stat_locked = 1
+                WHERE ch_id = {$ch_id}");
+        } else {
+            sql_query("INSERT INTO {$g5['mg_battle_stat_table']}
+                (ch_id, mb_id, stat_hp, stat_str, stat_dex, stat_int, stat_con, stat_luk, stat_points, stat_locked)
+                VALUES ({$ch_id}, '{$member['mb_id']}',
+                {$stat_vals['stat_hp']}, {$stat_vals['stat_str']}, {$stat_vals['stat_dex']},
+                {$stat_vals['stat_int']}, {$stat_vals['stat_con']}, {$stat_vals['stat_luk']}, {$remaining}, 1)");
+        }
+    }
+}
+
 // 완료 메시지
 $msg = $is_edit ? '캐릭터가 수정되었습니다.' : '캐릭터가 생성되었습니다.';
 if ($btn_submit) {

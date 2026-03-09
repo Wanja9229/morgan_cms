@@ -23,9 +23,7 @@ $status_colors = array(
     <!-- 상단: 제목 -->
     <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
         <h1 class="text-2xl font-bold text-mg-text-primary flex items-center gap-2">
-            <svg class="w-6 h-6 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
-            </svg>
+            <i data-lucide="gift" class="w-6 h-6 text-mg-accent"></i>
             선물함
             <?php if ($pending_count > 0) { ?>
             <span class="ml-2 px-2 py-0.5 bg-mg-error text-white text-sm font-bold rounded-full"><?php echo $pending_count; ?></span>
@@ -33,15 +31,11 @@ $status_colors = array(
         </h1>
         <div class="flex gap-2">
             <a href="<?php echo G5_BBS_URL; ?>/inventory.php" class="text-mg-text-muted hover:text-mg-accent transition-colors flex items-center gap-1">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
-                </svg>
+                <i data-lucide="box" class="w-4 h-4"></i>
                 인벤토리
             </a>
             <a href="<?php echo G5_BBS_URL; ?>/shop.php" class="text-mg-text-muted hover:text-mg-accent transition-colors flex items-center gap-1">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                </svg>
+                <i data-lucide="shopping-bag" class="w-4 h-4"></i>
                 상점
             </a>
         </div>
@@ -76,9 +70,7 @@ $status_colors = array(
                         <img src="<?php echo $gift['si_image']; ?>" alt="" class="w-full h-full object-cover">
                         <?php } else { ?>
                         <div class="w-full h-full flex items-center justify-center">
-                            <svg class="w-8 h-8 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                            </svg>
+                            <i data-lucide="package" class="w-8 h-8 text-mg-text-muted"></i>
                         </div>
                         <?php } ?>
                     </div>
@@ -126,9 +118,7 @@ $status_colors = array(
         </div>
         <?php } else { ?>
         <div class="card py-16 text-center">
-            <svg class="w-16 h-16 mx-auto text-mg-text-muted mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
-            </svg>
+            <i data-lucide="gift" class="w-16 h-16 mx-auto text-mg-text-muted mb-4"></i>
             <p class="text-mg-text-muted">받은 선물이 없습니다.</p>
         </div>
         <?php } ?>

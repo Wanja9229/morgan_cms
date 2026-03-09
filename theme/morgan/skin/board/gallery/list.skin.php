@@ -47,17 +47,12 @@ if (count($list) > 0) {
             <div class="flex items-center gap-2">
                 <?php if ($admin_href) { ?>
                 <a href="<?php echo $admin_href; ?>" class="btn btn-ghost" title="관리자">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
+                    <i data-lucide="settings" class="w-5 h-5"></i>
                 </a>
                 <?php } ?>
                 <?php if ($write_href) { ?>
                 <a href="<?php echo $write_href; ?>" class="btn btn-primary">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
+                    <i data-lucide="plus" class="w-4 h-4 mr-1"></i>
                     글쓰기
                 </a>
                 <?php } ?>
@@ -108,9 +103,7 @@ if (count($list) > 0) {
                     <img src="<?php echo $thumb_url; ?>" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                     <?php } else { ?>
                     <div class="w-full h-full bg-mg-bg-tertiary flex items-center justify-center">
-                        <svg class="w-12 h-12 text-mg-text-muted/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
+                        <i data-lucide="image" class="w-12 h-12 text-mg-text-muted/30"></i>
                     </div>
                     <?php } ?>
 
@@ -120,9 +113,7 @@ if (count($list) > 0) {
 
                     <?php if ($row['comment_cnt']) { ?>
                     <span class="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                        </svg>
+                        <i data-lucide="message-circle" class="w-3 h-3"></i>
                         <?php echo $row['comment_cnt']; ?>
                     </span>
                     <?php } ?>
@@ -157,10 +148,7 @@ if (count($list) > 0) {
                         <div class="flex items-center gap-2 text-xs text-mg-text-muted flex-shrink-0">
                             <span><?php echo $row['datetime2']; ?></span>
                             <span class="flex items-center gap-0.5">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                </svg>
+                                <i data-lucide="eye" class="w-3 h-3"></i>
                                 <?php echo $row['wr_hit']; ?>
                             </span>
                         </div>
@@ -171,9 +159,7 @@ if (count($list) > 0) {
         </div>
         <?php } else { ?>
         <div class="card p-12 text-center text-mg-text-muted">
-            <svg class="w-16 h-16 mx-auto mb-4 text-mg-text-muted/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-            </svg>
+            <i data-lucide="image" class="w-16 h-16 mx-auto mb-4 text-mg-text-muted/30"></i>
             <p>등록된 게시글이 없습니다.</p>
         </div>
         <?php } ?>

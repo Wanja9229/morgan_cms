@@ -75,7 +75,7 @@ mt_srand();
 <div class="mg-inner skin-arcade" style="max-width:800px;">
     <!-- 뒤로가기 -->
     <a href="javascript:history.back();" style="display:inline-flex;align-items:center;gap:4px;font-size:0.625rem;color:#666;margin-bottom:1rem;">
-        <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        <i data-lucide="chevron-left" style="width:14px;height:14px;"></i>
         <span>&lt; BACK</span>
     </a>
 

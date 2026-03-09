@@ -126,6 +126,10 @@ $g5['mg_battle_encounter_table'] = 'mg_battle_encounter';
 $g5['mg_battle_slot_table'] = 'mg_battle_slot';
 $g5['mg_battle_log_table'] = 'mg_battle_log';
 $g5['mg_battle_skill_table'] = 'mg_battle_skill';
+// 수업 스케줄 시스템
+$g5['mg_training_class_table'] = 'mg_training_class';
+$g5['mg_training_schedule_table'] = 'mg_training_schedule';
+$g5['mg_training_progress_table'] = 'mg_training_progress';
 
 // [MT-1] 멀티테넌트 파일 경로 분기
 if (defined('MG_MULTITENANT_ENABLED') && MG_MULTITENANT_ENABLED
@@ -241,6 +245,10 @@ $mg['battle_encounter_table'] = $g5['mg_battle_encounter_table'];
 $mg['battle_slot_table'] = $g5['mg_battle_slot_table'];
 $mg['battle_log_table'] = $g5['mg_battle_log_table'];
 $mg['battle_skill_table'] = $g5['mg_battle_skill_table'];
+// 수업 스케줄 시스템
+$mg['training_class_table'] = $g5['mg_training_class_table'];
+$mg['training_schedule_table'] = $g5['mg_training_schedule_table'];
+$mg['training_progress_table'] = $g5['mg_training_progress_table'];
 
 // 상점 이미지 저장 경로
 define('MG_SHOP_IMAGE_PATH', $_mg_data_base_path.'/shop');
@@ -2520,7 +2528,7 @@ function mg_set_config($key, $value) {
 }
 
 /**
- * 아이콘 렌더링 (Heroicons 이름 또는 이미지 URL)
+ * 아이콘 렌더링 (Lucide 아이콘명 또는 이미지 URL)
  *
  * @param string $icon 아이콘명 또는 이미지 URL
  * @param string $class CSS 클래스
@@ -2537,7 +2545,49 @@ function mg_icon($icon, $class = 'w-5 h-5', $alt = '') {
         return '<img src="' . htmlspecialchars($icon) . '" alt="' . htmlspecialchars($alt) . '" class="' . $class . ' inline-block object-contain">';
     }
 
-    // Heroicons (outline) - 자주 사용되는 아이콘들
+    // 구 Heroicons 이름 → Lucide 이름 매핑 (하위 호환)
+    static $hero_to_lucide = array(
+        'check-circle' => 'check-circle',
+        'face-smile' => 'smile',
+        'shopping-cart' => 'shopping-cart',
+        'shopping-bag' => 'shopping-bag',
+        'building-office' => 'building-2',
+        'building-storefront' => 'store',
+        'home-modern' => 'house',
+        'musical-note' => 'music',
+        'chat-bubble-left' => 'message-square',
+        'envelope' => 'mail',
+        'academic-cap' => 'graduation-cap',
+        'clipboard-document-list' => 'clipboard-list',
+        'cog-6-tooth' => 'settings',
+        'wrench-screwdriver' => 'wrench',
+        'puzzle-piece' => 'puzzle',
+        'beaker' => 'flask-conical',
+        'lock-closed' => 'lock',
+        'lock-open' => 'lock-open',
+        'squares-2x2' => 'grid-2x2',
+        'rectangle-stack' => 'layers',
+        'archive-box' => 'archive',
+        'swatch' => 'palette',
+        'paint-brush' => 'paintbrush',
+        'photo' => 'image',
+        'document-text' => 'file-text',
+        'queue-list' => 'list',
+        'pencil-square' => 'square-pen',
+        'arrows-up-down' => 'arrow-up-down',
+        'bolt' => 'zap',
+        'badge' => 'badge-check',
+        'fire' => 'flame',
+        'cube' => 'box',
+    );
+
+    // 매핑된 이름이 있으면 변환
+    $lucide_name = isset($hero_to_lucide[$icon]) ? $hero_to_lucide[$icon] : $icon;
+
+    // Lucide 아이콘 태그 반환 (JS에서 SVG로 교체됨)
+    return '<i data-lucide="' . htmlspecialchars($lucide_name) . '" class="' . $class . '"></i>';
+
+    // === 아래는 레거시 Heroicons SVG (미사용, 참조용 보존) ===
     $heroicons = array(
         // 기본 아이콘
         'star' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>',
@@ -2618,7 +2668,7 @@ function mg_icon($icon, $class = 'w-5 h-5', $alt = '') {
 }
 
 /**
- * 아이콘 렌더링 (mg_icon 별칭, heroicons 호환)
+ * 아이콘 렌더링 (mg_icon 별칭)
  */
 function mg_heroicon($icon, $class = 'w-5 h-5') {
     return mg_icon($icon, $class);
@@ -2626,7 +2676,7 @@ function mg_heroicon($icon, $class = 'w-5 h-5') {
 
 /**
  * 관리자 아이콘 입력 필드 컴포넌트
- * Heroicons 텍스트 입력 + 이미지 파일 업로드 라디오 토글, 미리보기, 가이드 텍스트를 출력.
+ * Lucide 아이콘명 텍스트 입력 + 이미지 파일 업로드 라디오 토글, 미리보기, 가이드 텍스트를 출력.
  * 첫 호출 시 공용 JS 함수도 함께 출력.
  *
  * @param string $prefix   요소 ID 접두사 (페이지 내 고유)
@@ -2635,7 +2685,7 @@ function mg_heroicon($icon, $class = 'w-5 h-5') {
  *   text_name    - text input name (기본: $prefix)
  *   file_name    - file input name (기본: {text_name}_file)
  *   delete_name  - 삭제 checkbox name (기본: del_{prefix})
- *   placeholder  - text input placeholder (기본: 'heart, shield, star 등')
+ *   placeholder  - text input placeholder (기본: 'star, heart, shield 등')
  *   size_guide   - 권장 크기 (기본: '24x24px')
  *   show_preview - 기존 이미지 미리보기 (기본: true)
  *   show_delete  - 삭제 체크박스 (기본: true)
@@ -2647,7 +2697,7 @@ function mg_icon_input($prefix, $current = '', $opts = array()) {
     $text_name   = isset($opts['text_name'])   ? $opts['text_name']   : $prefix;
     $file_name   = isset($opts['file_name'])   ? $opts['file_name']   : $text_name . '_file';
     $delete_name = isset($opts['delete_name']) ? $opts['delete_name'] : 'del_' . $prefix;
-    $placeholder = isset($opts['placeholder']) ? $opts['placeholder'] : 'heart, shield, star 등';
+    $placeholder = isset($opts['placeholder']) ? $opts['placeholder'] : 'star, heart, shield 등';
     $size_guide  = isset($opts['size_guide'])  ? $opts['size_guide']  : '24x24px';
     $show_preview = isset($opts['show_preview']) ? $opts['show_preview'] : true;
     $show_delete  = isset($opts['show_delete'])  ? $opts['show_delete']  : true;
@@ -2678,7 +2728,7 @@ function mg_icon_input($prefix, $current = '', $opts = array()) {
     echo '<div style="display:flex;' . $flex_dir . 'gap:' . $gap . ';margin-bottom:' . $mb . ';">';
     echo '<label style="font-size:' . $font_sm . ';display:flex;align-items:center;gap:0.25rem;cursor:pointer;">';
     echo '<input type="radio" name="' . $prefix . '_type" value="text" checked onchange="mgIconToggle(\'' . $prefix . '\')">';
-    echo '<span>Heroicons</span></label>';
+    echo '<span>Lucide Icons</span></label>';
     echo '<label style="font-size:' . $font_sm . ';display:flex;align-items:center;gap:0.25rem;cursor:pointer;">';
     echo '<input type="radio" name="' . $prefix . '_type" value="file" onchange="mgIconToggle(\'' . $prefix . '\')">';
     echo '<span>이미지 업로드</span></label>';
@@ -2697,7 +2747,7 @@ function mg_icon_input($prefix, $current = '', $opts = array()) {
 
     // 가이드 텍스트
     echo '<p style="font-size:' . $font_xs . ';color:var(--mg-text-muted);margin-top:4px;">';
-    echo '<a href="https://heroicons.com/" target="_blank" style="color:var(--mg-accent);">Heroicons</a>';
+    echo '<a href="https://lucide.dev/icons/" target="_blank" style="color:var(--mg-accent);">Lucide Icons</a>';
     echo ' 아이콘명 또는 이미지 파일 (권장: ' . htmlspecialchars($size_guide) . ')</p>';
 
     // 공용 JS (첫 호출 시에만)
@@ -2746,6 +2796,327 @@ function mg_icon_input($prefix, $current = '', $opts = array()) {
         echo 'if(fi)fi.value="";';
         echo '}';
         echo '</script>';
+    }
+}
+
+// ============================================================
+// Game-Icons.net 연동
+// ============================================================
+
+/**
+ * Game-Icons.net 아이콘 렌더링
+ *
+ * @param string $name   아이콘 이름 (예: 'crossed-swords', 'fire-bolt')
+ * @param string $class  CSS 클래스 (예: 'w-5 h-5')
+ * @param string $color  색상 (CSS 값, 기본: currentColor)
+ * @return string        인라인 SVG HTML
+ */
+function mg_game_icon($name, $class = '', $color = '') {
+    if (!$name) return '';
+    $name = preg_replace('/[^a-z0-9\-]/', '', strtolower(trim($name)));
+    $path = G5_DATA_PATH . '/morgan/game-icons/' . $name . '.svg';
+
+    if (!file_exists($path)) return '<span class="' . htmlspecialchars($class) . '" title="' . htmlspecialchars($name) . '">?</span>';
+
+    $svg = file_get_contents($path);
+    if (!$svg) return '';
+
+    // 색상 적용: currentColor → 지정 색상
+    if ($color) {
+        $svg = str_replace('fill="currentColor"', 'fill="' . htmlspecialchars($color) . '"', $svg);
+    }
+
+    // 클래스 삽입
+    if ($class) {
+        $svg = str_replace('<svg ', '<svg class="' . htmlspecialchars($class) . '" ', $svg);
+    }
+
+    // 인라인 style로 크기 조정 (w-5 h-5 등 Tailwind 미지원 대비)
+    $svg = str_replace('<svg ', '<svg style="display:inline-block;vertical-align:middle;" ', $svg);
+
+    return $svg;
+}
+
+/**
+ * Game-Icons.net 아이콘 피커 모달
+ *
+ * 관리자 폼에서 사용하는 재사용 가능한 아이콘 선택 컴포넌트.
+ * 버튼 클릭 → 모달 (검색+컬러피커+그리드) → 선택 → hidden input에 값 세팅
+ *
+ * @param string $input_name  폼 필드 name 속성
+ * @param string $current     현재 선택된 아이콘 이름
+ * @param array  $opts        옵션
+ *   'color_name'  => 색상 필드 name (기본: {$input_name}_color)
+ *   'color'       => 현재 색상 (기본: #ffffff)
+ *   'placeholder' => 미선택 시 안내 텍스트
+ */
+function mg_game_icon_picker($input_name, $current = '', $opts = array()) {
+    static $picker_loaded = false;
+
+    $color_name = isset($opts['color_name']) ? $opts['color_name'] : $input_name . '_color';
+    $color = isset($opts['color']) ? $opts['color'] : '#ffffff';
+    $placeholder = isset($opts['placeholder']) ? $opts['placeholder'] : '아이콘 선택';
+    $uid = 'gip_' . preg_replace('/[^a-zA-Z0-9]/', '_', $input_name);
+
+    // 아이콘 인덱스 URL
+    $index_url = G5_DATA_URL . '/morgan/game-icons/_index.json';
+    $icon_base = G5_DATA_URL . '/morgan/game-icons/';
+
+    // 미리보기 + 선택 버튼
+    echo '<div class="mg-game-icon-picker" id="' . $uid . '-wrap">';
+    echo '<input type="hidden" name="' . htmlspecialchars($input_name) . '" id="' . $uid . '-input" value="' . htmlspecialchars($current) . '">';
+    echo '<input type="hidden" name="' . htmlspecialchars($color_name) . '" id="' . $uid . '-color" value="' . htmlspecialchars($color) . '">';
+
+    echo '<button type="button" onclick="mgGameIconOpen(\'' . $uid . '\')" class="inline-flex items-center gap-2 px-3 py-2 rounded border transition-colors" style="background:var(--mg-bg-primary);border-color:var(--mg-bg-tertiary);color:var(--mg-text-secondary);cursor:pointer;" onmouseover="this.style.borderColor=\'var(--mg-accent)\'" onmouseout="this.style.borderColor=\'var(--mg-bg-tertiary)\'">';
+    echo '<span id="' . $uid . '-preview" style="width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;">';
+    if ($current) {
+        echo mg_game_icon($current, '', $color);
+    } else {
+        echo '<span style="color:var(--mg-text-muted);font-size:20px;">?</span>';
+    }
+    echo '</span>';
+    echo '<span class="text-sm" id="' . $uid . '-label">' . ($current ? htmlspecialchars($current) : htmlspecialchars($placeholder)) . '</span>';
+    echo '</button>';
+
+    // 초기화 버튼 (값이 있을 때만)
+    echo '<button type="button" onclick="mgGameIconClear(\'' . $uid . '\')" id="' . $uid . '-clear" class="text-xs text-mg-text-muted hover:text-mg-error ml-1" style="' . ($current ? '' : 'display:none;') . '">✕</button>';
+    echo '</div>';
+
+    // 모달 HTML + JS (페이지 당 1회만)
+    if (!$picker_loaded) {
+        $picker_loaded = true;
+        ?>
+<!-- Game-Icon Picker Modal -->
+<div id="mg-gip-modal" class="fixed inset-0 z-[9999] hidden" style="background:rgba(0,0,0,0.7);" onclick="if(event.target===this)mgGameIconClose()">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary w-full overflow-hidden" style="max-width:680px;max-height:85vh;display:flex;flex-direction:column;">
+            <!-- 헤더 -->
+            <div class="px-4 py-3 border-b border-mg-bg-tertiary flex items-center gap-3 flex-shrink-0">
+                <h3 class="font-bold text-mg-text-primary text-sm flex-1">Game Icons 선택</h3>
+                <!-- 색상 -->
+                <label class="flex items-center gap-1.5 text-xs text-mg-text-secondary">
+                    색상
+                    <input type="color" id="mg-gip-colorpick" value="#ffffff" style="width:28px;height:28px;padding:0;border:1px solid var(--mg-bg-tertiary);border-radius:4px;cursor:pointer;background:transparent;">
+                </label>
+                <button type="button" onclick="mgGameIconClose()" class="text-mg-text-muted hover:text-mg-text-primary text-lg leading-none">&times;</button>
+            </div>
+            <!-- 검색 -->
+            <div class="px-4 py-2 border-b border-mg-bg-tertiary flex-shrink-0">
+                <input type="text" id="mg-gip-search" placeholder="아이콘 검색 (영문)..." class="w-full px-3 py-2 rounded text-sm" style="background:var(--mg-bg-primary);border:1px solid var(--mg-bg-tertiary);color:var(--mg-text-primary);outline:none;" oninput="mgGameIconFilter()">
+                <div class="flex items-center justify-between mt-1.5">
+                    <span id="mg-gip-count" class="text-[11px] text-mg-text-muted"></span>
+                </div>
+            </div>
+            <!-- 그리드 -->
+            <div id="mg-gip-grid" class="flex-1 overflow-y-auto p-3" style="scrollbar-width:thin;"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+.mg-gip-item {
+    width: 44px; height: 44px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 6px; cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.15s, background 0.15s;
+    position: relative;
+}
+.mg-gip-item:hover {
+    background: var(--mg-bg-tertiary);
+    border-color: var(--mg-accent);
+}
+.mg-gip-item.selected {
+    border-color: var(--mg-accent);
+    background: rgba(245,159,10,0.12);
+}
+.mg-gip-item svg { width: 28px; height: 28px; }
+.mg-gip-item .gip-name {
+    display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+    background: var(--mg-bg-primary); color: var(--mg-text-primary);
+    font-size: 10px; white-space: nowrap; padding: 2px 6px;
+    border-radius: 3px; border: 1px solid var(--mg-bg-tertiary);
+    pointer-events: none; z-index: 10;
+}
+.mg-gip-item:hover .gip-name { display: block; }
+</style>
+
+<script>
+(function(){
+    var GIP = window._mgGip = {
+        icons: [],
+        filtered: [],
+        loaded: false,
+        target: null,
+        color: '#ffffff',
+        page: 0,
+        perPage: 200,
+        indexUrl: <?php echo json_encode($index_url); ?>,
+        baseUrl: <?php echo json_encode($icon_base); ?>,
+        cache: {}
+    };
+
+    // 인덱스 로드
+    function loadIndex(cb) {
+        if (GIP.loaded) { cb(); return; }
+        fetch(GIP.indexUrl).then(function(r){return r.json();}).then(function(data){
+            GIP.icons = data;
+            GIP.loaded = true;
+            cb();
+        }).catch(function(){ console.error('Game icon index load failed'); });
+    }
+
+    // SVG 로드 (캐시)
+    function loadSvg(name, cb) {
+        if (GIP.cache[name]) { cb(GIP.cache[name]); return; }
+        fetch(GIP.baseUrl + name + '.svg').then(function(r){return r.text();}).then(function(svg){
+            GIP.cache[name] = svg;
+            cb(svg);
+        }).catch(function(){ cb(''); });
+    }
+
+    // 색상 적용
+    function colorize(svg, color) {
+        return svg.replace(/fill="currentColor"/g, 'fill="' + color + '"');
+    }
+
+    // 그리드 렌더
+    function renderGrid() {
+        var grid = document.getElementById('mg-gip-grid');
+        var list = GIP.filtered.length ? GIP.filtered : GIP.icons;
+        var end = Math.min((GIP.page + 1) * GIP.perPage, list.length);
+        var start = GIP.page * GIP.perPage;
+        var showing = list.slice(0, end);
+
+        document.getElementById('mg-gip-count').textContent = list.length.toLocaleString() + '개 아이콘' + (GIP.filtered.length ? ' (검색 결과)' : '');
+
+        var h = '<div style="display:flex;flex-wrap:wrap;gap:4px;">';
+        showing.forEach(function(name){
+            var sel = (GIP.target && document.getElementById(GIP.target + '-input').value === name) ? ' selected' : '';
+            h += '<div class="mg-gip-item' + sel + '" data-name="' + name + '" onclick="mgGameIconSelect(\'' + name.replace(/'/g, "\\'") + '\')">';
+            h += '<div class="gip-svg" data-icon="' + name + '"></div>';
+            h += '<span class="gip-name">' + name + '</span>';
+            h += '</div>';
+        });
+        h += '</div>';
+
+        if (end < list.length) {
+            h += '<div style="text-align:center;padding:12px;"><button type="button" onclick="_mgGip.page++;_mgGipRender()" class="px-4 py-2 rounded text-sm" style="background:var(--mg-bg-tertiary);color:var(--mg-text-secondary);border:none;cursor:pointer;">더 보기 (' + (list.length - end).toLocaleString() + '개 남음)</button></div>';
+        }
+        grid.innerHTML = h;
+
+        // SVG 지연 로드 (뷰포트 내)
+        lazyLoadSvgs();
+    }
+    window._mgGipRender = renderGrid;
+
+    function lazyLoadSvgs() {
+        var items = document.querySelectorAll('#mg-gip-grid .gip-svg[data-icon]');
+        var observer = new IntersectionObserver(function(entries){
+            entries.forEach(function(entry){
+                if (entry.isIntersecting) {
+                    var el = entry.target;
+                    var name = el.getAttribute('data-icon');
+                    if (!name) return;
+                    observer.unobserve(el);
+                    loadSvg(name, function(svg){
+                        if (svg) el.innerHTML = colorize(svg, GIP.color);
+                    });
+                    el.removeAttribute('data-icon');
+                }
+            });
+        }, { root: document.getElementById('mg-gip-grid'), rootMargin: '100px' });
+
+        items.forEach(function(el){ observer.observe(el); });
+    }
+
+    // 공개 함수들
+    window.mgGameIconOpen = function(uid) {
+        GIP.target = uid;
+        GIP.color = document.getElementById(uid + '-color').value || '#ffffff';
+        GIP.page = 0;
+        GIP.filtered = [];
+
+        var modal = document.getElementById('mg-gip-modal');
+        modal.classList.remove('hidden');
+        document.getElementById('mg-gip-search').value = '';
+        document.getElementById('mg-gip-colorpick').value = GIP.color;
+
+        loadIndex(function(){
+            renderGrid();
+        });
+
+        setTimeout(function(){ document.getElementById('mg-gip-search').focus(); }, 100);
+    };
+
+    window.mgGameIconClose = function() {
+        document.getElementById('mg-gip-modal').classList.add('hidden');
+    };
+
+    window.mgGameIconSelect = function(name) {
+        var uid = GIP.target;
+        if (!uid) return;
+
+        document.getElementById(uid + '-input').value = name;
+        document.getElementById(uid + '-color').value = GIP.color;
+
+        // 미리보기 갱신
+        loadSvg(name, function(svg){
+            var prev = document.getElementById(uid + '-preview');
+            if (prev && svg) prev.innerHTML = colorize(svg, GIP.color);
+            var label = document.getElementById(uid + '-label');
+            if (label) label.textContent = name;
+            var clr = document.getElementById(uid + '-clear');
+            if (clr) clr.style.display = '';
+        });
+
+        mgGameIconClose();
+    };
+
+    window.mgGameIconClear = function(uid) {
+        document.getElementById(uid + '-input').value = '';
+        document.getElementById(uid + '-color').value = '#ffffff';
+        var prev = document.getElementById(uid + '-preview');
+        if (prev) prev.innerHTML = '<span style="color:var(--mg-text-muted);font-size:20px;">?</span>';
+        var label = document.getElementById(uid + '-label');
+        if (label) label.textContent = '아이콘 선택';
+        var clr = document.getElementById(uid + '-clear');
+        if (clr) clr.style.display = 'none';
+    };
+
+    window.mgGameIconFilter = function() {
+        var q = document.getElementById('mg-gip-search').value.trim().toLowerCase();
+        GIP.page = 0;
+        if (!q) {
+            GIP.filtered = [];
+        } else {
+            GIP.filtered = GIP.icons.filter(function(n){ return n.indexOf(q) !== -1; });
+        }
+        renderGrid();
+    };
+
+    // 색상 변경 시 실시간 반영
+    document.getElementById('mg-gip-colorpick').addEventListener('input', function(){
+        GIP.color = this.value;
+        document.querySelectorAll('#mg-gip-grid .gip-svg').forEach(function(el){
+            var svgEl = el.querySelector('svg');
+            if (svgEl) {
+                svgEl.querySelectorAll('[fill]').forEach(function(p){
+                    if (p.getAttribute('fill') !== 'none') p.setAttribute('fill', GIP.color);
+                });
+            }
+        });
+    });
+
+    // ESC 닫기
+    document.addEventListener('keydown', function(e){
+        if (e.key === 'Escape' && !document.getElementById('mg-gip-modal').classList.contains('hidden')) {
+            mgGameIconClose();
+        }
+    });
+})();
+</script>
+        <?php
     }
 }
 
@@ -5331,6 +5702,24 @@ function mg_claim_expedition($mb_id, $el_id) {
                     $drop_result['items'] = array_values($drop_result['items']);
                 }
                 $evt_result['detail'] = implode(', ', $parts) ?: '-';
+                break;
+
+            case 'battle_encounter':
+                $bm_id_evt = (int)($effect['bm_id'] ?? 0);
+                if ($bm_id_evt > 0 && function_exists('mg_battle_create_encounter')) {
+                    $be_id_created = mg_battle_create_encounter(
+                        $bm_id_evt,
+                        $mb_id,
+                        (int)$log['ch_id'],
+                        $ea_id,
+                        $el_id
+                    );
+                    if ($be_id_created) {
+                        $mon_info = sql_fetch("SELECT bm_name FROM {$g5['mg_battle_monster_table']} WHERE bm_id = {$bm_id_evt}");
+                        $evt_result['detail'] = '몬스터 출현! ' . ($mon_info ? $mon_info['bm_name'] : '');
+                        $evt_result['be_id'] = $be_id_created;
+                    }
+                }
                 break;
         }
 

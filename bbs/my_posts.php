@@ -152,9 +152,7 @@ include_once(G5_THEME_PATH.'/head.php');
         </table>
         <?php } else { ?>
         <div class="py-12 text-center">
-            <svg class="w-12 h-12 text-mg-text-muted mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-            </svg>
+            <i data-lucide="file-text" class="w-12 h-12 text-mg-text-muted mx-auto mb-3"></i>
             <p class="text-sm text-mg-text-muted">작성한 글이 없습니다</p>
         </div>
         <?php } ?>

@@ -279,6 +279,9 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
     <!-- Morgan JS -->
     <script src="<?php echo G5_THEME_URL; ?>/js/notification.js?ver=<?php echo G5_JS_VER; ?>"></script>
 
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+
     <?php if(!defined('G5_IS_ADMIN')) echo $config['cf_add_script']; ?>
 </head>
 <body class="bg-mg-bg-primary text-mg-text-primary min-h-screen"<?php echo isset($g5['body_script']) ? $g5['body_script'] : ''; ?>>

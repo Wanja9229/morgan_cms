@@ -21,9 +21,7 @@ $status_label = $is_complete ? '완공' : ($is_building ? '건설 중' : '대기
     <!-- 뒤로 가기 -->
     <div class="mb-4">
         <a href="<?php echo G5_BBS_URL; ?>/pioneer.php" class="inline-flex items-center text-sm text-mg-text-secondary hover:text-mg-accent transition-colors">
-            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-            </svg>
+            <i data-lucide="chevron-left" class="w-4 h-4 mr-1"></i>
             목록으로
         </a>
     </div>

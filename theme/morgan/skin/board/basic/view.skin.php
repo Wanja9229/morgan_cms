@@ -148,7 +148,7 @@ $_mg_comment_cnt = isset($view['wr_comment']) ? (int)$view['wr_comment'] : 0;
                     if ($view['file'][$i]['view']) continue;
                 ?>
                 <a href="<?php echo $view['file'][$i]['href']; ?>" class="flex items-center text-sm font-medium transition-colors" style="color:var(--mg-text-secondary);" onmouseover="this.style.color='var(--mg-accent)'" onmouseout="this.style.color='var(--mg-text-secondary)'">
-                    <svg class="w-5 h-5 mr-2 flex-shrink-0" style="color:var(--mg-text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                    <i data-lucide="paperclip" class="w-5 h-5 mr-2 flex-shrink-0" style="color:var(--mg-text-muted);"></i>
                     <?php echo $view['file'][$i]['source']; ?>
                     <span class="ml-1 font-normal" style="color:var(--mg-text-muted);">(<?php echo $view['file'][$i]['size']; ?>)</span>
                 </a>
@@ -169,17 +169,13 @@ $_mg_comment_cnt = isset($view['wr_comment']) ? (int)$view['wr_comment'] : 0;
             <div class="flex items-center justify-center gap-4 pt-6 mt-6" style="border-top:1px solid var(--mg-bg-tertiary);">
                 <?php if ($is_good) { ?>
                 <button type="button" onclick="good_choice(document.getElementById('good_form'), 'good');" class="flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all" style="background:var(--mg-bg-primary);border:1px solid var(--mg-bg-tertiary);" onmouseover="this.style.borderColor='var(--mg-success)'" onmouseout="this.style.borderColor='var(--mg-bg-tertiary)'">
-                    <svg class="w-5 h-5" style="color:var(--mg-success);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
-                    </svg>
+                    <i data-lucide="thumbs-up" class="w-5 h-5" style="color:var(--mg-success);"></i>
                     <span class="font-medium" style="color:var(--mg-success);"><?php echo $view['wr_good']; ?></span>
                 </button>
                 <?php } ?>
                 <?php if ($is_nogood) { ?>
                 <button type="button" onclick="good_choice(document.getElementById('good_form'), 'nogood');" class="flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all" style="background:var(--mg-bg-primary);border:1px solid var(--mg-bg-tertiary);" onmouseover="this.style.borderColor='var(--mg-error)'" onmouseout="this.style.borderColor='var(--mg-bg-tertiary)'">
-                    <svg class="w-5 h-5" style="color:var(--mg-error);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5"/>
-                    </svg>
+                    <i data-lucide="thumbs-down" class="w-5 h-5" style="color:var(--mg-error);"></i>
                     <span class="font-medium" style="color:var(--mg-error);"><?php echo $view['wr_nogood']; ?></span>
                 </button>
                 <?php } ?>
@@ -201,7 +197,7 @@ $_mg_comment_cnt = isset($view['wr_comment']) ? (int)$view['wr_comment'] : 0;
             <div class="flex items-center justify-between flex-wrap gap-3 pt-6 mt-6" style="border-top:1px solid var(--mg-bg-tertiary);">
                 <div>
                     <a href="<?php echo $list_href; ?>" class="inline-flex items-center px-4 py-2.5 text-sm font-medium rounded-lg transition-all" style="background:var(--mg-bg-primary);border:1px solid var(--mg-bg-tertiary);color:var(--mg-text-secondary);" onmouseover="this.style.borderColor='var(--mg-accent)';this.style.color='var(--mg-text-primary)'" onmouseout="this.style.borderColor='var(--mg-bg-tertiary)';this.style.color='var(--mg-text-secondary)'">
-                        <svg class="w-4 h-4 mr-2" style="color:var(--mg-text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                        <i data-lucide="list" class="w-4 h-4 mr-2" style="color:var(--mg-text-muted);"></i>
                         목록으로
                     </a>
                 </div>
@@ -232,18 +228,14 @@ $_mg_comment_cnt = isset($view['wr_comment']) ? (int)$view['wr_comment'] : 0;
     <div class="rounded-2xl overflow-hidden mb-5" style="background:var(--mg-bg-secondary);border:1px solid var(--mg-bg-tertiary);">
         <?php if ($prev_href) { ?>
         <a href="<?php echo $prev_href; ?>" class="flex items-center gap-3 px-5 py-3.5 transition-colors" style="<?php echo $next_href ? 'border-bottom:1px solid var(--mg-bg-tertiary);' : ''; ?>" onmouseover="this.style.background='var(--mg-bg-primary)'" onmouseout="this.style.background='transparent'">
-            <svg class="w-4 h-4 flex-shrink-0" style="color:var(--mg-text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
-            </svg>
+            <i data-lucide="chevron-up" class="w-4 h-4 flex-shrink-0" style="color:var(--mg-text-muted);"></i>
             <span class="text-xs font-medium" style="color:var(--mg-text-muted);min-width:3rem;">이전글</span>
             <span class="text-sm flex-1 truncate" style="color:var(--mg-text-secondary);"><?php echo $prev['wr_subject']; ?></span>
         </a>
         <?php } ?>
         <?php if ($next_href) { ?>
         <a href="<?php echo $next_href; ?>" class="flex items-center gap-3 px-5 py-3.5 transition-colors" onmouseover="this.style.background='var(--mg-bg-primary)'" onmouseout="this.style.background='transparent'">
-            <svg class="w-4 h-4 flex-shrink-0" style="color:var(--mg-text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
+            <i data-lucide="chevron-down" class="w-4 h-4 flex-shrink-0" style="color:var(--mg-text-muted);"></i>
             <span class="text-xs font-medium" style="color:var(--mg-text-muted);min-width:3rem;">다음글</span>
             <span class="text-sm flex-1 truncate" style="color:var(--mg-text-secondary);"><?php echo $next['wr_subject']; ?></span>
         </a>

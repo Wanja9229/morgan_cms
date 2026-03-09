@@ -166,21 +166,32 @@
                 html += '</a>';
             }
             this.listEl.innerHTML = html;
+            this._renderIcons();
+        },
+
+        // Lucide 아이콘 헬퍼
+        _lucideIcon: function(name, cls) {
+            return '<i data-lucide="' + name + '" class="' + (cls || 'w-4 h-4') + '"></i>';
+        },
+
+        // Lucide 아이콘 렌더링 (DOM 삽입 후 호출)
+        _renderIcons: function() {
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         },
 
         // 알림 타입별 아이콘
         getTypeIcon: function(type) {
             var icons = {
-                'comment': { bg: 'bg-blue-500/20', svg: '<svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>' },
-                'reply': { bg: 'bg-cyan-500/20', svg: '<svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>' },
-                'like': { bg: 'bg-rose-500/20', svg: '<svg class="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/></svg>' },
-                'character_approved': { bg: 'bg-emerald-500/20', svg: '<svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>' },
-                'character_rejected': { bg: 'bg-red-500/20', svg: '<svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>' },
-                'gift_received': { bg: 'bg-amber-500/20', svg: '<svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>' },
-                'emoticon': { bg: 'bg-violet-500/20', svg: '<svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M8 14s1.5 2 4 2 4-2 4-2"/></svg>' },
-                'rp_reply': { bg: 'bg-indigo-500/20', svg: '<svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>' },
+                'comment': { bg: 'bg-blue-500/20', svg: this._lucideIcon('message-circle', 'w-4 h-4 text-blue-400') },
+                'reply': { bg: 'bg-cyan-500/20', svg: this._lucideIcon('reply', 'w-4 h-4 text-cyan-400') },
+                'like': { bg: 'bg-rose-500/20', svg: this._lucideIcon('heart', 'w-4 h-4 text-rose-400') },
+                'character_approved': { bg: 'bg-emerald-500/20', svg: this._lucideIcon('check-circle', 'w-4 h-4 text-emerald-400') },
+                'character_rejected': { bg: 'bg-red-500/20', svg: this._lucideIcon('x-circle', 'w-4 h-4 text-red-400') },
+                'gift_received': { bg: 'bg-amber-500/20', svg: this._lucideIcon('gift', 'w-4 h-4 text-amber-400') },
+                'emoticon': { bg: 'bg-violet-500/20', svg: this._lucideIcon('smile', 'w-4 h-4 text-violet-400') },
+                'rp_reply': { bg: 'bg-indigo-500/20', svg: this._lucideIcon('message-square', 'w-4 h-4 text-indigo-400') },
             };
-            return icons[type] || { bg: 'bg-mg-bg-tertiary', svg: '<svg class="w-4 h-4 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>' };
+            return icons[type] || { bg: 'bg-mg-bg-tertiary', svg: this._lucideIcon('bell', 'w-4 h-4 text-mg-text-muted') };
         },
 
         // 읽음 처리 후 이동
@@ -343,10 +354,10 @@ window.mgToast = function(message, type, duration) {
     type = type || 'info';
     duration = duration || 3000;
     var icons = {
-        success: '<svg width="16" height="16" fill="none" stroke="#22c55e" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>',
-        error:   '<svg width="16" height="16" fill="none" stroke="#ef4444" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>',
-        warning: '<svg width="16" height="16" fill="none" stroke="#eab308" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M12 3l9.5 16.5H2.5L12 3z"/></svg>',
-        info:    '<svg width="16" height="16" fill="none" stroke="#60a5fa" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01"/><circle cx="12" cy="12" r="10" stroke-width="2"/></svg>'
+        success: '<i data-lucide="check-circle" style="width:16px;height:16px;color:#22c55e;"></i>',
+        error:   '<i data-lucide="x-circle" style="width:16px;height:16px;color:#ef4444;"></i>',
+        warning: '<i data-lucide="alert-triangle" style="width:16px;height:16px;color:#eab308;"></i>',
+        info:    '<i data-lucide="info" style="width:16px;height:16px;color:#60a5fa;"></i>'
     };
     var bgs = { success:'rgba(34,197,94,0.15)', error:'rgba(239,68,68,0.15)', warning:'rgba(234,179,8,0.15)', info:'rgba(96,165,250,0.15)' };
     var container = document.getElementById('mg-toast-container');
@@ -363,11 +374,12 @@ window.mgToast = function(message, type, duration) {
             '<div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:' + (bgs[type]||bgs.info) + ';">' + (icons[type]||icons.info) + '</div>' +
             '<p style="flex:1;font-size:13px;color:var(--mg-text-primary,#f2f3f5);margin:0;line-height:1.5;word-break:break-word;">' + String(message).replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>') + '</p>' +
             '<button type="button" style="flex-shrink:0;padding:2px;color:var(--mg-text-muted,#949ba4);background:none;border:none;cursor:pointer;line-height:1;" data-mg-toast-close>' +
-                '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>' +
+                '<i data-lucide="x" style="width:14px;height:14px;"></i>' +
             '</button>' +
         '</div>';
     toast.querySelector('[data-mg-toast-close]').addEventListener('click', function() { dismiss(); });
     container.appendChild(toast);
+    if (typeof lucide !== 'undefined') lucide.createIcons();
     requestAnimationFrame(function() { toast.style.opacity='1'; toast.style.transform='translateY(0)'; });
     var timer = setTimeout(function() { dismiss(); }, duration);
     function dismiss() {

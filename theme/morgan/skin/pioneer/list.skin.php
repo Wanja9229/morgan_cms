@@ -188,7 +188,7 @@ unset($_fc);
 
         <?php if (empty($facilities)) { ?>
         <div class="pn-empty">
-            <svg class="w-12 h-12" style="color:var(--mg-text-muted);margin:0 auto 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            <i data-lucide="building-2" class="w-12 h-12" style="color:var(--mg-text-muted);margin:0 auto 1rem;"></i>
             <p class="text-mg-text-muted">등록된 시설이 없습니다.</p>
         </div>
         <?php } ?>

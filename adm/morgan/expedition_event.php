@@ -87,6 +87,7 @@ require_once __DIR__.'/_head.php';
                     'material_bonus' => array('재료 보상', '#3b82f6'),
                     'material_penalty' => array('재료 손실', '#f59e0b'),
                     'reward_loss' => array('보상 감소', '#ef4444'),
+                    'battle_encounter' => array('전투 조우', '#f59f0a'),
                 );
                 foreach ($events as $ev) {
                     $tl = $type_labels[$ev['ee_effect_type']] ?? array($ev['ee_effect_type'], '#949ba4');
@@ -190,6 +191,7 @@ require_once __DIR__.'/_head.php';
                         <option value="material_bonus">추가 재료 보상</option>
                         <option value="material_penalty">재료 손실</option>
                         <option value="reward_loss">보상 전체 감소</option>
+                        <option value="battle_encounter">전투 조우</option>
                     </select>
                 </div>
 
@@ -217,6 +219,19 @@ require_once __DIR__.'/_head.php';
                 <div id="effect-mat-penalty" class="mg-form-group" style="display:none;">
                     <label class="mg-form-label">손실 재료 개수 (획득한 보상 중 랜덤)</label>
                     <input type="number" name="effect_loss_count" id="effect_loss_count" class="mg-form-input" min="1" value="1">
+                </div>
+
+                <!-- 효과 필드: 전투 조우 -->
+                <div id="effect-battle" class="mg-form-group" style="display:none;">
+                    <label class="mg-form-label">몬스터 템플릿</label>
+                    <select name="effect_bm_id" id="effect_bm_id" class="mg-form-select">
+                        <?php
+                        $bm_res = sql_query("SELECT bm_id, bm_name, bm_type FROM {$g5['mg_battle_monster_table']} WHERE bm_use = 1 ORDER BY bm_name");
+                        if ($bm_res) { while ($bm = sql_fetch_array($bm_res)) { ?>
+                        <option value="<?php echo $bm['bm_id']; ?>"><?php echo htmlspecialchars($bm['bm_name']); ?> (<?php echo $bm['bm_type']; ?>)</option>
+                        <?php } } ?>
+                    </select>
+                    <small class="mg-form-text">관리자 > 전투 > 몬스터 관리에서 등록된 몬스터 목록</small>
                 </div>
 
                 <!-- 효과 필드: 보상 감소 -->
@@ -249,6 +264,7 @@ function toggleEffectFields() {
     document.getElementById('effect-material').style.display = (type === 'material_bonus') ? '' : 'none';
     document.getElementById('effect-mat-penalty').style.display = (type === 'material_penalty') ? '' : 'none';
     document.getElementById('effect-reward-loss').style.display = (type === 'reward_loss') ? '' : 'none';
+    document.getElementById('effect-battle').style.display = (type === 'battle_encounter') ? '' : 'none';
 }
 
 function openEventModal() {

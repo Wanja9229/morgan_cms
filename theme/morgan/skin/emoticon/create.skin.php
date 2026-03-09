@@ -61,9 +61,7 @@ if (!defined('_GNUBOARD_')) exit;
             <div class="p-4">
                 <div class="bg-mg-bg-primary border-2 border-dashed border-mg-bg-tertiary rounded-lg p-6 text-center cursor-pointer hover:border-mg-accent transition-colors"
                      id="uploadZone" onclick="document.getElementById('emoticonFiles').click();">
-                    <svg class="w-8 h-8 mx-auto mb-2 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
+                    <i data-lucide="image" class="w-8 h-8 mx-auto mb-2 text-mg-text-muted"></i>
                     <p class="text-sm text-mg-text-muted">이미지를 드래그하거나 클릭하여 업로드</p>
                     <p class="text-xs text-mg-text-muted mt-1">PNG, GIF, WebP | 최대 <?php echo $max_size; ?>KB | 권장 <?php echo $rec_size; ?>x<?php echo $rec_size; ?>px</p>
                 </div>

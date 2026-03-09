@@ -17,9 +17,7 @@ if (!defined('_GNUBOARD_')) exit;
                 <p class="text-3xl font-bold text-mg-accent"><?php echo number_format($member['mb_point']); ?><span class="text-lg">P</span></p>
             </div>
             <div class="w-16 h-16 rounded-full bg-mg-accent/20 flex items-center justify-center">
-                <svg class="w-8 h-8 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
+                <i data-lucide="circle-dollar-sign" class="w-8 h-8 text-mg-accent"></i>
             </div>
         </div>
     </div>
@@ -27,9 +25,7 @@ if (!defined('_GNUBOARD_')) exit;
     <!-- 포인트 내역 -->
     <div class="card">
         <h2 class="card-header mb-4">
-            <svg class="w-5 h-5 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-            </svg>
+            <i data-lucide="clipboard-list" class="w-5 h-5 text-mg-accent"></i>
             포인트 내역
         </h2>
 

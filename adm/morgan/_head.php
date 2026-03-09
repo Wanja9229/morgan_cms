@@ -725,6 +725,8 @@ if (isset($menu)) {
             color: var(--mg-accent);
         }
     </style>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
     <script>
     // 모달 배경 클릭 보호 — 드래그 시작이 배경일 때만 닫힘 허용
     document.addEventListener('mousedown', function(e) { document._mgMdTarget = e.target; }, true);

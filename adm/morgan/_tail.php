@@ -86,6 +86,11 @@
 
     restoreNavState();
 
+    // Lucide 아이콘 렌더링
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+
     // 관리자용 Toast (프론트 notification.js 미로드 대응)
     if (typeof mgToast === 'undefined') {
         window.mgToast = function(msg, type, duration) {

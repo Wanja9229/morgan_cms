@@ -238,7 +238,7 @@ require_once __DIR__.'/_head.php';
     <strong>· 소속별 유형</strong> — 유형의 "소속" 칸에서 특정 소속을 지정하면, 캐릭터 생성 시 해당 소속을 선택한 경우에만 표시됩니다. "공용"은 소속에 관계없이 항상 선택 가능합니다.<br>
     <strong>· 유형만 사용 / 소속만 사용</strong> — 둘 중 하나만 등록해도 됩니다. 등록되지 않은 항목은 캐릭터 폼에 표시되지 않습니다.<br>
     <strong>· 표시 명칭 변경</strong> — 관리자 설정 &gt; 캐릭터에서 "소속"과 "유형"의 표시명을 자유롭게 바꿀 수 있습니다. (예: 세력/종족, 학과/학년 등)<br>
-    <strong>· 아이콘</strong> — Heroicons 이름(shield, star, fire 등)을 입력하거나 이미지 파일을 업로드합니다.<br>
+    <strong>· 아이콘</strong> — Lucide Icons 이름(shield, star, flame 등)을 입력하거나 이미지 파일을 업로드합니다. (<a href="https://lucide.dev/icons/" target="_blank" style="color:var(--mg-accent);">lucide.dev/icons</a>)<br>
     <strong>· 정렬</strong> — ≡ 핸들을 드래그하여 순서를 변경합니다. 변경 즉시 저장됩니다.
 </div>
 

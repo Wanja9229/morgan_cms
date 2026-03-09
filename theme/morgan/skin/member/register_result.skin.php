@@ -12,9 +12,7 @@ if (!defined('_GNUBOARD_')) exit;
     <div class="card text-center">
         <!-- 아이콘 -->
         <div class="w-20 h-20 rounded-full bg-mg-success/20 mx-auto mb-4 flex items-center justify-center">
-            <svg class="w-10 h-10 text-mg-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-            </svg>
+            <i data-lucide="check" class="w-10 h-10 text-mg-success"></i>
         </div>
 
         <h2 class="text-xl font-bold text-mg-text-primary mb-2">가입을 환영합니다!</h2>

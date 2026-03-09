@@ -46,10 +46,10 @@ $slider_id = 'mg_slider_'.uniqid();
         <?php if ($show_arrows && count($slides) > 1): ?>
         <!-- Arrows -->
         <button type="button" class="mg-slider-prev absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors" onclick="mgSliderPrev('<?php echo $slider_id; ?>')">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            <i data-lucide="chevron-left" class="w-6 h-6"></i>
         </button>
         <button type="button" class="mg-slider-next absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors" onclick="mgSliderNext('<?php echo $slider_id; ?>')">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            <i data-lucide="chevron-right" class="w-6 h-6"></i>
         </button>
         <?php endif; ?>
 

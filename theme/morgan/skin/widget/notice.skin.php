@@ -15,9 +15,7 @@ if (!defined('_GNUBOARD_')) exit;
 ?>
 <div class="card mg-widget mg-widget-notice h-full flex flex-col">
     <h2 class="card-header">
-        <svg class="w-5 h-5 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
-        </svg>
+        <i data-lucide="megaphone" class="w-5 h-5 text-mg-accent"></i>
         <?php echo htmlspecialchars($title); ?>
     </h2>
     <ul class="space-y-2 text-sm flex-1 overflow-auto">

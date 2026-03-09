@@ -623,6 +623,59 @@ function removeLogo() {
         </div>
     </div>
 
+    <!-- 전투 설정 -->
+    <div class="mg-card" style="margin-top:1.5rem;">
+        <div class="mg-card-header">
+            <h4 class="mg-card-title">전투 설정</h4>
+        </div>
+        <div class="mg-card-body">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem;">
+                <div class="mg-form-group">
+                    <label class="mg-form-label">전투 사용</label>
+                    <?php echo _cfg_radio('battle_use', $mg_configs, '0'); ?>
+                </div>
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="battle_stat_base">스탯 기본값</label>
+                    <input type="number" name="battle_stat_base" id="battle_stat_base" value="<?php echo isset($mg_configs['battle_stat_base']) ? $mg_configs['battle_stat_base'] : '5'; ?>" class="mg-form-input" min="1" max="99">
+                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">캐릭터 생성 시 각 스탯의 기본값</small>
+                </div>
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="battle_stat_bonus_points">생성 시 분배 포인트</label>
+                    <input type="number" name="battle_stat_bonus_points" id="battle_stat_bonus_points" value="<?php echo isset($mg_configs['battle_stat_bonus_points']) ? $mg_configs['battle_stat_bonus_points'] : '15'; ?>" class="mg-form-input" min="0" max="999">
+                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">캐릭터 생성 시 자유롭게 분배할 수 있는 포인트</small>
+                </div>
+            </div>
+
+            <h5 style="font-size:0.8rem;font-weight:600;margin:1.25rem 0 0.75rem;color:var(--mg-text-muted);">수업 스케줄</h5>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem;">
+                <div class="mg-form-group">
+                    <label class="mg-form-label">수업 시스템 사용</label>
+                    <?php echo _cfg_radio('battle_training_use', $mg_configs, '0'); ?>
+                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">OFF 시 스탯 성장 아이템으로만 성장 가능</small>
+                </div>
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="training_stress_max">스트레스 상한</label>
+                    <input type="number" name="training_stress_max" id="training_stress_max" value="<?php echo isset($mg_configs['training_stress_max']) ? $mg_configs['training_stress_max'] : '100'; ?>" class="mg-form-input" min="10" max="999">
+                </div>
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="training_stress_free">자유행동 스트레스 감소</label>
+                    <input type="number" name="training_stress_free" id="training_stress_free" value="<?php echo isset($mg_configs['training_stress_free']) ? $mg_configs['training_stress_free'] : '10'; ?>" class="mg-form-input" min="0" max="100">
+                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">빈 슬롯(자유행동) 1개당 감소량</small>
+                </div>
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="training_stress_weekend">주말 스트레스 감소</label>
+                    <input type="number" name="training_stress_weekend" id="training_stress_weekend" value="<?php echo isset($mg_configs['training_stress_weekend']) ? $mg_configs['training_stress_weekend'] : '40'; ?>" class="mg-form-input" min="0" max="100">
+                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">토/일 각 1일당 감소량</small>
+                </div>
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="training_stress_threshold">효율 저하 임계값</label>
+                    <input type="number" name="training_stress_threshold" id="training_stress_threshold" value="<?php echo isset($mg_configs['training_stress_threshold']) ? $mg_configs['training_stress_threshold'] : '70'; ?>" class="mg-form-input" min="10" max="100">
+                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">이 수치 이상이면 수업 효율 50% 저하</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div style="margin-top:1.5rem;">
         <button type="submit" class="mg-btn mg-btn-primary">설정 저장</button>
     </div>

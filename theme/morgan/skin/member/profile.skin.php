@@ -100,9 +100,7 @@ $profile_titles = function_exists('mg_get_active_titles') ? mg_get_active_titles
                     <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.$profile_char['ch_thumb']; ?>" alt="" class="w-full h-full object-cover">
                     <?php } else { ?>
                     <div class="w-full h-full flex items-center justify-center">
-                        <svg class="w-6 h-6 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                        </svg>
+                        <i data-lucide="user" class="w-6 h-6 text-mg-text-muted"></i>
                     </div>
                     <?php } ?>
                 </div>

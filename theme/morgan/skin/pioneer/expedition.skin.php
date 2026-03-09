@@ -108,10 +108,10 @@ $relation_url = G5_BBS_URL . '/relation.php';
         <!-- 파견지 상세 -->
         <div style="padding:16px;">
             <div class="flex flex-wrap gap-3 text-sm mb-4" id="dm-stats">
-                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg" style="background:var(--mg-bg-primary);"><svg class="w-4 h-4" style="color:var(--mg-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> <span id="dm-stamina">0</span></span>
-                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg" style="background:var(--mg-bg-primary);"><svg class="w-4 h-4" style="color:var(--mg-text-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> <span id="dm-duration">0분</span></span>
-                <span id="dm-point-reward-wrap" class="inline-flex items-center gap-1 px-2 py-1 rounded-lg" style="background:var(--mg-bg-primary);display:none;"><svg class="w-4 h-4" style="color:var(--mg-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> <span id="dm-point-reward">0</span>P</span>
-                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg" style="background:var(--mg-bg-primary);"><svg class="w-4 h-4" style="color:var(--mg-text-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg> 파트너 +<span id="dm-partner-pt">0</span>P</span>
+                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg" style="background:var(--mg-bg-primary);"><i data-lucide="zap" class="w-4 h-4" style="color:var(--mg-accent);"></i> <span id="dm-stamina">0</span></span>
+                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg" style="background:var(--mg-bg-primary);"><i data-lucide="clock" class="w-4 h-4" style="color:var(--mg-text-secondary);"></i> <span id="dm-duration">0분</span></span>
+                <span id="dm-point-reward-wrap" class="inline-flex items-center gap-1 px-2 py-1 rounded-lg" style="background:var(--mg-bg-primary);display:none;"><i data-lucide="circle-dollar-sign" class="w-4 h-4" style="color:var(--mg-accent);"></i> <span id="dm-point-reward">0</span>P</span>
+                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg" style="background:var(--mg-bg-primary);"><i data-lucide="users" class="w-4 h-4" style="color:var(--mg-text-secondary);"></i> 파트너 +<span id="dm-partner-pt">0</span>P</span>
             </div>
             <div id="dm-drops" class="flex flex-wrap gap-2 mb-4"></div>
 
@@ -154,7 +154,7 @@ $relation_url = G5_BBS_URL . '/relation.php';
 <div id="reward-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" style="display:none;">
     <div class="bg-mg-bg-secondary rounded-xl max-w-sm w-full p-6">
         <div class="text-center mb-4">
-            <div class="mb-2"><svg class="w-8 h-8 mx-auto" style="color:var(--mg-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg></div>
+            <div class="mb-2"><i data-lucide="sparkles" class="w-8 h-8 mx-auto" style="color:var(--mg-accent);"></i></div>
             <h3 class="text-lg font-bold text-mg-text-primary">파견 완료!</h3>
         </div>
         <div id="reward-items" class="space-y-2 mb-4"></div>

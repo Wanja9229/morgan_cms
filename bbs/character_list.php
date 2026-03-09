@@ -188,7 +188,7 @@ include_once(G5_THEME_PATH.'/head.php');
                 <?php if ($stx) { ?>
                 <a href="?<?php echo build_query(['stx' => '', 'sfl' => '', 'page' => 1]); ?>" class="inline-flex items-center gap-1 bg-mg-bg-tertiary text-mg-text-secondary text-xs px-2 py-1 rounded-full hover:bg-mg-bg-primary transition-colors">
                     "<?php echo htmlspecialchars($stx); ?>"
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <i data-lucide="x" class="w-3 h-3"></i>
                 </a>
                 <?php } ?>
                 <?php if ($side_id) {
@@ -197,7 +197,7 @@ include_once(G5_THEME_PATH.'/head.php');
                 ?>
                 <a href="?<?php echo build_query(['side_id' => 0, 'page' => 1]); ?>" class="inline-flex items-center gap-1 bg-mg-bg-tertiary text-mg-text-secondary text-xs px-2 py-1 rounded-full hover:bg-mg-bg-primary transition-colors">
                     <?php echo $side_name; ?>
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <i data-lucide="x" class="w-3 h-3"></i>
                 </a>
                 <?php } ?>
                 <?php if ($class_id) {
@@ -206,7 +206,7 @@ include_once(G5_THEME_PATH.'/head.php');
                 ?>
                 <a href="?<?php echo build_query(['class_id' => 0, 'page' => 1]); ?>" class="inline-flex items-center gap-1 bg-mg-bg-tertiary text-mg-text-secondary text-xs px-2 py-1 rounded-full hover:bg-mg-bg-primary transition-colors">
                     <?php echo $class_name; ?>
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <i data-lucide="x" class="w-3 h-3"></i>
                 </a>
                 <?php } ?>
                 <a href="?" class="text-xs text-mg-accent hover:underline ml-2">전체 초기화</a>
@@ -226,9 +226,7 @@ include_once(G5_THEME_PATH.'/head.php');
                 <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.$char['ch_thumb']; ?>" alt="<?php echo $char['ch_name']; ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                 <?php } else { ?>
                 <div class="w-full h-full flex items-center justify-center text-mg-text-muted">
-                    <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                    </svg>
+                    <i data-lucide="user" class="w-12 h-12"></i>
                 </div>
                 <?php } ?>
 
@@ -286,9 +284,7 @@ include_once(G5_THEME_PATH.'/head.php');
     <!-- 빈 상태 -->
     <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary py-16 px-8 text-center">
         <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-mg-bg-tertiary flex items-center justify-center">
-            <svg class="w-8 h-8 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
+            <i data-lucide="search" class="w-8 h-8 text-mg-text-muted"></i>
         </div>
         <?php if ($stx || $side_id || $class_id) { ?>
         <h3 class="text-lg font-medium text-mg-text-primary mb-2">검색 결과가 없습니다</h3>

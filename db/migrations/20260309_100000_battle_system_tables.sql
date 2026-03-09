@@ -133,7 +133,7 @@ CREATE TABLE IF NOT EXISTS mg_battle_log (
 -- 7) 스킬 정의
 CREATE TABLE IF NOT EXISTS mg_battle_skill (
     sk_id           int AUTO_INCREMENT PRIMARY KEY,
-    sk_code         varchar(30) NOT NULL,
+    sk_code         varchar(30) NOT NULL UNIQUE,
     sk_name         varchar(50) NOT NULL,
     sk_desc         varchar(200) DEFAULT '',
     sk_icon         varchar(100) DEFAULT '',

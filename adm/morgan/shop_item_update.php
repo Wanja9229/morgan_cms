@@ -216,7 +216,7 @@ if ($mode == 'add' || $mode == 'edit') {
                 // 파일 모드이고 새 업로드 없으면 기존 이미지 유지
                 $badge_icon = $current_badge_icon;
             } elseif ($badge_icon_type === 'text' && !empty($effect['badge_icon'])) {
-                // 텍스트 모드면 Heroicons 이름 사용
+                // 텍스트 모드면 Lucide Icons 이름 사용
                 $badge_icon = $effect['badge_icon'];
             }
 

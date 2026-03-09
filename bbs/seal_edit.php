@@ -299,7 +299,7 @@ include_once(G5_THEME_PATH.'/head.php');
 
 <div class="mg-inner">
     <a href="javascript:history.back();" class="inline-flex items-center gap-1 text-sm text-mg-text-muted hover:text-mg-accent transition-colors mb-4">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        <i data-lucide="chevron-left" class="w-4 h-4"></i>
         <span>뒤로</span>
     </a>
 
@@ -348,7 +348,7 @@ include_once(G5_THEME_PATH.'/head.php');
                             <?php if (!empty($mc['ch_thumb'])) { ?>
                             <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.$mc['ch_thumb']; ?>" alt="" class="w-full h-full object-cover">
                             <?php } else { ?>
-                            <svg class="w-5 h-5 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                            <i data-lucide="user" class="w-5 h-5 text-mg-text-muted"></i>
                             <?php } ?>
                         </div>
                         <span class="text-sm text-mg-text-primary font-medium peer-checked:text-mg-accent"><?php echo htmlspecialchars($mc['ch_name']); ?></span>
@@ -448,7 +448,7 @@ include_once(G5_THEME_PATH.'/head.php');
                     </div>
                     <?php if ($image_upload) { ?>
                     <label class="inline-flex items-center gap-1 px-3 py-1.5 bg-mg-bg-tertiary hover:bg-mg-bg-primary text-mg-text-secondary text-xs rounded-lg cursor-pointer transition-colors">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <i data-lucide="image" class="w-3.5 h-3.5"></i>
                         파일 선택
                         <input type="file" accept="image/*" id="pp-image-file" class="hidden">
                     </label>
@@ -511,15 +511,15 @@ include_once(G5_THEME_PATH.'/head.php');
                     <p class="text-xs font-medium text-mg-text-secondary mb-2">텍스트 정렬</p>
                     <div class="flex gap-1">
                         <button type="button" data-align="left" class="sp-align-btn flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs border border-mg-bg-tertiary text-mg-text-secondary transition-colors">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M3 6h18M3 12h12M3 18h16"/></svg>
+                            <i data-lucide="align-left" class="w-3.5 h-3.5"></i>
                             좌측
                         </button>
                         <button type="button" data-align="center" class="sp-align-btn flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs border border-mg-bg-tertiary text-mg-text-secondary transition-colors">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M3 6h18M6 12h12M5 18h14"/></svg>
+                            <i data-lucide="align-center" class="w-3.5 h-3.5"></i>
                             가운데
                         </button>
                         <button type="button" data-align="right" class="sp-align-btn flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs border border-mg-bg-tertiary text-mg-text-secondary transition-colors">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M3 6h18M9 12h12M5 18h16"/></svg>
+                            <i data-lucide="align-right" class="w-3.5 h-3.5"></i>
                             우측
                         </button>
                     </div>
@@ -553,9 +553,7 @@ include_once(G5_THEME_PATH.'/head.php');
         <!-- 5. 모바일 폴백 -->
         <div id="mobile-editor" class="space-y-4 mb-4" style="display:none;">
             <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary p-6 text-center mb-4">
-                <svg class="w-10 h-10 mx-auto mb-3 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                </svg>
+                <i data-lucide="monitor" class="w-10 h-10 mx-auto mb-3 text-mg-text-muted"></i>
                 <p class="text-sm text-mg-text-secondary font-medium">레이아웃 편집은 PC에서만 가능합니다</p>
                 <p class="text-xs text-mg-text-muted mt-1">아래에서 텍스트와 이미지를 수정할 수 있습니다</p>
             </div>
@@ -599,7 +597,7 @@ include_once(G5_THEME_PATH.'/head.php');
                     </div>
                     <?php if ($image_upload) { ?>
                     <label class="inline-flex items-center gap-1 px-3 py-1.5 bg-mg-bg-tertiary hover:bg-mg-bg-primary text-mg-text-secondary text-xs rounded-lg cursor-pointer transition-colors">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <i data-lucide="image" class="w-3.5 h-3.5"></i>
                         파일 선택
                         <input type="file" accept="image/*" id="m-image-file" class="hidden">
                     </label>

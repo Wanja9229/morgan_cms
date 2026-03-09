@@ -340,7 +340,9 @@ function mg_battle_allocate_stats($ch_id, $alloc) {
     $str = max(0, (int)($alloc['str'] ?? 0));
     $dex = max(0, (int)($alloc['dex'] ?? 0));
     $int_val = max(0, (int)($alloc['int'] ?? 0));
-    $total = $hp + $str + $dex + $int_val;
+    $con = max(0, (int)($alloc['con'] ?? 0));
+    $luk = max(0, (int)($alloc['luk'] ?? 0));
+    $total = $hp + $str + $dex + $int_val + $con + $luk;
 
     if ($total <= 0) return array('success' => false, 'message' => '배분할 포인트를 입력해주세요.');
     if ($total > (int)$stat['stat_points']) {
@@ -352,6 +354,8 @@ function mg_battle_allocate_stats($ch_id, $alloc) {
         stat_str = stat_str + {$str},
         stat_dex = stat_dex + {$dex},
         stat_int = stat_int + {$int_val},
+        stat_con = stat_con + {$con},
+        stat_luk = stat_luk + {$luk},
         stat_points = stat_points - {$total}
         WHERE ch_id = {$ch_id}");
 
@@ -369,11 +373,12 @@ function mg_battle_reset_stats($ch_id) {
     $stat = sql_fetch("SELECT * FROM {$g5['mg_battle_stat_table']} WHERE ch_id = {$ch_id}");
     if (!$stat) return array('success' => false, 'message' => '스탯 정보가 없습니다.');
 
-    $used = (int)$stat['stat_hp'] + (int)$stat['stat_str'] + (int)$stat['stat_dex'] + (int)$stat['stat_int'];
-    $refund = $used + (int)$stat['stat_points'];
+    $base = (int)mg_config('battle_stat_base', '5');
+    $used = ((int)$stat['stat_hp'] - $base) + ((int)$stat['stat_str'] - $base) + ((int)$stat['stat_dex'] - $base) + ((int)$stat['stat_int'] - $base) + ((int)$stat['stat_con'] - $base) + ((int)$stat['stat_luk'] - $base);
+    $refund = max(0, $used) + (int)$stat['stat_points'];
 
     sql_query("UPDATE {$g5['mg_battle_stat_table']} SET
-        stat_hp = 0, stat_str = 0, stat_dex = 0, stat_int = 0,
+        stat_hp = {$base}, stat_str = {$base}, stat_dex = {$base}, stat_int = {$base}, stat_con = {$base}, stat_luk = {$base},
         stat_points = {$refund}
         WHERE ch_id = {$ch_id}");
 
@@ -629,4 +634,173 @@ function mg_battle_join($be_id, $ch_id, $mb_id, $role = 'participant') {
     $bsl_id = sql_insert_id();
 
     return array('success' => true, 'message' => '전투에 참여했습니다.', 'bsl_id' => $bsl_id);
+}
+
+// ============================================================
+// 11. 보상 분배
+// ============================================================
+
+/**
+ * 전투 승리 시 보상 분배
+ * 기본 보상: 균등 + 기여도 상위 3명 추가 보상 + 발견자 보너스
+ */
+function mg_battle_distribute_rewards($be_id) {
+    global $g5;
+    $be_id = (int)$be_id;
+
+    $enc = sql_fetch("SELECT * FROM {$g5['mg_battle_encounter_table']} WHERE be_id = {$be_id}");
+    if (!$enc) return;
+
+    $base_point = (int)$enc['be_reward_point'];
+    $death_penalty_pct = (int)mg_battle_config('battle_death_penalty', 50);
+
+    // 참여자 (행동 1회 이상)
+    $slots = array();
+    $res = sql_query("SELECT * FROM {$g5['mg_battle_slot_table']}
+                      WHERE be_id = {$be_id} AND action_count > 0
+                      ORDER BY (total_damage + total_heal + buff_count * 50 + debuff_count * 50 + taunt_absorb * 80) DESC");
+    while ($s = sql_fetch_array($res)) {
+        $s['contribution'] = (int)$s['total_damage'] + (int)$s['total_heal']
+                           + (int)$s['buff_count'] * 50 + (int)$s['debuff_count'] * 50
+                           + (int)$s['taunt_absorb'] * 80;
+        $slots[] = $s;
+    }
+
+    if (empty($slots)) return;
+
+    // 보상 계산
+    $bonus_rates = array(50, 30, 15); // 1,2,3위
+    $discoverer_bonus = 20;
+
+    foreach ($slots as $i => $slot) {
+        $reward = $base_point;
+
+        // 상위 3명 추가 보상
+        if ($i < 3) {
+            $reward += round($base_point * $bonus_rates[$i] / 100);
+        }
+
+        // 발견자 보너스
+        if ($slot['mb_id'] === $enc['discoverer_mb_id']) {
+            $reward += round($base_point * $discoverer_bonus / 100);
+        }
+
+        // 전사 패널티
+        if ($slot['slot_status'] === 'dead') {
+            $reward = round($reward * (100 - $death_penalty_pct) / 100);
+        }
+
+        // 포인트 지급
+        if ($reward > 0 && function_exists('insert_point')) {
+            insert_point($slot['mb_id'], $reward, '전투 보상 (기여 ' . ($i+1) . '위)', 'mg_battle', $be_id, 'reward');
+        }
+
+        // 알림
+        if (function_exists('mg_notify')) {
+            $mon = sql_fetch("SELECT bm_name FROM {$g5['mg_battle_monster_table']} WHERE bm_id = " . (int)$enc['bm_id']);
+            mg_notify($slot['mb_id'], 'battle', '전투 승리!',
+                      htmlspecialchars($mon['bm_name'] ?? '') . ' 격퇴 — 보상 ' . number_format($reward) . ' 포인트',
+                      G5_BBS_URL . '/battle.php?mode=list');
+        }
+    }
+
+    // 아이템 드랍 (기여율 비례)
+    $drops = json_decode($enc['be_reward_drops'] ?? '[]', true);
+    if (is_array($drops) && !empty($drops)) {
+        $total_contribution = array_sum(array_column($slots, 'contribution'));
+        if ($total_contribution <= 0) $total_contribution = 1;
+
+        foreach ($drops as $drop) {
+            $drop_rate = (int)($drop['rate'] ?? 0);
+            if (mt_rand(1, 100) > $drop_rate) continue;
+
+            // 기여율 비례 대상 선택
+            $roll = mt_rand(1, $total_contribution);
+            $cumulative = 0;
+            foreach ($slots as $slot) {
+                $cumulative += $slot['contribution'];
+                if ($roll <= $cumulative) {
+                    // 아이템 지급 (인벤토리)
+                    $si_id = (int)($drop['si_id'] ?? 0);
+                    if ($si_id > 0) {
+                        $mb_esc = sql_real_escape_string($slot['mb_id']);
+                        $existing = sql_fetch("SELECT iv_id, iv_count FROM {$g5['mg_inventory_table']}
+                                               WHERE mb_id = '{$mb_esc}' AND si_id = {$si_id}");
+                        if ($existing) {
+                            sql_query("UPDATE {$g5['mg_inventory_table']} SET iv_count = iv_count + 1 WHERE iv_id = " . (int)$existing['iv_id']);
+                        } else {
+                            sql_query("INSERT INTO {$g5['mg_inventory_table']} (mb_id, si_id, iv_count, iv_datetime)
+                                       VALUES ('{$mb_esc}', {$si_id}, 1, NOW())");
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+    }
+}
+
+// ============================================================
+// 12. 전투 조우 생성 (파견 연동)
+// ============================================================
+
+/**
+ * 전투 조우 생성 (파견 이벤트에서 호출)
+ */
+function mg_battle_create_encounter($bm_id, $discoverer_mb_id, $discoverer_ch_id, $ea_id = 0, $el_id = 0) {
+    global $g5;
+    $bm_id = (int)$bm_id;
+
+    $monster = sql_fetch("SELECT * FROM {$g5['mg_battle_monster_table']} WHERE bm_id = {$bm_id} AND bm_use = 1");
+    if (!$monster) return false;
+
+    // 몬스터 인스턴스 생성
+    $instances = array();
+    $count = ($monster['bm_type'] === 'mob_group') ? max(1, (int)$monster['bm_mob_count']) : 1;
+    for ($i = 0; $i < $count; $i++) {
+        $instances[] = array(
+            'idx' => $i,
+            'name' => $monster['bm_name'],
+            'hp' => (int)$monster['bm_hp'],
+            'max_hp' => (int)$monster['bm_hp'],
+            'atk' => (int)$monster['bm_atk'],
+            'def' => (int)$monster['bm_def'],
+        );
+    }
+
+    $monsters_json = sql_real_escape_string(json_encode($instances, JSON_UNESCAPED_UNICODE));
+    $drops_json = $monster['bm_reward_drops'] ? sql_real_escape_string($monster['bm_reward_drops']) : '[]';
+    $mb_esc = sql_real_escape_string($discoverer_mb_id);
+    $ch_id = (int)$discoverer_ch_id;
+
+    sql_query("INSERT INTO {$g5['mg_battle_encounter_table']}
+               (bm_id, be_type, be_status, be_monsters, be_time_limit, be_reward_point,
+                be_reward_drops, discoverer_mb_id, discoverer_ch_id, ea_id, el_id, be_discovered_at)
+               VALUES ({$bm_id}, '{$monster['bm_type']}', 'discovered',
+                       '{$monsters_json}', " . (int)$monster['bm_time_limit'] . ", " . (int)$monster['bm_reward_point'] . ",
+                       '{$drops_json}', '{$mb_esc}', {$ch_id}, " . (int)$ea_id . ", " . (int)$el_id . ", NOW())");
+
+    $be_id = sql_insert_id();
+    if (!$be_id) return false;
+
+    // 발견자 자동 참여
+    mg_battle_init_stat($ch_id, $discoverer_mb_id);
+    mg_battle_init_energy($ch_id, $discoverer_mb_id);
+    mg_battle_join($be_id, $ch_id, $discoverer_mb_id, 'discoverer');
+
+    // 전체 알림
+    if (function_exists('mg_notify')) {
+        // 로그인 중인 회원에게 알림 (최근 24시간 접속자)
+        $res = sql_query("SELECT mb_id FROM {$g5['member_table']}
+                          WHERE mb_datetime > DATE_SUB(NOW(), INTERVAL 24 HOUR)
+                          AND mb_id != '{$mb_esc}'
+                          LIMIT 50");
+        while ($row = sql_fetch_array($res)) {
+            mg_notify($row['mb_id'], 'battle', '몬스터 출현!',
+                      htmlspecialchars($monster['bm_name']) . '이(가) 발견되었습니다!',
+                      G5_BBS_URL . '/battle.php?mode=view&be_id=' . $be_id);
+        }
+    }
+
+    return $be_id;
 }

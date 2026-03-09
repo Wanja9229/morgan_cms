@@ -45,17 +45,12 @@ if (count($list) > 0) {
             <div class="flex items-center gap-2">
                 <?php if ($admin_href) { ?>
                 <a href="<?php echo $admin_href; ?>" class="btn btn-ghost" title="관리자">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
+                    <i data-lucide="settings" class="w-5 h-5"></i>
                 </a>
                 <?php } ?>
                 <?php if ($write_href) { ?>
                 <a href="<?php echo $write_href; ?>" class="btn btn-primary">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
+                    <i data-lucide="plus" class="w-4 h-4 mr-1"></i>
                     글쓰기
                 </a>
                 <?php } ?>
@@ -106,9 +101,7 @@ if (count($list) > 0) {
                                 <span class="text-xs text-mg-accent">[<?php echo $row['comment_cnt']; ?>]</span>
                                 <?php } ?>
                                 <?php if ($row['wr_file']) { ?>
-                                <svg class="w-4 h-4 text-mg-text-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
-                                </svg>
+                                <i data-lucide="paperclip" class="w-4 h-4 text-mg-text-muted flex-shrink-0"></i>
                                 <?php } ?>
                             </div>
 

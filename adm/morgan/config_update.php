@@ -156,6 +156,16 @@ $config_keys = array(
     'concierge_apply_anonymous',
     'concierge_penalty_count',
     'concierge_penalty_days',
+    // 전투 설정
+    'battle_use',
+    'battle_stat_base',
+    'battle_stat_bonus_points',
+    // 수업 스케줄 설정
+    'battle_training_use',
+    'training_stress_max',
+    'training_stress_free',
+    'training_stress_weekend',
+    'training_stress_threshold',
     // 개척 설정
     'pioneer_use',
     'stamina_daily_recover_limit',

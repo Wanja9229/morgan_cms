@@ -27,9 +27,7 @@ include_once(G5_PLUGIN_PATH.'/dice-box/dice-box-loader.php');
     <!-- 게임 영역 -->
     <div class="card mb-6">
         <h2 class="card-header mb-4">
-            <svg class="w-5 h-5 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
+            <i data-lucide="smile" class="w-5 h-5 text-mg-accent"></i>
             오늘의 출석체크
         </h2>
 
@@ -38,9 +36,7 @@ include_once(G5_PLUGIN_PATH.'/dice-box/dice-box-loader.php');
             <?php $resultData = json_decode($todayAttendance['at_game_result'], true); ?>
             <div class="text-center py-8">
                 <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-mg-success/20 flex items-center justify-center">
-                    <svg class="w-10 h-10 text-mg-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                    </svg>
+                    <i data-lucide="check" class="w-10 h-10 text-mg-success"></i>
                 </div>
                 <p class="text-lg font-semibold text-mg-text-primary mb-2">오늘 출석 완료!</p>
                 <?php if (!empty($resultData['dice'])): ?>
@@ -92,9 +88,7 @@ include_once(G5_PLUGIN_PATH.'/dice-box/dice-box-loader.php');
     <!-- 이번 달 출석 달력 -->
     <div class="card">
         <h2 class="card-header mb-4">
-            <svg class="w-5 h-5 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-            </svg>
+            <i data-lucide="calendar" class="w-5 h-5 text-mg-accent"></i>
             <?php echo date('Y년 n월'); ?> 출석 현황
         </h2>
 

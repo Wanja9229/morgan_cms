@@ -40,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $sk_desc = isset($_POST['sk_desc']) ? trim($_POST['sk_desc']) : '';
     $sk_icon = isset($_POST['sk_icon']) ? trim($_POST['sk_icon']) : '';
+    $sk_icon_color = isset($_POST['sk_icon_color']) ? trim($_POST['sk_icon_color']) : '#ffffff';
     $sk_type = isset($_POST['sk_type']) ? $_POST['sk_type'] : 'damage';
     $sk_stamina = max(1, (int)($_POST['sk_stamina'] ?? 2));
     $sk_target = isset($_POST['sk_target']) ? $_POST['sk_target'] : 'enemy_single';
@@ -60,10 +61,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($mode === 'add') {
         sql_query("INSERT INTO {$g5['mg_battle_skill_table']}
-            (sk_code, sk_name, sk_desc, sk_icon, sk_type, sk_stamina, sk_target, sk_target_count,
+            (sk_code, sk_name, sk_desc, sk_icon, sk_icon_color, sk_type, sk_stamina, sk_target, sk_target_count,
              sk_base_stat, sk_multiplier, sk_buff_stat, sk_buff_value, sk_buff_turns,
              sk_guard_reduction, sk_stat_req, sk_unlock_type, sk_unlock_ref, sk_use, sk_order)
-            VALUES ('{$esc($sk_code)}', '{$esc($sk_name)}', '{$esc($sk_desc)}', '{$esc($sk_icon)}',
+            VALUES ('{$esc($sk_code)}', '{$esc($sk_name)}', '{$esc($sk_desc)}', '{$esc($sk_icon)}', '{$esc($sk_icon_color)}',
                     '{$esc($sk_type)}', {$sk_stamina}, '{$esc($sk_target)}', {$sk_target_count},
                     '{$esc($sk_base_stat)}', {$sk_multiplier}, '{$esc($sk_buff_stat)}', {$sk_buff_value},
                     {$sk_buff_turns}, {$sk_guard_reduction}, '{$esc($sk_stat_req)}',
@@ -72,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         sql_query("UPDATE {$g5['mg_battle_skill_table']} SET
             sk_code = '{$esc($sk_code)}', sk_name = '{$esc($sk_name)}', sk_desc = '{$esc($sk_desc)}',
-            sk_icon = '{$esc($sk_icon)}', sk_type = '{$esc($sk_type)}', sk_stamina = {$sk_stamina},
+            sk_icon = '{$esc($sk_icon)}', sk_icon_color = '{$esc($sk_icon_color)}', sk_type = '{$esc($sk_type)}', sk_stamina = {$sk_stamina},
             sk_target = '{$esc($sk_target)}', sk_target_count = {$sk_target_count},
             sk_base_stat = '{$esc($sk_base_stat)}', sk_multiplier = {$sk_multiplier},
             sk_buff_stat = '{$esc($sk_buff_stat)}', sk_buff_value = {$sk_buff_value},
@@ -146,7 +147,7 @@ if ($tab === 'form') {
                 </div>
                 <div class="mg-form-group">
                     <label class="mg-form-label">아이콘</label>
-                    <input type="text" name="sk_icon" value="<?php echo htmlspecialchars($item['sk_icon'] ?? ''); ?>" class="mg-form-control" placeholder="💥">
+                    <?php mg_game_icon_picker('sk_icon', $item['sk_icon'] ?? '', array('color' => $item['sk_icon_color'] ?? '#ffffff')); ?>
                 </div>
             </div>
             <div class="mg-form-group">
@@ -308,7 +309,7 @@ if ($tab === 'form') {
                     <tr>
                         <td><input type="checkbox" name="chk[]" value="<?php echo $row['sk_id']; ?>"></td>
                         <td><?php echo $row['sk_id']; ?></td>
-                        <td style="font-size:1.2rem;"><?php echo $row['sk_icon']; ?></td>
+                        <td style="width:36px;"><?php echo $row['sk_icon'] ? mg_game_icon($row['sk_icon'], '', $row['sk_icon_color'] ?? '#ffffff') : ''; ?></td>
                         <td><code style="font-size:0.8rem;"><?php echo htmlspecialchars($row['sk_code']); ?></code></td>
                         <td><?php echo htmlspecialchars($row['sk_name']); ?></td>
                         <td><?php echo $type_labels[$row['sk_type']] ?? $row['sk_type']; ?></td>

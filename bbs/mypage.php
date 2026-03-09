@@ -148,81 +148,55 @@ $ach_rarity_colors = array(
         <div class="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             <!-- Row 1: 활동 -->
             <a href="<?php echo G5_BBS_URL; ?>/attendance.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
-                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-                </svg>
+                <i data-lucide="clipboard-check" class="w-5 h-5 text-mg-accent flex-shrink-0"></i>
                 <span class="text-sm text-mg-text-secondary">출석체크</span>
             </a>
             <a href="<?php echo G5_BBS_URL; ?>/my_posts.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
-                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14h6m-6-4h6"/>
-                </svg>
+                <i data-lucide="file-text" class="w-5 h-5 text-mg-accent flex-shrink-0"></i>
                 <span class="text-sm text-mg-text-secondary">내 글 모아보기</span>
             </a>
             <a href="<?php echo G5_BBS_URL; ?>/character_list.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
-                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                </svg>
+                <i data-lucide="user" class="w-5 h-5 text-mg-accent flex-shrink-0"></i>
                 <span class="text-sm text-mg-text-secondary">캐릭터 관리</span>
             </a>
             <a href="<?php echo G5_BBS_URL; ?>/inventory.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
-                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
-                </svg>
+                <i data-lucide="archive" class="w-5 h-5 text-mg-accent flex-shrink-0"></i>
                 <span class="text-sm text-mg-text-secondary">인벤토리</span>
             </a>
             <!-- Row 2: 성장 -->
             <?php if ($_seal_enabled) { ?>
             <a href="<?php echo G5_BBS_URL; ?>/seal_edit.php" data-no-spa class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
-                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
+                <i data-lucide="stamp" class="w-5 h-5 text-mg-accent flex-shrink-0"></i>
                 <span class="text-sm text-mg-text-secondary">인장 편집</span>
             </a>
             <?php } ?>
             <a href="<?php echo G5_BBS_URL; ?>/achievement.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
-                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-                </svg>
+                <i data-lucide="sparkles" class="w-5 h-5 text-mg-accent flex-shrink-0"></i>
                 <span class="text-sm text-mg-text-secondary">업적</span>
             </a>
             <a href="<?php echo G5_BBS_URL; ?>/notification.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
-                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                </svg>
+                <i data-lucide="bell" class="w-5 h-5 text-mg-accent flex-shrink-0"></i>
                 <span class="text-sm text-mg-text-secondary">알림</span>
             </a>
             <a href="<?php echo G5_BBS_URL; ?>/gift.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
-                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
-                </svg>
+                <i data-lucide="gift" class="w-5 h-5 text-mg-accent flex-shrink-0"></i>
                 <span class="text-sm text-mg-text-secondary">선물함</span>
             </a>
             <a href="<?php echo G5_URL; ?>/bbs/point.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
-                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
+                <i data-lucide="circle-dollar-sign" class="w-5 h-5 text-mg-accent flex-shrink-0"></i>
                 <span class="text-sm text-mg-text-secondary">포인트 내역</span>
             </a>
             <!-- Row 3: 컨텐츠/설정 -->
             <a href="<?php echo G5_BBS_URL; ?>/pioneer.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
-                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2z"/>
-                </svg>
+                <i data-lucide="flag" class="w-5 h-5 text-mg-accent flex-shrink-0"></i>
                 <span class="text-sm text-mg-text-secondary">개척</span>
             </a>
             <a href="<?php echo G5_BBS_URL; ?>/pioneer.php?view=expedition" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
-                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-                </svg>
+                <i data-lucide="map" class="w-5 h-5 text-mg-accent flex-shrink-0"></i>
                 <span class="text-sm text-mg-text-secondary">파견</span>
             </a>
             <a href="<?php echo G5_BBS_URL; ?>/member_confirm.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
-                <svg class="w-5 h-5 text-mg-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
+                <i data-lucide="settings" class="w-5 h-5 text-mg-accent flex-shrink-0"></i>
                 <span class="text-sm text-mg-text-secondary">회원정보 수정</span>
             </a>
         </div>
@@ -231,12 +205,12 @@ $ach_rarity_colors = array(
     <!-- 사이드바 위젯 관리 -->
     <?php
     $_widget_defs = array(
-        'inventory'    => array('label' => '인벤토리', 'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>'),
-        'gift'         => array('label' => '선물함', 'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>'),
-        'achievement'  => array('label' => '업적', 'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>'),
-        'notification' => array('label' => '알림', 'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>'),
-        'pioneer'      => array('label' => '개척', 'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2z"/></svg>'),
-        'expedition'   => array('label' => '파견', 'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>'),
+        'inventory'    => array('label' => '인벤토리', 'icon' => '<i data-lucide="archive" class="w-5 h-5"></i>'),
+        'gift'         => array('label' => '선물함', 'icon' => '<i data-lucide="gift" class="w-5 h-5"></i>'),
+        'achievement'  => array('label' => '업적', 'icon' => '<i data-lucide="sparkles" class="w-5 h-5"></i>'),
+        'notification' => array('label' => '알림', 'icon' => '<i data-lucide="bell" class="w-5 h-5"></i>'),
+        'pioneer'      => array('label' => '개척', 'icon' => '<i data-lucide="flag" class="w-5 h-5"></i>'),
+        'expedition'   => array('label' => '파견', 'icon' => '<i data-lucide="map" class="w-5 h-5"></i>'),
     );
     // 현재 위젯 상태 조회
     $widget_states = array('inventory' => 1, 'gift' => 1, 'achievement' => 0, 'notification' => 0, 'pioneer' => 0, 'expedition' => 0);
@@ -279,9 +253,7 @@ $ach_rarity_colors = array(
     <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden mb-6">
         <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary flex items-center justify-between">
             <h2 class="text-sm font-semibold text-mg-text-primary flex items-center gap-2">
-                <svg class="w-4 h-4 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                </svg>
+                <i data-lucide="user" class="w-4 h-4 text-mg-accent"></i>
                 대표 캐릭터
             </h2>
             <a href="<?php echo G5_BBS_URL; ?>/character.php" class="text-xs text-mg-accent hover:underline">캐릭터 관리</a>
@@ -294,9 +266,7 @@ $ach_rarity_colors = array(
                     <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.$main_char['ch_thumb']; ?>" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
                     <?php } else { ?>
                     <div class="w-full h-full flex items-center justify-center">
-                        <svg class="w-8 h-8 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                        </svg>
+                        <i data-lucide="user" class="w-8 h-8 text-mg-text-muted"></i>
                     </div>
                     <?php } ?>
                 </div>
@@ -387,7 +357,7 @@ $ach_rarity_colors = array(
                         <div class="inline-flex items-center gap-1 px-3 py-1.5 bg-mg-bg-primary rounded-lg text-sm text-mg-text-primary border border-mg-bg-tertiary">
                             「<?php echo htmlspecialchars($pt['tp_name']); ?>」
                             <button onclick="deleteTitle(<?php echo $pt['tp_id']; ?>, '<?php echo htmlspecialchars($pt['tp_name'], ENT_QUOTES); ?>')" class="text-mg-text-muted hover:text-mg-error transition-colors" title="삭제">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                <i data-lucide="x" class="w-3.5 h-3.5"></i>
                             </button>
                         </div>
                         <?php } ?>
@@ -402,7 +372,7 @@ $ach_rarity_colors = array(
                         <div class="inline-flex items-center gap-1 px-3 py-1.5 bg-mg-bg-primary rounded-lg text-sm text-mg-text-primary border border-mg-bg-tertiary">
                             「<?php echo htmlspecialchars($st['tp_name']); ?>」
                             <button onclick="deleteTitle(<?php echo $st['tp_id']; ?>, '<?php echo htmlspecialchars($st['tp_name'], ENT_QUOTES); ?>')" class="text-mg-text-muted hover:text-mg-error transition-colors" title="삭제">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                <i data-lucide="x" class="w-3.5 h-3.5"></i>
                             </button>
                         </div>
                         <?php } ?>
@@ -420,9 +390,7 @@ $ach_rarity_colors = array(
     <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden mb-6">
         <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary flex items-center justify-between">
             <h2 class="text-sm font-semibold text-mg-text-primary flex items-center gap-2">
-                <svg class="w-4 h-4 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-                </svg>
+                <i data-lucide="sparkles" class="w-4 h-4 text-mg-accent"></i>
                 업적
             </h2>
             <a href="<?php echo G5_BBS_URL; ?>/achievement.php" class="text-xs text-mg-accent hover:underline">전체보기</a>
@@ -502,9 +470,7 @@ $ach_rarity_colors = array(
         <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
             <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary flex items-center justify-between">
                 <h2 class="text-sm font-semibold text-mg-text-primary flex items-center gap-2">
-                    <svg class="w-4 h-4 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
-                    </svg>
+                    <i data-lucide="archive" class="w-4 h-4 text-mg-accent"></i>
                     인벤토리
                     <?php if ($inventory_count > 0) { ?>
                     <span class="text-xs text-mg-text-muted">(<?php echo $inventory_count; ?>)</span>
@@ -520,9 +486,7 @@ $ach_rarity_colors = array(
                         <?php if (!empty($inv_item['si_image'])) { ?>
                         <img src="<?php echo $inv_item['si_image']; ?>" alt="" class="w-full h-full object-cover rounded-lg">
                         <?php } else { ?>
-                        <svg class="w-6 h-6 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                        </svg>
+                        <i data-lucide="box" class="w-6 h-6 text-mg-text-muted"></i>
                         <?php } ?>
                         <?php if ($inv_item['iv_count'] > 1) { ?>
                         <span class="absolute bottom-0.5 right-0.5 bg-mg-bg-primary/90 text-xs px-1 rounded text-mg-text-secondary"><?php echo $inv_item['iv_count']; ?></span>
@@ -543,9 +507,7 @@ $ach_rarity_colors = array(
         <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
             <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary flex items-center justify-between">
                 <h2 class="text-sm font-semibold text-mg-text-primary flex items-center gap-2">
-                    <svg class="w-4 h-4 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
-                    </svg>
+                    <i data-lucide="gift" class="w-4 h-4 text-mg-accent"></i>
                     선물함
                     <?php if ($gift_count > 0) { ?>
                     <span class="bg-mg-error text-white text-xs px-1.5 py-0.5 rounded-full"><?php echo $gift_count; ?></span>
@@ -562,9 +524,7 @@ $ach_rarity_colors = array(
                             <?php if (!empty($gift['si_image'])) { ?>
                             <img src="<?php echo $gift['si_image']; ?>" alt="" class="w-full h-full object-cover rounded">
                             <?php } else { ?>
-                            <svg class="w-5 h-5 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
-                            </svg>
+                            <i data-lucide="gift" class="w-5 h-5 text-mg-text-muted"></i>
                             <?php } ?>
                         </div>
                         <div class="flex-1 min-w-0">
@@ -589,9 +549,7 @@ $ach_rarity_colors = array(
     <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden mb-6">
         <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary flex items-center justify-between">
             <h2 class="text-sm font-semibold text-mg-text-primary flex items-center gap-2">
-                <svg class="w-4 h-4 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
+                <i data-lucide="stamp" class="w-4 h-4 text-mg-accent"></i>
                 내 인장
             </h2>
             <a href="<?php echo G5_BBS_URL; ?>/seal_edit.php" data-no-spa class="text-xs text-mg-accent hover:underline">편집</a>

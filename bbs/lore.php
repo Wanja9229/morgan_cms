@@ -31,9 +31,7 @@ include_once(G5_THEME_PATH.'/head.php');
     <!-- 페이지 헤더 -->
     <div class="flex items-center gap-3 mb-6">
         <div class="w-10 h-10 rounded-lg bg-mg-accent/20 flex items-center justify-center flex-shrink-0">
-            <svg class="w-6 h-6 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-            </svg>
+            <i data-lucide="book-open" class="w-6 h-6 text-mg-accent"></i>
         </div>
         <div>
             <h1 class="text-2xl font-bold text-mg-text-primary">세계관 위키</h1>
@@ -44,22 +42,16 @@ include_once(G5_THEME_PATH.'/head.php');
     <!-- 서브 탭 -->
     <div class="flex flex-wrap gap-2 mb-4">
         <a href="<?php echo G5_BBS_URL; ?>/lore.php" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors bg-mg-accent/10 border border-mg-accent/30 text-mg-accent">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-            </svg>
+            <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
             위키
         </a>
         <a href="<?php echo G5_BBS_URL; ?>/lore_timeline.php" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors bg-mg-bg-secondary border border-mg-bg-tertiary text-mg-text-secondary hover:text-mg-accent hover:border-mg-accent/30">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
+            <i data-lucide="clock" class="w-3.5 h-3.5"></i>
             연대기
         </a>
         <?php if (mg_config('lore_map_image', '')) { ?>
         <a href="<?php echo G5_BBS_URL; ?>/lore_map.php" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors bg-mg-bg-secondary border border-mg-bg-tertiary text-mg-text-secondary hover:text-mg-accent hover:border-mg-accent/30">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-            </svg>
+            <i data-lucide="map" class="w-3.5 h-3.5"></i>
             지도
         </a>
         <?php } ?>
@@ -84,9 +76,7 @@ include_once(G5_THEME_PATH.'/head.php');
                 <img src="<?php echo htmlspecialchars($article['la_thumbnail']); ?>" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                 <?php } else { ?>
                 <div class="w-full h-full flex items-center justify-center text-mg-text-muted">
-                    <svg class="w-6 h-6 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
+                    <i data-lucide="file-text" class="w-6 h-6 opacity-50"></i>
                 </div>
                 <?php } ?>
             </div>
@@ -117,9 +107,7 @@ include_once(G5_THEME_PATH.'/head.php');
             $prev_url = G5_BBS_URL.'/lore.php?category='.$category.'&page='.($page - 1);
         ?>
         <a href="<?php echo $prev_url; ?>" class="w-10 h-10 flex items-center justify-center rounded-lg bg-mg-bg-tertiary text-mg-text-secondary hover:text-mg-text-primary transition-colors">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-            </svg>
+            <i data-lucide="chevron-left" class="w-4 h-4"></i>
         </a>
         <?php } ?>
 
@@ -159,9 +147,7 @@ include_once(G5_THEME_PATH.'/head.php');
             $next_url = G5_BBS_URL.'/lore.php?category='.$category.'&page='.($page + 1);
         ?>
         <a href="<?php echo $next_url; ?>" class="w-10 h-10 flex items-center justify-center rounded-lg bg-mg-bg-tertiary text-mg-text-secondary hover:text-mg-text-primary transition-colors">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-            </svg>
+            <i data-lucide="chevron-right" class="w-4 h-4"></i>
         </a>
         <?php } ?>
     </div>
@@ -171,9 +157,7 @@ include_once(G5_THEME_PATH.'/head.php');
     <!-- 빈 상태 -->
     <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary py-16 px-8 text-center">
         <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-mg-bg-tertiary flex items-center justify-center">
-            <svg class="w-8 h-8 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-            </svg>
+            <i data-lucide="file-text" class="w-8 h-8 text-mg-text-muted"></i>
         </div>
         <h3 class="text-lg font-medium text-mg-text-primary mb-2">등록된 문서가 없습니다</h3>
         <p class="text-mg-text-muted">아직 이 카테고리에 등록된 세계관 문서가 없습니다.</p>

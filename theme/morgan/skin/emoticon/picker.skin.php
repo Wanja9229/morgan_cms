@@ -21,12 +21,7 @@ if (!isset($picker_target)) $picker_target = 'wr_content';
             class="mg-emoticon-btn"
             onclick="MgEmoticonPicker.toggle('<?php echo $picker_id; ?>', '<?php echo $picker_target; ?>')"
             title="이모티콘">
-        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10" stroke-width="1.5"/>
-            <path stroke-linecap="round" stroke-width="1.5" d="M8 14s1.5 2 4 2 4-2 4-2"/>
-            <circle cx="9" cy="10" r="1" fill="currentColor" stroke="none"/>
-            <circle cx="15" cy="10" r="1" fill="currentColor" stroke="none"/>
-        </svg>
+        <i data-lucide="smile" style="width:20px;height:20px;"></i>
     </button>
 
     <div class="mg-emoticon-popup" id="mgEmoticonPopup_<?php echo $picker_id; ?>" style="display:none;">

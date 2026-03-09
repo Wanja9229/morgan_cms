@@ -12,9 +12,7 @@ if (!defined('_GNUBOARD_')) exit;
 <div class="mg-inner" style="max-width:800px;">
     <!-- 뒤로가기 -->
     <a href="javascript:history.back();" class="inline-flex items-center gap-1 text-sm text-mg-text-muted hover:text-mg-accent transition-colors mb-4">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-        </svg>
+        <i data-lucide="chevron-left" class="w-4 h-4"></i>
         <span>뒤로</span>
     </a>
 
@@ -33,9 +31,7 @@ if (!defined('_GNUBOARD_')) exit;
                     <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.$char['ch_thumb']; ?>" alt="<?php echo $char['ch_name']; ?>" class="w-full h-full object-cover">
                     <?php } else { ?>
                     <div class="w-full h-full flex items-center justify-center text-mg-text-muted">
-                        <svg class="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                        </svg>
+                        <i data-lucide="user" class="w-24 h-24"></i>
                     </div>
                     <?php } ?>
                 </div>
@@ -70,17 +66,13 @@ if (!defined('_GNUBOARD_')) exit;
                         <div class="flex items-center gap-3 mt-2 text-mg-text-secondary">
                             <?php if ($char['side_name'] && mg_config('use_side', '1') == '1') { ?>
                             <span class="flex items-center gap-1">
-                                <svg class="w-4 h-4 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/>
-                                </svg>
+                                <i data-lucide="flag" class="w-4 h-4 text-mg-accent"></i>
                                 <?php echo $char['side_name']; ?>
                             </span>
                             <?php } ?>
                             <?php if ($char['class_name'] && mg_config('use_class', '1') == '1') { ?>
                             <span class="flex items-center gap-1">
-                                <svg class="w-4 h-4 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-                                </svg>
+                                <i data-lucide="star" class="w-4 h-4 text-mg-accent"></i>
                                 <?php echo $char['class_name']; ?>
                             </span>
                             <?php } ?>
@@ -98,17 +90,13 @@ if (!defined('_GNUBOARD_')) exit;
                     <div class="flex items-center gap-2 flex-shrink-0">
                         <?php if ($can_request_relation) { ?>
                         <button type="button" onclick="openRelRequestModal()" class="inline-flex items-center gap-1 text-sm bg-mg-accent hover:bg-mg-accent-hover text-white px-3 py-1.5 rounded-lg transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
-                            </svg>
+                            <i data-lucide="link" class="w-4 h-4"></i>
                             <span>관계 신청</span>
                         </button>
                         <?php } ?>
                         <?php if ($is_owner) { ?>
                         <a href="<?php echo G5_BBS_URL; ?>/character_form.php?ch_id=<?php echo $char['ch_id']; ?>" class="inline-flex items-center gap-1 text-sm bg-mg-bg-tertiary hover:bg-mg-bg-primary text-mg-text-secondary px-3 py-1.5 rounded-lg transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                            </svg>
+                            <i data-lucide="pencil" class="w-4 h-4"></i>
                             <span>수정</span>
                         </a>
                         <?php } ?>
@@ -145,7 +133,7 @@ if (!defined('_GNUBOARD_')) exit;
                 <?php if ($a_icon) { ?>
                 <img src="<?php echo htmlspecialchars($a_icon); ?>" alt="<?php echo htmlspecialchars($a_name); ?>" class="w-10 h-10 object-contain">
                 <?php } else { ?>
-                <svg class="w-8 h-8" style="color:var(--mg-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3h14l-1.405 4.544A5.001 5.001 0 0112 13a5.001 5.001 0 01-5.595-5.456L5 3zm7 10v4m-4 4h8m-4-4v4"/></svg>
+                <i data-lucide="trophy" class="w-8 h-8" style="color:var(--mg-accent);"></i>
                 <?php } ?>
                 <span class="text-xs text-mg-text-secondary mt-1 text-center leading-tight max-w-[70px] truncate"><?php echo htmlspecialchars($a_name); ?></span>
                 <span class="text-[10px] mt-0.5" style="color:<?php echo $a_color; ?>;"><?php echo $ach_rarity_labels[$a_rarity] ?? ''; ?></span>

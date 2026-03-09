@@ -468,7 +468,7 @@ include_once(G5_THEME_PATH.'/skin/board/_lb_common.php');
             <?php if ($write_href) { ?>
             <div class="lb-def-write-area">
                 <button type="button" class="lb-def-write-btn" onclick="lbOpenWrite()">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/></svg>
+                    <i data-lucide="plus" class="w-4 h-4"></i>
                     글쓰기
                 </button>
             </div>

@@ -14,20 +14,18 @@ $_cal_id = 'mg-cal-' . uniqid();
 ?>
 <div class="card mg-widget mg-widget-calendar h-full flex flex-col" id="<?php echo $_cal_id; ?>">
     <h2 class="card-header">
-        <svg class="w-5 h-5 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-        </svg>
+        <i data-lucide="calendar" class="w-5 h-5 text-mg-accent"></i>
         <?php echo htmlspecialchars($title); ?>
     </h2>
 
     <!-- 달력 네비게이션 -->
     <div class="flex items-center justify-between mb-1">
         <button type="button" class="cal-nav-btn text-mg-text-secondary hover:text-mg-accent p-1" data-dir="-1">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            <i data-lucide="chevron-left" class="w-5 h-5"></i>
         </button>
         <span class="cal-month-label text-sm font-semibold text-mg-text-primary"></span>
         <button type="button" class="cal-nav-btn text-mg-text-secondary hover:text-mg-accent p-1" data-dir="1">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            <i data-lucide="chevron-right" class="w-5 h-5"></i>
         </button>
     </div>
 

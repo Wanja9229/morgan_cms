@@ -75,7 +75,7 @@ foreach ($grouped_fields as $fields) { $field_count += count($fields); }
 <div class="mg-inner skin-sns" style="max-width:800px;">
     <!-- 뒤로가기 -->
     <a href="javascript:history.back();" style="display:inline-flex;align-items:center;gap:4px;font-size:0.875rem;color:#536471;margin-bottom:1rem;">
-        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        <i data-lucide="chevron-left" style="width:16px;height:16px;"></i>
         <span>뒤로</span>
     </a>
 
@@ -113,13 +113,13 @@ foreach ($grouped_fields as $fields) { $field_count += count($fields); }
             <p style="color:#536471;font-size:0.9375rem;margin-top:0.5rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
                 <?php if ($ch_class && mg_config('use_class', '1') == '1') { ?>
                 <span style="display:inline-flex;align-items:center;gap:0.25rem;">
-                    <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.193 23.193 0 0112 15c-3.183 0-6.22-.64-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    <i data-lucide="briefcase" style="width:16px;height:16px;"></i>
                     <?php echo $ch_class; ?>
                 </span>
                 <?php } ?>
                 <?php if ($ch_side && mg_config('use_side', '1') == '1') { ?>
                 <span style="display:inline-flex;align-items:center;gap:0.25rem;">
-                    <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg>
+                    <i data-lucide="flag" style="width:16px;height:16px;"></i>
                     <?php echo $ch_side; ?>
                 </span>
                 <?php } ?>
@@ -127,7 +127,7 @@ foreach ($grouped_fields as $fields) { $field_count += count($fields); }
             <?php } ?>
 
             <p style="color:#536471;font-size:0.9375rem;margin-top:0.25rem;display:flex;align-items:center;gap:0.25rem;">
-                <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <i data-lucide="calendar" style="width:16px;height:16px;"></i>
                 가입일 <?php echo $ch_date; ?>
             </p>
 

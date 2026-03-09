@@ -83,9 +83,7 @@ if (!empty($list)) {
             <div class="flex items-center justify-between <?php echo $is_dice ? 'mb-1' : 'mb-2'; ?>">
                 <div class="flex items-center gap-2">
                     <?php if ($row['wr_comment_reply']) { ?>
-                    <svg class="w-4 h-4 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 4v7a3 3 0 003 3h5m0 0l-3-3m3 3l-3 3"/>
-                    </svg>
+                    <i data-lucide="corner-down-right" class="w-4 h-4 text-mg-text-muted"></i>
                     <?php } ?>
                     <?php
                     $cmt_char = isset($mg_cmt_chars[$row['wr_id']]) ? $mg_cmt_chars[$row['wr_id']] : null;

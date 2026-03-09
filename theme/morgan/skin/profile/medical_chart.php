@@ -74,7 +74,7 @@ $ch_initial = mb_substr($char['ch_name'], 0, 1);
 <div class="mg-inner skin-med" style="max-width:800px;">
     <!-- 뒤로가기 -->
     <a href="javascript:history.back();" style="display:inline-flex;align-items:center;gap:4px;font-size:0.875rem;color:#64748b;margin-bottom:1rem;text-decoration:none;">
-        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        <i data-lucide="chevron-left" style="width:16px;height:16px;"></i>
         <span>뒤로</span>
     </a>
 

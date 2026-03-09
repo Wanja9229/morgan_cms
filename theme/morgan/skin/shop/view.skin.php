@@ -23,9 +23,7 @@ if ($item['si_stock'] > 0) {
     <!-- 뒤로가기 -->
     <div class="mb-4">
         <a href="<?php echo G5_BBS_URL; ?>/shop.php<?php echo $item['sc_id'] ? '?sc_id='.$item['sc_id'] : ''; ?>" class="text-mg-text-muted hover:text-mg-accent transition-colors flex items-center gap-1">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-            </svg>
+            <i data-lucide="chevron-left" class="w-4 h-4"></i>
             상점으로 돌아가기
         </a>
     </div>
@@ -39,9 +37,7 @@ if ($item['si_stock'] > 0) {
                     <img src="<?php echo $item['si_image']; ?>" alt="<?php echo htmlspecialchars($item['si_name']); ?>" class="w-full h-full object-cover">
                     <?php } else { ?>
                     <div class="w-full h-full flex items-center justify-center">
-                        <svg class="w-20 h-20 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                        </svg>
+                        <i data-lucide="package" class="w-20 h-20 text-mg-text-muted"></i>
                     </div>
                     <?php } ?>
 
@@ -135,9 +131,7 @@ if ($item['si_stock'] > 0) {
 
                         <?php if ($gift_use == '1' && $can_buy === true) { ?>
                         <button type="button" onclick="openGiftModal(<?php echo $item['si_id']; ?>)" class="bg-mg-warning hover:opacity-80 text-white font-bold py-3 px-4 rounded-lg transition-opacity flex items-center gap-2" style="min-width:44px;min-height:44px;">
-                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
-                            </svg>
+                            <i data-lucide="gift" class="w-5 h-5 flex-shrink-0"></i>
                             <span class="hidden sm:inline text-sm">선물</span>
                         </button>
                         <?php } ?>

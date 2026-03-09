@@ -16,7 +16,7 @@ if (!defined('_GNUBOARD_')) exit;
             <input type="radio" name="mg_ch_id" value="0" <?php echo $lb_main_ch_id == 0 ? 'checked' : ''; ?>>
             <span class="lb-char-badge">
                 <span class="lb-char-icon">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    <i data-lucide="user" style="width:14px;height:14px;"></i>
                 </span>
                 <span>선택 안함</span>
             </span>

@@ -76,9 +76,7 @@ $form_title = $is_edit ? '글 수정' : '글쓰기';
                         <input type="radio" name="mg_ch_id" value="0" <?php echo $mg_selected_ch_id == 0 ? 'checked' : ''; ?> class="hidden">
                         <div class="flex items-center gap-2 px-3 py-2 rounded-lg border border-mg-bg-tertiary bg-mg-bg-primary hover:border-mg-accent transition-colors character-badge">
                             <div class="w-8 h-8 rounded-full bg-mg-bg-tertiary flex items-center justify-center">
-                                <svg class="w-4 h-4 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                </svg>
+                                <i data-lucide="user" class="w-4 h-4 text-mg-text-muted"></i>
                             </div>
                             <span class="text-sm text-mg-text-secondary">선택 안함</span>
                         </div>

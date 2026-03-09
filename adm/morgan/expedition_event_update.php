@@ -43,7 +43,7 @@ if (!empty($_POST['del_icon'])) {
 // 유효성 검사
 if (!$ee_name) alert('이벤트명을 입력하세요.', $redirect_url);
 
-$valid_types = array('point_bonus', 'point_penalty', 'material_bonus', 'material_penalty', 'reward_loss');
+$valid_types = array('point_bonus', 'point_penalty', 'material_bonus', 'material_penalty', 'reward_loss', 'battle_encounter');
 if (!in_array($ee_effect_type, $valid_types)) {
     alert('올바른 효과 유형을 선택하세요.', $redirect_url);
 }
@@ -65,6 +65,9 @@ switch ($ee_effect_type) {
     case 'reward_loss':
         $effect['point_loss'] = max(0, (int)($_POST['effect_point_loss'] ?? 0));
         $effect['material_loss_pct'] = max(0, min(100, (int)($_POST['effect_material_loss_pct'] ?? 50)));
+        break;
+    case 'battle_encounter':
+        $effect['bm_id'] = (int)($_POST['effect_bm_id'] ?? 0);
         break;
 }
 $ee_effect_json = json_encode($effect, JSON_UNESCAPED_UNICODE);

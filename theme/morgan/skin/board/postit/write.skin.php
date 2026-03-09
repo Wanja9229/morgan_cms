@@ -29,9 +29,7 @@ $current_color = $is_edit ? ($write['wr_1'] ?? '0') : '0';
 <div id="bo_write" class="mg-inner">
     <div class="card">
         <h2 class="text-xl font-bold text-mg-text-primary mb-6 flex items-center gap-2">
-            <svg class="w-6 h-6 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-            </svg>
+            <i data-lucide="pencil" class="w-6 h-6 text-mg-accent"></i>
             <?php echo $form_title; ?>
         </h2>
 
@@ -123,9 +121,7 @@ $current_color = $is_edit ? ($write['wr_1'] ?? '0') : '0';
             <div class="flex items-center justify-between">
                 <a href="<?php echo $list_href; ?>" class="btn btn-secondary">취소</a>
                 <button type="submit" id="btn_submit" class="btn btn-primary">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
+                    <i data-lucide="plus" class="w-4 h-4 mr-1"></i>
                     <?php echo $is_edit ? '수정하기' : '붙이기'; ?>
                 </button>
             </div>

@@ -27,15 +27,11 @@ if ($is_member) {
     <!-- 상단: 제목 -->
     <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
         <h1 class="text-2xl font-bold text-mg-text-primary flex items-center gap-2">
-            <svg class="w-6 h-6 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
-            </svg>
+            <i data-lucide="box" class="w-6 h-6 text-mg-accent"></i>
             인벤토리
         </h1>
         <a href="<?php echo G5_BBS_URL; ?>/shop.php" class="text-mg-text-muted hover:text-mg-accent transition-colors flex items-center gap-1">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-            </svg>
+            <i data-lucide="shopping-bag" class="w-4 h-4"></i>
             상점으로
         </a>
     </div>
@@ -71,9 +67,7 @@ if ($is_member) {
     <!-- ========== 재료 탭 콘텐츠 ========== -->
     <div class="card mb-4">
         <div class="flex items-start gap-3">
-            <svg class="w-5 h-5 text-mg-accent flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
+            <i data-lucide="info" class="w-5 h-5 text-mg-accent flex-shrink-0 mt-0.5"></i>
             <div class="text-sm text-mg-text-secondary">
                 <p>파견, 게시판 활동 등으로 획득한 재료입니다. 개척 시설 건설에 사용됩니다.</p>
             </div>
@@ -102,14 +96,10 @@ if ($is_member) {
     </div>
     <?php } else { ?>
     <div class="card py-16 text-center">
-        <svg class="w-16 h-16 mx-auto text-mg-text-muted mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-        </svg>
+        <i data-lucide="package" class="w-16 h-16 mx-auto text-mg-text-muted mb-4"></i>
         <p class="text-mg-text-muted mb-4">보유한 재료가 없습니다.</p>
         <a href="<?php echo G5_BBS_URL; ?>/shop.php?tab=material" class="inline-flex items-center gap-1 text-mg-accent hover:underline">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-            </svg>
+            <i data-lucide="shopping-bag" class="w-4 h-4"></i>
             상점에서 구매하기
         </a>
     </div>
@@ -121,9 +111,7 @@ if ($is_member) {
     <!-- 안내 -->
     <div class="card mb-4">
         <div class="flex items-start gap-3">
-            <svg class="w-5 h-5 text-mg-accent flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
+            <i data-lucide="info" class="w-5 h-5 text-mg-accent flex-shrink-0 mt-0.5"></i>
             <div class="text-sm text-mg-text-secondary space-y-1">
                 <p>게시글, 댓글 작성 시 보유한 이모티콘을 사용할 수 있습니다.</p>
                 <p>이모티콘은 <a href="<?php echo G5_BBS_URL; ?>/shop.php?tab=emoticon" class="text-mg-accent hover:underline">상점 &gt; 이모티콘</a> 탭에서 구매할 수 있습니다.</p>
@@ -138,9 +126,7 @@ if ($is_member) {
     <!-- 보유 이모티콘 셋 -->
     <div class="card mb-4">
         <div class="card-header">
-            <svg class="w-5 h-5 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-            </svg>
+            <i data-lucide="image" class="w-5 h-5 text-mg-accent"></i>
             보유 이모티콘 <span class="text-mg-accent ml-1"><?php echo count($my_emoticon_sets); ?></span>
         </div>
         <?php if (!empty($my_emoticon_sets)) { ?>
@@ -173,9 +159,7 @@ if ($is_member) {
     <?php if ($creator_enabled) { ?>
     <div class="card">
         <div class="card-header">
-            <svg class="w-5 h-5 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-            </svg>
+            <i data-lucide="pencil-line" class="w-5 h-5 text-mg-accent"></i>
             내가 만든 이모티콘
         </div>
 
@@ -288,9 +272,7 @@ if ($is_member) {
                 <img src="<?php echo $item['si_image']; ?>" alt="" class="w-full h-full object-cover">
                 <?php } else { ?>
                 <div class="w-full h-full flex items-center justify-center">
-                    <svg class="w-12 h-12 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                    </svg>
+                    <i data-lucide="package" class="w-12 h-12 text-mg-text-muted"></i>
                 </div>
                 <?php } ?>
 
@@ -330,7 +312,7 @@ if ($is_member) {
                             사용
                         </button>
                         <button type="button" onclick="openGiftModal(<?php echo $item['si_id']; ?>, '<?php echo htmlspecialchars(addslashes($item['si_name']), ENT_QUOTES); ?>')" style="flex-shrink:0;width:2.5rem;" class="bg-mg-bg-tertiary text-mg-text-secondary text-sm py-2 rounded-lg hover:bg-mg-accent hover:text-white transition-colors" title="선물하기">
-                            <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
+                            <i data-lucide="gift" class="w-4 h-4 mx-auto"></i>
                         </button>
                     </div>
                     <?php } ?>
@@ -379,7 +361,7 @@ if ($is_member) {
                     <span class="text-xs text-mg-text-muted" style="flex:1;text-align:center;">사용 불가</span>
                     <?php if (!$is_active) { ?>
                     <button type="button" onclick="openGiftModal(<?php echo $item['si_id']; ?>, '<?php echo htmlspecialchars(addslashes($item['si_name']), ENT_QUOTES); ?>')" style="flex-shrink:0;width:2.5rem;" class="bg-mg-bg-tertiary text-mg-text-secondary text-sm py-2 rounded-lg hover:bg-mg-accent hover:text-white transition-colors" title="선물하기">
-                        <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
+                        <i data-lucide="gift" class="w-4 h-4 mx-auto"></i>
                     </button>
                     <?php } ?>
                 </div>
@@ -392,16 +374,12 @@ if ($is_member) {
     <?php } else { ?>
     <!-- 아이템 없음 -->
     <div class="card py-16 text-center">
-        <svg class="w-16 h-16 mx-auto text-mg-text-muted mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
-        </svg>
+        <i data-lucide="box" class="w-16 h-16 mx-auto text-mg-text-muted mb-4"></i>
         <p class="text-mg-text-muted mb-4">
             <?php echo $tab ? '해당 카테고리에 보유한 아이템이 없습니다.' : '보유한 아이템이 없습니다.'; ?>
         </p>
         <a href="<?php echo G5_BBS_URL; ?>/shop.php" class="inline-flex items-center gap-1 text-mg-accent hover:underline">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-            </svg>
+            <i data-lucide="shopping-bag" class="w-4 h-4"></i>
             상점에서 구매하기
         </a>
     </div>
@@ -411,9 +389,7 @@ if ($is_member) {
     <!-- 하단 링크 -->
     <div class="mt-6 flex gap-4 justify-center">
         <a href="<?php echo G5_BBS_URL; ?>/gift.php" class="text-mg-text-muted hover:text-mg-accent transition-colors flex items-center gap-1">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
-            </svg>
+            <i data-lucide="gift" class="w-4 h-4"></i>
             선물함
         </a>
     </div>
@@ -424,7 +400,7 @@ if ($is_member) {
     <div style="background:var(--mg-bg-secondary);border-radius:0.75rem;padding:1.5rem;width:90%;max-width:400px;max-height:90vh;overflow-y:auto;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
             <h3 style="font-size:1.1rem;font-weight:600;color:var(--mg-text-primary);display:flex;align-items:center;gap:0.5rem;">
-                <svg class="w-5 h-5" style="color:var(--mg-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
+                <i data-lucide="gift" class="w-5 h-5" style="color:var(--mg-accent);"></i>
                 아이템 선물
             </h3>
             <button type="button" onclick="closeGiftModal()" style="color:var(--mg-text-muted);font-size:1.5rem;line-height:1;background:none;border:none;cursor:pointer;">&times;</button>

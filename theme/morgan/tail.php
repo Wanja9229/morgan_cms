@@ -82,9 +82,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
                     <?php } ?>
                 </div>
                 <a href="<?php echo G5_BBS_URL; ?>/character.php" class="flex-shrink-0 p-1.5 rounded-md hover:bg-mg-bg-tertiary text-mg-text-muted hover:text-mg-accent transition-colors" title="캐릭터 관리">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                    </svg>
+                    <i data-lucide="user" class="w-4 h-4"></i>
                 </a>
             </div>
             <div class="flex items-center justify-between py-2 border-t border-mg-bg-tertiary">
@@ -92,21 +90,15 @@ if (isset($is_ajax_request) && $is_ajax_request) {
                 <span class="text-sm font-semibold text-mg-accent"><?php echo function_exists('mg_point_format') ? mg_point_format($member['mb_point']) : number_format($member['mb_point']).'P'; ?></span>
             </div>
             <a href="<?php echo G5_BBS_URL; ?>/attendance.php" class="flex items-center justify-center gap-2 w-full py-2 mt-2 bg-mg-accent/10 hover:bg-mg-accent/20 text-mg-accent rounded-md text-sm font-medium transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-                </svg>
+                <i data-lucide="clipboard-check" class="w-4 h-4"></i>
                 출석체크
             </a>
             <a href="<?php echo G5_BBS_URL; ?>/mypage.php" class="flex items-center justify-center gap-2 w-full py-2 mt-2 bg-mg-bg-tertiary hover:bg-mg-bg-tertiary/80 text-mg-text-secondary hover:text-mg-text-primary rounded-md text-sm font-medium transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
+                <i data-lucide="circle-user-round" class="w-4 h-4"></i>
                 마이 페이지
             </a>
             <a href="<?php echo G5_BBS_URL; ?>/logout.php" class="flex items-center justify-center gap-2 w-full py-2 mt-2 text-mg-text-muted hover:text-mg-error rounded-md text-sm transition-colors" data-no-spa>
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                </svg>
+                <i data-lucide="log-out" class="w-4 h-4"></i>
                 로그아웃
             </a>
         </div>
@@ -125,9 +117,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
         <div class="card mb-4">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-sm font-semibold text-mg-text-primary flex items-center gap-2">
-                    <svg class="w-4 h-4 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
-                    </svg>
+                    <i data-lucide="package" class="w-4 h-4 text-mg-accent"></i>
                     인벤토리
                 </h3>
                 <a href="<?php echo G5_BBS_URL; ?>/inventory.php" class="text-xs text-mg-accent hover:text-mg-accent-hover">전체보기</a>
@@ -139,9 +129,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
                     <?php if (!empty($inv_item['si_image'])) { ?>
                     <img src="<?php echo $inv_item['si_image']; ?>" alt="" class="w-full h-full object-cover rounded-lg">
                     <?php } else { ?>
-                    <svg class="w-6 h-6 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                    </svg>
+                    <i data-lucide="box" class="w-6 h-6 text-mg-text-muted"></i>
                     <?php } ?>
                     <?php if ($inv_item['iv_count'] > 1) { ?>
                     <span class="absolute bottom-0.5 right-0.5 bg-mg-bg-primary/90 text-xs px-1 rounded text-mg-text-secondary"><?php echo $inv_item['iv_count']; ?></span>
@@ -177,9 +165,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
         <div class="card mb-4">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-sm font-semibold text-mg-text-primary flex items-center gap-2">
-                    <svg class="w-4 h-4 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
-                    </svg>
+                    <i data-lucide="gift" class="w-4 h-4 text-mg-accent"></i>
                     선물함
                     <?php if ($gift_count > 0) { ?>
                     <span class="bg-mg-error text-white text-xs px-1.5 py-0.5 rounded-full"><?php echo $gift_count; ?></span>
@@ -195,9 +181,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
                         <?php if (!empty($gift['si_image'])) { ?>
                         <img src="<?php echo $gift['si_image']; ?>" alt="" class="w-full h-full object-cover rounded">
                         <?php } else { ?>
-                        <svg class="w-4 h-4 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
-                        </svg>
+                        <i data-lucide="gift" class="w-4 h-4 text-mg-text-muted"></i>
                         <?php } ?>
                     </div>
                     <div class="flex-1 min-w-0">
@@ -209,9 +193,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
             </ul>
             <?php } else { ?>
             <div class="text-center py-4">
-                <svg class="w-8 h-8 text-mg-text-muted mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
-                </svg>
+                <i data-lucide="inbox" class="w-8 h-8 text-mg-text-muted mx-auto mb-2"></i>
                 <p class="text-xs text-mg-text-muted">받은 선물이 없습니다</p>
             </div>
             <?php } ?>
@@ -227,9 +209,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
         <div class="card mb-4">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-sm font-semibold text-mg-text-primary flex items-center gap-2">
-                    <svg class="w-4 h-4 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-                    </svg>
+                    <i data-lucide="sparkles" class="w-4 h-4 text-mg-accent"></i>
                     업적
                 </h3>
                 <a href="<?php echo G5_BBS_URL; ?>/achievement.php" class="text-xs text-mg-accent hover:text-mg-accent-hover">전체보기</a>
@@ -276,9 +256,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
         <div class="card mb-4">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-sm font-semibold text-mg-text-primary flex items-center gap-2">
-                    <svg class="w-4 h-4 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                    </svg>
+                    <i data-lucide="bell" class="w-4 h-4 text-mg-accent"></i>
                     알림
                     <?php if ($_noti_unread > 0) { ?>
                     <span class="bg-mg-error text-white text-xs px-1.5 py-0.5 rounded-full"><?php echo $_noti_unread > 99 ? '99+' : $_noti_unread; ?></span>
@@ -322,9 +300,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
         <div class="card mb-4">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-sm font-semibold text-mg-text-primary flex items-center gap-2">
-                    <svg class="w-4 h-4 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2z"/>
-                    </svg>
+                    <i data-lucide="flag" class="w-4 h-4 text-mg-accent"></i>
                     개척
                 </h3>
                 <a href="<?php echo G5_BBS_URL; ?>/pioneer.php" class="text-xs text-mg-accent hover:text-mg-accent-hover">보기</a>
@@ -368,9 +344,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
         <div class="card mb-4">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-sm font-semibold text-mg-text-primary flex items-center gap-2">
-                    <svg class="w-4 h-4 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-                    </svg>
+                    <i data-lucide="map" class="w-4 h-4 text-mg-accent"></i>
                     파견
                 </h3>
                 <a href="<?php echo G5_BBS_URL; ?>/pioneer.php?view=expedition" class="text-xs text-mg-accent hover:text-mg-accent-hover">보기</a>
@@ -439,7 +413,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
                     <button id="radio-play-btn" type="button" class="p-1.5 rounded hover:bg-mg-bg-tertiary text-mg-text-secondary transition-colors" title="재생/정지" style="font-size:0.85rem;line-height:1;">▶</button>
                     <button id="radio-next-btn" type="button" class="p-1.5 rounded hover:bg-mg-bg-tertiary text-mg-text-secondary transition-colors" title="다음 곡" style="font-size:0.75rem;line-height:1;">⏭</button>
                     <input type="range" id="radio-volume" min="0" max="100" value="30" style="flex:1;accent-color:var(--mg-accent);height:4px;">
-                    <button id="radio-video-btn" type="button" class="p-1.5 rounded hover:bg-mg-bg-tertiary text-mg-text-secondary transition-colors" title="영상 보기"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button>
+                    <button id="radio-video-btn" type="button" class="p-1.5 rounded hover:bg-mg-bg-tertiary text-mg-text-secondary transition-colors" title="영상 보기"><i data-lucide="video" class="w-4 h-4"></i></button>
                 </div>
                 <!-- 영상 (접힘) -->
                 <div id="radio-video-wrap" style="height:0;overflow:hidden;transition:height .3s;border-radius:6px;">
@@ -672,15 +646,171 @@ if (isset($is_ajax_request) && $is_ajax_request) {
         <!-- 비로그인 상태 -->
         <div class="card text-center">
             <div class="py-4">
-                <svg class="w-12 h-12 text-mg-text-muted mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                </svg>
+                <i data-lucide="user" class="w-12 h-12 text-mg-text-muted mx-auto mb-3"></i>
                 <p class="text-sm text-mg-text-secondary mb-4">로그인하고 커뮤니티에 참여하세요</p>
                 <a href="<?php echo G5_BBS_URL; ?>/login.php" class="btn btn-primary w-full mb-2">로그인</a>
                 <a href="<?php echo G5_BBS_URL; ?>/register.php" class="btn btn-secondary w-full">회원가입</a>
             </div>
         </div>
         <?php } ?>
+
+        <?php
+        // ─── 활성 전투 위젯 (하단 고정) ───
+        if ($is_member && function_exists('mg_config') && mg_config('battle_use', '0') === '1') {
+            $_battle_encounters = array();
+            $_be_res = sql_query("SELECT e.be_id, e.be_status, e.be_time_limit, e.be_started_at, e.be_monsters,
+                                         m.bm_name, m.bm_image, a.ea_name
+                                  FROM {$g5['mg_battle_encounter_table']} e
+                                  LEFT JOIN {$g5['mg_battle_monster_table']} m ON e.bm_id = m.bm_id
+                                  LEFT JOIN {$g5['mg_expedition_area_table']} a ON e.ea_id = a.ea_id
+                                  WHERE e.be_status IN ('discovered','active')
+                                  ORDER BY e.be_status DESC, e.be_discovered_at DESC
+                                  LIMIT 10");
+            if ($_be_res !== false) {
+                while ($_be_row = sql_fetch_array($_be_res)) {
+                    $_monsters = json_decode($_be_row['be_monsters'] ?? '[]', true);
+                    $_hp = 0; $_max_hp = 0;
+                    if (is_array($_monsters)) {
+                        foreach ($_monsters as $_m) { $_hp += (int)($_m['hp'] ?? 0); $_max_hp += (int)($_m['max_hp'] ?? 1); }
+                    }
+                    $_slot_cnt = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_battle_slot_table']} WHERE be_id = " . (int)$_be_row['be_id']);
+                    $_battle_encounters[] = array(
+                        'be_id'     => (int)$_be_row['be_id'],
+                        'status'    => $_be_row['be_status'],
+                        'name'      => $_be_row['bm_name'] ?? '',
+                        'image'     => $_be_row['bm_image'] ?? '',
+                        'area'      => $_be_row['ea_name'] ?? '',
+                        'hp'        => $_hp,
+                        'max_hp'    => $_max_hp,
+                        'slots'     => (int)($_slot_cnt['cnt'] ?? 0),
+                        'started'   => $_be_row['be_started_at'] ?? '',
+                        'time_limit'=> (int)$_be_row['be_time_limit'],
+                    );
+                }
+            }
+            if (!empty($_battle_encounters)) {
+        ?>
+        <!-- 활성 전투 위젯 -->
+        <div id="battle-widget" style="position:sticky;bottom:0;z-index:15;margin:0 -1rem -1rem -1rem;">
+            <div style="background:linear-gradient(180deg, transparent 0%, var(--mg-bg-secondary) 40%);height:16px;pointer-events:none;"></div>
+            <div style="background:var(--mg-bg-secondary);border-top:1px solid var(--mg-accent);padding:10px 12px;">
+                <!-- 슬라이드 컨테이너 -->
+                <div id="bw-slides" style="position:relative;overflow:hidden;">
+                    <?php foreach ($_battle_encounters as $_bi => $_be) {
+                        $_hp_pct = $_be['max_hp'] > 0 ? round($_be['hp'] / $_be['max_hp'] * 100) : 0;
+                        $_hp_color = $_hp_pct > 60 ? '#ef4444' : ($_hp_pct > 25 ? '#eab308' : '#22c55e');
+                        $_status_label = $_be['status'] === 'active' ? '전투 중' : '발견';
+                        $_status_color = $_be['status'] === 'active' ? '#f97316' : '#3b82f6';
+                    ?>
+                    <div class="bw-slide" data-be-id="<?php echo $_be['be_id']; ?>"
+                         data-started="<?php echo $_be['started']; ?>"
+                         data-time-limit="<?php echo $_be['time_limit']; ?>"
+                         style="<?php echo $_bi > 0 ? 'display:none;' : ''; ?>">
+                        <!-- 보스명 + 상태 -->
+                        <a href="<?php echo G5_BBS_URL; ?>/battle.php?mode=view&be_id=<?php echo $_be['be_id']; ?>"
+                           class="block" style="text-decoration:none;color:inherit;">
+                            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+                                <?php if ($_be['image']) { ?>
+                                <img src="<?php echo htmlspecialchars($_be['image']); ?>" alt=""
+                                     style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1.5px solid <?php echo $_status_color; ?>;flex-shrink:0;">
+                                <?php } else { ?>
+                                <div style="width:28px;height:28px;border-radius:50%;background:var(--mg-bg-tertiary);border:1.5px solid <?php echo $_status_color; ?>;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                    <i data-lucide="swords" style="width:14px;height:14px;color:<?php echo $_status_color; ?>;"></i>
+                                </div>
+                                <?php } ?>
+                                <div style="flex:1;min-width:0;">
+                                    <div style="display:flex;align-items:center;gap:4px;">
+                                        <span style="font-size:12px;font-weight:700;color:var(--mg-text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?php echo htmlspecialchars($_be['name']); ?></span>
+                                        <span style="font-size:9px;padding:1px 4px;border-radius:3px;font-weight:600;color:<?php echo $_status_color; ?>;background:<?php echo $_status_color; ?>15;white-space:nowrap;"><?php echo $_status_label; ?></span>
+                                    </div>
+                                    <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--mg-text-muted);">
+                                        <?php if ($_be['area']) { ?><span><?php echo htmlspecialchars($_be['area']); ?></span><?php } ?>
+                                        <span><?php echo $_be['slots']; ?>명</span>
+                                        <span class="bw-timer" style="color:var(--mg-accent);">--:--</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- HP 바 -->
+                            <div style="display:flex;align-items:center;gap:6px;">
+                                <div style="flex:1;height:4px;background:var(--mg-bg-tertiary);border-radius:2px;overflow:hidden;">
+                                    <div class="bw-hp-bar" style="height:100%;border-radius:2px;background:<?php echo $_hp_color; ?>;width:<?php echo $_hp_pct; ?>%;transition:width 0.5s;"></div>
+                                </div>
+                                <span style="font-size:10px;color:var(--mg-text-muted);white-space:nowrap;">HP <?php echo $_hp_pct; ?>%</span>
+                            </div>
+                        </a>
+                    </div>
+                    <?php } ?>
+                </div>
+
+                <?php if (count($_battle_encounters) > 1) { ?>
+                <!-- 슬라이드 컨트롤 -->
+                <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;">
+                    <button onclick="bwPrev()" style="background:none;border:none;color:var(--mg-text-muted);cursor:pointer;padding:2px;font-size:14px;">&#9664;</button>
+                    <span id="bw-page" style="font-size:10px;color:var(--mg-text-muted);">1 / <?php echo count($_battle_encounters); ?></span>
+                    <button onclick="bwNext()" style="background:none;border:none;color:var(--mg-text-muted);cursor:pointer;padding:2px;font-size:14px;">&#9654;</button>
+                </div>
+                <?php } ?>
+            </div>
+        </div>
+
+        <script>
+        (function() {
+            var slides = document.querySelectorAll('.bw-slide');
+            var total = slides.length;
+            if (total === 0) return;
+            var current = 0;
+
+            // 슬라이드 전환
+            window.bwPrev = function() {
+                slides[current].style.display = 'none';
+                current = (current - 1 + total) % total;
+                slides[current].style.display = '';
+                updatePage();
+            };
+            window.bwNext = function() {
+                slides[current].style.display = 'none';
+                current = (current + 1) % total;
+                slides[current].style.display = '';
+                updatePage();
+            };
+            function updatePage() {
+                var el = document.getElementById('bw-page');
+                if (el) el.textContent = (current + 1) + ' / ' + total;
+            }
+
+            // 타이머 갱신
+            function updateTimers() {
+                slides.forEach(function(s) {
+                    var timer = s.querySelector('.bw-timer');
+                    if (!timer) return;
+                    var started = s.getAttribute('data-started');
+                    var limit = parseInt(s.getAttribute('data-time-limit')) || 0;
+                    if (!started || !limit) {
+                        timer.textContent = '대기';
+                        return;
+                    }
+                    var elapsed = Math.floor((Date.now() / 1000) - (new Date(started + ' UTC').getTime() / 1000));
+                    var remain = Math.max(0, limit - elapsed);
+                    var h = Math.floor(remain / 3600);
+                    var m = Math.floor((remain % 3600) / 60);
+                    var sec = remain % 60;
+                    timer.textContent = (h > 0 ? h + ':' : '') + String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+                    if (remain <= 0) timer.textContent = '종료';
+                });
+            }
+            updateTimers();
+            setInterval(updateTimers, 1000);
+
+            // 자동 슬라이드 (10초)
+            if (total > 1) {
+                setInterval(function() { window.bwNext(); }, 10000);
+            }
+        })();
+        </script>
+        <?php
+            } // end if !empty encounters
+        } // end if battle_use
+        ?>
 
     </aside>
 

@@ -54,4 +54,5 @@ $menu["menu800"] = array(
     array('801900', '전투 설정', $mg_admin_url . '/battle_config.php', 'mg_battle', '전투'),
     array('801910', '몬스터 관리', $mg_admin_url . '/battle_monster.php', 'mg_battle_monster'),
     array('801920', '스킬 관리', $mg_admin_url . '/battle_skill.php', 'mg_battle_skill'),
+    array('801930', '수업 관리', $mg_admin_url . '/training_class.php', 'mg_training'),
 );

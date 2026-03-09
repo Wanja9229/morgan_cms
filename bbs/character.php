@@ -73,9 +73,7 @@ include_once(G5_THEME_PATH.'/head.php');
         </div>
         <?php if ($can_create) { ?>
         <a href="<?php echo G5_BBS_URL; ?>/character_form.php" class="btn btn-primary inline-flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
+            <i data-lucide="plus" class="w-5 h-5"></i>
             <span>새 캐릭터</span>
         </a>
         <?php } else { ?>
@@ -94,9 +92,7 @@ include_once(G5_THEME_PATH.'/head.php');
                 <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.$char['ch_thumb']; ?>" alt="<?php echo $char['ch_name']; ?>" class="w-full h-full object-cover">
                 <?php } else { ?>
                 <div class="w-full h-full flex items-center justify-center text-mg-text-muted">
-                    <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                    </svg>
+                    <i data-lucide="user" class="w-16 h-16"></i>
                 </div>
                 <?php } ?>
 
@@ -124,15 +120,10 @@ include_once(G5_THEME_PATH.'/head.php');
                 <!-- 호버 액션 -->
                 <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                     <a href="<?php echo G5_BBS_URL; ?>/character_form.php?ch_id=<?php echo $char['ch_id']; ?>" class="bg-mg-bg-secondary hover:bg-mg-bg-tertiary text-mg-text-primary p-2 rounded-lg transition-colors" title="수정">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                        </svg>
+                        <i data-lucide="pencil" class="w-5 h-5"></i>
                     </a>
                     <a href="<?php echo G5_BBS_URL; ?>/character_view.php?ch_id=<?php echo $char['ch_id']; ?>" class="bg-mg-bg-secondary hover:bg-mg-bg-tertiary text-mg-text-primary p-2 rounded-lg transition-colors" title="프로필">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                        </svg>
+                        <i data-lucide="eye" class="w-5 h-5"></i>
                     </a>
                 </div>
             </div>
@@ -168,16 +159,12 @@ include_once(G5_THEME_PATH.'/head.php');
     <!-- 빈 상태 -->
     <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary py-16 px-8 text-center">
         <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-mg-bg-tertiary flex items-center justify-center">
-            <svg class="w-8 h-8 text-mg-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-            </svg>
+            <i data-lucide="user" class="w-8 h-8 text-mg-text-muted"></i>
         </div>
         <h3 class="text-lg font-medium text-mg-text-primary mb-2">아직 캐릭터가 없습니다</h3>
         <p class="text-mg-text-muted mb-6">첫 번째 캐릭터를 만들어보세요!</p>
         <a href="<?php echo G5_BBS_URL; ?>/character_form.php" class="btn btn-primary inline-flex items-center gap-2 px-6 py-2.5">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
+            <i data-lucide="plus" class="w-5 h-5"></i>
             <span>캐릭터 만들기</span>
         </a>
     </div>

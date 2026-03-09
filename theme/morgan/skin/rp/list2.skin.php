@@ -59,9 +59,7 @@ function rp_time_ago($datetime) {
         <div class="flex items-center justify-between flex-wrap gap-4">
             <div>
                 <h1 class="text-xl font-bold text-mg-text-primary flex items-center gap-2">
-                    <svg class="w-6 h-6 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                    </svg>
+                    <i data-lucide="message-circle" class="w-6 h-6 text-mg-accent"></i>
                     <?php if ($owner) { ?>
                     <?php echo htmlspecialchars($owner_nick); ?>님의 역극
                     <?php } else { ?>
@@ -77,9 +75,7 @@ function rp_time_ago($datetime) {
             </div>
             <?php if ($is_member && $can_create['can_create'] && count($my_characters) > 0) { ?>
             <button type="button" onclick="openWriteModal()" class="btn btn-primary flex items-center gap-1">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
+                <i data-lucide="plus" class="w-4 h-4"></i>
                 새 글
             </button>
             <?php } elseif ($is_member && count($my_characters) === 0) { ?>
@@ -254,20 +250,18 @@ function rp_time_ago($datetime) {
                             <span class="text-xs text-mg-text-muted rp-reply-count">(댓글 <?php echo (int)$mem['rm_reply_count']; ?>개)</span>
                             <?php if ($is_completed && !$is_owner_char) { ?>
                             <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] rounded-full <?php echo $comp_data['rc_rewarded'] ? 'bg-green-500/20 text-green-400' : 'bg-mg-bg-tertiary text-mg-text-muted'; ?>">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                <i data-lucide="check" class="w-3 h-3"></i>
                                 완결<?php if ($comp_data['rc_rewarded']) echo ' +' . (int)$comp_data['rc_point'] . 'P'; ?>
                             </span>
                             <?php } elseif (!$is_owner_char && $is_owner && $is_open) { ?>
                             <button type="button" onclick="event.stopPropagation();completeCharacter(<?php echo $thread['rt_id']; ?>,<?php echo $mem_ch_id; ?>,'<?php echo htmlspecialchars($mem['ch_name'] ?: $mem['mb_nick']); ?>')"
                                     class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] rounded-full bg-mg-bg-tertiary text-mg-text-muted hover:bg-amber-500/20 hover:text-amber-400 transition-colors rp-complete-btn">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <i data-lucide="check-circle" class="w-3 h-3"></i>
                                 완결
                             </button>
                             <?php } ?>
                             <!-- 토글 화살표 -->
-                            <svg class="w-4 h-4 ml-auto text-mg-text-muted rp-toggle-arrow transition-transform duration-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                            </svg>
+                            <i data-lucide="chevron-right" class="w-4 h-4 ml-auto text-mg-text-muted rp-toggle-arrow transition-transform duration-200 flex-shrink-0"></i>
                         </button>
 
                         <!-- 메신저 컨테이너 (숨김, AJAX로 로딩) -->
@@ -309,13 +303,11 @@ function rp_time_ago($datetime) {
                                         </div>
                                         <div class="flex flex-col gap-1">
                                             <label class="bg-mg-bg-tertiary hover:bg-mg-bg-tertiary/80 text-mg-text-muted rounded-lg flex-1 transition-colors cursor-pointer flex items-center justify-center" title="이미지 첨부" style="min-width:32px;">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                                <i data-lucide="image" class="w-3.5 h-3.5"></i>
                                                 <input type="file" name="rr_image" accept="image/jpeg,image/png,image/gif,image/webp" class="hidden rp-image-input">
                                             </label>
                                             <button type="submit" class="bg-mg-accent hover:bg-mg-accent-hover text-white rounded-lg flex-1 transition-colors flex items-center justify-center" style="min-width:32px;">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-                                                </svg>
+                                                <i data-lucide="send" class="w-3.5 h-3.5"></i>
                                             </button>
                                         </div>
                                     </div>
@@ -324,7 +316,7 @@ function rp_time_ago($datetime) {
                             <?php } elseif ($is_completed && !$is_owner_char) { ?>
                             <div class="border-t border-mg-bg-tertiary p-2">
                                 <p class="text-center text-xs text-mg-text-muted py-1 flex items-center justify-center gap-1">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
                                     완결된 캐릭터입니다<?php if ($comp_data['rc_rewarded']) echo ' (+' . (int)$comp_data['rc_point'] . 'P)'; ?>
                                 </p>
                             </div>
@@ -342,9 +334,7 @@ function rp_time_ago($datetime) {
             <?php if (!$is_open) { ?>
             <div class="border-t border-mg-bg-tertiary pt-3 mt-3">
                 <p class="text-center text-mg-text-muted text-sm py-1 flex items-center justify-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                    </svg>
+                    <i data-lucide="lock" class="w-4 h-4"></i>
                     완결된 역극입니다
                 </p>
             </div>
@@ -361,9 +351,7 @@ function rp_time_ago($datetime) {
             <?php } elseif ($is_full) { ?>
             <div class="border-t border-mg-bg-tertiary pt-3 mt-3">
                 <p class="text-center text-mg-text-muted text-sm py-1 flex items-center justify-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-                    </svg>
+                    <i data-lucide="user-plus" class="w-4 h-4"></i>
                     참여 인원이 가득 찼습니다 (<?php echo count($thread_members); ?>/<?php echo $thread['rt_max_member']; ?>)
                 </p>
             </div>
@@ -384,13 +372,11 @@ function rp_time_ago($datetime) {
                     </div>
                     <div class="flex flex-col gap-1">
                         <label class="bg-mg-bg-tertiary hover:bg-mg-bg-tertiary/80 text-mg-text-muted rounded-lg px-3 py-2 flex-shrink-0 h-[38px] transition-colors cursor-pointer flex items-center" title="이미지 첨부">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            <i data-lucide="image" class="w-4 h-4"></i>
                             <input type="file" name="rr_image" accept="image/jpeg,image/png,image/gif,image/webp" class="hidden rp-image-input">
                         </label>
                         <button type="submit" class="bg-mg-accent hover:bg-mg-accent-hover text-white rounded-lg px-4 py-2 flex-shrink-0 h-[38px] transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-                            </svg>
+                            <i data-lucide="send" class="w-4 h-4"></i>
                         </button>
                     </div>
                 </form>
@@ -438,9 +424,7 @@ function rp_time_ago($datetime) {
     <?php } else { ?>
     <!-- 빈 상태 -->
     <div class="card py-16 text-center">
-        <svg class="w-16 h-16 mx-auto text-mg-text-muted mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-        </svg>
+        <i data-lucide="message-circle" class="w-16 h-16 mx-auto text-mg-text-muted mb-4"></i>
         <p class="text-mg-text-muted text-lg mb-2">역극이 없습니다</p>
         <p class="text-mg-text-muted text-sm mb-6">
             <?php if ($status == 'closed') { ?>
@@ -453,9 +437,7 @@ function rp_time_ago($datetime) {
         </p>
         <?php if ($is_member && $can_create['can_create'] && count($my_characters) > 0) { ?>
         <button type="button" onclick="openWriteModal()" class="btn btn-primary inline-flex items-center gap-1">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
+            <i data-lucide="plus" class="w-4 h-4"></i>
             새 글
         </button>
         <?php } elseif ($is_member && count($my_characters) === 0) { ?>
@@ -481,9 +463,7 @@ function rp_time_ago($datetime) {
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-xl font-bold text-mg-text-primary">새 역극</h2>
                 <button type="button" onclick="closeWriteModal()" class="text-mg-text-muted hover:text-mg-text-primary transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
+                    <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
 

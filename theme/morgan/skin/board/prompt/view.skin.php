@@ -32,9 +32,7 @@ function _prompt_view_status_badge($status) {
     <div class="rounded-2xl overflow-hidden" style="background:var(--mg-bg-secondary);border:1px solid color-mix(in srgb, var(--mg-accent) 25%, var(--mg-bg-tertiary));">
         <div class="flex items-center gap-3 px-5 py-4">
             <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background:color-mix(in srgb, var(--mg-accent) 15%, transparent);">
-                <svg class="w-5 h-5" style="color:var(--mg-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-                </svg>
+                <i data-lucide="clipboard-check" class="w-5 h-5" style="color:var(--mg-accent);"></i>
             </div>
             <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 flex-wrap">
