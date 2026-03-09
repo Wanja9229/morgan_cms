@@ -118,6 +118,14 @@ $g5['mg_event_claim_table'] = 'mg_event_claim';
 $g5['mg_event_suspicious_table'] = 'mg_event_suspicious';
 // 유저 위젯 설정
 $g5['mg_user_widget_table'] = 'mg_user_widget';
+// 전투 시스템
+$g5['mg_battle_stat_table'] = 'mg_battle_stat';
+$g5['mg_battle_energy_table'] = 'mg_battle_energy';
+$g5['mg_battle_monster_table'] = 'mg_battle_monster';
+$g5['mg_battle_encounter_table'] = 'mg_battle_encounter';
+$g5['mg_battle_slot_table'] = 'mg_battle_slot';
+$g5['mg_battle_log_table'] = 'mg_battle_log';
+$g5['mg_battle_skill_table'] = 'mg_battle_skill';
 
 // [MT-1] 멀티테넌트 파일 경로 분기
 if (defined('MG_MULTITENANT_ENABLED') && MG_MULTITENANT_ENABLED
@@ -225,6 +233,14 @@ $mg['concierge_result_table'] = $g5['mg_concierge_result_table'];
 $mg['migrations_table'] = $g5['mg_migrations_table'];
 // 유저 위젯 설정
 $mg['user_widget_table'] = $g5['mg_user_widget_table'];
+// 전투 시스템
+$mg['battle_stat_table'] = $g5['mg_battle_stat_table'];
+$mg['battle_energy_table'] = $g5['mg_battle_energy_table'];
+$mg['battle_monster_table'] = $g5['mg_battle_monster_table'];
+$mg['battle_encounter_table'] = $g5['mg_battle_encounter_table'];
+$mg['battle_slot_table'] = $g5['mg_battle_slot_table'];
+$mg['battle_log_table'] = $g5['mg_battle_log_table'];
+$mg['battle_skill_table'] = $g5['mg_battle_skill_table'];
 
 // 상점 이미지 저장 경로
 define('MG_SHOP_IMAGE_PATH', $_mg_data_base_path.'/shop');
@@ -535,6 +551,11 @@ $mg['shop_type_groups'] = array(
         'icon' => 'home',
         'types' => array('furniture')
     ),
+    'battle' => array(
+        'label' => '전투',
+        'icon' => 'swords',
+        'types' => array('battle_weapon', 'battle_armor', 'battle_accessory', 'battle_consumable', 'battle_skill_book')
+    ),
     'etc' => array(
         'label' => '기타',
         'icon' => 'gift',
@@ -582,6 +603,12 @@ function mg_get_item_types() {
         'concierge_boost' => array('name' => '의뢰 보상 부스터', 'desc' => '의뢰 보상을 추가로 받습니다 (1회 소모)', 'group' => 'system'),
         'stamina_recover' => array('name' => '스태미나 회복 물약', 'desc' => '스태미나를 풀 충전합니다 (일일 상한 적용, 소모품)', 'group' => 'system'),
         'nick_bg' => array('name' => '이름표 배경색', 'desc' => '닉네임에 배경색을 적용합니다', 'group' => 'decor'),
+        // 전투
+        'battle_weapon' => array('name' => '전투 무기', 'desc' => '전투 시스템 무기 장비', 'group' => 'battle'),
+        'battle_armor' => array('name' => '전투 방어구', 'desc' => '전투 시스템 방어 장비', 'group' => 'battle'),
+        'battle_accessory' => array('name' => '전투 장신구', 'desc' => '전투 시스템 장신구', 'group' => 'battle'),
+        'battle_consumable' => array('name' => '전투 소모품', 'desc' => '전투용 소모품 (회복약, 부활, 기력 충전 등)', 'group' => 'battle'),
+        'battle_skill_book' => array('name' => '스킬북', 'desc' => '전투 스킬 해금용 아이템', 'group' => 'battle'),
         // 재료·가구·기타
         'material' => array('name' => '재료', 'desc' => '개척 시스템 재료 아이템', 'group' => 'material'),
         'furniture' => array('name' => '가구', 'desc' => '마이룸 가구', 'group' => 'furniture'),
