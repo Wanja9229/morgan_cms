@@ -9408,3 +9408,8 @@ function mg_get_active_titles($mb_id, $ch_id = 0) {
     $title_cache[$cache_key] = $result;
     return $result;
 }
+
+// ============================================================
+// 전투 시스템 함수 (별도 파일)
+// ============================================================
+include_once(G5_PLUGIN_PATH.'/morgan/battle/battle.php');
