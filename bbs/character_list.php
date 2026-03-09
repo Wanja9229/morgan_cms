@@ -122,14 +122,18 @@ include_once(G5_THEME_PATH.'/head.php');
 ?>
 
 <?php
-// 캐릭터 신청 기간 체크
+// 캐릭터 신청 가능 여부 체크
+$_char_reg_stop = mg_config('char_reg_stop', '0');
 $_char_reg_use = mg_config('char_reg_period_use', '0');
 $_char_reg_start = mg_config('char_reg_start', '');
 $_char_reg_end = mg_config('char_reg_end', '');
-$_char_reg_open = true; // 기본: 항상 열림
+$_char_reg_open = true;
 $_char_reg_msg = '';
 
-if ($_char_reg_use == '1' && $_char_reg_start && $_char_reg_end) {
+if ($_char_reg_stop == '1') {
+    $_char_reg_open = false;
+    $_char_reg_msg = '현재 캐릭터 모집이 중단되었습니다.';
+} elseif ($_char_reg_use == '1' && $_char_reg_start && $_char_reg_end) {
     $now = date('Y-m-d\TH:i');
     $_char_reg_open = ($now >= $_char_reg_start && $now <= $_char_reg_end);
     if (!$_char_reg_open) {

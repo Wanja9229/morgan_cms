@@ -108,6 +108,43 @@ require_once __DIR__.'/_head.php';
     </div>
 </div>
 
+<!-- 캐릭터 신청 설정 -->
+<?php
+$_cr_stop = mg_config('char_reg_stop', '0');
+$_cr_period_use = mg_config('char_reg_period_use', '0');
+$_cr_start = mg_config('char_reg_start', '');
+$_cr_end = mg_config('char_reg_end', '');
+?>
+<div class="mg-card" style="margin-bottom:1rem;">
+    <div class="mg-card-header" style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;">
+        <h3 style="font-size:0.9rem;margin:0;">캐릭터 신청 설정</h3>
+        <button type="button" class="mg-btn mg-btn-primary mg-btn-sm" onclick="saveCharRegConfig()" id="btnSaveCharReg">저장</button>
+    </div>
+    <div class="mg-card-body" style="padding:1rem;">
+        <div style="display:flex;flex-wrap:wrap;gap:1.5rem;align-items:flex-start;">
+            <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;padding:0.25rem 0;">
+                <input type="checkbox" id="char_reg_stop" <?php echo $_cr_stop == '1' ? 'checked' : ''; ?>>
+                <span style="font-weight:600;color:var(--mg-error);">모집 중단</span>
+                <small style="color:var(--mg-text-muted);font-size:0.75rem;">— 체크 시 기간과 무관하게 즉시 신청 차단</small>
+            </label>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end;margin-top:1rem;">
+            <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                <input type="checkbox" id="char_reg_period_use" <?php echo $_cr_period_use == '1' ? 'checked' : ''; ?>>
+                <span>기간 제한</span>
+            </label>
+            <div class="mg-form-group" style="margin:0;">
+                <label class="mg-form-label" style="font-size:0.75rem;margin-bottom:0.25rem;">시작일</label>
+                <input type="datetime-local" id="char_reg_start" value="<?php echo htmlspecialchars($_cr_start); ?>" class="mg-form-input" style="padding:0.35rem 0.5rem;font-size:0.85rem;">
+            </div>
+            <div class="mg-form-group" style="margin:0;">
+                <label class="mg-form-label" style="font-size:0.75rem;margin-bottom:0.25rem;">마감일</label>
+                <input type="datetime-local" id="char_reg_end" value="<?php echo htmlspecialchars($_cr_end); ?>" class="mg-form-input" style="padding:0.35rem 0.5rem;font-size:0.85rem;">
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- 검색 -->
 <div class="mg-card" style="margin-bottom:1rem;">
     <div class="mg-card-body" style="padding:1rem;">
@@ -340,6 +377,28 @@ function closeRejectModal() {
 document.getElementById('rejectModal').addEventListener('click', function(e) {
     if (e.target === this && document._mgMdTarget === this) closeRejectModal();
 });
+
+function saveCharRegConfig() {
+    var btn = document.getElementById('btnSaveCharReg');
+    btn.disabled = true; btn.textContent = '저장 중...';
+    var fd = new FormData();
+    fd.append('mode', 'save_char_reg');
+    fd.append('char_reg_stop', document.getElementById('char_reg_stop').checked ? '1' : '0');
+    fd.append('char_reg_period_use', document.getElementById('char_reg_period_use').checked ? '1' : '0');
+    fd.append('char_reg_start', document.getElementById('char_reg_start').value);
+    fd.append('char_reg_end', document.getElementById('char_reg_end').value);
+    fetch('./character_list_update.php', {method:'POST', body:fd})
+        .then(function(r){return r.json();})
+        .then(function(d){
+            btn.disabled = false; btn.textContent = '저장';
+            if(d.success) { btn.textContent = '저장됨'; setTimeout(function(){ btn.textContent = '저장'; }, 1500); }
+            else alert(d.message || '저장 실패');
+        })
+        .catch(function(){
+            btn.disabled = false; btn.textContent = '저장';
+            alert('저장 중 오류가 발생했습니다.');
+        });
+}
 </script>
 
 <?php

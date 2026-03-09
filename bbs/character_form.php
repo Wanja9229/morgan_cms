@@ -16,10 +16,12 @@ include_once(G5_PATH.'/plugin/morgan/morgan.php');
 $ch_id = isset($_GET['ch_id']) ? (int)$_GET['ch_id'] : 0;
 $is_edit = $ch_id > 0;
 
-// 신규 생성 시 신청 기간 체크
+// 신규 생성 시 신청 가능 여부 체크
 if (!$is_edit) {
-    $_char_reg_use = mg_config('char_reg_period_use', '0');
-    if ($_char_reg_use == '1') {
+    if (mg_config('char_reg_stop', '0') == '1') {
+        alert('현재 캐릭터 모집이 중단되었습니다.', G5_BBS_URL.'/character_list.php');
+    }
+    if (mg_config('char_reg_period_use', '0') == '1') {
         $_char_reg_start = mg_config('char_reg_start', '');
         $_char_reg_end = mg_config('char_reg_end', '');
         if ($_char_reg_start && $_char_reg_end) {

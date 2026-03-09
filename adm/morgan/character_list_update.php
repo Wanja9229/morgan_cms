@@ -11,6 +11,20 @@ auth_check_menu($auth, $sub_menu, 'w');
 // Morgan 플러그인 로드
 include_once(G5_PATH.'/plugin/morgan/morgan.php');
 
+// AJAX: 캐릭터 신청 설정 저장
+$mode = isset($_POST['mode']) ? $_POST['mode'] : '';
+if ($mode === 'save_char_reg') {
+    $keys = array('char_reg_stop', 'char_reg_period_use', 'char_reg_start', 'char_reg_end');
+    foreach ($keys as $key) {
+        if (isset($_POST[$key])) {
+            mg_set_config($key, $_POST[$key]);
+        }
+    }
+    header('Content-Type: application/json');
+    echo json_encode(array('success' => true));
+    exit;
+}
+
 $page = isset($_POST['page']) ? (int)$_POST['page'] : 1;
 $state = isset($_POST['state']) ? clean_xss_tags($_POST['state']) : '';
 $redirect_url = G5_ADMIN_URL.'/morgan/character_list.php?page='.$page.($state ? '&state='.$state : '');
