@@ -144,21 +144,24 @@ if ($tab === 'form') {
     <input type="hidden" name="mode" value="<?php echo $is_edit ? 'edit' : 'add'; ?>">
     <input type="hidden" name="bm_id" value="<?php echo (int)$item['bm_id']; ?>">
 
-    <div class="mg-card" style="margin-bottom:1rem;">
+    <div class="mg-card">
         <div class="mg-card-header"><?php echo $is_edit ? '몬스터 수정' : '몬스터 등록'; ?></div>
         <div class="mg-card-body">
-            <div class="mg-form-group">
-                <label class="mg-form-label">이름 *</label>
-                <input type="text" name="bm_name" value="<?php echo htmlspecialchars($item['bm_name'] ?? ''); ?>" class="mg-form-control" required>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:1rem;">
+                <div class="mg-form-group">
+                    <label class="mg-form-label">이름 *</label>
+                    <input type="text" name="bm_name" value="<?php echo htmlspecialchars($item['bm_name'] ?? ''); ?>" class="mg-form-input" required>
+                </div>
+                <div class="mg-form-group">
+                    <label class="mg-form-label">유형</label>
+                    <select name="bm_type" class="mg-form-select" id="bm_type_select">
+                        <option value="mob" <?php echo ($item['bm_type'] ?? '') === 'mob' ? 'selected' : ''; ?>>일반 몹 (mob)</option>
+                        <option value="boss" <?php echo ($item['bm_type'] ?? '') === 'boss' ? 'selected' : ''; ?>>보스 (boss)</option>
+                        <option value="story_boss" <?php echo ($item['bm_type'] ?? '') === 'story_boss' ? 'selected' : ''; ?>>스토리 보스 (story_boss)</option>
+                    </select>
+                </div>
             </div>
-            <div class="mg-form-group">
-                <label class="mg-form-label">유형</label>
-                <select name="bm_type" class="mg-form-control" style="width:200px;" id="bm_type_select">
-                    <option value="mob" <?php echo ($item['bm_type'] ?? '') === 'mob' ? 'selected' : ''; ?>>일반 몹 (mob)</option>
-                    <option value="boss" <?php echo ($item['bm_type'] ?? '') === 'boss' ? 'selected' : ''; ?>>보스 (boss)</option>
-                    <option value="story_boss" <?php echo ($item['bm_type'] ?? '') === 'story_boss' ? 'selected' : ''; ?>>스토리 보스 (story_boss)</option>
-                </select>
-            </div>
+
             <div class="mg-form-group">
                 <label class="mg-form-label">이미지</label>
                 <?php if (!empty($item['bm_image'])) { ?>
@@ -166,56 +169,66 @@ if ($tab === 'form') {
                         <img src="<?php echo G5_DATA_URL . '/' . $item['bm_image']; ?>" style="max-width:200px; max-height:200px; border-radius:8px;">
                     </div>
                 <?php } ?>
-                <input type="file" name="bm_image_file" accept="image/*" class="mg-form-control">
+                <input type="file" name="bm_image_file" accept="image/*" class="mg-form-input">
             </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
+
+            <h4 style="font-size:0.9rem;font-weight:600;margin:1.25rem 0 0.75rem;color:var(--mg-text-secondary);">전투 수치</h4>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:1rem;">
                 <div class="mg-form-group">
                     <label class="mg-form-label">HP</label>
-                    <input type="number" name="bm_hp" value="<?php echo (int)($item['bm_hp'] ?? 1000); ?>" class="mg-form-control" min="1">
+                    <input type="number" name="bm_hp" value="<?php echo (int)($item['bm_hp'] ?? 1000); ?>" class="mg-form-input" min="1">
                 </div>
                 <div class="mg-form-group">
                     <label class="mg-form-label">ATK</label>
-                    <input type="number" name="bm_atk" value="<?php echo (int)($item['bm_atk'] ?? 50); ?>" class="mg-form-control" min="0">
+                    <input type="number" name="bm_atk" value="<?php echo (int)($item['bm_atk'] ?? 50); ?>" class="mg-form-input" min="0">
                 </div>
                 <div class="mg-form-group">
                     <label class="mg-form-label">DEF</label>
-                    <input type="number" name="bm_def" value="<?php echo (int)($item['bm_def'] ?? 10); ?>" class="mg-form-control" min="0">
+                    <input type="number" name="bm_def" value="<?php echo (int)($item['bm_def'] ?? 10); ?>" class="mg-form-input" min="0">
                 </div>
             </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+
+            <h4 style="font-size:0.9rem;font-weight:600;margin:1.25rem 0 0.75rem;color:var(--mg-text-secondary);">보상 & 규칙</h4>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:1rem;">
                 <div class="mg-form-group">
                     <label class="mg-form-label">제한 시간 (초)</label>
-                    <input type="number" name="bm_time_limit" value="<?php echo (int)($item['bm_time_limit'] ?? 7200); ?>" class="mg-form-control" min="60">
-                    <small class="mg-form-text">기본 7200초 = 2시간</small>
+                    <input type="number" name="bm_time_limit" value="<?php echo (int)($item['bm_time_limit'] ?? 7200); ?>" class="mg-form-input" min="60">
+                    <p style="margin-top:0.25rem;font-size:0.85rem;color:var(--mg-text-muted);">기본 7200초 = 2시간</p>
                 </div>
                 <div class="mg-form-group">
                     <label class="mg-form-label">보상 포인트</label>
-                    <input type="number" name="bm_reward_point" value="<?php echo (int)($item['bm_reward_point'] ?? 500); ?>" class="mg-form-control" min="0">
+                    <input type="number" name="bm_reward_point" value="<?php echo (int)($item['bm_reward_point'] ?? 500); ?>" class="mg-form-input" min="0">
                 </div>
             </div>
-            <div class="mg-form-group" id="mob_count_group">
-                <label class="mg-form-label">등장 수 (mob 전용)</label>
-                <input type="number" name="bm_mob_count" value="<?php echo (int)($item['bm_mob_count'] ?? 1); ?>" class="mg-form-control" style="width:120px;" min="1" max="5">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:1rem;">
+                <div class="mg-form-group" id="mob_count_group">
+                    <label class="mg-form-label">등장 수 (mob 전용)</label>
+                    <input type="number" name="bm_mob_count" value="<?php echo (int)($item['bm_mob_count'] ?? 1); ?>" class="mg-form-input" min="1" max="5">
+                </div>
+                <div class="mg-form-group" id="story_regen_group" style="display:none;">
+                    <label class="mg-form-label">라운드 간 HP 회복률 (%)</label>
+                    <input type="number" name="bm_story_regen_pct" value="<?php echo (int)($item['bm_story_regen_pct'] ?? 5); ?>" class="mg-form-input" min="0" max="100">
+                    <p style="margin-top:0.25rem;font-size:0.85rem;color:var(--mg-text-muted);">잔여 HP의 N% 회복 (스토리 보스 전용)</p>
+                </div>
             </div>
-            <div class="mg-form-group" id="story_regen_group" style="display:none;">
-                <label class="mg-form-label">라운드 간 HP 회복률 (%)</label>
-                <input type="number" name="bm_story_regen_pct" value="<?php echo (int)($item['bm_story_regen_pct'] ?? 5); ?>" class="mg-form-control" style="width:120px;" min="0" max="100">
-                <small class="mg-form-text">잔여 HP의 N% 회복 (스토리 보스 전용)</small>
-            </div>
+
             <div class="mg-form-group">
                 <label class="mg-form-label">드랍 테이블 (JSON)</label>
-                <textarea name="bm_reward_drops" class="mg-form-control" rows="3" style="font-family:monospace;font-size:0.85rem;"><?php echo htmlspecialchars($item['bm_reward_drops'] ?? '[]'); ?></textarea>
-                <small class="mg-form-text">[{"item_id":101,"chance":30,"count":1}, ...]</small>
+                <textarea name="bm_reward_drops" class="mg-form-textarea" rows="3" style="font-family:monospace;font-size:0.85rem;"><?php echo htmlspecialchars($item['bm_reward_drops'] ?? '[]'); ?></textarea>
+                <p style="margin-top:0.25rem;font-size:0.85rem;color:var(--mg-text-muted);">[{"item_id":101,"chance":30,"count":1}, ...]</p>
             </div>
             <div class="mg-form-group">
                 <label class="mg-form-label">출현 지역 (JSON)</label>
-                <textarea name="bm_areas" class="mg-form-control" rows="2" style="font-family:monospace;font-size:0.85rem;"><?php echo htmlspecialchars($item['bm_areas'] ?? '[]'); ?></textarea>
-                <small class="mg-form-text">[ea_id, ea_id, ...]</small>
+                <textarea name="bm_areas" class="mg-form-textarea" rows="2" style="font-family:monospace;font-size:0.85rem;"><?php echo htmlspecialchars($item['bm_areas'] ?? '[]'); ?></textarea>
+                <p style="margin-top:0.25rem;font-size:0.85rem;color:var(--mg-text-muted);">[ea_id, ea_id, ...]</p>
             </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+
+            <hr style="border:0;border-top:1px solid var(--mg-bg-tertiary);margin:1.5rem 0;">
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:1rem;">
                 <div class="mg-form-group">
                     <label class="mg-form-label">정렬 순서</label>
-                    <input type="number" name="bm_order" value="<?php echo (int)($item['bm_order'] ?? 0); ?>" class="mg-form-control" style="width:120px;">
+                    <input type="number" name="bm_order" value="<?php echo (int)($item['bm_order'] ?? 0); ?>" class="mg-form-input">
                 </div>
                 <div class="mg-form-group">
                     <label class="mg-form-label">활성 상태</label>
@@ -228,8 +241,9 @@ if ($tab === 'form') {
         </div>
     </div>
 
-    <div style="text-align:right; padding:1rem 0;">
+    <div style="margin-top:1.5rem;display:flex;gap:0.5rem;">
         <button type="submit" class="mg-btn mg-btn-primary"><?php echo $is_edit ? '수정' : '등록'; ?></button>
+        <a href="./battle_monster.php" class="mg-btn mg-btn-secondary">목록으로</a>
     </div>
 </form>
 
@@ -273,14 +287,14 @@ if ($tab === 'form') {
 
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
     <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
-        <select onchange="location.href='./battle_monster.php?bm_type='+this.value" class="mg-form-control" style="width:150px;">
+        <select onchange="location.href='./battle_monster.php?bm_type='+this.value" class="mg-form-select" style="width:150px;">
             <option value="">전체 유형</option>
             <option value="mob" <?php echo $type_filter === 'mob' ? 'selected' : ''; ?>>일반 몹</option>
             <option value="boss" <?php echo $type_filter === 'boss' ? 'selected' : ''; ?>>보스</option>
             <option value="story_boss" <?php echo $type_filter === 'story_boss' ? 'selected' : ''; ?>>스토리 보스</option>
         </select>
         <form method="get" action="./battle_monster.php" style="display:flex; gap:0.25rem;">
-            <input type="text" name="stx" value="<?php echo htmlspecialchars($stx); ?>" placeholder="이름 검색" class="mg-form-control" style="width:160px;">
+            <input type="text" name="stx" value="<?php echo htmlspecialchars($stx); ?>" placeholder="이름 검색" class="mg-form-input" style="width:160px;">
             <button type="submit" class="mg-btn mg-btn-secondary" style="font-size:0.85rem;">검색</button>
         </form>
     </div>
@@ -294,7 +308,7 @@ if ($tab === 'form') {
             <table class="mg-table">
                 <thead>
                     <tr>
-                        <th style="width:40px;"><input type="checkbox" onclick="var c=this.form.querySelectorAll('input[name=\\'chk[]\\']');for(var i=0;i<c.length;i++)c[i].checked=this.checked;"></th>
+                        <th style="width:40px;"><input type="checkbox" onclick="var c=this.form.querySelectorAll('input[name=\'chk[]\']');for(var i=0;i<c.length;i++)c[i].checked=this.checked;"></th>
                         <th>ID</th>
                         <th>이름</th>
                         <th>유형</th>

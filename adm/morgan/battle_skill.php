@@ -133,17 +133,17 @@ if ($tab === 'form') {
     <input type="hidden" name="mode" value="<?php echo $is_edit ? 'edit' : 'add'; ?>">
     <input type="hidden" name="sk_id" value="<?php echo (int)$item['sk_id']; ?>">
 
-    <div class="mg-card" style="margin-bottom:1rem;">
+    <div class="mg-card">
         <div class="mg-card-header"><?php echo $is_edit ? '스킬 수정' : '스킬 등록'; ?></div>
         <div class="mg-card-body">
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:1rem;">
                 <div class="mg-form-group">
                     <label class="mg-form-label">코드 *</label>
-                    <input type="text" name="sk_code" value="<?php echo htmlspecialchars($item['sk_code'] ?? ''); ?>" class="mg-form-control" required placeholder="power_attack">
+                    <input type="text" name="sk_code" value="<?php echo htmlspecialchars($item['sk_code'] ?? ''); ?>" class="mg-form-input" required placeholder="power_attack">
                 </div>
                 <div class="mg-form-group">
                     <label class="mg-form-label">이름 *</label>
-                    <input type="text" name="sk_name" value="<?php echo htmlspecialchars($item['sk_name'] ?? ''); ?>" class="mg-form-control" required>
+                    <input type="text" name="sk_name" value="<?php echo htmlspecialchars($item['sk_name'] ?? ''); ?>" class="mg-form-input" required>
                 </div>
                 <div class="mg-form-group">
                     <label class="mg-form-label">아이콘</label>
@@ -152,12 +152,14 @@ if ($tab === 'form') {
             </div>
             <div class="mg-form-group">
                 <label class="mg-form-label">설명</label>
-                <input type="text" name="sk_desc" value="<?php echo htmlspecialchars($item['sk_desc'] ?? ''); ?>" class="mg-form-control">
+                <input type="text" name="sk_desc" value="<?php echo htmlspecialchars($item['sk_desc'] ?? ''); ?>" class="mg-form-input">
             </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:1rem;">
+
+            <h4 style="font-size:0.9rem;font-weight:600;margin:1.25rem 0 0.75rem;color:var(--mg-text-secondary);">스킬 속성</h4>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:1rem;">
                 <div class="mg-form-group">
                     <label class="mg-form-label">타입</label>
-                    <select name="sk_type" class="mg-form-control">
+                    <select name="sk_type" class="mg-form-select">
                         <?php foreach ($type_options as $k => $v) { ?>
                             <option value="<?php echo $k; ?>" <?php echo ($item['sk_type'] ?? '') === $k ? 'selected' : ''; ?>><?php echo $v; ?></option>
                         <?php } ?>
@@ -165,11 +167,11 @@ if ($tab === 'form') {
                 </div>
                 <div class="mg-form-group">
                     <label class="mg-form-label">기력 소모</label>
-                    <input type="number" name="sk_stamina" value="<?php echo (int)($item['sk_stamina'] ?? 2); ?>" class="mg-form-control" min="1">
+                    <input type="number" name="sk_stamina" value="<?php echo (int)($item['sk_stamina'] ?? 2); ?>" class="mg-form-input" min="1">
                 </div>
                 <div class="mg-form-group">
                     <label class="mg-form-label">대상</label>
-                    <select name="sk_target" class="mg-form-control">
+                    <select name="sk_target" class="mg-form-select">
                         <?php foreach ($target_options as $k => $v) { ?>
                             <option value="<?php echo $k; ?>" <?php echo ($item['sk_target'] ?? '') === $k ? 'selected' : ''; ?>><?php echo $v; ?></option>
                         <?php } ?>
@@ -177,14 +179,14 @@ if ($tab === 'form') {
                 </div>
                 <div class="mg-form-group">
                     <label class="mg-form-label">대상 수</label>
-                    <input type="number" name="sk_target_count" value="<?php echo (int)($item['sk_target_count'] ?? 1); ?>" class="mg-form-control" min="1">
-                    <small class="mg-form-text">ally_multi용</small>
+                    <input type="number" name="sk_target_count" value="<?php echo (int)($item['sk_target_count'] ?? 1); ?>" class="mg-form-input" min="1">
+                    <p style="margin-top:0.25rem;font-size:0.85rem;color:var(--mg-text-muted);">ally_multi용</p>
                 </div>
             </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:1rem;">
                 <div class="mg-form-group">
                     <label class="mg-form-label">기반 스탯</label>
-                    <select name="sk_base_stat" class="mg-form-control">
+                    <select name="sk_base_stat" class="mg-form-select">
                         <?php foreach ($stat_options as $k => $v) { ?>
                             <option value="<?php echo $k; ?>" <?php echo ($item['sk_base_stat'] ?? '') === $k ? 'selected' : ''; ?>><?php echo $v; ?></option>
                         <?php } ?>
@@ -192,43 +194,43 @@ if ($tab === 'form') {
                 </div>
                 <div class="mg-form-group">
                     <label class="mg-form-label">배율</label>
-                    <input type="number" name="sk_multiplier" value="<?php echo $item['sk_multiplier'] ?? '1.50'; ?>" class="mg-form-control" step="0.01" min="0">
+                    <input type="number" name="sk_multiplier" value="<?php echo $item['sk_multiplier'] ?? '1.50'; ?>" class="mg-form-input" step="0.01" min="0">
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="mg-card" style="margin-bottom:1rem;">
+    <div class="mg-card" style="margin-top:1.5rem;">
         <div class="mg-card-header">버프/디버프/수호</div>
         <div class="mg-card-body">
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:1rem;">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:1rem;">
                 <div class="mg-form-group">
                     <label class="mg-form-label">버프 대상 스탯</label>
-                    <input type="text" name="sk_buff_stat" value="<?php echo htmlspecialchars($item['sk_buff_stat'] ?? ''); ?>" class="mg-form-control" placeholder="atk, def, satk">
+                    <input type="text" name="sk_buff_stat" value="<?php echo htmlspecialchars($item['sk_buff_stat'] ?? ''); ?>" class="mg-form-input" placeholder="atk, def, satk">
                 </div>
                 <div class="mg-form-group">
                     <label class="mg-form-label">버프 수치 (%)</label>
-                    <input type="number" name="sk_buff_value" value="<?php echo (int)($item['sk_buff_value'] ?? 0); ?>" class="mg-form-control" min="0">
+                    <input type="number" name="sk_buff_value" value="<?php echo (int)($item['sk_buff_value'] ?? 0); ?>" class="mg-form-input" min="0">
                 </div>
                 <div class="mg-form-group">
                     <label class="mg-form-label">지속 횟수</label>
-                    <input type="number" name="sk_buff_turns" value="<?php echo (int)($item['sk_buff_turns'] ?? 3); ?>" class="mg-form-control" min="0">
+                    <input type="number" name="sk_buff_turns" value="<?php echo (int)($item['sk_buff_turns'] ?? 3); ?>" class="mg-form-input" min="0">
                 </div>
                 <div class="mg-form-group">
                     <label class="mg-form-label">수호 감소율 (%)</label>
-                    <input type="number" name="sk_guard_reduction" value="<?php echo (int)($item['sk_guard_reduction'] ?? 0); ?>" class="mg-form-control" min="0" max="100">
+                    <input type="number" name="sk_guard_reduction" value="<?php echo (int)($item['sk_guard_reduction'] ?? 0); ?>" class="mg-form-input" min="0" max="100">
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="mg-card" style="margin-bottom:1rem;">
+    <div class="mg-card" style="margin-top:1.5rem;">
         <div class="mg-card-header">해금 조건</div>
         <div class="mg-card-body">
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:1rem;">
                 <div class="mg-form-group">
                     <label class="mg-form-label">해금 방식</label>
-                    <select name="sk_unlock_type" class="mg-form-control">
+                    <select name="sk_unlock_type" class="mg-form-select">
                         <?php foreach ($unlock_options as $k => $v) { ?>
                             <option value="<?php echo $k; ?>" <?php echo ($item['sk_unlock_type'] ?? '') === $k ? 'selected' : ''; ?>><?php echo $v; ?></option>
                         <?php } ?>
@@ -236,18 +238,18 @@ if ($tab === 'form') {
                 </div>
                 <div class="mg-form-group">
                     <label class="mg-form-label">해금 참조 ID</label>
-                    <input type="number" name="sk_unlock_ref" value="<?php echo (int)($item['sk_unlock_ref'] ?? 0); ?>" class="mg-form-control" min="0">
-                    <small class="mg-form-text">si_id 또는 achievement_id</small>
+                    <input type="number" name="sk_unlock_ref" value="<?php echo (int)($item['sk_unlock_ref'] ?? 0); ?>" class="mg-form-input" min="0">
+                    <p style="margin-top:0.25rem;font-size:0.85rem;color:var(--mg-text-muted);">si_id 또는 achievement_id</p>
                 </div>
                 <div class="mg-form-group">
                     <label class="mg-form-label">스탯 요구 조건</label>
-                    <input type="text" name="sk_stat_req" value="<?php echo htmlspecialchars($item['sk_stat_req'] ?? ''); ?>" class="mg-form-control" placeholder="int:15">
+                    <input type="text" name="sk_stat_req" value="<?php echo htmlspecialchars($item['sk_stat_req'] ?? ''); ?>" class="mg-form-input" placeholder="int:15">
                 </div>
             </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:1rem;">
                 <div class="mg-form-group">
                     <label class="mg-form-label">정렬 순서</label>
-                    <input type="number" name="sk_order" value="<?php echo (int)($item['sk_order'] ?? 0); ?>" class="mg-form-control" style="width:120px;">
+                    <input type="number" name="sk_order" value="<?php echo (int)($item['sk_order'] ?? 0); ?>" class="mg-form-input">
                 </div>
                 <div class="mg-form-group">
                     <label class="mg-form-label">활성 상태</label>
@@ -260,8 +262,9 @@ if ($tab === 'form') {
         </div>
     </div>
 
-    <div style="text-align:right; padding:1rem 0;">
+    <div style="margin-top:1.5rem;display:flex;gap:0.5rem;">
         <button type="submit" class="mg-btn mg-btn-primary"><?php echo $is_edit ? '수정' : '등록'; ?></button>
+        <a href="./battle_skill.php" class="mg-btn mg-btn-secondary">목록으로</a>
     </div>
 </form>
 
@@ -283,7 +286,7 @@ if ($tab === 'form') {
             <table class="mg-table">
                 <thead>
                     <tr>
-                        <th style="width:40px;"><input type="checkbox" onclick="var c=this.form.querySelectorAll('input[name=\\'chk[]\\']');for(var i=0;i<c.length;i++)c[i].checked=this.checked;"></th>
+                        <th style="width:40px;"><input type="checkbox" onclick="var c=this.form.querySelectorAll('input[name=\'chk[]\']');for(var i=0;i<c.length;i++)c[i].checked=this.checked;"></th>
                         <th>ID</th>
                         <th>아이콘</th>
                         <th>코드</th>

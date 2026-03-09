@@ -80,122 +80,132 @@ $cfg = array(
 <form method="post" action="./battle_config.php">
 
 <!-- 기본 설정 -->
-<div class="mg-card" style="margin-bottom:1rem;">
+<div class="mg-card">
     <div class="mg-card-header">기본 설정</div>
     <div class="mg-card-body">
-        <div class="mg-form-group">
-            <label class="mg-form-label">전투 시스템 사용</label>
-            <select name="battle_use" class="mg-form-control" style="width:120px;">
-                <option value="1" <?php echo $cfg['battle_use'] == '1' ? 'selected' : ''; ?>>사용</option>
-                <option value="0" <?php echo $cfg['battle_use'] == '0' ? 'selected' : ''; ?>>미사용</option>
-            </select>
-        </div>
-        <div class="mg-form-group">
-            <label class="mg-form-label">탐사 전투 발생 확률 (%)</label>
-            <input type="number" name="battle_encounter_rate" value="<?php echo $cfg['battle_encounter_rate']; ?>" class="mg-form-control" style="width:120px;" min="0" max="100">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:1rem;">
+            <div class="mg-form-group">
+                <label class="mg-form-label">전투 시스템 사용</label>
+                <select name="battle_use" class="mg-form-select">
+                    <option value="1" <?php echo $cfg['battle_use'] == '1' ? 'selected' : ''; ?>>사용</option>
+                    <option value="0" <?php echo $cfg['battle_use'] == '0' ? 'selected' : ''; ?>>미사용</option>
+                </select>
+            </div>
+            <div class="mg-form-group">
+                <label class="mg-form-label">탐사 전투 발생 확률 (%)</label>
+                <input type="number" name="battle_encounter_rate" value="<?php echo $cfg['battle_encounter_rate']; ?>" class="mg-form-input" min="0" max="100">
+            </div>
         </div>
     </div>
 </div>
 
 <!-- 기력 -->
-<div class="mg-card" style="margin-bottom:1rem;">
+<div class="mg-card" style="margin-top:1.5rem;">
     <div class="mg-card-header">기력 (Energy)</div>
     <div class="mg-card-body">
-        <div class="mg-form-group">
-            <label class="mg-form-label">최대 기력</label>
-            <input type="number" name="battle_energy_max" value="<?php echo $cfg['battle_energy_max']; ?>" class="mg-form-control" style="width:120px;" min="1">
-        </div>
-        <div class="mg-form-group">
-            <label class="mg-form-label">충전 간격 (초)</label>
-            <input type="number" name="battle_energy_interval" value="<?php echo $cfg['battle_energy_interval']; ?>" class="mg-form-control" style="width:120px;" min="60">
-            <small class="mg-form-text">기본 1800초 = 30분</small>
-        </div>
-        <div class="mg-form-group">
-            <label class="mg-form-label">초기 지급량</label>
-            <input type="number" name="battle_energy_initial" value="<?php echo $cfg['battle_energy_initial']; ?>" class="mg-form-control" style="width:120px;" min="0">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:1rem;">
+            <div class="mg-form-group">
+                <label class="mg-form-label">최대 기력</label>
+                <input type="number" name="battle_energy_max" value="<?php echo $cfg['battle_energy_max']; ?>" class="mg-form-input" min="1">
+            </div>
+            <div class="mg-form-group">
+                <label class="mg-form-label">충전 간격 (초)</label>
+                <input type="number" name="battle_energy_interval" value="<?php echo $cfg['battle_energy_interval']; ?>" class="mg-form-input" min="60">
+                <p style="margin-top:0.25rem;font-size:0.85rem;color:var(--mg-text-muted);">기본 1800초 = 30분</p>
+            </div>
+            <div class="mg-form-group">
+                <label class="mg-form-label">초기 지급량</label>
+                <input type="number" name="battle_energy_initial" value="<?php echo $cfg['battle_energy_initial']; ?>" class="mg-form-input" min="0">
+            </div>
         </div>
     </div>
 </div>
 
 <!-- 스탯 -->
-<div class="mg-card" style="margin-bottom:1rem;">
+<div class="mg-card" style="margin-top:1.5rem;">
     <div class="mg-card-header">스탯 & 전투 수치</div>
     <div class="mg-card-body">
-        <div class="mg-form-group">
-            <label class="mg-form-label">초기 스탯 포인트</label>
-            <input type="number" name="battle_stat_points" value="<?php echo $cfg['battle_stat_points']; ?>" class="mg-form-control" style="width:120px;" min="0">
-        </div>
-        <div class="mg-form-group">
-            <label class="mg-form-label">기본 HP (스탯 보정 전)</label>
-            <input type="number" name="battle_base_hp" value="<?php echo $cfg['battle_base_hp']; ?>" class="mg-form-control" style="width:120px;" min="1">
-        </div>
-        <div class="mg-form-group">
-            <label class="mg-form-label">HP 자동회복률 (max_hp의 %)</label>
-            <input type="number" name="battle_hp_regen_pct" value="<?php echo $cfg['battle_hp_regen_pct']; ?>" class="mg-form-control" style="width:120px;" min="0" max="100">
-            <small class="mg-form-text">기력 충전 1회당 회복량</small>
-        </div>
-        <div class="mg-form-group">
-            <label class="mg-form-label">기본 크리티컬률 (%)</label>
-            <input type="number" name="battle_base_crit_rate" value="<?php echo $cfg['battle_base_crit_rate']; ?>" class="mg-form-control" style="width:120px;" min="0" max="100">
-        </div>
-        <div class="mg-form-group">
-            <label class="mg-form-label">기본 크리티컬 배율 (%)</label>
-            <input type="number" name="battle_base_crit_mult" value="<?php echo $cfg['battle_base_crit_mult']; ?>" class="mg-form-control" style="width:120px;" min="100">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:1rem;">
+            <div class="mg-form-group">
+                <label class="mg-form-label">초기 스탯 포인트</label>
+                <input type="number" name="battle_stat_points" value="<?php echo $cfg['battle_stat_points']; ?>" class="mg-form-input" min="0">
+            </div>
+            <div class="mg-form-group">
+                <label class="mg-form-label">기본 HP (스탯 보정 전)</label>
+                <input type="number" name="battle_base_hp" value="<?php echo $cfg['battle_base_hp']; ?>" class="mg-form-input" min="1">
+            </div>
+            <div class="mg-form-group">
+                <label class="mg-form-label">HP 자동회복률 (max_hp의 %)</label>
+                <input type="number" name="battle_hp_regen_pct" value="<?php echo $cfg['battle_hp_regen_pct']; ?>" class="mg-form-input" min="0" max="100">
+                <p style="margin-top:0.25rem;font-size:0.85rem;color:var(--mg-text-muted);">기력 충전 1회당 회복량</p>
+            </div>
+            <div class="mg-form-group">
+                <label class="mg-form-label">기본 크리티컬률 (%)</label>
+                <input type="number" name="battle_base_crit_rate" value="<?php echo $cfg['battle_base_crit_rate']; ?>" class="mg-form-input" min="0" max="100">
+            </div>
+            <div class="mg-form-group">
+                <label class="mg-form-label">기본 크리티컬 배율 (%)</label>
+                <input type="number" name="battle_base_crit_mult" value="<?php echo $cfg['battle_base_crit_mult']; ?>" class="mg-form-input" min="100">
+            </div>
         </div>
     </div>
 </div>
 
 <!-- 전투 규칙 -->
-<div class="mg-card" style="margin-bottom:1rem;">
+<div class="mg-card" style="margin-top:1.5rem;">
     <div class="mg-card-header">전투 규칙</div>
     <div class="mg-card-body">
-        <div class="mg-form-group">
-            <label class="mg-form-label">발견자 초대 인원</label>
-            <input type="number" name="battle_invite_max" value="<?php echo $cfg['battle_invite_max']; ?>" class="mg-form-control" style="width:120px;" min="0" max="10">
-        </div>
-        <div class="mg-form-group">
-            <label class="mg-form-label">미시작 소멸 시간 (초)</label>
-            <input type="number" name="battle_expire_no_start" value="<?php echo $cfg['battle_expire_no_start']; ?>" class="mg-form-control" style="width:120px;" min="300">
-            <small class="mg-form-text">첫 행동 없이 이 시간 경과 시 자동 소멸</small>
-        </div>
-        <div class="mg-form-group">
-            <label class="mg-form-label">전사 패널티 (%)</label>
-            <input type="number" name="battle_death_penalty" value="<?php echo $cfg['battle_death_penalty']; ?>" class="mg-form-control" style="width:120px;" min="0" max="100">
-            <small class="mg-form-text">전사 상태로 전투 종료 시 보상 감소율</small>
-        </div>
-        <div class="mg-form-group">
-            <label class="mg-form-label">도발 지속 횟수</label>
-            <input type="number" name="battle_taunt_turns" value="<?php echo $cfg['battle_taunt_turns']; ?>" class="mg-form-control" style="width:120px;" min="1">
-        </div>
-        <div class="mg-form-group">
-            <label class="mg-form-label">수호 지속 횟수</label>
-            <input type="number" name="battle_guard_turns" value="<?php echo $cfg['battle_guard_turns']; ?>" class="mg-form-control" style="width:120px;" min="1">
-        </div>
-        <div class="mg-form-group">
-            <label class="mg-form-label">수호 데미지 감소율 (%)</label>
-            <input type="number" name="battle_guard_reduction" value="<?php echo $cfg['battle_guard_reduction']; ?>" class="mg-form-control" style="width:120px;" min="0" max="100">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:1rem;">
+            <div class="mg-form-group">
+                <label class="mg-form-label">발견자 초대 인원</label>
+                <input type="number" name="battle_invite_max" value="<?php echo $cfg['battle_invite_max']; ?>" class="mg-form-input" min="0" max="10">
+            </div>
+            <div class="mg-form-group">
+                <label class="mg-form-label">미시작 소멸 시간 (초)</label>
+                <input type="number" name="battle_expire_no_start" value="<?php echo $cfg['battle_expire_no_start']; ?>" class="mg-form-input" min="300">
+                <p style="margin-top:0.25rem;font-size:0.85rem;color:var(--mg-text-muted);">첫 행동 없이 이 시간 경과 시 자동 소멸</p>
+            </div>
+            <div class="mg-form-group">
+                <label class="mg-form-label">전사 패널티 (%)</label>
+                <input type="number" name="battle_death_penalty" value="<?php echo $cfg['battle_death_penalty']; ?>" class="mg-form-input" min="0" max="100">
+                <p style="margin-top:0.25rem;font-size:0.85rem;color:var(--mg-text-muted);">전사 상태로 전투 종료 시 보상 감소율</p>
+            </div>
+            <div class="mg-form-group">
+                <label class="mg-form-label">도발 지속 횟수</label>
+                <input type="number" name="battle_taunt_turns" value="<?php echo $cfg['battle_taunt_turns']; ?>" class="mg-form-input" min="1">
+            </div>
+            <div class="mg-form-group">
+                <label class="mg-form-label">수호 지속 횟수</label>
+                <input type="number" name="battle_guard_turns" value="<?php echo $cfg['battle_guard_turns']; ?>" class="mg-form-input" min="1">
+            </div>
+            <div class="mg-form-group">
+                <label class="mg-form-label">수호 데미지 감소율 (%)</label>
+                <input type="number" name="battle_guard_reduction" value="<?php echo $cfg['battle_guard_reduction']; ?>" class="mg-form-input" min="0" max="100">
+            </div>
         </div>
     </div>
 </div>
 
 <!-- 스토리 보스 -->
-<div class="mg-card" style="margin-bottom:1rem;">
+<div class="mg-card" style="margin-top:1.5rem;">
     <div class="mg-card-header">스토리 보스</div>
     <div class="mg-card-body">
-        <div class="mg-form-group">
-            <label class="mg-form-label">라운드 간 HP 회복률 (%)</label>
-            <input type="number" name="battle_story_regen_pct" value="<?php echo $cfg['battle_story_regen_pct']; ?>" class="mg-form-control" style="width:120px;" min="0" max="100">
-            <small class="mg-form-text">잔여 HP의 N% 회복</small>
-        </div>
-        <div class="mg-form-group">
-            <label class="mg-form-label">라운드 참여 보상 (%)</label>
-            <input type="number" name="battle_story_round_reward_pct" value="<?php echo $cfg['battle_story_round_reward_pct']; ?>" class="mg-form-control" style="width:120px;" min="0" max="100">
-            <small class="mg-form-text">기본 보상의 N%를 라운드 참여 보상으로 지급</small>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:1rem;">
+            <div class="mg-form-group">
+                <label class="mg-form-label">라운드 간 HP 회복률 (%)</label>
+                <input type="number" name="battle_story_regen_pct" value="<?php echo $cfg['battle_story_regen_pct']; ?>" class="mg-form-input" min="0" max="100">
+                <p style="margin-top:0.25rem;font-size:0.85rem;color:var(--mg-text-muted);">잔여 HP의 N% 회복</p>
+            </div>
+            <div class="mg-form-group">
+                <label class="mg-form-label">라운드 참여 보상 (%)</label>
+                <input type="number" name="battle_story_round_reward_pct" value="<?php echo $cfg['battle_story_round_reward_pct']; ?>" class="mg-form-input" min="0" max="100">
+                <p style="margin-top:0.25rem;font-size:0.85rem;color:var(--mg-text-muted);">기본 보상의 N%를 라운드 참여 보상으로 지급</p>
+            </div>
         </div>
     </div>
 </div>
 
-<div style="text-align:right; padding:1rem 0;">
+<div style="margin-top:1.5rem;display:flex;gap:0.5rem;">
     <button type="submit" class="mg-btn mg-btn-primary">설정 저장</button>
 </div>
 
