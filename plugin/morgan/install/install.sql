@@ -2545,4 +2545,213 @@ CREATE TABLE IF NOT EXISTS `mg_user_widget` (
     KEY `idx_mb_order` (`mb_id`, `widget_order`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='유저 위젯 설정';
 
+-- ======================================
+-- 27. 전투 시스템 (Battle System)
+-- ======================================
+
+-- 전투 스탯 (캐릭터당 1개)
+CREATE TABLE IF NOT EXISTS `mg_battle_stat` (
+    `bs_id`           INT AUTO_INCREMENT PRIMARY KEY,
+    `ch_id`           INT NOT NULL,
+    `mb_id`           VARCHAR(20) NOT NULL,
+    `stat_hp`         INT DEFAULT 5,
+    `stat_str`        INT DEFAULT 5,
+    `stat_dex`        INT DEFAULT 5,
+    `stat_int`        INT DEFAULT 5,
+    `stat_con`        INT DEFAULT 5,
+    `stat_luk`        INT DEFAULT 5,
+    `stat_stress`     INT NOT NULL DEFAULT 0 COMMENT '현재 스트레스 (0~100)',
+    `stat_locked`     TINYINT(1) NOT NULL DEFAULT 0,
+    `stat_points`     INT DEFAULT 0,
+    `equip_weapon`    INT DEFAULT 0,
+    `equip_armor`     INT DEFAULT 0,
+    `equip_accessory` INT DEFAULT 0,
+    `skill_slot_1`    INT DEFAULT 0,
+    `skill_slot_2`    INT DEFAULT 0,
+    `skill_slot_3`    INT DEFAULT 0,
+    `bs_created`      DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `bs_updated`      DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY (`ch_id`),
+    KEY (`mb_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 기력 (캐릭터당 1개)
+CREATE TABLE IF NOT EXISTS `mg_battle_energy` (
+    `ben_id`          INT AUTO_INCREMENT PRIMARY KEY,
+    `ch_id`           INT NOT NULL,
+    `mb_id`           VARCHAR(20) NOT NULL,
+    `current_energy`  INT DEFAULT 5,
+    `max_energy`      INT DEFAULT 10,
+    `last_charge_at`  DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `last_hp_regen_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY (`ch_id`),
+    KEY (`mb_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 몬스터 템플릿 (관리자 등록)
+CREATE TABLE IF NOT EXISTS `mg_battle_monster` (
+    `bm_id`           INT AUTO_INCREMENT PRIMARY KEY,
+    `bm_name`         VARCHAR(100) NOT NULL,
+    `bm_image`        VARCHAR(500) DEFAULT '',
+    `bm_type`         ENUM('boss','mob','story_boss') DEFAULT 'mob',
+    `bm_hp`           INT DEFAULT 1000,
+    `bm_atk`          INT DEFAULT 50,
+    `bm_def`          INT DEFAULT 10,
+    `bm_time_limit`   INT DEFAULT 7200,
+    `bm_reward_point` INT DEFAULT 500,
+    `bm_reward_drops` TEXT,
+    `bm_areas`        TEXT,
+    `bm_mob_count`    INT DEFAULT 1,
+    `bm_story_regen_pct` INT DEFAULT 5,
+    `bm_use`          TINYINT(1) DEFAULT 1,
+    `bm_order`        INT DEFAULT 0,
+    `bm_created`      DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 전투 인카운터 (발견된 전투 인스턴스)
+CREATE TABLE IF NOT EXISTS `mg_battle_encounter` (
+    `be_id`           INT AUTO_INCREMENT PRIMARY KEY,
+    `bm_id`           INT NOT NULL,
+    `be_type`         ENUM('boss','mob_group','story_boss') DEFAULT 'boss',
+    `be_status`       ENUM('discovered','active','cleared','failed','expired') DEFAULT 'discovered',
+    `be_monsters`     TEXT,
+    `be_time_limit`   INT DEFAULT 7200,
+    `be_reward_point` INT DEFAULT 500,
+    `be_reward_drops` TEXT,
+    `taunt_queue`     TEXT,
+    `be_debuffs`      TEXT,
+    `discoverer_mb_id` VARCHAR(20) NOT NULL,
+    `discoverer_ch_id` INT NOT NULL,
+    `ea_id`           INT DEFAULT 0,
+    `el_id`           INT DEFAULT 0,
+    `be_story_group_id` VARCHAR(50) DEFAULT '',
+    `be_story_hp_carry` INT DEFAULT 0,
+    `be_story_round`  INT DEFAULT 1,
+    `be_discovered_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `be_started_at`   DATETIME DEFAULT NULL,
+    `be_ended_at`     DATETIME DEFAULT NULL,
+    KEY (`be_status`),
+    KEY (`discoverer_mb_id`),
+    KEY (`be_story_group_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 참여자 슬롯
+CREATE TABLE IF NOT EXISTS `mg_battle_slot` (
+    `bsl_id`          INT AUTO_INCREMENT PRIMARY KEY,
+    `be_id`           INT NOT NULL,
+    `mb_id`           VARCHAR(20) NOT NULL,
+    `ch_id`           INT NOT NULL,
+    `slot_role`       ENUM('discoverer','participant') DEFAULT 'participant',
+    `slot_status`     ENUM('active','dead','retreated') DEFAULT 'active',
+    `current_hp`      INT DEFAULT 0,
+    `max_hp`          INT DEFAULT 0,
+    `total_damage`    INT DEFAULT 0,
+    `total_heal`      INT DEFAULT 0,
+    `buff_count`      INT DEFAULT 0,
+    `debuff_count`    INT DEFAULT 0,
+    `taunt_absorb`    INT DEFAULT 0,
+    `action_count`    INT DEFAULT 0,
+    `buffs_active`    TEXT,
+    `bsl_joined_at`   DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY (`be_id`, `ch_id`),
+    UNIQUE KEY (`be_id`, `mb_id`),
+    KEY (`be_id`, `slot_status`),
+    KEY (`mb_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 전투 로그
+CREATE TABLE IF NOT EXISTS `mg_battle_log` (
+    `bl_id`           INT AUTO_INCREMENT PRIMARY KEY,
+    `be_id`           INT NOT NULL,
+    `mb_id`           VARCHAR(20) NOT NULL,
+    `ch_id`           INT NOT NULL,
+    `bl_action`       VARCHAR(30) NOT NULL,
+    `bl_target_type`  ENUM('monster','player','self') DEFAULT 'monster',
+    `bl_target_id`    INT DEFAULT 0,
+    `bl_damage`       INT DEFAULT 0,
+    `bl_heal`         INT DEFAULT 0,
+    `bl_counter`      INT DEFAULT 0,
+    `bl_counter_target_ch` INT DEFAULT 0,
+    `bl_is_crit`      TINYINT(1) DEFAULT 0,
+    `bl_is_evade`     TINYINT(1) DEFAULT 0,
+    `bl_detail`       TEXT,
+    `bl_datetime`     DATETIME DEFAULT CURRENT_TIMESTAMP,
+    KEY (`be_id`, `bl_datetime`),
+    KEY (`mb_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 스킬 정의
+CREATE TABLE IF NOT EXISTS `mg_battle_skill` (
+    `sk_id`           INT AUTO_INCREMENT PRIMARY KEY,
+    `sk_code`         VARCHAR(30) NOT NULL UNIQUE,
+    `sk_name`         VARCHAR(50) NOT NULL,
+    `sk_desc`         VARCHAR(200) DEFAULT '',
+    `sk_icon`         VARCHAR(100) DEFAULT '',
+    `sk_icon_color`   VARCHAR(10) DEFAULT '#ffffff',
+    `sk_type`         ENUM('damage','heal','buff','debuff','taunt') NOT NULL,
+    `sk_stamina`      INT DEFAULT 2,
+    `sk_target`       ENUM('enemy_single','enemy_all','ally_single','ally_multi','ally_all','self') NOT NULL,
+    `sk_target_count` INT DEFAULT 1,
+    `sk_base_stat`    ENUM('str','dex','int','none') DEFAULT 'dex',
+    `sk_multiplier`   DECIMAL(3,2) DEFAULT 1.50,
+    `sk_buff_stat`    VARCHAR(20) DEFAULT '',
+    `sk_buff_value`   INT DEFAULT 0,
+    `sk_buff_turns`   INT DEFAULT 3,
+    `sk_guard_reduction` INT DEFAULT 0,
+    `sk_stat_req`     VARCHAR(30) DEFAULT '',
+    `sk_unlock_type`  ENUM('default','shop','drop','achievement') DEFAULT 'default',
+    `sk_unlock_ref`   INT DEFAULT 0,
+    `sk_use`          TINYINT(1) DEFAULT 1,
+    `sk_order`        INT DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ======================================
+-- 28. 훈련 스케줄 시스템
+-- ======================================
+
+-- 훈련 과정
+CREATE TABLE IF NOT EXISTS `mg_training_class` (
+    `tc_id`           INT AUTO_INCREMENT PRIMARY KEY,
+    `tc_name`         VARCHAR(100) NOT NULL,
+    `tc_desc`         TEXT,
+    `tc_icon`         VARCHAR(255) DEFAULT '',
+    `tc_icon_color`   VARCHAR(10) DEFAULT '#ffffff',
+    `tc_stat`         VARCHAR(20) NOT NULL DEFAULT 'stat_str' COMMENT 'stat_hp, stat_str, stat_dex, stat_int, stat_con, stat_luk, none',
+    `tc_stat_amount`  INT NOT NULL DEFAULT 1 COMMENT '이수 완료 시 스탯 증가량',
+    `tc_required`     INT NOT NULL DEFAULT 10 COMMENT '이수에 필요한 총 슬롯 횟수',
+    `tc_cost`         INT NOT NULL DEFAULT 0 COMMENT '슬롯당 수강료 (포인트)',
+    `tc_stress`       INT NOT NULL DEFAULT 5 COMMENT '슬롯당 스트레스 변화 (음수=감소)',
+    `tc_max_repeat`   INT NOT NULL DEFAULT 0 COMMENT '캐릭터당 최대 이수 횟수 (0=무제한)',
+    `tc_order`        INT NOT NULL DEFAULT 0,
+    `tc_use`          TINYINT NOT NULL DEFAULT 1,
+    `tc_created`      DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `tc_updated`      DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 훈련 스케줄
+CREATE TABLE IF NOT EXISTS `mg_training_schedule` (
+    `ts_id`           INT AUTO_INCREMENT PRIMARY KEY,
+    `ch_id`           INT NOT NULL,
+    `mb_id`           VARCHAR(20) NOT NULL,
+    `ts_year`         SMALLINT NOT NULL COMMENT '연도',
+    `ts_week`         TINYINT NOT NULL COMMENT 'ISO 주차 (1~53)',
+    `ts_slots`        JSON NOT NULL COMMENT '15슬롯 배열',
+    `ts_total_cost`   INT NOT NULL DEFAULT 0 COMMENT '총 수강료',
+    `ts_settled`      TINYINT NOT NULL DEFAULT 0 COMMENT '0=미정산, 1=정산완료',
+    `ts_created`      DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY `uk_ch_week` (`ch_id`, `ts_year`, `ts_week`),
+    KEY `idx_mb` (`mb_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 훈련 진행도
+CREATE TABLE IF NOT EXISTS `mg_training_progress` (
+    `tp_id`           INT AUTO_INCREMENT PRIMARY KEY,
+    `ch_id`           INT NOT NULL,
+    `tc_id`           INT NOT NULL,
+    `tp_progress`     DECIMAL(6,1) NOT NULL DEFAULT 0 COMMENT '현재 누적 진행도',
+    `tp_completed`    INT NOT NULL DEFAULT 0 COMMENT '이수 완료 횟수',
+    `tp_updated`      DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY `uk_ch_class` (`ch_id`, `tc_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 SET FOREIGN_KEY_CHECKS = 1;
