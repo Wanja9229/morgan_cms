@@ -93,6 +93,13 @@ if (isset($_POST['btn_add_section'])) {
         alert('섹션명을 입력해주세요.');
     }
 
+    // 동일 섹션명 중복 체크
+    $esc_cat = sql_real_escape_string($category);
+    $dup_cat = sql_fetch("SELECT pf_id FROM {$g5['mg_profile_field_table']} WHERE pf_category = '{$esc_cat}' LIMIT 1");
+    if ($dup_cat['pf_id']) {
+        alert('이미 동일한 이름의 섹션이 존재합니다: '.$category);
+    }
+
     // 섹션에 기본 필드 하나 추가 (섹션만 따로 저장할 수 없으므로)
     $code = 'pf_'.time().'_'.mt_rand(100, 999);
     sql_query("INSERT INTO {$g5['mg_profile_field_table']} (pf_code, pf_name, pf_type, pf_category, pf_use, pf_order)
@@ -128,6 +135,13 @@ if (isset($_POST['btn_add_field'])) {
 
     if (!$name) {
         alert('필드명을 입력해주세요.');
+    }
+
+    // 동일 이름 중복 체크
+    $esc_name = sql_real_escape_string($name);
+    $dup = sql_fetch("SELECT pf_id FROM {$g5['mg_profile_field_table']} WHERE pf_name = '{$esc_name}'");
+    if ($dup['pf_id']) {
+        alert('이미 동일한 이름의 필드가 존재합니다: '.$name);
     }
 
     // 코드 자동 생성 (타임스탬프 + 랜덤)
@@ -258,6 +272,30 @@ if (isset($_POST['btn_delete'])) {
     }
 
     alert(count($chk).'개 필드가 삭제되었습니다.', $redirect_url);
+}
+
+// 섹션 삭제 (AJAX)
+if (isset($_POST['btn_delete_section'])) {
+    $category = isset($_POST['delete_category']) ? trim(clean_xss_tags($_POST['delete_category'])) : '';
+
+    if (!$category) {
+        header('Content-Type: application/json');
+        echo json_encode(array('success' => false, 'message' => '섹션명이 없습니다.'));
+        exit;
+    }
+
+    $esc_cat = sql_real_escape_string($category);
+
+    // 섹션의 모든 필드 ID 조회
+    $result = sql_query("SELECT pf_id FROM {$g5['mg_profile_field_table']} WHERE pf_category = '{$esc_cat}'");
+    while ($row = sql_fetch_array($result)) {
+        sql_query("DELETE FROM {$g5['mg_profile_value_table']} WHERE pf_id = {$row['pf_id']}");
+    }
+    sql_query("DELETE FROM {$g5['mg_profile_field_table']} WHERE pf_category = '{$esc_cat}'");
+
+    header('Content-Type: application/json');
+    echo json_encode(array('success' => true));
+    exit;
 }
 
 alert('잘못된 접근입니다.', $redirect_url);

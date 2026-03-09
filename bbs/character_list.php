@@ -121,11 +121,45 @@ function build_query($params = array()) {
 include_once(G5_THEME_PATH.'/head.php');
 ?>
 
+<?php
+// 캐릭터 신청 기간 체크
+$_char_reg_use = mg_config('char_reg_period_use', '0');
+$_char_reg_start = mg_config('char_reg_start', '');
+$_char_reg_end = mg_config('char_reg_end', '');
+$_char_reg_open = true; // 기본: 항상 열림
+$_char_reg_msg = '';
+
+if ($_char_reg_use == '1' && $_char_reg_start && $_char_reg_end) {
+    $now = date('Y-m-d\TH:i');
+    $_char_reg_open = ($now >= $_char_reg_start && $now <= $_char_reg_end);
+    if (!$_char_reg_open) {
+        if ($now < $_char_reg_start) {
+            $_char_reg_msg = '캐릭터 신청 기간: ' . str_replace('T', ' ', $_char_reg_start) . ' ~ ' . str_replace('T', ' ', $_char_reg_end);
+        } else {
+            $_char_reg_msg = '캐릭터 신청 기간이 종료되었습니다.';
+        }
+    }
+}
+?>
+
 <div class="mg-inner">
     <!-- 페이지 헤더 -->
-    <div class="mb-6">
-        <h1 class="text-2xl font-bold text-mg-text-primary">캐릭터 목록</h1>
-        <p class="text-sm text-mg-text-muted mt-1"><?php echo $cat === 'npc' ? 'NPC' : '승인된 캐릭터'; ?> <?php echo number_format($total_count); ?>명</p>
+    <div class="mb-6" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
+        <div>
+            <h1 class="text-2xl font-bold text-mg-text-primary">캐릭터 목록</h1>
+            <p class="text-sm text-mg-text-muted mt-1"><?php echo $cat === 'npc' ? 'NPC' : '승인된 캐릭터'; ?> <?php echo number_format($total_count); ?>명</p>
+        </div>
+        <?php if ($is_member) { ?>
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+            <?php if ($_char_reg_open) { ?>
+            <a href="<?php echo G5_BBS_URL; ?>/character_form.php" class="btn btn-primary text-sm" style="display:inline-flex;align-items:center;gap:0.375rem;">
+                <i data-lucide="plus" style="width:16px;height:16px;"></i> 캐릭터 신청
+            </a>
+            <?php } else { ?>
+            <span class="text-sm text-mg-text-muted" style="background:var(--mg-bg-tertiary);padding:0.5rem 0.75rem;border-radius:0.5rem;" title="<?php echo htmlspecialchars($_char_reg_msg); ?>">신청 기간 아님</span>
+            <?php } ?>
+        </div>
+        <?php } ?>
     </div>
 
     <!-- 카테고리 탭 -->

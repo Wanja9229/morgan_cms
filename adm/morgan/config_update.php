@@ -99,6 +99,10 @@ $config_keys = array(
     'character_create_point',
     'max_characters',
     'max_relations',
+    // 캐릭터 신청 기간
+    'char_reg_period_use',
+    'char_reg_start',
+    'char_reg_end',
     'show_main_character',
     'use_side',
     'use_class',

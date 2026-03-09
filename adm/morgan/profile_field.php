@@ -106,8 +106,8 @@ require_once __DIR__.'/_head.php';
 }
 .pf-field-row {
     display: grid;
-    grid-template-columns: 32px 40px 140px 110px 1fr 60px 60px 70px;
-    min-width: 700px;
+    grid-template-columns: 32px 40px 140px 110px 1fr 60px 60px 70px 36px;
+    min-width: 740px;
     gap: 0.5rem;
     align-items: center;
     padding: 0.75rem 1rem;
@@ -184,9 +184,10 @@ require_once __DIR__.'/_head.php';
             <span style="cursor:pointer;" onclick="toggleSection(this.closest('.pf-section-header'))"><?php echo htmlspecialchars($category); ?></span>
             <span class="pf-section-count"><?php echo count($fields); ?>개</span>
         </div>
-        <div style="display:flex;gap:0.5rem;">
-            <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="openAddFieldModal('<?php echo htmlspecialchars($category); ?>')">필드 추가</button>
-            <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="openRenameSectionModal('<?php echo htmlspecialchars($category); ?>')">이름 변경</button>
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+            <button type="button" class="mg-btn mg-btn-primary mg-btn-sm" onclick="openAddFieldModal('<?php echo htmlspecialchars($category); ?>')" style="font-size:0.8rem;">+ 필드 추가</button>
+            <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="openRenameSectionModal('<?php echo htmlspecialchars($category); ?>')" style="font-size:0.8rem;">이름 변경</button>
+            <button type="button" class="mg-btn mg-btn-danger mg-btn-sm" onclick="deleteSection('<?php echo htmlspecialchars($category); ?>')" style="font-size:0.8rem;">섹션 삭제</button>
         </div>
     </div>
     <div class="pf-section-body">
@@ -198,6 +199,7 @@ require_once __DIR__.'/_head.php';
             <div>선택 옵션</div>
             <div style="text-align:center;">필수</div>
             <div style="text-align:center;">사용</div>
+            <div></div>
             <div></div>
         </div>
         <?php foreach ($fields as $field): ?>
@@ -233,6 +235,11 @@ require_once __DIR__.'/_head.php';
             <div>
                 <button type="button" class="mg-btn mg-btn-secondary mg-btn-sm" onclick="openEditFieldModal(<?php echo $field['pf_id']; ?>)">상세</button>
             </div>
+            <div>
+                <button type="button" onclick="deleteField(<?php echo $field['pf_id']; ?>)" title="필드 삭제" style="background:none;border:none;cursor:pointer;color:var(--mg-text-muted);padding:4px;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.color='var(--mg-error)'" onmouseout="this.style.color='var(--mg-text-muted)'">
+                    <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+            </div>
         </div>
         <?php endforeach; ?>
         <?php if (empty($fields)): ?>
@@ -259,7 +266,7 @@ require_once __DIR__.'/_head.php';
 
 <div style="margin-top:1rem;display:flex;gap:0.5rem;">
     <button type="submit" name="btn_save" class="mg-btn mg-btn-primary">변경사항 저장</button>
-    <button type="submit" name="btn_delete" class="mg-btn mg-btn-danger" onclick="return confirm('선택한 필드를 삭제하시겠습니까?');">선택 삭제</button>
+    <button type="submit" name="btn_delete" class="mg-btn mg-btn-danger" onclick="return confirm('삭제된 데이터는 복구할 수 없습니다. 정말 삭제하시겠습니까?');">선택 삭제</button>
 </div>
 
 </form>
@@ -421,6 +428,20 @@ function openAddFieldModal(category) {
     document.getElementById('add_field_category').value = category;
     openModal('addFieldModal');
 }
+
+// 필드 추가 폼 중복 이름 검사
+document.querySelector('#addFieldModal form').addEventListener('submit', function(e) {
+    var newName = this.querySelector('[name="new_pf_name"]').value.trim();
+    if (!newName) return;
+    var exists = false;
+    document.querySelectorAll('#ffieldlist input[name="pf_name[]"]').forEach(function(inp) {
+        if (inp.value.trim() === newName) exists = true;
+    });
+    if (exists) {
+        e.preventDefault();
+        alert('이미 동일한 이름의 필드가 존재합니다: ' + newName);
+    }
+});
 
 function toggleOptionsField(select) {
     var group = document.getElementById('optionsGroup');
@@ -664,6 +685,28 @@ document.querySelectorAll('.mg-modal').forEach(function(modal) {
         });
     }
 })();
+
+// 개별 필드 삭제
+function deleteField(pfId) {
+    if (!confirm('삭제된 데이터는 복구할 수 없습니다. 정말 삭제하시겠습니까?')) return;
+    var fd = new FormData();
+    fd.append('btn_delete', '1');
+    fd.append('chk[]', pfId);
+    fetch(updateUrl, {method:'POST', body:fd})
+        .then(function(r){ location.reload(); })
+        .catch(function(){ alert('삭제 중 오류가 발생했습니다.'); });
+}
+
+// 섹션 삭제
+function deleteSection(category) {
+    if (!confirm('섹션 "' + category + '"과 포함된 모든 필드가 삭제됩니다.\n삭제된 데이터는 복구할 수 없습니다. 정말 삭제하시겠습니까?')) return;
+    var fd = new FormData();
+    fd.append('btn_delete_section', '1');
+    fd.append('delete_category', category);
+    fetch(updateUrl, {method:'POST', body:fd})
+        .then(function(r){ location.reload(); })
+        .catch(function(){ alert('삭제 중 오류가 발생했습니다.'); });
+}
 </script>
 
 <?php

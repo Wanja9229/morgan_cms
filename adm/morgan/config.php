@@ -119,6 +119,27 @@ function _cfg_radio($name, $configs, $default = '1', $labels = array('사용', '
 
             <hr style="border:0;border-top:1px solid var(--mg-bg-tertiary);margin:1.5rem 0;">
 
+            <h4 style="font-size:0.9rem;font-weight:600;margin-bottom:1rem;color:var(--mg-text-secondary);">캐릭터 신청 기간</h4>
+
+            <div class="mg-form-group" style="margin-bottom:1rem;">
+                <label class="mg-form-label">신청 기간 제한</label>
+                <?php echo _cfg_radio('char_reg_period_use', $mg_configs, '0'); ?>
+                <small style="color:var(--mg-text-muted);font-size:0.75rem;">사용 시 설정된 기간에만 캐릭터 신청이 가능합니다. 미사용 시 항상 신청 가능.</small>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem;">
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="char_reg_start">신청 시작일</label>
+                    <input type="datetime-local" name="char_reg_start" id="char_reg_start" value="<?php echo isset($mg_configs['char_reg_start']) ? $mg_configs['char_reg_start'] : ''; ?>" class="mg-form-input">
+                </div>
+                <div class="mg-form-group">
+                    <label class="mg-form-label" for="char_reg_end">신청 마감일</label>
+                    <input type="datetime-local" name="char_reg_end" id="char_reg_end" value="<?php echo isset($mg_configs['char_reg_end']) ? $mg_configs['char_reg_end'] : ''; ?>" class="mg-form-input">
+                </div>
+            </div>
+
+            <hr style="border:0;border-top:1px solid var(--mg-bg-tertiary);margin:1.5rem 0;">
+
             <h4 style="font-size:0.9rem;font-weight:600;margin-bottom:1rem;color:var(--mg-text-secondary);">접속자 표시</h4>
 
             <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:1.5rem;">

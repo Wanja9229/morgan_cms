@@ -16,6 +16,21 @@ include_once(G5_PATH.'/plugin/morgan/morgan.php');
 $ch_id = isset($_GET['ch_id']) ? (int)$_GET['ch_id'] : 0;
 $is_edit = $ch_id > 0;
 
+// 신규 생성 시 신청 기간 체크
+if (!$is_edit) {
+    $_char_reg_use = mg_config('char_reg_period_use', '0');
+    if ($_char_reg_use == '1') {
+        $_char_reg_start = mg_config('char_reg_start', '');
+        $_char_reg_end = mg_config('char_reg_end', '');
+        if ($_char_reg_start && $_char_reg_end) {
+            $now = date('Y-m-d\TH:i');
+            if ($now < $_char_reg_start || $now > $_char_reg_end) {
+                alert('지금은 캐릭터 신청 기간이 아닙니다. (신청 기간: ' . str_replace('T', ' ', $_char_reg_start) . ' ~ ' . str_replace('T', ' ', $_char_reg_end) . ')', G5_BBS_URL.'/character_list.php');
+            }
+        }
+    }
+}
+
 // 수정 모드일 경우 캐릭터 정보 조회
 $char = array();
 $profile_values = array();
