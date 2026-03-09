@@ -42,4 +42,6 @@ CREATE TABLE IF NOT EXISTS mg_training_progress (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 스트레스 컬럼 추가
-ALTER TABLE mg_battle_stat ADD COLUMN IF NOT EXISTS stat_stress int NOT NULL DEFAULT 0 COMMENT '현재 스트레스 (0~100)';
+SET @col = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'mg_battle_stat' AND COLUMN_NAME = 'stat_stress');
+SET @sql = IF(@col = 0, 'ALTER TABLE mg_battle_stat ADD COLUMN stat_stress int NOT NULL DEFAULT 0 COMMENT \'현재 스트레스 (0~100)\'', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;

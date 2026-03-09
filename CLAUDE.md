@@ -37,13 +37,15 @@ docker exec morgan_mysql mysql -u morgan_user -pmorgan_pass --default-character-
 
 ### 마이그레이션 파일 병행
 로컬 적용과 동시에 `db/migrations/YYYYMMDD_HHMMSS_설명.sql` 파일도 작성한다.
+**반드시 `docs/MIGRATION_GUIDE.md`를 확인한 후 작성할 것.**
 
 - **파일명**: `YYYYMMDD_HHMMSS_snake_case_설명.sql` (알파벳순 = 시간순)
 - **멱등성 보장**: `INSERT IGNORE`, `IF NOT EXISTS` 등 사용 (중복 실행해도 안전)
+- **ADD COLUMN 금지**: `ADD COLUMN IF NOT EXISTS` 사용 금지 → `information_schema` + `PREPARE/EXECUTE` 패턴 사용
 - URL은 root-relative 경로 사용 (`/data/...` — 도메인 제외)
 - `mg_migrations` 테이블이 적용 이력 추적
 - `morgan.php` 로드 시 세션당 1회 자동 체크 → 미적용 파일 순서대로 실행
-- 관련 파일: `db/migrations/*.sql`, `plugin/morgan/migrate.php`
+- 관련 파일: `db/migrations/*.sql`, `plugin/morgan/migrate.php`, `docs/MIGRATION_GUIDE.md`
 
 ## 코드 패턴
 
