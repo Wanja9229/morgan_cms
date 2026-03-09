@@ -1271,31 +1271,11 @@ function mg_render_main() {
  * @return string HTML
  */
 function mg_render_default_main() {
-    global $config;
-
     ob_start();
     ?>
     <section class="card mb-6">
-        <h1 class="text-2xl font-bold text-mg-accent mb-2">
-            <?php echo $config['cf_title']; ?>에 오신 것을 환영합니다
-        </h1>
         <p class="text-mg-text-secondary">자캐 커뮤니티를 위한 특화형 CMS - Morgan Edition</p>
     </section>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div class="card">
-            <h2 class="card-header">최근 게시글</h2>
-            <p class="text-sm text-mg-text-muted">게시글이 없습니다.</p>
-        </div>
-        <div class="card">
-            <h2 class="card-header">인기 캐릭터</h2>
-            <p class="text-sm text-mg-text-muted">등록된 캐릭터가 없습니다.</p>
-        </div>
-        <div class="card">
-            <h2 class="card-header">공지사항</h2>
-            <p class="text-sm text-mg-text-muted">등록된 공지사항이 없습니다.</p>
-        </div>
-    </div>
     <?php
     return ob_get_clean();
 }
