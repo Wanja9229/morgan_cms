@@ -540,7 +540,7 @@ include_once(G5_THEME_PATH.'/head.php');
                 $_stat_bonus = (int)mg_config('battle_stat_bonus_points', '15');
 
                 // 수정 모드: 기존 스탯 로드
-                $_stat_values = array('stat_hp' => $_stat_base, 'stat_str' => $_stat_base, 'stat_dex' => $_stat_base, 'stat_int' => $_stat_base, 'stat_con' => $_stat_base, 'stat_luk' => $_stat_base);
+                $_stat_values = array('stat_hp' => $_stat_base, 'stat_str' => $_stat_base, 'stat_dex' => $_stat_base, 'stat_int' => $_stat_base);
                 $_stat_used = 0;
                 $_stat_locked = 0;
                 if ($is_edit) {
@@ -560,8 +560,6 @@ include_once(G5_THEME_PATH.'/head.php');
                     'stat_str' => array('STR', '힘', '물리 공격력에 영향'),
                     'stat_dex' => array('DEX', '민첩', '명중/회피에 영향'),
                     'stat_int' => array('INT', '지능', '마법 공격력에 영향'),
-                    'stat_con' => array('CON', '근성', '방어력에 영향'),
-                    'stat_luk' => array('LUK', '행운', '치명타/드롭에 영향'),
                 );
             ?>
             <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
@@ -581,7 +579,7 @@ include_once(G5_THEME_PATH.'/head.php');
                 <div class="p-4">
                     <?php if ($_stat_locked) { ?>
                     <p class="text-xs text-mg-text-muted mb-4">스탯이 확정되었습니다. 스탯 초기화 아이템을 사용하면 재분배할 수 있습니다.</p>
-                    <div class="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <?php foreach ($_stat_labels as $skey => $slabel) { ?>
                         <div class="text-center p-2 rounded-lg bg-mg-bg-primary/50">
                             <div class="text-xs font-bold text-mg-accent" style="font-family:'Bebas Neue',monospace;letter-spacing:0.1em;"><?php echo $slabel[0]; ?></div>
@@ -1089,7 +1087,7 @@ window.cfDeleteRelation = function(crId, myChId) {
     var remainEl = document.getElementById('stat-remaining-val');
     if (!remainEl) return; // 전투 비활성화 시 요소 없음
 
-    var statKeys = ['stat_hp', 'stat_str', 'stat_dex', 'stat_int', 'stat_con', 'stat_luk'];
+    var statKeys = ['stat_hp', 'stat_str', 'stat_dex', 'stat_int'];
     var totalBonus = <?php echo isset($_stat_bonus) ? $_stat_bonus : 0; ?>;
 
     function getUsed() {

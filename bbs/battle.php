@@ -490,7 +490,7 @@ $_training_use = mg_config('battle_training_use', '0');
     $_stat_locked_bp = (int)($stat['stat_locked'] ?? 0);
     $_stat_base_bp = (int)mg_config('battle_stat_base', '5');
     $_stat_bonus_bp = (int)mg_config('battle_stat_bonus_points', '15');
-    $stat_names = array('stat_hp' => 'HP 체력', 'stat_str' => 'STR 힘', 'stat_dex' => 'DEX 민첩', 'stat_int' => 'INT 지능', 'stat_con' => 'CON 근성', 'stat_luk' => 'LUK 행운');
+    $stat_names = array('stat_hp' => 'HP 체력', 'stat_str' => 'STR 힘', 'stat_dex' => 'DEX 민첩', 'stat_int' => 'INT 지능');
     $equipped = $my_battle_profile['equipped_skills'];
     $derived_labels = array(
         'max_hp' => array('MAX HP', ''),

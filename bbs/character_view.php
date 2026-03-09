@@ -147,8 +147,6 @@ if ($_battle_use == '1' && $battle_stat && $battle_stat['bs_id']) {
         'stat_str' => array('STR', '힘'),
         'stat_dex' => array('DEX', '민첩'),
         'stat_int' => array('INT', '지능'),
-        'stat_con' => array('CON', '근성'),
-        'stat_luk' => array('LUK', '행운'),
     );
     $_stress = (int)($battle_stat['stat_stress'] ?? 0);
     $_stress_color = $_stress >= 100 ? '#ef4444' : ($_stress >= 70 ? '#f59e0b' : '#22c55e');
@@ -160,7 +158,7 @@ if ($_battle_use == '1' && $battle_stat && $battle_stat['bs_id']) {
             <h2 class="font-medium text-mg-text-primary">전투 스탯</h2>
         </div>
         <div class="p-4">
-            <div class="grid grid-cols-3 sm:grid-cols-6 gap-3 mb-4">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                 <?php foreach ($_stat_labels as $skey => $slabel) {
                     $sval = (int)($battle_stat[$skey] ?? $_stat_base);
                 ?>

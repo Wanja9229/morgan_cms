@@ -347,15 +347,13 @@ $api_url = G5_BBS_URL . '/training_api.php';
                     <button type="button" onclick="document.getElementById('tr-stat-modal').classList.add('hidden')" class="text-mg-text-muted hover:text-mg-text-primary text-xl leading-none">&times;</button>
                 </div>
                 <div class="p-5">
-                    <div class="grid grid-cols-3 gap-3">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <?php
                         $_stat_labels_modal = array(
                             'stat_hp'  => array('HP', '체력', '#ef4444'),
                             'stat_str' => array('STR', '힘', '#f59e0b'),
                             'stat_dex' => array('DEX', '민첩', '#22c55e'),
                             'stat_int' => array('INT', '지능', '#6366f1'),
-                            'stat_con' => array('CON', '근성', '#8b5cf6'),
-                            'stat_luk' => array('LUK', '행운', '#ec4899'),
                         );
                         foreach ($_stat_labels_modal as $skey => $slabel) {
                             $sval = (int)($stat[$skey] ?? 0);

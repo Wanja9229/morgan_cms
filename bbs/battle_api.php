@@ -404,7 +404,7 @@ switch ($action) {
 
         $_stat_base = (int)mg_config('battle_stat_base', '5');
         $_stat_bonus = (int)mg_config('battle_stat_bonus_points', '15');
-        $stat_keys = array('stat_hp', 'stat_str', 'stat_dex', 'stat_int', 'stat_con', 'stat_luk');
+        $stat_keys = array('stat_hp', 'stat_str', 'stat_dex', 'stat_int');
         $vals = array();
         $total_used = 0;
         foreach ($stat_keys as $sk) {
@@ -422,14 +422,14 @@ switch ($action) {
         if ($bs && $bs['bs_id']) {
             sql_query("UPDATE {$g5['mg_battle_stat_table']} SET
                 stat_hp = {$vals['stat_hp']}, stat_str = {$vals['stat_str']}, stat_dex = {$vals['stat_dex']},
-                stat_int = {$vals['stat_int']}, stat_con = {$vals['stat_con']}, stat_luk = {$vals['stat_luk']},
+                stat_int = {$vals['stat_int']},
                 stat_points = {$remaining}, stat_locked = 1 WHERE ch_id = {$ch_id}");
         } else {
             sql_query("INSERT INTO {$g5['mg_battle_stat_table']}
-                (ch_id, mb_id, stat_hp, stat_str, stat_dex, stat_int, stat_con, stat_luk, stat_points, stat_locked)
+                (ch_id, mb_id, stat_hp, stat_str, stat_dex, stat_int, stat_points, stat_locked)
                 VALUES ({$ch_id}, '{$mb_id}',
                 {$vals['stat_hp']}, {$vals['stat_str']}, {$vals['stat_dex']},
-                {$vals['stat_int']}, {$vals['stat_con']}, {$vals['stat_luk']}, {$remaining}, 1)");
+                {$vals['stat_int']}, {$remaining}, 1)");
         }
         echo json_encode(array('success' => true, 'message' => '스탯이 확정되었습니다.'));
         break;
@@ -459,7 +459,7 @@ switch ($action) {
             exit;
         }
 
-        $valid_stats = array('stat_str', 'stat_dex', 'stat_int', 'stat_con', 'stat_luk');
+        $valid_stats = array('stat_str', 'stat_dex', 'stat_int');
         if (!in_array($stat_key, $valid_stats)) {
             echo json_encode(array('success' => false, 'message' => '유효하지 않은 스탯'));
             exit;
