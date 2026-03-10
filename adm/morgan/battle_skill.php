@@ -125,8 +125,82 @@ if ($tab === 'form') {
     $unlock_options = array('default' => '기본 제공', 'shop' => '상점 구매', 'drop' => '전투 드랍', 'achievement' => '업적');
 ?>
 
-<div style="margin-bottom:1rem;">
+<div style="margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;">
     <a href="./battle_skill.php" class="mg-btn mg-btn-secondary" style="font-size:0.85rem;">&larr; 목록으로</a>
+    <button type="button" onclick="document.getElementById('skillGuideModal').style.display='flex'" class="mg-btn mg-btn-secondary" style="font-size:0.85rem;">&#9432; 스킬 배율 가이드</button>
+</div>
+
+<!-- 스킬 배율 가이드 모달 -->
+<div id="skillGuideModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;" onclick="if(event.target===this)this.style.display='none'">
+    <div style="background:var(--mg-bg-secondary,#2b2d31);border:1px solid var(--mg-bg-tertiary,#313338);border-radius:12px;max-width:760px;width:95%;max-height:85vh;overflow-y:auto;padding:24px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3 style="font-size:1rem;font-weight:700;">스킬 배율 가이드</h3>
+            <button type="button" onclick="document.getElementById('skillGuideModal').style.display='none'" style="background:none;border:none;color:var(--mg-text-muted);font-size:1.25rem;cursor:pointer;">&times;</button>
+        </div>
+
+        <h4 style="font-weight:600;font-size:0.9rem;margin-bottom:0.5rem;">기본 수치 체계</h4>
+        <table class="mg-table" style="font-size:0.8rem;margin-bottom:1.25rem;">
+            <thead><tr><th>파생 수치</th><th>계산식</th></tr></thead>
+            <tbody>
+                <tr><td>ATK (물리 공격력)</td><td>STR &times; 2 + 장비 ATK</td></tr>
+                <tr><td>SATK (기술 공격력)</td><td>DEX &times; 2 + 장비 SATK</td></tr>
+                <tr><td>INT (회복/지원)</td><td>INT &times; 2 + 장비 SUPPORT</td></tr>
+                <tr><td>DEF (방어력)</td><td>(HP + STR) &divide; 4 + 장비 DEF</td></tr>
+                <tr><td>MAX HP</td><td>기본HP(100) + HP스탯 &times; 10 + 장비 HP</td></tr>
+            </tbody>
+        </table>
+
+        <h4 style="font-weight:600;font-size:0.9rem;margin-bottom:0.5rem;">타입별 배율 적용</h4>
+        <table class="mg-table" style="font-size:0.8rem;margin-bottom:1.25rem;">
+            <thead><tr><th style="width:80px;">타입</th><th>배율 적용 방식</th><th>예시</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><strong>데미지</strong></td>
+                    <td>파생 공격력 &times; 배율 &times; 난수(0.9~1.1)</td>
+                    <td>기반=STR &rarr; ATK(=STR&times;2) &times; 1.50<br>STR 10이면 약 30 데미지</td>
+                </tr>
+                <tr>
+                    <td><strong>회복</strong></td>
+                    <td>INT 파생 &times; 배율</td>
+                    <td>기반=INT &rarr; INT&times;2 &times; 1.00<br>INT 10이면 약 20 회복</td>
+                </tr>
+                <tr>
+                    <td><strong>버프</strong></td>
+                    <td>대상 스탯을 수치(%)만큼 N횟수 동안 증가<br>배율·기반스탯 미사용</td>
+                    <td>대상=ATK, 수치=30, 횟수=3<br>&rarr; 3턴간 ATK +30%</td>
+                </tr>
+                <tr>
+                    <td><strong>디버프</strong></td>
+                    <td>적의 스탯을 수치(%)만큼 N횟수 동안 감소<br>배율·기반스탯 미사용</td>
+                    <td>대상=DEF, 수치=20, 횟수=2<br>&rarr; 2턴간 적 DEF -20%</td>
+                </tr>
+                <tr>
+                    <td><strong>도발</strong></td>
+                    <td>N횟수 동안 보스 반격을 자신에게 유도<br>배율·기반스탯 미사용</td>
+                    <td>횟수=3, 수호감소율=30<br>&rarr; 3회 반격 흡수, 피해 30% 감소</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4 style="font-weight:600;font-size:0.9rem;margin-bottom:0.5rem;">기반 스탯 &rarr; 파생 수치 매핑</h4>
+        <table class="mg-table" style="font-size:0.8rem;margin-bottom:1rem;">
+            <thead><tr><th>기반 스탯</th><th>데미지 참조</th><th>회복 참조</th><th>권장 타입</th></tr></thead>
+            <tbody>
+                <tr><td>STR</td><td>ATK (물리)</td><td>&mdash;</td><td>데미지 (근접)</td></tr>
+                <tr><td>DEX</td><td>SATK (기술)</td><td>&mdash;</td><td>데미지 (원거리/기술)</td></tr>
+                <tr><td>INT</td><td>&mdash;</td><td>INT &times; 2</td><td>회복, 버프</td></tr>
+                <tr><td>NONE</td><td>&mdash;</td><td>&mdash;</td><td>도발, 수호 (스탯 무관)</td></tr>
+            </tbody>
+        </table>
+
+        <p style="color:var(--mg-text-muted);font-size:0.8rem;line-height:1.6;">
+            <strong>수호 감소율</strong>: 도발 사용자가 받는 반격 데미지를 N% 감소. 도발 타입에서만 유효.<br>
+            <strong>HP 스탯과 수호</strong>: HP 스탯은 MAX HP 뿐만 아니라 DEF((HP+STR)&divide;4)에도 기여하므로,<br>
+            &nbsp;&nbsp;HP를 많이 찍은 탱커는 수호 감소율 + 높은 방어력으로 반격 피해를 이중으로 줄일 수 있음.<br>
+            <strong>주사위</strong>: 모든 액션에 1d20 판정. 1=0.3x(대실패) ~ 10=0.95x ~ 20=1.8x(대성공)<br>
+            <strong>크리티컬</strong>: 장비 크리티컬률 기반 판정. 적중 시 기본 150% 배율 추가.
+        </p>
+    </div>
 </div>
 
 <form method="post" action="./battle_skill.php">
@@ -206,7 +280,24 @@ if ($tab === 'form') {
             <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:1rem;">
                 <div class="mg-form-group">
                     <label class="mg-form-label">버프 대상 스탯</label>
-                    <input type="text" name="sk_buff_stat" value="<?php echo htmlspecialchars($item['sk_buff_stat'] ?? ''); ?>" class="mg-form-input" placeholder="atk, def, satk">
+                    <?php
+                    $buff_stat_options = array(
+                        '' => '— 선택 —',
+                        'atk' => 'ATK (STR → 물리 공격력)',
+                        'satk' => 'SATK (DEX → 기술 공격력)',
+                        'def' => 'DEF (방어력)',
+                        'max_hp' => 'MAX HP',
+                        'int' => 'INT (회복/지원 계열)',
+                        'crit_rate' => 'CRIT RATE (치명타 확률)',
+                        'crit_mult' => 'CRIT MULT (치명타 배율)',
+                        'evasion' => 'EVASION (회피율)',
+                    );
+                    ?>
+                    <select name="sk_buff_stat" class="mg-form-select">
+                        <?php foreach ($buff_stat_options as $bk => $bv) { ?>
+                            <option value="<?php echo $bk; ?>" <?php echo ($item['sk_buff_stat'] ?? '') === $bk ? 'selected' : ''; ?>><?php echo $bv; ?></option>
+                        <?php } ?>
+                    </select>
                 </div>
                 <div class="mg-form-group">
                     <label class="mg-form-label">버프 수치 (%)</label>

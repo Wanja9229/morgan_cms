@@ -148,6 +148,51 @@ foreach ($grouped_fields as $fields) { $field_count += count($fields); }
             </div>
         </div>
 
+        <!-- 전투 스탯 -->
+        <?php if ($_battle_use == '1' && $battle_stat) {
+            $_stat_base = (int)mg_config('battle_stat_base', '5');
+            $bs_hp = (int)($battle_stat['stat_hp'] ?? $_stat_base);
+            $bs_str = (int)($battle_stat['stat_str'] ?? $_stat_base);
+            $bs_dex = (int)($battle_stat['stat_dex'] ?? $_stat_base);
+            $bs_int = (int)($battle_stat['stat_int'] ?? $_stat_base);
+            $bs_stress = (int)($battle_stat['stat_stress'] ?? 0);
+            $stress_color = $bs_stress >= 100 ? '#ef4444' : ($bs_stress >= 70 ? '#f59e0b' : '#22c55e');
+        ?>
+        <div style="padding:0.75rem 1.5rem;background:#f7f9f9;font-size:0.8125rem;font-weight:700;color:#536471;border-bottom:1px solid #eff3f4;">
+            <span style="display:inline-flex;align-items:center;gap:0.25rem;">
+                <i data-lucide="swords" style="width:14px;height:14px;"></i>
+                전투 스탯
+            </span>
+        </div>
+        <div style="padding:1rem 1.5rem;border-bottom:1px solid #eff3f4;">
+            <div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-bottom:0.75rem;">
+                <div class="sns-stat">
+                    <span class="sns-stat-num"><?php echo $bs_hp; ?></span>
+                    <span class="sns-stat-label"> HP</span>
+                </div>
+                <div class="sns-stat">
+                    <span class="sns-stat-num"><?php echo $bs_str; ?></span>
+                    <span class="sns-stat-label"> STR</span>
+                </div>
+                <div class="sns-stat">
+                    <span class="sns-stat-num"><?php echo $bs_dex; ?></span>
+                    <span class="sns-stat-label"> DEX</span>
+                </div>
+                <div class="sns-stat">
+                    <span class="sns-stat-num"><?php echo $bs_int; ?></span>
+                    <span class="sns-stat-label"> INT</span>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.5rem;">
+                <span style="font-size:0.8125rem;color:#536471;white-space:nowrap;">스트레스</span>
+                <div style="flex:1;height:8px;background:#eff3f4;border-radius:9999px;overflow:hidden;">
+                    <div style="height:100%;width:<?php echo min($bs_stress, 100); ?>%;background:<?php echo $stress_color; ?>;border-radius:9999px;transition:width 0.3s;"></div>
+                </div>
+                <span style="font-size:0.8125rem;color:<?php echo $stress_color; ?>;font-weight:700;min-width:2rem;text-align:right;"><?php echo $bs_stress; ?>%</span>
+            </div>
+        </div>
+        <?php } ?>
+
         <!-- 업적 -->
         <?php if (!empty($achievement_showcase)) { ?>
         <div style="padding:1rem 1.5rem;border-bottom:1px solid #eff3f4;">

@@ -2847,7 +2847,8 @@ function mg_game_icon_picker($input_name, $current = '', $opts = array()) {
     echo '<input type="hidden" name="' . htmlspecialchars($input_name) . '" id="' . $uid . '-input" value="' . htmlspecialchars($current) . '">';
     echo '<input type="hidden" name="' . htmlspecialchars($color_name) . '" id="' . $uid . '-color" value="' . htmlspecialchars($color) . '">';
 
-    echo '<button type="button" onclick="mgGameIconOpen(\'' . $uid . '\')" class="inline-flex items-center gap-2 px-3 py-2 rounded border transition-colors" style="background:var(--mg-bg-primary);border-color:var(--mg-bg-tertiary);color:var(--mg-text-secondary);cursor:pointer;" onmouseover="this.style.borderColor=\'var(--mg-accent)\'" onmouseout="this.style.borderColor=\'var(--mg-bg-tertiary)\'">';
+    echo '<div class="inline-flex items-center rounded border transition-colors" style="background:var(--mg-bg-primary);border-color:var(--mg-bg-tertiary);height:44px;overflow:hidden;" onmouseover="this.style.borderColor=\'var(--mg-accent)\'" onmouseout="this.style.borderColor=\'var(--mg-bg-tertiary)\'">';
+    echo '<button type="button" onclick="mgGameIconOpen(\'' . $uid . '\')" class="inline-flex items-center gap-2" style="padding:0 14px;height:100%;background:none;border:none;color:var(--mg-text-secondary);cursor:pointer;">';
     echo '<span id="' . $uid . '-preview" style="width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;">';
     if ($current) {
         echo mg_game_icon($current, '', $color);
@@ -2855,11 +2856,11 @@ function mg_game_icon_picker($input_name, $current = '', $opts = array()) {
         echo '<span style="color:var(--mg-text-muted);font-size:20px;">?</span>';
     }
     echo '</span>';
-    echo '<span class="text-sm" id="' . $uid . '-label">' . ($current ? htmlspecialchars($current) : htmlspecialchars($placeholder)) . '</span>';
+    echo '<span style="font-size:14px;" id="' . $uid . '-label">' . ($current ? htmlspecialchars($current) : htmlspecialchars($placeholder)) . '</span>';
     echo '</button>';
-
-    // 초기화 버튼 (값이 있을 때만)
-    echo '<button type="button" onclick="mgGameIconClear(\'' . $uid . '\')" id="' . $uid . '-clear" class="text-xs text-mg-text-muted hover:text-mg-error ml-1" style="' . ($current ? '' : 'display:none;') . '">✕</button>';
+    // 초기화 버튼 (값이 있을 때만) — 컨테이너 안에 배치
+    echo '<button type="button" onclick="mgGameIconClear(\'' . $uid . '\')" id="' . $uid . '-clear" style="padding:0 10px;height:100%;background:none;border:none;border-left:1px solid var(--mg-bg-tertiary);color:var(--mg-text-muted);cursor:pointer;font-size:13px;' . ($current ? '' : 'display:none;') . '" onmouseover="this.style.color=\'var(--mg-error)\'" onmouseout="this.style.color=\'var(--mg-text-muted)\'">✕</button>';
+    echo '</div>';
     echo '</div>';
 
     // 모달 HTML + JS (페이지 당 1회만)
@@ -2869,10 +2870,26 @@ function mg_game_icon_picker($input_name, $current = '', $opts = array()) {
 <!-- Game-Icon Picker Modal -->
 <div id="mg-gip-modal" class="fixed inset-0 z-[9999] hidden" style="background:rgba(0,0,0,0.7);" onclick="if(event.target===this)mgGameIconClose()">
     <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary w-full overflow-hidden" style="max-width:680px;max-height:85vh;display:flex;flex-direction:column;">
+        <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary w-full overflow-hidden" style="max-width:720px;max-height:85vh;display:flex;flex-direction:column;">
             <!-- 헤더 -->
-            <div class="px-4 py-3 border-b border-mg-bg-tertiary flex items-center gap-3 flex-shrink-0">
+            <div class="border-b border-mg-bg-tertiary flex items-center gap-3 flex-shrink-0" style="padding:16px 24px;">
                 <h3 class="font-bold text-mg-text-primary text-sm flex-1">Game Icons 선택</h3>
+                <!-- 업로드 (관리자만) -->
+                <?php
+                global $is_admin, $member, $config;
+                $_gip_is_admin = false;
+                if (!empty($is_admin)) {
+                    $_gip_is_admin = true;
+                } elseif (!empty($member['mb_id']) && !empty($config['cf_admin']) && $config['cf_admin'] === $member['mb_id']) {
+                    $_gip_is_admin = true;
+                }
+                if ($_gip_is_admin) { ?>
+                <label style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:12px;cursor:pointer;background:var(--mg-bg-tertiary);color:var(--mg-text-secondary);transition:background 0.15s;" onmouseover="this.style.background='var(--mg-accent)';this.style.color='#fff'" onmouseout="this.style.background='var(--mg-bg-tertiary)';this.style.color='var(--mg-text-secondary)'">
+                    <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    SVG 업로드
+                    <input type="file" accept=".svg" id="mg-gip-upload" style="display:none;" onchange="mgGameIconUpload(this)">
+                </label>
+                <?php } ?>
                 <!-- 색상 -->
                 <label class="flex items-center gap-1.5 text-xs text-mg-text-secondary">
                     색상
@@ -2881,14 +2898,15 @@ function mg_game_icon_picker($input_name, $current = '', $opts = array()) {
                 <button type="button" onclick="mgGameIconClose()" class="text-mg-text-muted hover:text-mg-text-primary text-lg leading-none">&times;</button>
             </div>
             <!-- 검색 -->
-            <div class="px-4 py-2 border-b border-mg-bg-tertiary flex-shrink-0">
-                <input type="text" id="mg-gip-search" placeholder="아이콘 검색 (영문)..." class="w-full px-3 py-2 rounded text-sm" style="background:var(--mg-bg-primary);border:1px solid var(--mg-bg-tertiary);color:var(--mg-text-primary);outline:none;" oninput="mgGameIconFilter()">
+            <div class="border-b border-mg-bg-tertiary flex-shrink-0" style="padding:12px 24px;">
+                <input type="text" id="mg-gip-search" placeholder="아이콘 검색 (영문)..." class="w-full rounded" style="background:var(--mg-bg-primary);border:1px solid var(--mg-bg-tertiary);color:var(--mg-text-primary);outline:none;padding:10px 14px;font-size:14px;" oninput="mgGameIconFilter()">
                 <div class="flex items-center justify-between mt-1.5">
                     <span id="mg-gip-count" class="text-[11px] text-mg-text-muted"></span>
+                    <span style="font-size:11px;color:var(--mg-text-muted);">SVG only · 정사각형 viewBox 권장 (512×512 이하)</span>
                 </div>
             </div>
             <!-- 그리드 -->
-            <div id="mg-gip-grid" class="flex-1 overflow-y-auto p-3" style="scrollbar-width:thin;"></div>
+            <div id="mg-gip-grid" class="flex-1 overflow-y-auto" style="padding:20px 24px;scrollbar-width:thin;"></div>
         </div>
     </div>
 </div>
@@ -3094,6 +3112,50 @@ function mg_game_icon_picker($input_name, $current = '', $opts = array()) {
             mgGameIconClose();
         }
     });
+
+    // SVG 업로드
+    window.mgGameIconUpload = function(input) {
+        if (!input.files || !input.files[0]) return;
+        var file = input.files[0];
+
+        if (!file.name.toLowerCase().endsWith('.svg')) {
+            alert('SVG 파일만 업로드할 수 있습니다.');
+            input.value = '';
+            return;
+        }
+
+        var fd = new FormData();
+        fd.append('mode', 'upload');
+        fd.append('svg_file', file);
+
+        fetch('<?php echo G5_ADMIN_URL; ?>/morgan/game_icon_upload.php', {
+            method: 'POST',
+            body: fd
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                alert(data.message);
+                // 인덱스 캐시 갱신 — 새 아이콘 추가
+                if (GIP.loaded && data.name) {
+                    GIP.icons.push(data.name);
+                    GIP.icons.sort();
+                    GIP.filtered = GIP.icons.slice();
+                    GIP.page = 0;
+                    // 검색창 비우고 새로 렌더
+                    document.getElementById('mg-gip-search').value = data.name;
+                    mgGameIconFilter();
+                }
+            } else {
+                alert(data.message || '업로드에 실패했습니다.');
+            }
+            input.value = '';
+        })
+        .catch(function() {
+            alert('업로드 중 오류가 발생했습니다.');
+            input.value = '';
+        });
+    };
 })();
 </script>
         <?php

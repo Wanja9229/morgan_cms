@@ -44,7 +44,7 @@ $sub_type = isset($_GET['type']) ? clean_xss_tags($_GET['type']) : '';
 
 // 페이지네이션
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$rows = 12;
+$rows = 15;
 
 // 특수 탭 여부
 $is_emoticon_tab = ($tab === 'emoticon');

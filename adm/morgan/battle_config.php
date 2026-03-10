@@ -37,6 +37,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'battle_guard_reduction',
         'battle_story_regen_pct',
         'battle_story_round_reward_pct',
+        'battle_dice_use',
+        'battle_dice_multipliers',
     );
 
     foreach ($config_keys as $key) {
@@ -74,6 +76,8 @@ $cfg = array(
     'battle_guard_reduction'        => mg_config('battle_guard_reduction', '30'),
     'battle_story_regen_pct'        => mg_config('battle_story_regen_pct', '5'),
     'battle_story_round_reward_pct' => mg_config('battle_story_round_reward_pct', '15'),
+    'battle_dice_use'               => mg_config('battle_dice_use', '1'),
+    'battle_dice_multipliers'       => mg_config('battle_dice_multipliers', '0.3,0.5,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95,1.0,1.05,1.1,1.15,1.2,1.25,1.3,1.4,1.5,1.8'),
 );
 ?>
 
@@ -181,6 +185,28 @@ $cfg = array(
             <div class="mg-form-group">
                 <label class="mg-form-label">수호 데미지 감소율 (%)</label>
                 <input type="number" name="battle_guard_reduction" value="<?php echo $cfg['battle_guard_reduction']; ?>" class="mg-form-input" min="0" max="100">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 주사위 시스템 -->
+<div class="mg-card" style="margin-top:1.5rem;">
+    <div class="mg-card-header">주사위 시스템 (1d20)</div>
+    <div class="mg-card-body">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:1rem;">
+            <div class="mg-form-group">
+                <label class="mg-form-label">주사위 사용</label>
+                <select name="battle_dice_use" class="mg-form-select">
+                    <option value="1" <?php echo $cfg['battle_dice_use'] == '1' ? 'selected' : ''; ?>>사용 (1d20 판정)</option>
+                    <option value="0" <?php echo $cfg['battle_dice_use'] == '0' ? 'selected' : ''; ?>>미사용 (고정 배율 1.0x)</option>
+                </select>
+                <p style="margin-top:0.25rem;font-size:0.85rem;color:var(--mg-text-muted);">모든 전투 행동에 주사위 판정 적용</p>
+            </div>
+            <div class="mg-form-group">
+                <label class="mg-form-label">눈별 배율 (1~6)</label>
+                <input type="text" name="battle_dice_multipliers" value="<?php echo htmlspecialchars($cfg['battle_dice_multipliers']); ?>" class="mg-form-input" placeholder="0.3,0.5,...,1.8">
+                <p style="margin-top:0.25rem;font-size:0.85rem;color:var(--mg-text-muted);">쉼표 구분 (개수=면 수). 20개=1d20, 6개=1d6</p>
             </div>
         </div>
     </div>

@@ -121,6 +121,36 @@ $edition = 'Vol. ' . ceil($char['ch_id'] / 10) . ', No. ' . $char['ch_id'];
                 </div>
             </div>
 
+            <!-- 전투 능력치 -->
+            <?php if ($_battle_use == '1' && $battle_stat) {
+                $_stat_base = (int)mg_config('battle_stat_base', '5');
+                $_nw_stats = array(
+                    'HP' => (int)($battle_stat['stat_hp'] ?? $_stat_base),
+                    'STR' => (int)($battle_stat['stat_str'] ?? $_stat_base),
+                    'DEX' => (int)($battle_stat['stat_dex'] ?? $_stat_base),
+                    'INT' => (int)($battle_stat['stat_int'] ?? $_stat_base),
+                );
+                $_bs_stress = (int)($battle_stat['stat_stress'] ?? 0);
+                $_stress_color = $_bs_stress >= 100 ? '#b91c1c' : ($_bs_stress >= 70 ? '#92400e' : '#166534');
+            ?>
+            <hr class="nw-rule" style="margin-top:1.5rem;">
+            <div style="margin-top:1rem;">
+                <h3 class="nw-playfair" style="font-size:1.125rem;font-weight:700;margin:0 0 0.75rem;">&#9632; 전투 능력치</h3>
+                <div style="display:flex;flex-wrap:wrap;gap:0.25rem 1.5rem;font-size:0.9375rem;margin-bottom:0.75rem;">
+                    <?php foreach ($_nw_stats as $label => $val) { ?>
+                    <span><strong><?php echo $label; ?></strong> <?php echo $val; ?></span>
+                    <?php } ?>
+                </div>
+                <div style="font-size:0.875rem;color:#8b7355;">
+                    <strong style="color:#2c1810;">스트레스</strong>
+                    <span style="display:inline-block;width:100px;height:6px;background:#e7e0d2;border-radius:2px;vertical-align:middle;margin:0 0.375rem;overflow:hidden;">
+                        <span style="display:block;width:<?php echo min(100, $_bs_stress); ?>%;height:100%;background:<?php echo $_stress_color; ?>;border-radius:2px;"></span>
+                    </span>
+                    <span style="color:<?php echo $_stress_color; ?>;font-weight:700;"><?php echo $_bs_stress; ?>%</span>
+                </div>
+            </div>
+            <?php } ?>
+
             <hr class="nw-rule">
 
             <!-- 사진 + 본문 -->

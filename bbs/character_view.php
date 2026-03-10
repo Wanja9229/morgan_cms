@@ -148,52 +148,8 @@ if ($_battle_use == '1') {
     }
 }
 
-// 프로필 템플릿 렌더링
+// 프로필 템플릿 렌더링 (전투 스탯은 각 스킨 내부에서 표시)
 include($skin_template);
-
-// 전투 스탯 표시 (전투 기능 활성화 시)
-if ($_battle_use == '1' && $battle_stat) {
-    $_stat_base = (int)mg_config('battle_stat_base', '5');
-    $_stat_labels = array(
-        'stat_hp'  => array('HP', '체력'),
-        'stat_str' => array('STR', '힘'),
-        'stat_dex' => array('DEX', '민첩'),
-        'stat_int' => array('INT', '지능'),
-    );
-    $_stress = (int)($battle_stat['stat_stress'] ?? 0);
-    $_stress_color = $_stress >= 100 ? '#ef4444' : ($_stress >= 70 ? '#f59e0b' : '#22c55e');
-?>
-<div style="max-width:800px;margin:1rem auto 0;">
-    <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
-        <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary flex items-center gap-2">
-            <i data-lucide="bar-chart-3" class="w-4 h-4 text-mg-accent"></i>
-            <h2 class="font-medium text-mg-text-primary">전투 스탯</h2>
-        </div>
-        <div class="p-4">
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                <?php foreach ($_stat_labels as $skey => $slabel) {
-                    $sval = (int)($battle_stat[$skey] ?? $_stat_base);
-                ?>
-                <div class="text-center p-2 rounded-lg bg-mg-bg-primary/50">
-                    <div class="text-xs font-bold text-mg-accent" style="font-family:'Bebas Neue',monospace;letter-spacing:0.1em;"><?php echo $slabel[0]; ?></div>
-                    <div class="text-lg font-bold text-mg-text-primary"><?php echo $sval; ?></div>
-                    <div class="text-[10px] text-mg-text-muted"><?php echo $slabel[1]; ?></div>
-                </div>
-                <?php } ?>
-            </div>
-            <!-- 스트레스 바 -->
-            <div class="flex items-center gap-3">
-                <span class="text-xs text-mg-text-muted" style="min-width:52px;">스트레스</span>
-                <div class="flex-1 h-2 rounded-full bg-mg-bg-tertiary overflow-hidden">
-                    <div class="h-full rounded-full transition-all" style="width:<?php echo min(100, $_stress); ?>%;background:<?php echo $_stress_color; ?>;"></div>
-                </div>
-                <span class="text-xs font-bold" style="color:<?php echo $_stress_color; ?>;min-width:36px;text-align:right;"><?php echo $_stress; ?>/100</span>
-            </div>
-        </div>
-    </div>
-</div>
-<?php
-}
 
 // 프로필 배경 레이어 (가장 뒤쪽, Vanta/이펙트 아래)
 if (!empty($profile_bg_image)) {
@@ -475,9 +431,12 @@ if ($profile_bg_id) {
                         });
                     }
 
-                    // 주인: 저장 버튼 표시
+                    // 주인: 저장 버튼을 관계도 내부 오버레이로 이동
                     if (isOwner && saveBtn) {
                         saveBtn.classList.remove('hidden');
+                        saveBtn.style.cssText = 'position:absolute;top:8px;right:8px;z-index:10;padding:4px 10px;border-radius:6px;font-size:0.75rem;font-weight:500;cursor:pointer;background:var(--mg-bg-secondary,#2b2d31);color:var(--mg-accent,#f59f0a);border:1px solid var(--mg-bg-tertiary,#313338);';
+                        container.style.position = 'relative';
+                        container.appendChild(saveBtn);
                     }
 
                     // 비주인: 클릭으로 캐릭터 이동

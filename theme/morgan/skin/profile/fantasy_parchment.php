@@ -362,6 +362,45 @@ $ch_date_roman = date('d.m.Y', strtotime($char['ch_datetime']));
             </div>
         </div>
 
+        <!-- 전투 능력 -->
+        <?php if ($_battle_use == '1' && $battle_stat) {
+            $_stat_base = (int)mg_config('battle_stat_base', '5');
+            $_fp_stats = array(
+                array('label' => 'HP', 'sub' => '체력', 'val' => (int)($battle_stat['stat_hp'] ?? $_stat_base)),
+                array('label' => 'STR', 'sub' => '힘', 'val' => (int)($battle_stat['stat_str'] ?? $_stat_base)),
+                array('label' => 'DEX', 'sub' => '민첩', 'val' => (int)($battle_stat['stat_dex'] ?? $_stat_base)),
+                array('label' => 'INT', 'sub' => '지능', 'val' => (int)($battle_stat['stat_int'] ?? $_stat_base)),
+            );
+            $_bs_stress = (int)($battle_stat['stat_stress'] ?? 0);
+            $_stress_color = $_bs_stress >= 100 ? '#b91c1c' : ($_bs_stress >= 70 ? '#d97706' : '#365314');
+        ?>
+        <div class="fp-rule" style="padding:0 2rem;"><span class="fp-rule-icon">&#9876;</span></div>
+        <div style="padding:0 2rem;">
+            <h3 class="fp-display" style="text-align:center;font-size:1rem;color:#c5a55a;margin-bottom:1rem;">&#9876; 전투 능력</h3>
+            <table class="fp-field-table">
+                <tbody>
+                    <?php foreach ($_fp_stats as $fs) { ?>
+                    <tr>
+                        <td class="fp-field-label fp-heading"><?php echo $fs['label']; ?> <span style="font-weight:400;font-size:0.75rem;color:#6d4c2a;"><?php echo $fs['sub']; ?></span></td>
+                        <td class="fp-field-value" style="font-weight:700;font-size:1.125rem;color:#c5a55a;"><?php echo $fs['val']; ?></td>
+                    </tr>
+                    <?php } ?>
+                    <tr>
+                        <td class="fp-field-label fp-heading">스트레스</td>
+                        <td class="fp-field-value">
+                            <div style="display:flex;align-items:center;gap:0.5rem;">
+                                <div style="flex:1;height:6px;background:rgba(197,165,90,0.15);border-radius:2px;overflow:hidden;">
+                                    <div style="width:<?php echo min(100, $_bs_stress); ?>%;height:100%;background:<?php echo $_stress_color; ?>;border-radius:2px;"></div>
+                                </div>
+                                <span style="font-weight:700;font-size:0.8125rem;color:<?php echo $_stress_color; ?>;"><?php echo $_bs_stress; ?>/100</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <?php } ?>
+
         <!-- 업적 -->
         <?php if (!empty($achievement_showcase)) { ?>
         <div class="fp-rule" style="padding:0 2rem;"><span class="fp-rule-icon">&#9733;</span></div>

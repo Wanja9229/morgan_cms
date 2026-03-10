@@ -63,6 +63,9 @@ if ($is_edit) {
     }
 }
 
+// 승인된 캐릭터: 기본정보/이미지/프로필 필드 수정 불가
+$_is_approved = $is_edit && ($char['ch_state'] ?? '') === 'approved';
+
 // 세력/종족 목록
 $_use_side = mg_config('use_side', '1') == '1';
 $_use_class = mg_config('use_class', '1') == '1';
@@ -212,11 +215,16 @@ include_once(G5_THEME_PATH.'/head.php');
                     <!-- 캐릭터명 -->
                     <div>
                         <label for="ch_name" class="block text-sm font-medium text-mg-text-secondary mb-1.5">
-                            캐릭터명 <span class="text-red-400">*</span>
+                            캐릭터명 <?php if (!$_is_approved) { ?><span class="text-red-400">*</span><?php } ?>
                         </label>
+                        <?php if ($_is_approved) { ?>
+                        <input type="hidden" name="ch_name" value="<?php echo htmlspecialchars($char['ch_name']); ?>">
+                        <p class="text-mg-text-primary px-4 py-2.5"><?php echo htmlspecialchars($char['ch_name']); ?></p>
+                        <?php } else { ?>
                         <input type="text" name="ch_name" id="ch_name" value="<?php echo $char['ch_name'] ?? ''; ?>" required
                                class="w-full bg-mg-bg-primary border border-mg-bg-tertiary rounded-lg px-4 py-2.5 text-mg-text-primary placeholder-mg-text-muted focus:outline-none focus:border-mg-accent transition-colors"
                                placeholder="캐릭터 이름을 입력하세요">
+                        <?php } ?>
                     </div>
 
                     <!-- 세력/종족 -->
@@ -226,12 +234,20 @@ include_once(G5_THEME_PATH.'/head.php');
                             <label for="side_id" class="block text-sm font-medium text-mg-text-secondary mb-1.5">
                                 <?php echo mg_config('side_title', '소속'); ?>
                             </label>
+                            <?php if ($_is_approved) {
+                                $cur_side_name = '';
+                                foreach ($sides as $side) { if ($side['side_id'] == ($char['side_id'] ?? '')) $cur_side_name = $side['side_name']; }
+                            ?>
+                            <input type="hidden" name="side_id" value="<?php echo (int)($char['side_id'] ?? 0); ?>">
+                            <p class="text-mg-text-primary px-4 py-2.5"><?php echo $cur_side_name ?: '-'; ?></p>
+                            <?php } else { ?>
                             <select name="side_id" id="side_id" class="w-full bg-mg-bg-primary border border-mg-bg-tertiary rounded-lg px-4 py-2.5 text-mg-text-primary focus:outline-none focus:border-mg-accent transition-colors">
                                 <option value="">선택안함</option>
                                 <?php foreach ($sides as $side) { ?>
                                 <option value="<?php echo $side['side_id']; ?>" <?php echo ($char['side_id'] ?? '') == $side['side_id'] ? 'selected' : ''; ?>><?php echo $side['side_name']; ?></option>
                                 <?php } ?>
                             </select>
+                            <?php } ?>
                         </div>
                         <?php } ?>
 
@@ -240,12 +256,20 @@ include_once(G5_THEME_PATH.'/head.php');
                             <label for="class_id" class="block text-sm font-medium text-mg-text-secondary mb-1.5">
                                 <?php echo mg_config('class_title', '유형'); ?>
                             </label>
+                            <?php if ($_is_approved) {
+                                $cur_class_name = '';
+                                foreach ($classes as $class) { if ($class['class_id'] == ($char['class_id'] ?? '')) $cur_class_name = $class['class_name']; }
+                            ?>
+                            <input type="hidden" name="class_id" value="<?php echo (int)($char['class_id'] ?? 0); ?>">
+                            <p class="text-mg-text-primary px-4 py-2.5"><?php echo $cur_class_name ?: '-'; ?></p>
+                            <?php } else { ?>
                             <select name="class_id" id="class_id" class="w-full bg-mg-bg-primary border border-mg-bg-tertiary rounded-lg px-4 py-2.5 text-mg-text-primary focus:outline-none focus:border-mg-accent transition-colors">
                                 <option value="">선택안함</option>
                                 <?php foreach ($classes as $class) { ?>
                                 <option value="<?php echo $class['class_id']; ?>" data-side-id="<?php echo (int)($class['side_id'] ?? 0); ?>" <?php echo ($char['class_id'] ?? '') == $class['class_id'] ? 'selected' : ''; ?>><?php echo $class['class_name']; ?></option>
                                 <?php } ?>
                             </select>
+                            <?php } ?>
                         </div>
                         <?php } ?>
                     </div>
@@ -304,250 +328,6 @@ include_once(G5_THEME_PATH.'/head.php');
                     <?php } ?>
                 </div>
             </div>
-
-            <!-- 캐릭터 이미지 카드 -->
-            <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
-                <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary">
-                    <h2 class="font-medium text-mg-text-primary">캐릭터 이미지</h2>
-                </div>
-                <div class="p-4 space-y-6">
-                    <!-- 두상 이미지 -->
-                    <div>
-                        <h3 class="text-sm font-medium text-mg-text-secondary mb-3">두상 이미지</h3>
-                        <div class="flex items-start gap-4">
-                            <div class="w-28 h-28 bg-mg-bg-tertiary rounded-lg overflow-hidden flex-shrink-0">
-                                <?php if ($is_edit && $char['ch_thumb']) { ?>
-                                <img id="thumb-preview" src="<?php echo MG_CHAR_IMAGE_URL.'/'.$char['ch_thumb']; ?>" alt="" class="w-full h-full object-cover">
-                                <?php } else { ?>
-                                <div id="thumb-preview" class="w-full h-full flex items-center justify-center text-mg-text-muted">
-                                    <i data-lucide="image" class="w-10 h-10"></i>
-                                </div>
-                                <?php } ?>
-                            </div>
-                            <div class="flex-1">
-                                <input type="file" name="ch_thumb" id="ch_thumb" accept="image/*"
-                                       class="block w-full text-sm text-mg-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-mg-accent file:text-white hover:file:bg-mg-accent-hover file:cursor-pointer cursor-pointer">
-                                <p class="text-xs text-mg-text-muted mt-2">프로필, 댓글 등에 표시됩니다. (정사각형 권장)</p>
-                                <?php if ($is_edit && $char['ch_thumb']) { ?>
-                                <label class="flex items-center gap-2 mt-2 cursor-pointer">
-                                    <input type="checkbox" name="del_thumb" value="1" class="w-4 h-4 rounded border-mg-bg-tertiary bg-mg-bg-primary text-red-500 focus:ring-red-500 focus:ring-offset-0">
-                                    <span class="text-sm text-red-400">삭제</span>
-                                </label>
-                                <?php } ?>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 전신 이미지 -->
-                    <div>
-                        <h3 class="text-sm font-medium text-mg-text-secondary mb-3">전신 이미지 <span class="text-mg-text-muted font-normal">(선택)</span></h3>
-                        <div class="flex items-start gap-4">
-                            <div class="w-28 h-36 bg-mg-bg-tertiary rounded-lg overflow-hidden flex-shrink-0">
-                                <?php if ($is_edit && ($char['ch_image'] ?? '')) { ?>
-                                <img id="body-preview" src="<?php echo MG_CHAR_IMAGE_URL.'/'.$char['ch_image']; ?>" alt="" class="w-full h-full object-cover">
-                                <?php } else { ?>
-                                <div id="body-preview" class="w-full h-full flex items-center justify-center text-mg-text-muted">
-                                    <i data-lucide="image" class="w-10 h-10"></i>
-                                </div>
-                                <?php } ?>
-                            </div>
-                            <div class="flex-1">
-                                <input type="file" name="ch_image" id="ch_image" accept="image/*"
-                                       class="block w-full text-sm text-mg-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-mg-accent file:text-white hover:file:bg-mg-accent-hover file:cursor-pointer cursor-pointer">
-                                <p class="text-xs text-mg-text-muted mt-2">캐릭터 상세 페이지에 표시됩니다.</p>
-                                <?php if ($is_edit && ($char['ch_image'] ?? '')) { ?>
-                                <label class="flex items-center gap-2 mt-2 cursor-pointer">
-                                    <input type="checkbox" name="del_image" value="1" class="w-4 h-4 rounded border-mg-bg-tertiary bg-mg-bg-primary text-red-500 focus:ring-red-500 focus:ring-offset-0">
-                                    <span class="text-sm text-red-400">삭제</span>
-                                </label>
-                                <?php } ?>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 헤더/배너 이미지 -->
-                    <div>
-                        <h3 class="text-sm font-medium text-mg-text-secondary mb-3">헤더/배너 이미지 <span class="text-mg-text-muted font-normal">(선택)</span></h3>
-                        <div class="flex items-start gap-4">
-                            <div class="w-full h-32 bg-mg-bg-tertiary rounded-lg overflow-hidden flex-shrink-0" style="max-width:20rem;">
-                                <?php if ($is_edit && ($char['ch_header'] ?? '')) { ?>
-                                <img id="header-preview" src="<?php echo MG_CHAR_IMAGE_URL.'/'.$char['ch_header']; ?>" alt="" class="w-full h-full object-cover">
-                                <?php } else { ?>
-                                <div id="header-preview" class="w-full h-full flex items-center justify-center text-mg-text-muted">
-                                    <i data-lucide="image" class="w-10 h-10"></i>
-                                </div>
-                                <?php } ?>
-                            </div>
-                        </div>
-                        <div class="mt-2">
-                            <input type="file" name="ch_header" id="ch_header" accept="image/*"
-                                   class="block w-full text-sm text-mg-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-mg-accent file:text-white hover:file:bg-mg-accent-hover file:cursor-pointer cursor-pointer">
-                            <p class="text-xs text-mg-text-muted mt-2">프로필 상단에 표시되는 가로형 배너 이미지 (권장: 1200x400)</p>
-                            <?php if ($is_edit && ($char['ch_header'] ?? '')) { ?>
-                            <label class="flex items-center gap-2 mt-2 cursor-pointer">
-                                <input type="checkbox" name="del_header" value="1" class="w-4 h-4 rounded border-mg-bg-tertiary bg-mg-bg-primary text-red-500 focus:ring-red-500 focus:ring-offset-0">
-                                <span class="text-sm text-red-400">삭제</span>
-                            </label>
-                            <?php } ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 프로필 스킨/배경 선택 -->
-            <?php
-            // 보유한 스킨/배경 아이템 조회
-            $owned_skins = array();
-            $owned_bgs = array();
-            if ($member['mb_id']) {
-                $inv_sql = "SELECT i.si_id, i.si_name, i.si_type, i.si_effect
-                            FROM {$g5['mg_inventory_table']} iv
-                            JOIN {$g5['mg_shop_item_table']} i ON iv.si_id = i.si_id
-                            WHERE iv.mb_id = '{$member['mb_id']}' AND iv.iv_count > 0
-                            AND i.si_type IN ('profile_skin', 'profile_effect')
-                            ORDER BY i.si_order, i.si_id";
-                $inv_result = sql_query($inv_sql);
-                while ($inv_row = sql_fetch_array($inv_result)) {
-                    $eff = json_decode($inv_row['si_effect'], true);
-                    if ($inv_row['si_type'] === 'profile_skin' && !empty($eff['skin_id'])) {
-                        $owned_skins[$eff['skin_id']] = $inv_row['si_name'];
-                    } elseif ($inv_row['si_type'] === 'profile_effect' && !empty($eff['bg_id'])) {
-                        $owned_bgs[$eff['bg_id']] = $inv_row['si_name'];
-                    }
-                }
-            }
-            $cur_skin = $is_edit ? ($char['ch_profile_skin'] ?? '') : '';
-            $cur_bg = $is_edit ? ($char['ch_profile_bg'] ?? '') : '';
-            // 배경색은 아이템 구매제로 전환 (character_form에서 직접 설정 불가)
-
-            // 인벤토리 활성 아이템 (회원 전체 기본값)
-            $active_skin_id = mg_get_profile_skin_id($member['mb_id']);
-            $active_bg_id = mg_get_profile_effect_id($member['mb_id']);
-
-            // 기본 옵션 라벨 (인벤토리 기본값 표시)
-            $all_skin_names = mg_get_profile_skin_list();
-            $all_bg_names = mg_get_profile_effect_list();
-            $skin_default_label = $active_skin_id ? '인벤토리 기본값 (' . ($all_skin_names[$active_skin_id] ?? $active_skin_id) . ')' : '기본 스킨';
-            $bg_default_label = $active_bg_id ? '인벤토리 기본값 (' . ($all_bg_names[$active_bg_id] ?? $active_bg_id) . ')' : '없음';
-            ?>
-            <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
-                <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary">
-                    <h2 class="font-medium text-mg-text-primary">프로필 꾸미기</h2>
-                </div>
-                <div class="p-4 space-y-4">
-                    <div>
-                        <label for="ch_profile_skin" class="block text-sm font-medium text-mg-text-secondary mb-1.5">프로필 스킨</label>
-                        <select name="ch_profile_skin" id="ch_profile_skin" class="w-full bg-mg-bg-tertiary border border-mg-bg-tertiary text-mg-text-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-mg-accent focus:border-transparent">
-                            <option value="" <?php echo !$cur_skin ? 'selected' : ''; ?>><?php echo htmlspecialchars($skin_default_label); ?></option>
-                            <option value="default" <?php echo $cur_skin === 'default' ? 'selected' : ''; ?>>기본 스킨</option>
-                            <?php foreach ($owned_skins as $sk_id => $sk_name) { ?>
-                            <option value="<?php echo htmlspecialchars($sk_id); ?>" <?php echo $cur_skin === $sk_id ? 'selected' : ''; ?>><?php echo htmlspecialchars($sk_name); ?></option>
-                            <?php } ?>
-                        </select>
-                        <p class="text-xs text-mg-text-muted mt-1">인벤토리에서 장착한 스킨이 기본 적용됩니다. 이 캐릭터만 다르게 하려면 선택하세요.</p>
-                    </div>
-                    <?php if (!empty($owned_bgs)) { ?>
-                    <div>
-                        <label for="ch_profile_bg" class="block text-sm font-medium text-mg-text-secondary mb-1.5">배경 이펙트</label>
-                        <select name="ch_profile_bg" id="ch_profile_bg" class="w-full bg-mg-bg-tertiary border border-mg-bg-tertiary text-mg-text-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-mg-accent focus:border-transparent">
-                            <option value=""><?php echo htmlspecialchars($bg_default_label); ?></option>
-                            <?php foreach ($owned_bgs as $bg_id => $bg_name) { ?>
-                            <option value="<?php echo htmlspecialchars($bg_id); ?>" <?php echo $cur_bg === $bg_id ? 'selected' : ''; ?>><?php echo htmlspecialchars($bg_name); ?></option>
-                            <?php } ?>
-                        </select>
-                        <p class="text-xs text-mg-text-muted mt-1">인벤토리에서 장착한 이펙트가 기본 적용됩니다. 이 캐릭터만 다르게 하려면 선택하세요.</p>
-                    </div>
-                    <?php } ?>
-                </div>
-            </div>
-
-            <!-- 프로필 정보 (동적 필드) -->
-            <?php foreach ($grouped_fields as $category => $fields) { ?>
-            <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
-                <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary">
-                    <h2 class="font-medium text-mg-text-primary"><?php echo $category; ?></h2>
-                </div>
-                <div class="p-4 space-y-4">
-                    <?php foreach ($fields as $field) { ?>
-                    <div>
-                        <label for="pf_<?php echo $field['pf_id']; ?>" class="block text-sm font-medium text-mg-text-secondary mb-1.5">
-                            <?php echo $field['pf_name']; ?>
-                            <?php if ($field['pf_required']) { ?><span class="text-red-400">*</span><?php } ?>
-                        </label>
-
-                        <?php if ($field['pf_type'] == 'text') { ?>
-                        <input type="text" name="profile[<?php echo $field['pf_id']; ?>]" id="pf_<?php echo $field['pf_id']; ?>"
-                               value="<?php echo htmlspecialchars($field['value']); ?>"
-                               placeholder="<?php echo $field['pf_placeholder']; ?>"
-                               <?php echo $field['pf_required'] ? 'required' : ''; ?>
-                               class="w-full bg-mg-bg-primary border border-mg-bg-tertiary rounded-lg px-4 py-2.5 text-mg-text-primary placeholder-mg-text-muted focus:outline-none focus:border-mg-accent transition-colors">
-
-                        <?php } elseif ($field['pf_type'] == 'textarea') { ?>
-                        <textarea name="profile[<?php echo $field['pf_id']; ?>]" id="pf_<?php echo $field['pf_id']; ?>" rows="4"
-                                  placeholder="<?php echo $field['pf_placeholder']; ?>"
-                                  <?php echo $field['pf_required'] ? 'required' : ''; ?>
-                                  class="w-full bg-mg-bg-primary border border-mg-bg-tertiary rounded-lg px-4 py-2.5 text-mg-text-primary placeholder-mg-text-muted focus:outline-none focus:border-mg-accent transition-colors resize-none"><?php echo htmlspecialchars($field['value']); ?></textarea>
-
-                        <?php } elseif ($field['pf_type'] == 'select') {
-                            $options = json_decode($field['pf_options'], true) ?: array();
-                        ?>
-                        <select name="profile[<?php echo $field['pf_id']; ?>]" id="pf_<?php echo $field['pf_id']; ?>"
-                                <?php echo $field['pf_required'] ? 'required' : ''; ?>
-                                class="w-full bg-mg-bg-primary border border-mg-bg-tertiary rounded-lg px-4 py-2.5 text-mg-text-primary focus:outline-none focus:border-mg-accent transition-colors">
-                            <option value="">선택</option>
-                            <?php foreach ($options as $opt) { ?>
-                            <option value="<?php echo $opt; ?>" <?php echo $field['value'] == $opt ? 'selected' : ''; ?>><?php echo $opt; ?></option>
-                            <?php } ?>
-                        </select>
-
-                        <?php } elseif ($field['pf_type'] == 'multiselect') {
-                            $ms_options = json_decode($field['pf_options'], true) ?: array();
-                            $ms_selected = $field['value'] ? json_decode($field['value'], true) : array();
-                            if (!is_array($ms_selected)) $ms_selected = array();
-                        ?>
-                        <div class="space-y-1.5">
-                            <?php foreach ($ms_options as $opt) { ?>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" name="profile[<?php echo $field['pf_id']; ?>][]" value="<?php echo htmlspecialchars($opt); ?>"
-                                       <?php echo in_array($opt, $ms_selected) ? 'checked' : ''; ?>
-                                       class="w-4 h-4 rounded border-mg-bg-tertiary bg-mg-bg-primary text-mg-accent focus:ring-mg-accent focus:ring-offset-0">
-                                <span class="text-sm text-mg-text-primary"><?php echo htmlspecialchars($opt); ?></span>
-                            </label>
-                            <?php } ?>
-                        </div>
-
-                        <?php } elseif ($field['pf_type'] == 'url') { ?>
-                        <input type="url" name="profile[<?php echo $field['pf_id']; ?>]" id="pf_<?php echo $field['pf_id']; ?>"
-                               value="<?php echo htmlspecialchars($field['value']); ?>"
-                               placeholder="<?php echo $field['pf_placeholder'] ?: 'https://'; ?>"
-                               <?php echo $field['pf_required'] ? 'required' : ''; ?>
-                               class="w-full bg-mg-bg-primary border border-mg-bg-tertiary rounded-lg px-4 py-2.5 text-mg-text-primary placeholder-mg-text-muted focus:outline-none focus:border-mg-accent transition-colors">
-
-                        <?php } elseif ($field['pf_type'] == 'image') { ?>
-                        <?php if ($field['value']) { ?>
-                        <div class="mb-2 rounded-lg overflow-hidden border border-mg-bg-tertiary" style="max-width:16rem;max-height:12rem;">
-                            <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.htmlspecialchars($field['value']); ?>" class="w-full h-full object-contain" alt="">
-                        </div>
-                        <input type="hidden" name="profile[<?php echo $field['pf_id']; ?>]" value="<?php echo htmlspecialchars($field['value']); ?>">
-                        <label class="flex items-center gap-2 mb-2 cursor-pointer">
-                            <input type="checkbox" name="del_profile_image[<?php echo $field['pf_id']; ?>]" value="1"
-                                   class="w-4 h-4 rounded border-mg-bg-tertiary bg-mg-bg-primary text-red-500 focus:ring-red-500 focus:ring-offset-0">
-                            <span class="text-sm text-red-400">이미지 삭제</span>
-                        </label>
-                        <?php } ?>
-                        <input type="file" name="profile_image[<?php echo $field['pf_id']; ?>]" id="pf_<?php echo $field['pf_id']; ?>" accept="image/*"
-                               class="block w-full text-sm text-mg-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-mg-bg-tertiary file:text-mg-text-primary hover:file:bg-mg-bg-primary file:cursor-pointer cursor-pointer">
-
-                        <?php } ?>
-
-                        <?php if ($field['pf_help']) { ?>
-                        <p class="text-xs text-mg-text-muted mt-1"><?php echo $field['pf_help']; ?></p>
-                        <?php } ?>
-                    </div>
-                    <?php } ?>
-                </div>
-            </div>
-            <?php } ?>
 
             <?php
             // 전투 스탯 분배 UI (전투 기능 활성화 시)
@@ -635,6 +415,311 @@ include_once(G5_THEME_PATH.'/head.php');
                 </div>
             </div>
             <?php } // end battle_use ?>
+
+            <!-- 캐릭터 이미지 카드 -->
+            <?php if ($_is_approved) { ?>
+            <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
+                <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary">
+                    <h2 class="font-medium text-mg-text-primary flex items-center gap-2">캐릭터 이미지 <span class="text-xs text-mg-text-muted flex items-center gap-1"><i data-lucide="lock" class="w-3.5 h-3.5"></i>승인됨</span></h2>
+                </div>
+                <div class="p-4">
+                    <div class="flex items-start gap-4 flex-wrap">
+                        <?php if ($char['ch_thumb']) { ?>
+                        <div>
+                            <p class="text-xs text-mg-text-muted mb-1.5">두상</p>
+                            <div class="w-28 h-28 bg-mg-bg-tertiary rounded-lg overflow-hidden">
+                                <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.$char['ch_thumb']; ?>" alt="" class="w-full h-full object-cover">
+                            </div>
+                        </div>
+                        <?php } ?>
+                        <?php if ($char['ch_image'] ?? '') { ?>
+                        <div>
+                            <p class="text-xs text-mg-text-muted mb-1.5">전신</p>
+                            <div class="w-28 h-36 bg-mg-bg-tertiary rounded-lg overflow-hidden">
+                                <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.$char['ch_image']; ?>" alt="" class="w-full h-full object-cover">
+                            </div>
+                        </div>
+                        <?php } ?>
+                        <?php if ($char['ch_header'] ?? '') { ?>
+                        <div class="w-full">
+                            <p class="text-xs text-mg-text-muted mb-1.5">헤더</p>
+                            <div class="h-32 bg-mg-bg-tertiary rounded-lg overflow-hidden" style="max-width:20rem;">
+                                <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.$char['ch_header']; ?>" alt="" class="w-full h-full object-cover">
+                            </div>
+                        </div>
+                        <?php } ?>
+                        <?php if (!$char['ch_thumb'] && !($char['ch_image'] ?? '') && !($char['ch_header'] ?? '')) { ?>
+                        <p class="text-sm text-mg-text-muted">등록된 이미지가 없습니다.</p>
+                        <?php } ?>
+                    </div>
+                </div>
+            </div>
+            <?php } else { ?>
+            <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
+                <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary">
+                    <h2 class="font-medium text-mg-text-primary">캐릭터 이미지</h2>
+                </div>
+                <div class="p-4 space-y-6">
+                    <!-- 두상 이미지 -->
+                    <div>
+                        <h3 class="text-sm font-medium text-mg-text-secondary mb-3">두상 이미지</h3>
+                        <div class="flex items-start gap-4">
+                            <div class="w-28 h-28 bg-mg-bg-tertiary rounded-lg overflow-hidden flex-shrink-0">
+                                <?php if ($is_edit && $char['ch_thumb']) { ?>
+                                <img id="thumb-preview" src="<?php echo MG_CHAR_IMAGE_URL.'/'.$char['ch_thumb']; ?>" alt="" class="w-full h-full object-cover">
+                                <?php } else { ?>
+                                <div id="thumb-preview" class="w-full h-full flex items-center justify-center text-mg-text-muted">
+                                    <i data-lucide="image" class="w-10 h-10"></i>
+                                </div>
+                                <?php } ?>
+                            </div>
+                            <div class="flex-1">
+                                <input type="file" name="ch_thumb" id="ch_thumb" accept="image/*"
+                                       class="block w-full text-sm text-mg-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-mg-accent file:text-white hover:file:bg-mg-accent-hover file:cursor-pointer cursor-pointer">
+                                <p class="text-xs text-mg-text-muted mt-2">프로필, 댓글 등에 표시됩니다. (정사각형 권장)</p>
+                                <?php if ($is_edit && $char['ch_thumb']) { ?>
+                                <label class="flex items-center gap-2 mt-2 cursor-pointer">
+                                    <input type="checkbox" name="del_thumb" value="1" class="w-4 h-4 rounded border-mg-bg-tertiary bg-mg-bg-primary text-red-500 focus:ring-red-500 focus:ring-offset-0">
+                                    <span class="text-sm text-red-400">삭제</span>
+                                </label>
+                                <?php } ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 전신 이미지 -->
+                    <div>
+                        <h3 class="text-sm font-medium text-mg-text-secondary mb-3">전신 이미지 <span class="text-mg-text-muted font-normal">(선택)</span></h3>
+                        <div class="flex items-start gap-4">
+                            <div class="w-28 h-36 bg-mg-bg-tertiary rounded-lg overflow-hidden flex-shrink-0">
+                                <?php if ($is_edit && ($char['ch_image'] ?? '')) { ?>
+                                <img id="body-preview" src="<?php echo MG_CHAR_IMAGE_URL.'/'.$char['ch_image']; ?>" alt="" class="w-full h-full object-cover">
+                                <?php } else { ?>
+                                <div id="body-preview" class="w-full h-full flex items-center justify-center text-mg-text-muted">
+                                    <i data-lucide="image" class="w-10 h-10"></i>
+                                </div>
+                                <?php } ?>
+                            </div>
+                            <div class="flex-1">
+                                <input type="file" name="ch_image" id="ch_image" accept="image/*"
+                                       class="block w-full text-sm text-mg-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-mg-accent file:text-white hover:file:bg-mg-accent-hover file:cursor-pointer cursor-pointer">
+                                <p class="text-xs text-mg-text-muted mt-2">캐릭터 상세 페이지에 표시됩니다.</p>
+                                <?php if ($is_edit && ($char['ch_image'] ?? '')) { ?>
+                                <label class="flex items-center gap-2 mt-2 cursor-pointer">
+                                    <input type="checkbox" name="del_image" value="1" class="w-4 h-4 rounded border-mg-bg-tertiary bg-mg-bg-primary text-red-500 focus:ring-red-500 focus:ring-offset-0">
+                                    <span class="text-sm text-red-400">삭제</span>
+                                </label>
+                                <?php } ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 헤더/배너 이미지 -->
+                    <div>
+                        <h3 class="text-sm font-medium text-mg-text-secondary mb-3">헤더/배너 이미지 <span class="text-mg-text-muted font-normal">(선택)</span></h3>
+                        <div class="flex items-start gap-4">
+                            <div class="w-full h-32 bg-mg-bg-tertiary rounded-lg overflow-hidden flex-shrink-0" style="max-width:20rem;">
+                                <?php if ($is_edit && ($char['ch_header'] ?? '')) { ?>
+                                <img id="header-preview" src="<?php echo MG_CHAR_IMAGE_URL.'/'.$char['ch_header']; ?>" alt="" class="w-full h-full object-cover">
+                                <?php } else { ?>
+                                <div id="header-preview" class="w-full h-full flex items-center justify-center text-mg-text-muted">
+                                    <i data-lucide="image" class="w-10 h-10"></i>
+                                </div>
+                                <?php } ?>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <input type="file" name="ch_header" id="ch_header" accept="image/*"
+                                   class="block w-full text-sm text-mg-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-mg-accent file:text-white hover:file:bg-mg-accent-hover file:cursor-pointer cursor-pointer">
+                            <p class="text-xs text-mg-text-muted mt-2">프로필 상단에 표시되는 가로형 배너 이미지 (권장: 1200x400)</p>
+                            <?php if ($is_edit && ($char['ch_header'] ?? '')) { ?>
+                            <label class="flex items-center gap-2 mt-2 cursor-pointer">
+                                <input type="checkbox" name="del_header" value="1" class="w-4 h-4 rounded border-mg-bg-tertiary bg-mg-bg-primary text-red-500 focus:ring-red-500 focus:ring-offset-0">
+                                <span class="text-sm text-red-400">삭제</span>
+                            </label>
+                            <?php } ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php } ?>
+
+            <!-- 프로필 스킨/배경 선택 -->
+            <?php
+            // 보유한 스킨/배경 아이템 조회
+            $owned_skins = array();
+            $owned_bgs = array();
+            if ($member['mb_id']) {
+                $inv_sql = "SELECT i.si_id, i.si_name, i.si_type, i.si_effect
+                            FROM {$g5['mg_inventory_table']} iv
+                            JOIN {$g5['mg_shop_item_table']} i ON iv.si_id = i.si_id
+                            WHERE iv.mb_id = '{$member['mb_id']}' AND iv.iv_count > 0
+                            AND i.si_type IN ('profile_skin', 'profile_effect')
+                            ORDER BY i.si_order, i.si_id";
+                $inv_result = sql_query($inv_sql);
+                while ($inv_row = sql_fetch_array($inv_result)) {
+                    $eff = json_decode($inv_row['si_effect'], true);
+                    if ($inv_row['si_type'] === 'profile_skin' && !empty($eff['skin_id'])) {
+                        $owned_skins[$eff['skin_id']] = $inv_row['si_name'];
+                    } elseif ($inv_row['si_type'] === 'profile_effect' && !empty($eff['bg_id'])) {
+                        $owned_bgs[$eff['bg_id']] = $inv_row['si_name'];
+                    }
+                }
+            }
+            $cur_skin = $is_edit ? ($char['ch_profile_skin'] ?? '') : '';
+            $cur_bg = $is_edit ? ($char['ch_profile_bg'] ?? '') : '';
+            // 배경색은 아이템 구매제로 전환 (character_form에서 직접 설정 불가)
+
+            // 인벤토리 활성 아이템 (회원 전체 기본값)
+            $active_skin_id = mg_get_profile_skin_id($member['mb_id']);
+            $active_bg_id = mg_get_profile_effect_id($member['mb_id']);
+
+            // 기본 옵션 라벨 (인벤토리 기본값 표시)
+            $all_skin_names = mg_get_profile_skin_list();
+            $all_bg_names = mg_get_profile_effect_list();
+            $skin_default_label = $active_skin_id ? '인벤토리 기본값 (' . ($all_skin_names[$active_skin_id] ?? $active_skin_id) . ')' : '기본 스킨';
+            $bg_default_label = $active_bg_id ? '인벤토리 기본값 (' . ($all_bg_names[$active_bg_id] ?? $active_bg_id) . ')' : '없음';
+            ?>
+            <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
+                <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary">
+                    <h2 class="font-medium text-mg-text-primary">프로필 꾸미기</h2>
+                </div>
+                <div class="p-4 space-y-4">
+                    <div>
+                        <label for="ch_profile_skin" class="block text-sm font-medium text-mg-text-secondary mb-1.5">프로필 스킨</label>
+                        <select name="ch_profile_skin" id="ch_profile_skin" class="w-full bg-mg-bg-tertiary border border-mg-bg-tertiary text-mg-text-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-mg-accent focus:border-transparent">
+                            <option value="" <?php echo !$cur_skin ? 'selected' : ''; ?>><?php echo htmlspecialchars($skin_default_label); ?></option>
+                            <option value="default" <?php echo $cur_skin === 'default' ? 'selected' : ''; ?>>기본 스킨</option>
+                            <?php foreach ($owned_skins as $sk_id => $sk_name) { ?>
+                            <option value="<?php echo htmlspecialchars($sk_id); ?>" <?php echo $cur_skin === $sk_id ? 'selected' : ''; ?>><?php echo htmlspecialchars($sk_name); ?></option>
+                            <?php } ?>
+                        </select>
+                        <p class="text-xs text-mg-text-muted mt-1">인벤토리에서 장착한 스킨이 기본 적용됩니다. 이 캐릭터만 다르게 하려면 선택하세요.</p>
+                    </div>
+                    <?php if (!empty($owned_bgs)) { ?>
+                    <div>
+                        <label for="ch_profile_bg" class="block text-sm font-medium text-mg-text-secondary mb-1.5">배경 이펙트</label>
+                        <select name="ch_profile_bg" id="ch_profile_bg" class="w-full bg-mg-bg-tertiary border border-mg-bg-tertiary text-mg-text-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-mg-accent focus:border-transparent">
+                            <option value="" <?php echo !$cur_bg ? 'selected' : ''; ?>><?php echo htmlspecialchars($bg_default_label); ?></option>
+                            <option value="none" <?php echo $cur_bg === 'none' ? 'selected' : ''; ?>>없음 (이펙트 해제)</option>
+                            <?php foreach ($owned_bgs as $bg_id => $bg_name) { ?>
+                            <option value="<?php echo htmlspecialchars($bg_id); ?>" <?php echo $cur_bg === $bg_id ? 'selected' : ''; ?>><?php echo htmlspecialchars($bg_name); ?></option>
+                            <?php } ?>
+                        </select>
+                        <p class="text-xs text-mg-text-muted mt-1">인벤토리에서 장착한 이펙트가 기본 적용됩니다. 이 캐릭터만 다르게 하려면 선택하세요.</p>
+                    </div>
+                    <?php } ?>
+                </div>
+            </div>
+
+            <!-- 프로필 정보 (동적 필드) -->
+            <?php foreach ($grouped_fields as $category => $fields) { ?>
+            <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
+                <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary">
+                    <h2 class="font-medium text-mg-text-primary flex items-center gap-2"><?php echo $category; ?><?php if ($_is_approved) { ?> <span class="text-xs text-mg-text-muted flex items-center gap-1"><i data-lucide="lock" class="w-3.5 h-3.5"></i>승인됨</span><?php } ?></h2>
+                </div>
+                <div class="p-4 space-y-4">
+                    <?php foreach ($fields as $field) { ?>
+                    <div>
+                        <label class="block text-sm font-medium text-mg-text-secondary mb-1.5">
+                            <?php echo $field['pf_name']; ?>
+                            <?php if (!$_is_approved && $field['pf_required']) { ?><span class="text-red-400">*</span><?php } ?>
+                        </label>
+
+                        <?php if ($_is_approved) { ?>
+                            <?php // 승인된 캐릭터: 읽기전용 텍스트 표시 ?>
+                            <?php if ($field['pf_type'] == 'image' && $field['value']) { ?>
+                            <div class="rounded-lg overflow-hidden border border-mg-bg-tertiary" style="max-width:16rem;max-height:12rem;">
+                                <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.htmlspecialchars($field['value']); ?>" class="w-full h-full object-contain" alt="">
+                            </div>
+                            <?php } elseif ($field['pf_type'] == 'multiselect') {
+                                $ms_selected = $field['value'] ? json_decode($field['value'], true) : array();
+                                if (!is_array($ms_selected)) $ms_selected = array();
+                            ?>
+                            <p class="text-mg-text-primary px-4 py-2.5"><?php echo $ms_selected ? htmlspecialchars(implode(', ', $ms_selected)) : '<span class="text-mg-text-muted">-</span>'; ?></p>
+                            <?php } elseif ($field['pf_type'] == 'url' && $field['value']) { ?>
+                            <a href="<?php echo htmlspecialchars($field['value']); ?>" target="_blank" rel="noopener" class="text-mg-accent hover:underline px-4 py-2.5 block"><?php echo htmlspecialchars($field['value']); ?></a>
+                            <?php } elseif ($field['pf_type'] == 'textarea') { ?>
+                            <div class="text-mg-text-primary px-4 py-2.5 whitespace-pre-wrap"><?php echo $field['value'] ? htmlspecialchars($field['value']) : '<span class="text-mg-text-muted">-</span>'; ?></div>
+                            <?php } else { ?>
+                            <p class="text-mg-text-primary px-4 py-2.5"><?php echo $field['value'] ? htmlspecialchars($field['value']) : '<span class="text-mg-text-muted">-</span>'; ?></p>
+                            <?php } ?>
+                        <?php } else { ?>
+                            <?php // 미승인 캐릭터: 입력 폼 ?>
+                            <?php if ($field['pf_type'] == 'text') { ?>
+                        <input type="text" name="profile[<?php echo $field['pf_id']; ?>]" id="pf_<?php echo $field['pf_id']; ?>"
+                               value="<?php echo htmlspecialchars($field['value']); ?>"
+                               placeholder="<?php echo $field['pf_placeholder']; ?>"
+                               <?php echo $field['pf_required'] ? 'required' : ''; ?>
+                               class="w-full bg-mg-bg-primary border border-mg-bg-tertiary rounded-lg px-4 py-2.5 text-mg-text-primary placeholder-mg-text-muted focus:outline-none focus:border-mg-accent transition-colors">
+
+                        <?php } elseif ($field['pf_type'] == 'textarea') { ?>
+                        <textarea name="profile[<?php echo $field['pf_id']; ?>]" id="pf_<?php echo $field['pf_id']; ?>" rows="4"
+                                  placeholder="<?php echo $field['pf_placeholder']; ?>"
+                                  <?php echo $field['pf_required'] ? 'required' : ''; ?>
+                                  class="w-full bg-mg-bg-primary border border-mg-bg-tertiary rounded-lg px-4 py-2.5 text-mg-text-primary placeholder-mg-text-muted focus:outline-none focus:border-mg-accent transition-colors resize-none"><?php echo htmlspecialchars($field['value']); ?></textarea>
+
+                        <?php } elseif ($field['pf_type'] == 'select') {
+                            $options = json_decode($field['pf_options'], true) ?: array();
+                        ?>
+                        <select name="profile[<?php echo $field['pf_id']; ?>]" id="pf_<?php echo $field['pf_id']; ?>"
+                                <?php echo $field['pf_required'] ? 'required' : ''; ?>
+                                class="w-full bg-mg-bg-primary border border-mg-bg-tertiary rounded-lg px-4 py-2.5 text-mg-text-primary focus:outline-none focus:border-mg-accent transition-colors">
+                            <option value="">선택</option>
+                            <?php foreach ($options as $opt) { ?>
+                            <option value="<?php echo $opt; ?>" <?php echo $field['value'] == $opt ? 'selected' : ''; ?>><?php echo $opt; ?></option>
+                            <?php } ?>
+                        </select>
+
+                        <?php } elseif ($field['pf_type'] == 'multiselect') {
+                            $ms_options = json_decode($field['pf_options'], true) ?: array();
+                            $ms_selected = $field['value'] ? json_decode($field['value'], true) : array();
+                            if (!is_array($ms_selected)) $ms_selected = array();
+                        ?>
+                        <div class="space-y-1.5">
+                            <?php foreach ($ms_options as $opt) { ?>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" name="profile[<?php echo $field['pf_id']; ?>][]" value="<?php echo htmlspecialchars($opt); ?>"
+                                       <?php echo in_array($opt, $ms_selected) ? 'checked' : ''; ?>
+                                       class="w-4 h-4 rounded border-mg-bg-tertiary bg-mg-bg-primary text-mg-accent focus:ring-mg-accent focus:ring-offset-0">
+                                <span class="text-sm text-mg-text-primary"><?php echo htmlspecialchars($opt); ?></span>
+                            </label>
+                            <?php } ?>
+                        </div>
+
+                        <?php } elseif ($field['pf_type'] == 'url') { ?>
+                        <input type="url" name="profile[<?php echo $field['pf_id']; ?>]" id="pf_<?php echo $field['pf_id']; ?>"
+                               value="<?php echo htmlspecialchars($field['value']); ?>"
+                               placeholder="<?php echo $field['pf_placeholder'] ?: 'https://'; ?>"
+                               <?php echo $field['pf_required'] ? 'required' : ''; ?>
+                               class="w-full bg-mg-bg-primary border border-mg-bg-tertiary rounded-lg px-4 py-2.5 text-mg-text-primary placeholder-mg-text-muted focus:outline-none focus:border-mg-accent transition-colors">
+
+                        <?php } elseif ($field['pf_type'] == 'image') { ?>
+                        <?php if ($field['value']) { ?>
+                        <div class="mb-2 rounded-lg overflow-hidden border border-mg-bg-tertiary" style="max-width:16rem;max-height:12rem;">
+                            <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.htmlspecialchars($field['value']); ?>" class="w-full h-full object-contain" alt="">
+                        </div>
+                        <input type="hidden" name="profile[<?php echo $field['pf_id']; ?>]" value="<?php echo htmlspecialchars($field['value']); ?>">
+                        <label class="flex items-center gap-2 mb-2 cursor-pointer">
+                            <input type="checkbox" name="del_profile_image[<?php echo $field['pf_id']; ?>]" value="1"
+                                   class="w-4 h-4 rounded border-mg-bg-tertiary bg-mg-bg-primary text-red-500 focus:ring-red-500 focus:ring-offset-0">
+                            <span class="text-sm text-red-400">이미지 삭제</span>
+                        </label>
+                        <?php } ?>
+                        <input type="file" name="profile_image[<?php echo $field['pf_id']; ?>]" id="pf_<?php echo $field['pf_id']; ?>" accept="image/*"
+                               class="block w-full text-sm text-mg-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-mg-bg-tertiary file:text-mg-text-primary hover:file:bg-mg-bg-primary file:cursor-pointer cursor-pointer">
+
+                        <?php } ?>
+
+                            <?php if ($field['pf_help']) { ?>
+                        <p class="text-xs text-mg-text-muted mt-1"><?php echo $field['pf_help']; ?></p>
+                            <?php } ?>
+                        <?php } ?>
+                    </div>
+                    <?php } ?>
+                </div>
+            </div>
+            <?php } ?>
 
             <?php if ($is_edit) { ?>
             <script>

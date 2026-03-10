@@ -10,6 +10,7 @@
 
 include_once('./_common.php');
 include_once(G5_PATH.'/plugin/morgan/morgan.php');
+include_once(G5_PATH.'/plugin/dice-box/dice-box-loader.php');
 
 if (mg_config('battle_use', '1') != '1') {
     alert_close('전투 기능이 비활성화되어 있습니다.');
@@ -103,6 +104,25 @@ if ($mode === 'view' && $be_id) {
 
     // 몬스터 정보
     $monster = sql_fetch("SELECT * FROM {$g5['mg_battle_monster_table']} WHERE bm_id = {$encounter['bm_id']}");
+
+    // 전투 소모 아이템
+    $battle_items = array();
+    $bi_res = sql_query("SELECT ii.iv_id, ii.iv_count as qty, si.si_id, si.si_name, si.si_effect
+                          FROM {$g5['mg_inventory_table']} ii
+                          JOIN {$g5['mg_shop_item_table']} si ON ii.si_id = si.si_id
+                          WHERE ii.mb_id = '{$mb_id}' AND si.si_type = 'battle_consumable' AND ii.iv_count > 0
+                          ORDER BY si.si_name");
+    if ($bi_res) {
+        while ($bi = sql_fetch_array($bi_res)) {
+            $battle_items[] = $bi;
+        }
+    }
+}
+
+// 주사위 면 수
+$dice_sides = 20;
+if (function_exists('mg_battle_dice_sides')) {
+    $dice_sides = mg_battle_dice_sides();
 }
 
 $g5['title'] = '전투';
@@ -427,7 +447,7 @@ $_training_use = mg_config('battle_training_use', '1');
                     $is_dead = (int)$slot['current_hp'] <= 0;
                     $is_discoverer = ($slot['mb_id'] === $encounter['discoverer_mb_id']);
                 ?>
-                <div class="flex items-center gap-2 px-3 py-2 border-b border-white/[0.02] hover:bg-mg-accent/[0.04] transition-colors <?php echo $is_dead ? 'opacity-40' : ''; ?>">
+                <div class="flex items-center gap-2 px-3 py-2 border-b border-white/[0.02] hover:bg-mg-accent/[0.04] transition-colors <?php echo $is_dead ? 'opacity-40' : ''; ?>" data-ch-id="<?php echo (int)$slot['ch_id']; ?>" style="position:relative;">
                     <div class="relative flex-shrink-0">
                         <div class="w-8 h-8 rounded-md bg-mg-bg-tertiary flex items-center justify-center overflow-hidden">
                             <?php if ($slot['ch_thumb']) { ?>
@@ -658,6 +678,60 @@ $_training_use = mg_config('battle_training_use', '1');
 </div>
 <?php } ?>
 
+<!-- ═══════════════════════════════════
+     주사위 판정 모달
+     ═══════════════════════════════════ -->
+<?php if ($mode === 'view') { ?>
+<div id="battle-dice-modal" class="fixed inset-0 z-50" style="background:rgba(0,0,0,0.8); display:none;">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div style="max-width:480px; width:100%;">
+            <div id="dice-result-display" class="text-center mb-3" style="display:none;">
+                <div id="dice-result-value" style="font-family:'Bebas Neue',sans-serif; font-size:4.5rem; line-height:1; text-shadow:0 0 30px currentColor;"></div>
+                <div id="dice-result-mult" class="mt-1" style="font-family:'Bebas Neue',sans-serif; font-size:1.3rem; color:var(--mg-text-secondary); letter-spacing:0.1em;"></div>
+            </div>
+            <div id="battle-dice-box" class="dice-box-overlay"></div>
+            <div id="dice-action-result" class="text-center mt-3" style="display:none;">
+                <div id="dice-action-text" style="font-size:1rem; color:var(--mg-text-primary);"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 스킬 선택 팝업 -->
+<div id="skill-select-modal" class="fixed inset-0 z-50" style="background:rgba(0,0,0,0.65); display:none;" onclick="if(event.target===this){this.style.display='none';}">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden" style="max-width:360px; width:100%;">
+            <div class="px-4 py-3 border-b border-mg-bg-tertiary flex items-center justify-between">
+                <h3 class="font-bold text-mg-text-primary flex items-center gap-2" style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.1em;">
+                    <i data-lucide="crosshair" class="w-4 h-4 text-mg-accent"></i> SKILL SELECT
+                </h3>
+                <button onclick="document.getElementById('skill-select-modal').style.display='none'" class="text-mg-text-muted hover:text-mg-text-primary">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div id="skill-select-list" class="p-3"></div>
+        </div>
+    </div>
+</div>
+
+<!-- 아이템 선택 팝업 -->
+<div id="item-select-modal" class="fixed inset-0 z-50" style="background:rgba(0,0,0,0.65); display:none;" onclick="if(event.target===this){this.style.display='none';}">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden" style="max-width:360px; width:100%;">
+            <div class="px-4 py-3 border-b border-mg-bg-tertiary flex items-center justify-between">
+                <h3 class="font-bold text-mg-text-primary flex items-center gap-2" style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.1em;">
+                    <i data-lucide="box" class="w-4 h-4" style="color:#22c55e;"></i> ITEM
+                </h3>
+                <button onclick="document.getElementById('item-select-modal').style.display='none'" class="text-mg-text-muted hover:text-mg-text-primary">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div id="item-select-list" class="p-3"></div>
+        </div>
+    </div>
+</div>
+<?php } ?>
+
 <style>
 @keyframes monsterIdle {
     0%, 100% { transform: translateY(0); }
@@ -701,6 +775,62 @@ $_training_use = mg_config('battle_training_use', '1');
 @media (max-width: 639px) {
     #battle-profile-modal .p-4.grid { grid-template-columns: 1fr !important; }
 }
+/* 주사위 결과 컬러 */
+.dice-nat1 { color: #ef4444; }
+.dice-low { color: #f97316; }
+.dice-mid { color: #eab308; }
+.dice-high { color: #22c55e; }
+.dice-nat20 { color: #f59f0a; text-shadow: 0 0 40px #f59f0a, 0 0 80px rgba(245,159,10,0.5); }
+/* 전투 이펙트 팝업 */
+@keyframes battleEffectFloat {
+    0% { transform: translateY(0) scale(0.5); opacity: 0; }
+    15% { transform: translateY(-5px) scale(1.1); opacity: 1; }
+    30% { transform: translateY(-10px) scale(1); }
+    80% { opacity: 1; }
+    100% { transform: translateY(-40px) scale(0.9); opacity: 0; }
+}
+@keyframes battleEffectShake {
+    0%, 100% { transform: translateX(0); }
+    10% { transform: translateX(-6px); }
+    30% { transform: translateX(6px); }
+    50% { transform: translateX(-4px); }
+    70% { transform: translateX(4px); }
+    90% { transform: translateX(-2px); }
+}
+@keyframes critFlash {
+    0% { opacity: 0; transform: scale(0.3) rotate(-5deg); }
+    20% { opacity: 1; transform: scale(1.2) rotate(2deg); }
+    40% { transform: scale(0.95) rotate(-1deg); }
+    100% { opacity: 0; transform: scale(1.1) rotate(0deg) translateY(-20px); }
+}
+.battle-effect-popup {
+    position: absolute;
+    font-family: 'Bebas Neue', sans-serif;
+    font-weight: 700;
+    pointer-events: none;
+    z-index: 100;
+    animation: battleEffectFloat 1.5s forwards;
+    white-space: nowrap;
+}
+.battle-effect-crit {
+    animation: critFlash 1.8s forwards;
+    font-size: 1.8rem;
+}
+.monster-hit {
+    animation: battleEffectShake 0.5s ease-out;
+}
+/* 스킬/아이템 선택 버튼 */
+.skill-select-btn {
+    display: flex; align-items: center; gap: 0.5rem;
+    width: 100%; padding: 0.6rem 0.75rem;
+    background: var(--mg-bg-primary); border: 1px solid var(--mg-bg-tertiary);
+    border-radius: 0.5rem; cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    text-align: left; color: var(--mg-text-primary);
+}
+.skill-select-btn:hover { border-color: var(--mg-accent); background: rgba(245,159,10,0.04); }
+.skill-select-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.skill-select-btn:disabled:hover { border-color: var(--mg-bg-tertiary); background: var(--mg-bg-primary); }
 </style>
 
 <script>
@@ -709,7 +839,29 @@ var BATTLE = {
     beId: <?php echo $be_id ?: 0; ?>,
     chId: <?php echo $selected_ch_id ?: 0; ?>,
     mode: '<?php echo $mode; ?>',
-    pollTimer: null
+    pollTimer: null,
+    diceSides: <?php echo (int)$dice_sides; ?>,
+    diceInited: false,
+    actionLock: false,
+    equippedSkills: <?php
+        $js_skills = array();
+        if ($my_battle_profile && !empty($my_battle_profile['equipped_skills'])) {
+            foreach ($my_battle_profile['equipped_skills'] as $slot => $sk) {
+                $js_skills[] = array(
+                    'slot' => (int)$slot,
+                    'sk_id' => (int)$sk['sk_id'],
+                    'sk_name' => $sk['sk_name'],
+                    'sk_type' => $sk['sk_type'],
+                    'sk_stamina' => (int)$sk['sk_stamina'],
+                    'sk_target' => $sk['sk_target'] ?? 'enemy_single',
+                    'sk_target_count' => (int)($sk['sk_target_count'] ?? 1),
+                );
+            }
+        }
+        echo json_encode($js_skills, JSON_UNESCAPED_UNICODE);
+    ?>,
+    battleItems: <?php echo json_encode($battle_items ?? array(), JSON_UNESCAPED_UNICODE); ?>,
+    myEnergy: <?php echo (int)($my_energy['current'] ?? 0); ?>
 };
 
 // ── 전투 프로필 모달 ──
@@ -730,7 +882,6 @@ function loadBattleList() {
             var el = document.getElementById('battle-list');
             var data = res.data || [];
 
-            // 맵 마커 렌더링
             renderBattleMapMarkers(data);
 
             if (data.length === 0) {
@@ -752,7 +903,6 @@ function loadBattleList() {
 
                 h += '<a href="?mode=view&be_id=' + e.be_id + '&ch_id=' + BATTLE.chId + '" class="block bg-mg-bg-secondary rounded-lg border border-mg-bg-tertiary hover:border-mg-accent/30 transition-colors overflow-hidden">';
                 h += '<div class="flex items-center gap-3 p-3">';
-                // 몬스터 썸네일
                 if (e.monster_image) {
                     h += '<div style="width:48px;height:48px;flex-shrink:0;border-radius:8px;overflow:hidden;border:1px solid var(--mg-bg-tertiary);">';
                     h += '<img src="' + e.monster_image + '" style="width:100%;height:100%;object-fit:cover;" alt="">';
@@ -787,7 +937,6 @@ function renderBattleMapMarkers(encounters) {
 
     if (!encounters || encounters.length === 0) return;
 
-    // 좌표별로 그룹핑 (같은 파견지에 여러 보스 가능)
     var grouped = {};
     encounters.forEach(function(e) {
         if (e.ea_map_x == null || e.ea_map_y == null) return;
@@ -801,10 +950,9 @@ function renderBattleMapMarkers(encounters) {
         var first = group[0];
         var x = parseFloat(first.ea_map_x);
         var y = parseFloat(first.ea_map_y);
-        var sz = 44; // 마커 크기
+        var sz = 44;
 
         if (group.length === 1) {
-            // 단일 보스: 썸네일 1개
             var marker = document.createElement('div');
             marker.className = 'battle-map-marker status-' + first.be_status;
             marker.style.left = x + '%';
@@ -827,7 +975,6 @@ function renderBattleMapMarkers(encounters) {
             };
             markersEl.appendChild(marker);
         } else {
-            // 여러 보스: 세로 겹침 배치
             group.forEach(function(e, idx) {
                 var marker = document.createElement('div');
                 marker.className = 'battle-map-marker status-' + e.be_status;
@@ -837,7 +984,7 @@ function renderBattleMapMarkers(encounters) {
                 marker.style.width = smallSz + 'px';
                 marker.style.height = smallSz + 'px';
                 marker.style.marginLeft = (-smallSz / 2) + 'px';
-                marker.style.marginTop = (-smallSz / 2 + idx * 14) + 'px'; // 14px씩 아래로 겹침
+                marker.style.marginTop = (-smallSz / 2 + idx * 14) + 'px';
                 marker.style.zIndex = 5 + idx;
 
                 if (e.monster_image) {
@@ -846,7 +993,6 @@ function renderBattleMapMarkers(encounters) {
                     marker.innerHTML = '<div style="width:' + smallSz + 'px;height:' + smallSz + 'px;border-radius:50%;background:var(--mg-bg-tertiary);border:2px solid var(--mg-accent);display:flex;align-items:center;justify-content:center;">' +
                         '<svg class="w-4 h-4 text-mg-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.5 17.5L3 6V3h3l11.5 11.5M13 7.5l3.5-3.5 4 4L17 11.5"/></svg></div>';
                 }
-                // 마지막 마커에만 라벨 + 카운트
                 if (idx === group.length - 1) {
                     marker.innerHTML += '<div class="marker-count">' + group.length + '</div>';
                     marker.innerHTML += '<div class="marker-name">' + first.ea_name + '</div>';
@@ -859,8 +1005,6 @@ function renderBattleMapMarkers(encounters) {
             });
         }
     });
-
-    // 좌표가 없는 전투들은 맵에 표시 안 됨 (카드 리스트로만 확인)
 }
 
 // ── 전투 참여 ──
@@ -880,10 +1024,116 @@ function battleJoin() {
     });
 }
 
-// ── 전투 행동 ──
-function battleAction(type, targetChId) {
+// ═══════════════════════════════════
+//  주사위 + 전투 행동 시스템
+// ═══════════════════════════════════
+
+// ── 주사위 모달 표시 + 3D 롤 ──
+function showDiceRoll(diceValue, callback) {
+    var modal = document.getElementById('battle-dice-modal');
+    if (!modal) { if (callback) callback(); return; }
+
+    // 초기화
+    var resultDisp = document.getElementById('dice-result-display');
+    var actionResult = document.getElementById('dice-action-result');
+    resultDisp.style.display = 'none';
+    actionResult.style.display = 'none';
+    modal.style.display = '';
+
+    var notation = '1d' + BATTLE.diceSides + '@' + diceValue;
+
+    function doRoll() {
+        if (window.MorganDice && window.MorganDice.isReady()) {
+            window.MorganDice.clear();
+            setTimeout(function() {
+                window.MorganDice.roll(notation).then(function() {
+                    // 롤 완료 후 결과 표시
+                    setTimeout(function() {
+                        showDiceResult(diceValue);
+                        if (callback) setTimeout(callback, 800);
+                    }, 600);
+                });
+            }, 100);
+        } else if (window.MorganDice && !BATTLE.diceInited) {
+            BATTLE.diceInited = true;
+            window.MorganDice.init('#battle-dice-box').then(function() {
+                window.MorganDice.roll(notation).then(function() {
+                    setTimeout(function() {
+                        showDiceResult(diceValue);
+                        if (callback) setTimeout(callback, 800);
+                    }, 600);
+                });
+            }).catch(function() {
+                showDiceResult(diceValue);
+                if (callback) setTimeout(callback, 800);
+            });
+        } else {
+            // MorganDice 없으면 텍스트만 표시
+            showDiceResult(diceValue);
+            if (callback) setTimeout(callback, 800);
+        }
+    }
+
+    // MorganDice 모듈이 아직 로드 안 됐을 수 있음
+    if (window.MorganDiceLoaded) {
+        doRoll();
+    } else {
+        window.addEventListener('MorganDiceLoaded', function() { doRoll(); }, { once: true });
+        // 타임아웃 fallback
+        setTimeout(function() {
+            if (!window.MorganDiceLoaded) {
+                showDiceResult(diceValue);
+                if (callback) setTimeout(callback, 800);
+            }
+        }, 3000);
+    }
+}
+
+function showDiceResult(roll) {
+    var resultDisp = document.getElementById('dice-result-display');
+    var valEl = document.getElementById('dice-result-value');
+    var multEl = document.getElementById('dice-result-mult');
+    var sides = BATTLE.diceSides;
+
+    // 컬러 클래스 결정
+    var cls = 'dice-mid';
+    if (roll <= 1) cls = 'dice-nat1';
+    else if (roll <= Math.ceil(sides * 0.25)) cls = 'dice-low';
+    else if (roll >= sides) cls = 'dice-nat20';
+    else if (roll >= Math.ceil(sides * 0.75)) cls = 'dice-high';
+
+    valEl.className = cls;
+    valEl.textContent = roll;
+
+    var label = roll <= 1 ? 'CRITICAL FAIL' : roll >= sides ? 'NATURAL ' + sides + '!' : '1d' + sides;
+    multEl.textContent = label;
+    resultDisp.style.display = '';
+}
+
+function hideDiceModal() {
+    var modal = document.getElementById('battle-dice-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+// ── 전투 행동 (주사위 연동) ──
+function battleAction(type, skId, targetChIds) {
+    if (BATTLE.actionLock) return;
+
+    // 스킬 선택 모달
+    if (type === 'skill' && !skId) {
+        showSkillSelector();
+        return;
+    }
+    // 아이템 선택 모달
+    if (type === 'item') {
+        showItemSelector();
+        return;
+    }
+
+    BATTLE.actionLock = true;
     var body = 'action=battle_action&be_id=' + BATTLE.beId + '&ch_id=' + BATTLE.chId + '&type=' + type;
-    if (targetChId) body += '&target_ch_id=' + targetChId;
+    if (skId) body += '&sk_id=' + skId;
+    if (targetChIds) body += '&target_ch_ids=' + targetChIds;
 
     fetch(BATTLE.apiUrl, {
         method: 'POST',
@@ -891,16 +1141,310 @@ function battleAction(type, targetChId) {
         body: body
     })
     .then(r => r.json())
-    .then(res => {
-        if (!res.success) { alert(res.message || '행동 실패'); return; }
-        // 데미지 팝업
-        if (res.data && res.data.damage) showDmgPopup(res.data.damage);
-        // UI 갱신
-        pollBattle();
+    .then(function(res) {
+        if (!res.success) {
+            alert(res.message || '행동 실패');
+            BATTLE.actionLock = false;
+            return;
+        }
+
+        var d = res.data || {};
+        var diceRoll = d.dice || 0;
+
+        if (diceRoll > 0) {
+            // 주사위 모달 → 이펙트 → UI 갱신
+            showDiceRoll(diceRoll, function() {
+                // 액션 결과 텍스트
+                showDiceActionText(d);
+                // 이펙트 애니메이션
+                setTimeout(function() {
+                    playBattleEffect(d);
+                    // 반격 이펙트
+                    if (d.counter && d.counter.damage > 0 && !d.counter.evaded) {
+                        setTimeout(function() {
+                            showParticipantEffect(d.counter.target_ch_id, -d.counter.damage, '#ef4444');
+                        }, 600);
+                    } else if (d.counter && d.counter.evaded) {
+                        setTimeout(function() {
+                            showParticipantEffect(d.counter.target_ch_id, 'MISS', '#60a5fa');
+                        }, 600);
+                    }
+                    // 모달 닫고 UI 갱신
+                    setTimeout(function() {
+                        hideDiceModal();
+                        pollBattle();
+                        BATTLE.actionLock = false;
+                    }, 1500);
+                }, 400);
+            });
+        } else {
+            // 주사위 없는 행동
+            if (d.damage) showMonsterEffect(d.damage, d.is_crit);
+            pollBattle();
+            BATTLE.actionLock = false;
+        }
+    })
+    .catch(function() {
+        BATTLE.actionLock = false;
     });
 }
 
-// ── 폴링 ──
+function showDiceActionText(d) {
+    var el = document.getElementById('dice-action-result');
+    var textEl = document.getElementById('dice-action-text');
+    if (!el || !textEl) return;
+
+    textEl.innerHTML = d.message || '';
+    el.style.display = '';
+}
+
+// ── 전투 이펙트 분기 ──
+function playBattleEffect(d) {
+    var at = d.action_type || 'attack';
+
+    switch (at) {
+        case 'attack':
+        case 'damage':
+            showMonsterEffect(d.damage, d.is_crit);
+            break;
+        case 'heal':
+            if (d.heal) {
+                // 자신에게 힐 이펙트 표시
+                showParticipantEffect(BATTLE.chId, '+' + d.heal, '#22c55e');
+            }
+            break;
+        case 'buff':
+            showParticipantEffect(BATTLE.chId, (d.buff_stat || 'BUFF') + ' +' + (d.buff_value || '') + '%', '#60a5fa');
+            break;
+        case 'debuff':
+            showMonsterTextEffect((d.debuff_stat || 'DEBUFF') + ' -' + (d.debuff_value || '') + '%', '#c084fc');
+            break;
+        case 'taunt':
+            showMonsterTextEffect('PROVOKED!', '#eab308');
+            break;
+    }
+}
+
+// ── 몬스터에 데미지 이펙트 ──
+function showMonsterEffect(val, isCrit) {
+    var c = document.getElementById('dmg-popup-container');
+    if (!c || !val) return;
+
+    // 쉐이크
+    var monsterEl = document.getElementById('monster-display');
+    if (monsterEl) {
+        monsterEl.classList.add('monster-hit');
+        setTimeout(function() { monsterEl.classList.remove('monster-hit'); }, 500);
+    }
+
+    var el = document.createElement('div');
+    el.className = 'battle-effect-popup' + (isCrit ? ' battle-effect-crit' : '');
+    var absVal = Math.abs(val);
+    var color = val < 0 ? '#ef4444' : '#22c55e';
+    el.style.cssText = 'top:' + (25 + Math.random() * 20) + '%; left:' + (35 + Math.random() * 25) + '%; font-size:' + (isCrit ? '3rem' : '2.2rem') + '; color:' + color + '; text-shadow:0 0 15px ' + color + ', 0 2px 4px rgba(0,0,0,0.5);';
+    el.textContent = (val > 0 ? '+' : '') + val;
+    c.appendChild(el);
+
+    if (isCrit) {
+        var critLabel = document.createElement('div');
+        critLabel.className = 'battle-effect-popup';
+        critLabel.style.cssText = 'top:' + (parseInt(el.style.top) - 8) + '%; left:' + el.style.left + '; font-size:1rem; color:#f59f0a; text-shadow:0 0 20px #f59f0a;';
+        critLabel.textContent = 'CRITICAL!';
+        c.appendChild(critLabel);
+        setTimeout(function() { critLabel.remove(); }, 1600);
+    }
+
+    setTimeout(function() { el.remove(); }, 1600);
+}
+
+// ── 몬스터에 텍스트 이펙트 (디버프/도발) ──
+function showMonsterTextEffect(text, color) {
+    var c = document.getElementById('dmg-popup-container');
+    if (!c) return;
+
+    var el = document.createElement('div');
+    el.className = 'battle-effect-popup';
+    el.style.cssText = 'top:30%; left:' + (30 + Math.random() * 20) + '%; font-size:1.5rem; color:' + color + '; text-shadow:0 0 15px ' + color + ', 0 2px 4px rgba(0,0,0,0.5);';
+    el.textContent = text;
+    c.appendChild(el);
+    setTimeout(function() { el.remove(); }, 1600);
+}
+
+// ── 참여자(캐릭터)에 이펙트 ──
+function showParticipantEffect(chId, text, color) {
+    var row = document.querySelector('#participants-list [data-ch-id="' + chId + '"]');
+    if (!row) return;
+
+    var el = document.createElement('div');
+    el.className = 'battle-effect-popup';
+    el.style.cssText = 'top:-5px; right:8px; font-size:1.1rem; color:' + color + '; text-shadow:0 0 10px ' + color + ';';
+    el.textContent = text;
+    row.appendChild(el);
+    setTimeout(function() { el.remove(); }, 1600);
+}
+
+// ═══════════════════════════════════
+//  스킬 / 아이템 선택 UI
+// ═══════════════════════════════════
+
+function showSkillSelector() {
+    var modal = document.getElementById('skill-select-modal');
+    var list = document.getElementById('skill-select-list');
+    if (!modal || !list) return;
+
+    var skills = BATTLE.equippedSkills;
+    if (!skills || skills.length === 0) {
+        list.innerHTML = '<div class="text-center py-4 text-mg-text-muted text-sm">장착된 스킬이 없습니다.<br>프로필에서 스킬을 장착해주세요.</div>';
+        modal.style.display = '';
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        return;
+    }
+
+    var typeIcons = { damage: 'swords', heal: 'heart', buff: 'arrow-up', debuff: 'arrow-down', taunt: 'shield' };
+    var typeColors = { damage: '#ef4444', heal: '#22c55e', buff: '#60a5fa', debuff: '#c084fc', taunt: '#eab308' };
+    var h = '';
+
+    skills.forEach(function(sk) {
+        var icon = typeIcons[sk.sk_type] || 'crosshair';
+        var color = typeColors[sk.sk_type] || '#f59f0a';
+        var disabled = sk.sk_stamina > BATTLE.myEnergy ? ' disabled' : '';
+        h += '<button class="skill-select-btn mb-2"' + disabled + ' onclick="onSkillSelect(' + sk.sk_id + ', \'' + sk.sk_type + '\', \'' + sk.sk_target + '\', ' + sk.sk_target_count + ')">';
+        h += '<div class="w-8 h-8 rounded flex items-center justify-center flex-shrink-0" style="background:' + color + '20; border:1px solid ' + color + '40;">';
+        h += '<i data-lucide="' + icon + '" class="w-4 h-4" style="color:' + color + ';"></i></div>';
+        h += '<div class="flex-1 min-w-0"><div class="text-sm font-bold truncate">' + sk.sk_name + '</div>';
+        h += '<div class="text-[10px] text-mg-text-muted">' + sk.sk_type.toUpperCase() + ' · EN ' + sk.sk_stamina + '</div></div>';
+        h += '</button>';
+    });
+
+    list.innerHTML = h;
+    modal.style.display = '';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function onSkillSelect(skId, skType, skTarget, targetCount) {
+    document.getElementById('skill-select-modal').style.display = 'none';
+
+    // 아군 대상 스킬이면 대상 선택 필요
+    if ((skType === 'heal' || skType === 'buff') && skTarget !== 'ally_all' && skTarget !== 'self') {
+        showTargetSelector(skId, targetCount);
+        return;
+    }
+
+    battleAction('skill', skId, skTarget === 'self' ? BATTLE.chId : '');
+}
+
+function showTargetSelector(skId, maxTargets) {
+    // 참여자 목록에서 선택 가능하게
+    var rows = document.querySelectorAll('#participants-list [data-ch-id]');
+    var selected = [];
+
+    rows.forEach(function(row) {
+        var chId = row.getAttribute('data-ch-id');
+        row.style.cursor = 'pointer';
+        row.style.outline = '2px solid transparent';
+
+        var handler = function() {
+            var idx = selected.indexOf(chId);
+            if (idx >= 0) {
+                selected.splice(idx, 1);
+                row.style.outline = '2px solid transparent';
+            } else if (selected.length < maxTargets) {
+                selected.push(chId);
+                row.style.outline = '2px solid var(--mg-accent)';
+            }
+        };
+        row._targetHandler = handler;
+        row.addEventListener('click', handler);
+    });
+
+    // 확인 버튼 추가
+    var confirmBar = document.createElement('div');
+    confirmBar.id = 'target-confirm-bar';
+    confirmBar.style.cssText = 'position:fixed; bottom:0; left:0; right:0; z-index:60; background:var(--mg-bg-secondary); border-top:2px solid var(--mg-accent); padding:0.75rem; text-align:center;';
+    confirmBar.innerHTML = '<span class="text-sm text-mg-text-secondary mr-3">대상 ' + maxTargets + '명 선택</span>' +
+        '<button onclick="confirmTargetSelect(' + skId + ')" class="cmd-btn cmd-primary" style="clip-path:none;">확인</button>' +
+        '<button onclick="cancelTargetSelect()" class="cmd-btn cmd-muted ml-2" style="clip-path:none;">취소</button>';
+    document.body.appendChild(confirmBar);
+
+    BATTLE._targetSelected = selected;
+}
+
+function confirmTargetSelect(skId) {
+    var selected = BATTLE._targetSelected || [];
+    cancelTargetSelect();
+    if (selected.length > 0) {
+        battleAction('skill', skId, selected.join(','));
+    }
+}
+
+function cancelTargetSelect() {
+    var bar = document.getElementById('target-confirm-bar');
+    if (bar) bar.remove();
+    document.querySelectorAll('#participants-list [data-ch-id]').forEach(function(row) {
+        if (row._targetHandler) {
+            row.removeEventListener('click', row._targetHandler);
+            delete row._targetHandler;
+        }
+        row.style.cursor = '';
+        row.style.outline = '';
+    });
+    BATTLE._targetSelected = null;
+}
+
+function showItemSelector() {
+    var modal = document.getElementById('item-select-modal');
+    var list = document.getElementById('item-select-list');
+    if (!modal || !list) return;
+
+    var items = BATTLE.battleItems;
+    if (!items || items.length === 0) {
+        list.innerHTML = '<div class="text-center py-4 text-mg-text-muted text-sm">사용 가능한 전투 소모품이 없습니다.</div>';
+        modal.style.display = '';
+        return;
+    }
+
+    var h = '';
+    items.forEach(function(it) {
+        var eff = {};
+        try { eff = JSON.parse(it.si_effect || '{}'); } catch(e) {}
+        var typeLabel = { heal: '회복', revive: '부활', stamina: '기력', dice_lock: '주사위 고정', dice_reroll: '리롤', dice_bless: '축복' };
+        var label = typeLabel[eff.type] || '소모품';
+        h += '<button class="skill-select-btn mb-2" onclick="useItem(' + it.si_id + ')">';
+        h += '<div class="w-8 h-8 rounded flex items-center justify-center flex-shrink-0" style="background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.3);">';
+        h += '<i data-lucide="box" class="w-4 h-4" style="color:#22c55e;"></i></div>';
+        h += '<div class="flex-1 min-w-0"><div class="text-sm font-bold truncate">' + it.si_name + '</div>';
+        h += '<div class="text-[10px] text-mg-text-muted">' + label + ' · ' + it.qty + '개</div></div>';
+        h += '</button>';
+    });
+
+    list.innerHTML = h;
+    modal.style.display = '';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function useItem(siId) {
+    document.getElementById('item-select-modal').style.display = 'none';
+
+    fetch(BATTLE.apiUrl, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'action=use_item&be_id=' + BATTLE.beId + '&ch_id=' + BATTLE.chId + '&si_id=' + siId
+    })
+    .then(r => r.json())
+    .then(function(res) {
+        if (res.success) {
+            if (typeof mgToast === 'function') mgToast(res.message || '아이템 사용!', 'success');
+            pollBattle();
+        } else {
+            alert(res.message || '아이템 사용 실패');
+        }
+    });
+}
+
+// ═══════════════════════════════════
+//  폴링 + 유틸
+// ═══════════════════════════════════
+
 function pollBattle() {
     if (!BATTLE.beId) return;
     fetch(BATTLE.apiUrl + '?action=poll&be_id=' + BATTLE.beId)
@@ -926,6 +1470,39 @@ function pollBattle() {
                                      (s%60).toString().padStart(2,'0');
                 }
             }
+            // 내 HP/EN 갱신
+            if (d.my_hp !== undefined) {
+                var hpFill = document.getElementById('my-hp-fill');
+                var hpText = document.getElementById('my-hp-text');
+                if (hpFill && d.my_max_hp) {
+                    hpFill.style.width = (d.my_max_hp > 0 ? (d.my_hp / d.my_max_hp * 100).toFixed(1) : 0) + '%';
+                }
+                if (hpText && d.my_max_hp !== undefined) {
+                    hpText.textContent = d.my_hp + ' / ' + d.my_max_hp;
+                }
+            }
+            if (d.my_energy !== undefined) {
+                BATTLE.myEnergy = d.my_energy;
+            }
+            // 참여자 HP 갱신
+            if (d.participants) {
+                d.participants.forEach(function(p) {
+                    var row = document.querySelector('#participants-list [data-ch-id="' + p.ch_id + '"]');
+                    if (!row) return;
+                    var hpBar = row.querySelector('.h-1 > div');
+                    var hpText = row.querySelector('.text-\\[10px\\]');
+                    if (hpBar && p.max_hp > 0) {
+                        var pct = Math.round(p.current_hp / p.max_hp * 100);
+                        hpBar.style.width = pct + '%';
+                        hpBar.style.background = pct > 60 ? '#22c55e' : (pct > 25 ? '#eab308' : '#ef4444');
+                    }
+                    if (hpText) {
+                        hpText.textContent = p.current_hp + ' / ' + p.max_hp + (p.current_hp <= 0 ? ' (전사)' : '');
+                    }
+                    if (p.current_hp <= 0) row.classList.add('opacity-40');
+                    else row.classList.remove('opacity-40');
+                });
+            }
             // 전투 종료 체크
             if (d.status === 'cleared' || d.status === 'failed') {
                 clearInterval(BATTLE.pollTimer);
@@ -934,15 +1511,9 @@ function pollBattle() {
         });
 }
 
-// ── 데미지 팝업 ──
+// ── 데미지 팝업 (레거시 호환) ──
 function showDmgPopup(val) {
-    var c = document.getElementById('dmg-popup-container');
-    if (!c) return;
-    var el = document.createElement('div');
-    el.style.cssText = 'position:absolute; top:35%; left:' + (40 + Math.random()*20) + '%; font-family:"Bebas Neue",sans-serif; font-size:2.5rem; color:' + (val < 0 ? '#ef4444' : '#22c55e') + '; text-shadow:0 0 12px rgba(0,0,0,0.5); letter-spacing:0.05em; animation:dmgPop 1.2s forwards; pointer-events:none;';
-    el.textContent = (val > 0 ? '+' : '') + val;
-    c.appendChild(el);
-    setTimeout(function() { el.remove(); }, 1300);
+    showMonsterEffect(val, false);
 }
 
 // ── 로그 토글 ──
@@ -961,7 +1532,6 @@ function bpStatAdjust(key, delta) {
     if (key in _bpStatPending) cur = _bpStatPending[key];
     var nv = cur + delta;
     if (nv < base) return;
-    // 총 사용량 체크
     var remainEl = document.getElementById('bp-stat-remain');
     var totalBonus = <?php echo isset($_stat_bonus_bp) ? $_stat_bonus_bp : 15; ?>;
     var used = 0;
@@ -1006,11 +1576,17 @@ document.addEventListener('DOMContentLoaded', function() {
     if (BATTLE.mode === 'view' && BATTLE.beId) {
         BATTLE.pollTimer = setInterval(pollBattle, 30000);
     }
-    // URL 파라미터 bp=1이면 프로필 모달 자동 열기
     if (new URLSearchParams(location.search).get('bp') === '1') {
         openBattleProfile();
     }
 });
 </script>
+
+<?php
+// 전투 뷰 모드에서 주사위 3D 로더 출력
+if ($mode === 'view') {
+    mg_dice_box_scripts(array('container' => '#battle-dice-box'));
+}
+?>
 
 <?php include_once(G5_THEME_PATH.'/tail.php'); ?>

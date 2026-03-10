@@ -145,6 +145,40 @@ $serial = strtoupper(substr(md5($char['ch_id'] . $char['ch_name']), 0, 8));
                 </div>
             </div>
 
+            <!-- 전투 평가 -->
+            <?php if ($_battle_use == '1' && $battle_stat) {
+                $_stat_base = (int)mg_config('battle_stat_base', '5');
+                $_mil_stats = array(
+                    array('label' => 'HP (체력)', 'val' => (int)($battle_stat['stat_hp'] ?? $_stat_base)),
+                    array('label' => 'STR (힘)', 'val' => (int)($battle_stat['stat_str'] ?? $_stat_base)),
+                    array('label' => 'DEX (민첩)', 'val' => (int)($battle_stat['stat_dex'] ?? $_stat_base)),
+                    array('label' => 'INT (지능)', 'val' => (int)($battle_stat['stat_int'] ?? $_stat_base)),
+                );
+                $_bs_stress = (int)($battle_stat['stat_stress'] ?? 0);
+                $_stress_color = $_bs_stress >= 100 ? '#dc2626' : ($_bs_stress >= 70 ? '#d97706' : '#365314');
+            ?>
+            <div class="mil-section">
+                <div class="mil-section-header" style="border-bottom:1px dashed #84cc16;">COMBAT ASSESSMENT</div>
+                <?php foreach ($_mil_stats as $ms) { ?>
+                <div class="mil-row">
+                    <div class="mil-label"><?php echo $ms['label']; ?></div>
+                    <div class="mil-val" style="font-weight:700;"><?php echo $ms['val']; ?></div>
+                </div>
+                <?php } ?>
+                <div class="mil-row" style="border-bottom:none;">
+                    <div class="mil-label">STRESS LEVEL</div>
+                    <div class="mil-val">
+                        <div style="display:flex;align-items:center;gap:0.5rem;">
+                            <div style="flex:1;height:6px;background:#e7e5e4;border-radius:2px;overflow:hidden;">
+                                <div style="width:<?php echo min(100, $_bs_stress); ?>%;height:100%;background:<?php echo $_stress_color; ?>;"></div>
+                            </div>
+                            <span style="font-weight:700;font-size:0.75rem;color:<?php echo $_stress_color; ?>;"><?php echo $_bs_stress; ?>/100</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php } ?>
+
             <!-- 업적/훈장 -->
             <?php if (!empty($achievement_showcase)) { ?>
             <div class="mil-section">

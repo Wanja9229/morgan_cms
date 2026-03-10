@@ -17,7 +17,8 @@ if (isset($is_ajax_request) && $is_ajax_request) {
     <!-- End Main Content -->
 
     <!-- Right Sidebar (Member Widget) -->
-    <aside id="widget-sidebar" class="hidden lg:block w-72 bg-mg-bg-secondary fixed right-0 top-12 bottom-0 p-4 border-l border-mg-bg-tertiary overflow-y-auto">
+    <aside id="widget-sidebar" class="hidden lg:block w-72 bg-mg-bg-secondary fixed right-0 top-12 bottom-0 border-l border-mg-bg-tertiary" style="z-index:40;flex-direction:column;overflow:hidden;">
+        <div id="widget-sidebar-scroll" class="p-4" style="flex:1;overflow-y:auto;">
 
         <?php if ($is_member) { ?>
         <?php
@@ -689,11 +690,12 @@ if (isset($is_ajax_request) && $is_ajax_request) {
                 }
             }
             if (!empty($_battle_encounters)) {
+                $_has_battle_widget = true;
         ?>
         <!-- 활성 전투 위젯 -->
-        <div id="battle-widget" style="position:sticky;bottom:0;z-index:15;margin:0 -1rem -1rem -1rem;">
-            <div style="background:linear-gradient(180deg, transparent 0%, var(--mg-bg-secondary) 40%);height:16px;pointer-events:none;"></div>
-            <div style="background:var(--mg-bg-secondary);border-top:1px solid var(--mg-accent);padding:10px 12px;">
+        </div><!-- /widget-sidebar-scroll -->
+        <div id="battle-widget" style="flex-shrink:0;z-index:15;">
+            <div style="background:var(--mg-bg-primary);border-top:2px solid var(--mg-accent);padding:10px 12px;box-shadow:0 -8px 24px rgba(0,0,0,0.5);">
                 <!-- 슬라이드 컨테이너 -->
                 <div id="bw-slides" style="position:relative;overflow:hidden;">
                     <?php foreach ($_battle_encounters as $_bi => $_be) {
@@ -810,6 +812,9 @@ if (isset($is_ajax_request) && $is_ajax_request) {
         <?php
             } // end if !empty encounters
         } // end if battle_use
+        if (empty($_has_battle_widget)) {
+            echo '</div><!-- /widget-sidebar-scroll (no battle) -->';
+        }
         ?>
 
     </aside>

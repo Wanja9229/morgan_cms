@@ -239,6 +239,20 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
             background: linear-gradient(135deg, var(--mg-accent), #ec4899);
             -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
         }
+
+        /* 우측 위젯 사이드바 flex 레이아웃 */
+        @media (min-width: 1024px) {
+            #widget-sidebar { display: flex !important; }
+        }
+
+        /* 상점 카드 개선 */
+        .shop-card-img { aspect-ratio: 4/3; }
+        .shop-card:hover { background-color: var(--mg-bg-tertiary); }
+        .shop-card { transition: all 0.2s ease; }
+        .shop-grid-gap { gap: 0.875rem; }
+        @media (min-width: 1024px) {
+            .lg\:grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+        }
     </style>
 
     <!-- 그누보드 전역 JS 변수 -->

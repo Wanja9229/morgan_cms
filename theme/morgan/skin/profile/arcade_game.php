@@ -123,23 +123,43 @@ mt_srand();
                 </div>
             </div>
 
-            <!-- 스탯 바 (미사용 — 주석 처리)
-            <div>
-                <div style="color:#666;margin-bottom:0.75rem;text-align:center;">== STATUS ==</div>
-                <?php foreach ($stats as $label => $val) {
-                    $colors = array('STR' => '#ff0080', 'DEX' => '#00ff88', 'INT' => '#00e5ff', 'WIS' => '#ffe600', 'CHA' => '#ff6b00', 'LUK' => '#bf00ff');
-                    $color = $colors[$label];
+            <!-- 전투 스탯 -->
+            <?php if ($_battle_use == '1' && $battle_stat) {
+                $_stat_base = (int)mg_config('battle_stat_base', '5');
+                $_arc_stats = array(
+                    'HP'  => array('val' => (int)($battle_stat['stat_hp'] ?? $_stat_base), 'color' => '#ff0080'),
+                    'STR' => array('val' => (int)($battle_stat['stat_str'] ?? $_stat_base), 'color' => '#00ff88'),
+                    'DEX' => array('val' => (int)($battle_stat['stat_dex'] ?? $_stat_base), 'color' => '#00e5ff'),
+                    'INT' => array('val' => (int)($battle_stat['stat_int'] ?? $_stat_base), 'color' => '#ffe600'),
+                );
+                $_arc_max = max(array_column($_arc_stats, 'val'), array(1));
+                $_arc_max = max($_arc_max) ?: 1;
+                $_bs_stress = (int)($battle_stat['stat_stress'] ?? 0);
+                $_stress_color = $_bs_stress >= 100 ? '#ff0033' : ($_bs_stress >= 70 ? '#ffe600' : '#00ff88');
+            ?>
+            <div style="margin-top:1.5rem;border-top:2px solid #333;padding-top:1rem;">
+                <div class="arc-neon-yellow" style="margin-bottom:0.75rem;text-align:center;">== BATTLE STATUS ==</div>
+                <?php foreach ($_arc_stats as $label => $s) {
+                    $pct = round(($s['val'] / $_arc_max) * 100);
                 ?>
                 <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.375rem;">
-                    <span style="width:2.5rem;text-align:right;color:<?php echo $color; ?>;"><?php echo $label; ?></span>
+                    <span style="width:2.5rem;text-align:right;color:<?php echo $s['color']; ?>;"><?php echo $label; ?></span>
                     <div class="arc-bar" style="flex:1;">
-                        <div class="arc-bar-fill" style="width:<?php echo $val; ?>%;background:<?php echo $color; ?>;"></div>
+                        <div class="arc-bar-fill" style="width:<?php echo $pct; ?>%;background:<?php echo $s['color']; ?>;"></div>
                     </div>
-                    <span style="width:1.5rem;color:<?php echo $color; ?>;"><?php echo $val; ?></span>
+                    <span style="width:1.5rem;color:<?php echo $s['color']; ?>;"><?php echo $s['val']; ?></span>
                 </div>
                 <?php } ?>
+                <!-- STRESS -->
+                <div style="margin-top:0.75rem;display:flex;align-items:center;gap:0.5rem;">
+                    <span style="width:2.5rem;text-align:right;color:<?php echo $_stress_color; ?>;">STS</span>
+                    <div class="arc-bar" style="flex:1;">
+                        <div class="arc-bar-fill" style="width:<?php echo min(100, $_bs_stress); ?>%;background:<?php echo $_stress_color; ?>;"></div>
+                    </div>
+                    <span style="width:2.5rem;color:<?php echo $_stress_color; ?>;"><?php echo $_bs_stress; ?></span>
+                </div>
             </div>
-            -->
+            <?php } ?>
 
             <!-- 업적 -->
             <?php if (!empty($achievement_showcase)) { ?>

@@ -165,6 +165,49 @@ $ch_initial = mb_substr($char['ch_name'], 0, 1);
                     </div>
                 </div>
 
+                <!-- 전투 바이탈 -->
+                <?php if ($_battle_use == '1' && $battle_stat) {
+                    $_stat_base = (int)mg_config('battle_stat_base', '5');
+                    $_med_stats = array(
+                        array('label' => 'HP', 'sub' => '체력', 'val' => (int)($battle_stat['stat_hp'] ?? $_stat_base)),
+                        array('label' => 'STR', 'sub' => '힘', 'val' => (int)($battle_stat['stat_str'] ?? $_stat_base)),
+                        array('label' => 'DEX', 'sub' => '민첩', 'val' => (int)($battle_stat['stat_dex'] ?? $_stat_base)),
+                        array('label' => 'INT', 'sub' => '지능', 'val' => (int)($battle_stat['stat_int'] ?? $_stat_base)),
+                    );
+                    $_med_max = max(array_column($_med_stats, 'val'), array(1));
+                    $_med_max = max($_med_max) ?: 1;
+                    $_bs_stress = (int)($battle_stat['stat_stress'] ?? 0);
+                    $_stress_color = $_bs_stress >= 100 ? '#ef4444' : ($_bs_stress >= 70 ? '#f59e0b' : '#0d9488');
+                ?>
+                <div style="padding:1rem 1.5rem;border-bottom:1px solid #e2e8f0;">
+                    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;">
+                        <span style="color:#0d9488;font-size:1.125rem;">&#9829;</span>
+                        <span style="font-size:0.6875rem;color:#64748b;text-transform:uppercase;letter-spacing:0.1em;font-weight:600;" class="med-mono">COMBAT VITALS</span>
+                    </div>
+                    <?php foreach ($_med_stats as $ms) {
+                        $pct = round(($ms['val'] / $_med_max) * 100);
+                    ?>
+                    <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem;">
+                        <span style="width:70px;font-size:0.8125rem;font-weight:600;color:#0d9488;" class="med-mono"><?php echo $ms['label']; ?> <span style="color:#94a3b8;font-weight:400;font-size:0.6875rem;"><?php echo $ms['sub']; ?></span></span>
+                        <div style="flex:1;height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden;">
+                            <div style="width:<?php echo $pct; ?>%;height:100%;background:#0d9488;border-radius:4px;transition:width 0.3s;"></div>
+                        </div>
+                        <span style="width:30px;text-align:right;font-size:0.8125rem;font-weight:700;color:#0d9488;" class="med-mono"><?php echo $ms['val']; ?></span>
+                    </div>
+                    <?php } ?>
+                    <!-- 스트레스 지수 -->
+                    <div style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px dashed #e2e8f0;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.375rem;">
+                            <span style="font-size:0.8125rem;font-weight:600;color:#64748b;">스트레스 지수</span>
+                            <span style="font-size:0.8125rem;font-weight:700;color:<?php echo $_stress_color; ?>;" class="med-mono"><?php echo $_bs_stress; ?>/100</span>
+                        </div>
+                        <div style="height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden;">
+                            <div style="width:<?php echo min(100, $_bs_stress); ?>%;height:100%;background:<?php echo $_stress_color; ?>;border-radius:4px;transition:width 0.3s;"></div>
+                        </div>
+                    </div>
+                </div>
+                <?php } ?>
+
                 <!-- 업적 -->
                 <?php if (!empty($achievement_showcase)) { ?>
                 <div style="padding:1rem 1.5rem;border-bottom:1px solid #e2e8f0;">

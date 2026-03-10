@@ -121,6 +121,36 @@ $ch_owner = htmlspecialchars($char['mb_nick']);
             </div>
         </div>
 
+        <!-- 전투 기록 -->
+        <?php if ($_battle_use == '1' && $battle_stat) {
+            $_stat_base = (int)mg_config('battle_stat_base', '5');
+            $bs_hp = (int)($battle_stat['stat_hp'] ?? $_stat_base);
+            $bs_str = (int)($battle_stat['stat_str'] ?? $_stat_base);
+            $bs_dex = (int)($battle_stat['stat_dex'] ?? $_stat_base);
+            $bs_int = (int)($battle_stat['stat_int'] ?? $_stat_base);
+            $bs_stress = (int)($battle_stat['stat_stress'] ?? 0);
+            $stress_color = $bs_stress >= 100 ? '#8b0000' : ($bs_stress >= 70 ? '#b45309' : '#15803d');
+        ?>
+        <div class="wt-field-row" style="background:rgba(0,0,0,0.05);padding:1rem;border-radius:0.25rem;margin-top:1rem;margin-bottom:1rem;">
+            <p class="wt-western" style="font-weight:bold;text-decoration:underline;margin-bottom:0.75rem;font-size:1.125rem;">COMBAT RECORD:</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 1.5rem;">
+                <p><strong>HP / 체력</strong> — <span style="font-size:1.25rem;color:#8b0000;" class="wt-western"><?php echo $bs_hp; ?></span></p>
+                <p><strong>STR / 힘</strong> — <span style="font-size:1.25rem;color:#8b0000;" class="wt-western"><?php echo $bs_str; ?></span></p>
+                <p><strong>DEX / 민첩</strong> — <span style="font-size:1.25rem;color:#8b0000;" class="wt-western"><?php echo $bs_dex; ?></span></p>
+                <p><strong>INT / 지능</strong> — <span style="font-size:1.25rem;color:#8b0000;" class="wt-western"><?php echo $bs_int; ?></span></p>
+            </div>
+            <div style="margin-top:0.75rem;border-top:1px solid rgba(58,42,26,0.2);padding-top:0.75rem;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:0.375rem;">
+                    <strong>스트레스</strong>
+                    <span style="color:<?php echo $stress_color; ?>;font-weight:bold;"><?php echo $bs_stress; ?>%</span>
+                </div>
+                <div style="height:10px;background:rgba(58,42,26,0.15);border:1px solid rgba(58,42,26,0.3);overflow:hidden;">
+                    <div style="height:100%;width:<?php echo min($bs_stress, 100); ?>%;background:<?php echo $stress_color; ?>;transition:width 0.3s;"></div>
+                </div>
+            </div>
+        </div>
+        <?php } ?>
+
         <!-- 프로필 필드 -->
         <div style="margin-top:2rem;border-top:4px solid #3a2a1a;padding-top:1.5rem;">
             <?php if ($ch_side || $ch_class) { ?>
@@ -163,6 +193,7 @@ $ch_owner = htmlspecialchars($char['mb_nick']);
                 </ul>
             </div>
             <?php } ?>
+
         </div>
 
         <!-- 관계 -->

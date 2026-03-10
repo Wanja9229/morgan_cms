@@ -133,20 +133,27 @@ switch ($action) {
 
         // 참여자
         $slots = array();
-        $s_res = sql_query("SELECT bs.ch_id, bs.current_hp, bs.max_hp, bs.total_damage, bs.slot_role
+        $s_res = sql_query("SELECT bs.*
                             FROM {$g5['mg_battle_slot_table']} bs
                             WHERE bs.be_id = {$be_id}
-                            ORDER BY bs.total_damage DESC");
+                            ORDER BY (bs.total_damage + bs.total_heal + bs.buff_count * 50 + bs.debuff_count * 50 + bs.taunt_absorb * 80) DESC");
         while ($s = sql_fetch_array($s_res)) {
             $ch = sql_fetch("SELECT ch_name, ch_thumb FROM {$g5['mg_character_table']} WHERE ch_id = " . (int)$s['ch_id']);
+            $contribution = (int)$s['total_damage'] + (int)$s['total_heal']
+                          + (int)$s['buff_count'] * 50 + (int)$s['debuff_count'] * 50
+                          + (int)$s['taunt_absorb'] * 80;
             $slots[] = array(
                 'ch_id' => (int)$s['ch_id'],
+                'mb_id' => $s['mb_id'],
                 'ch_name' => $ch ? $ch['ch_name'] : '',
                 'ch_thumb' => $ch ? $ch['ch_thumb'] : '',
                 'hp' => (int)$s['current_hp'],
                 'max_hp' => (int)$s['max_hp'],
-                'contribution' => (int)$s['total_damage'],
+                'status' => $s['slot_status'],
+                'contribution' => $contribution,
                 'role' => $s['slot_role'],
+                'buffs' => json_decode($s['buffs_active'] ?? '[]', true),
+                'dice_effects' => json_decode($s['dice_effects'] ?? '[]', true),
             );
         }
 
@@ -159,7 +166,10 @@ switch ($action) {
                 'time' => date('H:i', strtotime($l['bl_datetime'])),
                 'actor' => $actor ? $actor['ch_name'] : '',
                 'action' => $l['bl_action'],
-                'value' => (int)$l['bl_value'],
+                'damage' => (int)($l['bl_damage'] ?? 0),
+                'heal' => (int)($l['bl_heal'] ?? 0),
+                'dice' => (int)($l['bl_dice'] ?? 0),
+                'is_crit' => (int)($l['bl_is_crit'] ?? 0),
                 'detail' => $l['bl_detail'] ?? '',
             );
         }
@@ -168,6 +178,7 @@ switch ($action) {
             'status' => $enc['be_status'],
             'boss_hp' => $boss_hp,
             'boss_max_hp' => $boss_max,
+            'monsters' => $monsters,
             'time_remaining' => $time_remaining,
             'slots' => $slots,
             'logs' => $logs,
@@ -219,12 +230,14 @@ switch ($action) {
         }
         break;
 
-    // ═══ 전투 행동 ═══
+    // ═══ 전투 행동 (전체 스킬 타입 + 주사위) ═══
     case 'battle_action':
         $be_id = (int)($_POST['be_id'] ?? 0);
         $ch_id = (int)($_POST['ch_id'] ?? 0);
         $type  = isset($_POST['type']) ? clean_xss_tags($_POST['type']) : '';
-        $target_ch_id = (int)($_POST['target_ch_id'] ?? 0);
+        $sk_id = (int)($_POST['sk_id'] ?? 0);
+        $target_idx = (int)($_POST['target_idx'] ?? 0);  // 몬스터 인스턴스 인덱스
+        $target_ch_ids_raw = isset($_POST['target_ch_ids']) ? $_POST['target_ch_ids'] : '';
 
         if (!$be_id || !$ch_id || !$type) {
             echo json_encode(array('success' => false, 'message' => '잘못된 요청'));
@@ -238,20 +251,49 @@ switch ($action) {
             exit;
         }
 
+        // 시간 초과 체크
+        if ($enc['be_status'] === 'active' && $enc['be_started_at']) {
+            $elapsed = time() - strtotime($enc['be_started_at']);
+            if ($elapsed >= (int)$enc['be_time_limit']) {
+                sql_query("UPDATE {$g5['mg_battle_encounter_table']} SET be_status = 'failed', be_ended_at = NOW() WHERE be_id = {$be_id} AND be_status = 'active'");
+                echo json_encode(array('success' => false, 'message' => '제한 시간이 초과되었습니다.'));
+                exit;
+            }
+        }
+
         // 내 슬롯 확인
         $my_slot = sql_fetch("SELECT * FROM {$g5['mg_battle_slot_table']} WHERE be_id = {$be_id} AND ch_id = {$ch_id} AND mb_id = '{$mb_id}'");
         if (!$my_slot) {
             echo json_encode(array('success' => false, 'message' => '전투에 참여하지 않았습니다.'));
             exit;
         }
-        if ((int)$my_slot['current_hp'] <= 0) {
+        if ($my_slot['slot_status'] === 'dead' || (int)$my_slot['current_hp'] <= 0) {
             echo json_encode(array('success' => false, 'message' => '전사 상태에서는 행동할 수 없습니다.'));
             exit;
         }
 
+        // HP 자동회복 (lazy)
+        mg_battle_apply_hp_regen($ch_id, $be_id);
+
+        // 스킬 정보 로드 (type=skill 시)
+        $skill = null;
+        $en_cost = 1; // 기본공격 = 1
+
+        if ($type === 'skill') {
+            if (!$sk_id) {
+                echo json_encode(array('success' => false, 'message' => '스킬을 선택해주세요.'));
+                exit;
+            }
+            $skill = sql_fetch("SELECT * FROM {$g5['mg_battle_skill_table']} WHERE sk_id = {$sk_id} AND sk_use = 1");
+            if (!$skill) {
+                echo json_encode(array('success' => false, 'message' => '존재하지 않는 스킬입니다.'));
+                exit;
+            }
+            $en_cost = (int)$skill['sk_stamina'];
+        }
+
         // 기력 확인
         $energy = mg_battle_get_energy($ch_id);
-        $en_cost = ($type === 'attack') ? 1 : 2;
         if ($energy['current'] < $en_cost) {
             echo json_encode(array('success' => false, 'message' => '기력이 부족합니다. (필요: ' . $en_cost . ', 보유: ' . $energy['current'] . ')'));
             exit;
@@ -262,23 +304,107 @@ switch ($action) {
             sql_query("UPDATE {$g5['mg_battle_encounter_table']} SET be_status = 'active', be_started_at = NOW() WHERE be_id = {$be_id} AND be_status = 'discovered'");
         }
 
-        // 파생 수치 계산
-        $derived = mg_battle_calc_derived($ch_id);
+        // 파생 수치 계산 + 활성 버프 적용
+        $derived_raw = mg_battle_calc_derived($ch_id);
+        $my_buffs = json_decode($my_slot['buffs_active'] ?? '[]', true);
+        $derived = mg_battle_apply_buffs($derived_raw, $my_buffs);
 
         // 기력 소모
         mg_battle_use_energy($ch_id, $en_cost);
 
-        // 행동 처리
-        $result_data = array('damage' => 0, 'heal' => 0, 'message' => '');
+        // 주사위 굴림
+        $dice = mg_battle_roll_dice($ch_id, $be_id);
+
+        // 몬스터 데이터
         $monsters = json_decode($enc['be_monsters'] ?? '[]', true);
         if (!is_array($monsters)) $monsters = array();
 
-        switch ($type) {
-            case 'attack':
-                // 일반공격: 물리 데미지
-                $base_dmg = max(1, $derived['atk']);
-                $variance = mt_rand(90, 110) / 100;
-                $damage = max(1, round($base_dmg * $variance));
+        // 몬스터 디버프 보정
+        $debuff_mods = mg_battle_get_debuff_mods($be_id);
+
+        // 행동 결과
+        $result_data = array(
+            'damage' => 0, 'heal' => 0, 'message' => '',
+            'is_crit' => false, 'dice' => $dice['roll'],
+            'dice_multiplier' => $dice['multiplier'],
+            'dice_item' => $dice['item_used'],
+        );
+
+        $log_action = $type;
+        $log_target_type = 'monster';
+        $log_target_id = 0;
+        $log_dmg = 0;
+        $log_heal = 0;
+        $do_counter = true; // 반격 발생 여부
+
+        // ─── 일반공격 ───
+        if ($type === 'attack') {
+            $base_atk = max(1, $derived['atk']);
+            $damage = max(1, round($base_atk * $dice['multiplier']));
+
+            // 몬스터 DEF 적용 (디버프 감소 반영)
+            $mon_def = 0;
+            foreach ($monsters as $m) {
+                if ((int)$m['hp'] > 0) {
+                    $mon_def = (int)($m['def'] ?? 0);
+                    break;
+                }
+            }
+            $effective_def = max(0, round($mon_def * (100 - ($debuff_mods['def'] ?? 0)) / 100));
+            $damage = max(1, $damage - $effective_def);
+
+            // 크리티컬
+            $is_crit = (mt_rand(1, 100) <= $derived['crit_rate']);
+            if ($is_crit) {
+                $damage = round($damage * $derived['crit_mult'] / 100);
+            }
+
+            // 타겟 몬스터에 적용
+            $hit_monster = null;
+            foreach ($monsters as &$m) {
+                if ((int)$m['hp'] > 0 && (int)$m['idx'] === $target_idx) {
+                    $m['hp'] = max(0, (int)$m['hp'] - $damage);
+                    $hit_monster = $m;
+                    break;
+                }
+            }
+            // 지정 타겟이 없으면 첫 번째 생존 몬스터
+            if (!$hit_monster) {
+                foreach ($monsters as &$m) {
+                    if ((int)$m['hp'] > 0) {
+                        $m['hp'] = max(0, (int)$m['hp'] - $damage);
+                        $hit_monster = $m;
+                        break;
+                    }
+                }
+            }
+            unset($m);
+
+            $result_data['damage'] = -$damage;
+            $result_data['is_crit'] = $is_crit;
+            $result_data['action_type'] = 'attack';
+            $result_data['message'] = '일반공격 ' . ($is_crit ? '(크리티컬!) ' : '') . '-' . $damage . ' [🎲' . $dice['roll'] . ']';
+            $log_dmg = $damage;
+            $log_action = 'attack';
+
+            sql_query("UPDATE {$g5['mg_battle_slot_table']} SET total_damage = total_damage + {$damage}, action_count = action_count + 1 WHERE bsl_id = " . (int)$my_slot['bsl_id']);
+
+        // ─── 스킬 행동 ───
+        } elseif ($type === 'skill' && $skill) {
+            $sk_type = $skill['sk_type'];
+            $sk_target = $skill['sk_target'];
+            $sk_base_stat = $skill['sk_base_stat'];
+            $sk_mult = (float)$skill['sk_multiplier'];
+            $log_action = $skill['sk_code'];
+
+            // ── 데미지 스킬 ──
+            if ($sk_type === 'damage') {
+                // 기반 스탯에 따른 공격력 결정
+                $base_val = $derived['atk']; // STR 기반
+                if ($sk_base_stat === 'dex') $base_val = $derived['satk'];
+                elseif ($sk_base_stat === 'int') $base_val = $derived['support'];
+
+                $damage = max(1, round($base_val * $sk_mult * $dice['multiplier']));
 
                 // 크리티컬
                 $is_crit = (mt_rand(1, 100) <= $derived['crit_rate']);
@@ -286,106 +412,460 @@ switch ($action) {
                     $damage = round($damage * $derived['crit_mult'] / 100);
                 }
 
-                // 몬스터에 데미지 적용 (첫 번째 생존 몬스터)
-                foreach ($monsters as &$m) {
-                    if ((int)$m['hp'] > 0) {
-                        $m['hp'] = max(0, (int)$m['hp'] - $damage);
+                // 대상: 적 1체 또는 전체
+                if ($sk_target === 'enemy_all') {
+                    // 전체공격: 모든 생존 몬스터에 데미지
+                    $total_dealt = 0;
+                    foreach ($monsters as &$m) {
+                        if ((int)$m['hp'] > 0) {
+                            $m_def = max(0, round((int)($m['def'] ?? 0) * (100 - ($debuff_mods['def'] ?? 0)) / 100));
+                            $actual = max(1, $damage - $m_def);
+                            $m['hp'] = max(0, (int)$m['hp'] - $actual);
+                            $total_dealt += $actual;
+                        }
+                    }
+                    unset($m);
+                    $result_data['damage'] = -$total_dealt;
+                    $result_data['is_crit'] = $is_crit;
+                    $result_data['action_type'] = 'damage';
+                    $result_data['message'] = $skill['sk_name'] . ' (전체) ' . ($is_crit ? '(크리티컬!) ' : '') . '-' . $total_dealt . ' [🎲' . $dice['roll'] . ']';
+                    $log_dmg = $total_dealt;
+                    sql_query("UPDATE {$g5['mg_battle_slot_table']} SET total_damage = total_damage + {$total_dealt}, action_count = action_count + 1 WHERE bsl_id = " . (int)$my_slot['bsl_id']);
+                } else {
+                    // 단일 대상
+                    $hit = false;
+                    foreach ($monsters as &$m) {
+                        if ((int)$m['hp'] > 0 && ((int)$m['idx'] === $target_idx || !$hit)) {
+                            $m_def = max(0, round((int)($m['def'] ?? 0) * (100 - ($debuff_mods['def'] ?? 0)) / 100));
+                            $damage = max(1, $damage - $m_def);
+                            $m['hp'] = max(0, (int)$m['hp'] - $damage);
+                            $hit = true;
+                            break;
+                        }
+                    }
+                    unset($m);
+                    $result_data['damage'] = -$damage;
+                    $result_data['is_crit'] = $is_crit;
+                    $result_data['action_type'] = 'damage';
+                    $result_data['message'] = $skill['sk_name'] . ' ' . ($is_crit ? '(크리티컬!) ' : '') . '-' . $damage . ' [🎲' . $dice['roll'] . ']';
+                    $log_dmg = $damage;
+                    sql_query("UPDATE {$g5['mg_battle_slot_table']} SET total_damage = total_damage + {$damage}, action_count = action_count + 1 WHERE bsl_id = " . (int)$my_slot['bsl_id']);
+                }
+
+            // ── 회복 스킬 ──
+            } elseif ($sk_type === 'heal') {
+                $base_heal = max(1, $derived['support']);
+                $heal_amount = max(1, round($base_heal * $sk_mult * $dice['multiplier']));
+                $do_counter = false; // 힐은 반격 없음
+                $log_target_type = 'player';
+
+                // 부활 스킬 특수 처리
+                if ($skill['sk_code'] === 'revive') {
+                    $revive_hp = max(1, $derived_raw['stat_int'] * 3);
+                    $revive_hp = round($revive_hp * $dice['multiplier']);
+                    $target_ch_ids = array_map('intval', explode(',', $target_ch_ids_raw));
+                    $revived = 0;
+
+                    foreach ($target_ch_ids as $tch) {
+                        if ($tch <= 0) continue;
+                        $dead_slot = sql_fetch("SELECT bsl_id, max_hp FROM {$g5['mg_battle_slot_table']}
+                                                WHERE be_id = {$be_id} AND ch_id = {$tch} AND slot_status = 'dead'");
+                        if ($dead_slot) {
+                            $revive_final = min($revive_hp, (int)$dead_slot['max_hp']);
+                            sql_query("UPDATE {$g5['mg_battle_slot_table']} SET current_hp = {$revive_final}, slot_status = 'active' WHERE bsl_id = " . (int)$dead_slot['bsl_id']);
+                            $revived++;
+                            break; // 부활은 1명만
+                        }
+                    }
+
+                    $result_data['heal'] = $revive_hp;
+                    $result_data['action_type'] = 'heal';
+                    $result_data['message'] = $skill['sk_name'] . ' — 부활! HP ' . $revive_hp . ' [🎲' . $dice['roll'] . ']';
+                    $log_heal = $revive_hp;
+                    sql_query("UPDATE {$g5['mg_battle_slot_table']} SET total_heal = total_heal + {$revive_hp}, action_count = action_count + 1 WHERE bsl_id = " . (int)$my_slot['bsl_id']);
+
+                } else {
+                    // 일반 힐 / 전체힐
+                    $target_ch_ids = array();
+                    $total_healed = 0;
+
+                    if ($sk_target === 'ally_all') {
+                        // 전체힐: 생존 아군 전체
+                        $allies = sql_query("SELECT ch_id, current_hp, max_hp FROM {$g5['mg_battle_slot_table']}
+                                             WHERE be_id = {$be_id} AND slot_status = 'active'");
+                        while ($ally = sql_fetch_array($allies)) {
+                            $can_heal = (int)$ally['max_hp'] - (int)$ally['current_hp'];
+                            if ($can_heal > 0) {
+                                $actual_heal = min($heal_amount, $can_heal);
+                                sql_query("UPDATE {$g5['mg_battle_slot_table']} SET current_hp = current_hp + {$actual_heal}
+                                           WHERE be_id = {$be_id} AND ch_id = " . (int)$ally['ch_id']);
+                                $total_healed += $actual_heal;
+                            }
+                        }
+                    } else {
+                        // 아군 N명 선택 힐
+                        $target_ch_ids = array_map('intval', explode(',', $target_ch_ids_raw));
+                        $max_targets = (int)$skill['sk_target_count'];
+                        $healed_count = 0;
+
+                        foreach ($target_ch_ids as $tch) {
+                            if ($tch <= 0 || $healed_count >= $max_targets) continue;
+                            $ally = sql_fetch("SELECT current_hp, max_hp FROM {$g5['mg_battle_slot_table']}
+                                               WHERE be_id = {$be_id} AND ch_id = {$tch} AND slot_status = 'active'");
+                            if ($ally) {
+                                $can_heal = (int)$ally['max_hp'] - (int)$ally['current_hp'];
+                                if ($can_heal > 0) {
+                                    $actual_heal = min($heal_amount, $can_heal);
+                                    sql_query("UPDATE {$g5['mg_battle_slot_table']} SET current_hp = current_hp + {$actual_heal}
+                                               WHERE be_id = {$be_id} AND ch_id = {$tch}");
+                                    $total_healed += $actual_heal;
+                                }
+                                $healed_count++;
+                            }
+                        }
+                    }
+
+                    $result_data['heal'] = $total_healed;
+                    $result_data['action_type'] = 'heal';
+                    $result_data['message'] = $skill['sk_name'] . ' +' . $total_healed . ' HP [🎲' . $dice['roll'] . ']';
+                    $log_heal = $total_healed;
+                    sql_query("UPDATE {$g5['mg_battle_slot_table']} SET total_heal = total_heal + {$total_healed}, action_count = action_count + 1 WHERE bsl_id = " . (int)$my_slot['bsl_id']);
+                }
+
+            // ── 버프 스킬 ──
+            } elseif ($sk_type === 'buff') {
+                $do_counter = false;
+                $log_target_type = 'player';
+                $buff_stat = $skill['sk_buff_stat'];
+                $buff_value = (int)$skill['sk_buff_value'];
+                $buff_turns = (int)$skill['sk_buff_turns'];
+
+                // 주사위 17~20이면 +1턴 보너스 (d20 상위 20%)
+                $dice_sides = mg_battle_dice_sides();
+                if ($dice['roll'] >= ceil($dice_sides * 0.85)) $buff_turns += 1;
+
+                $target_ch_ids = array_map('intval', explode(',', $target_ch_ids_raw));
+                $max_targets = (int)$skill['sk_target_count'];
+                $buffed = 0;
+
+                foreach ($target_ch_ids as $tch) {
+                    if ($tch <= 0 || $buffed >= $max_targets) continue;
+                    $ally = sql_fetch("SELECT slot_status FROM {$g5['mg_battle_slot_table']}
+                                       WHERE be_id = {$be_id} AND ch_id = {$tch} AND slot_status = 'active'");
+                    if ($ally) {
+                        mg_battle_add_buff($tch, $be_id, $buff_stat, $buff_value, $buff_turns);
+                        $buffed++;
+                    }
+                }
+
+                $result_data['action_type'] = 'buff';
+                $result_data['buff_stat'] = strtoupper($buff_stat);
+                $result_data['buff_value'] = $buff_value;
+                $result_data['message'] = $skill['sk_name'] . ' — ' . strtoupper($buff_stat) . ' +' . $buff_value . '% (' . $buff_turns . '턴) [🎲' . $dice['roll'] . ']';
+                sql_query("UPDATE {$g5['mg_battle_slot_table']} SET buff_count = buff_count + 1, action_count = action_count + 1 WHERE bsl_id = " . (int)$my_slot['bsl_id']);
+
+            // ── 디버프 스킬 ──
+            } elseif ($sk_type === 'debuff') {
+                $debuff_stat = $skill['sk_buff_stat'];
+                $debuff_value = (int)$skill['sk_buff_value'];
+                $debuff_duration_min = (int)$skill['sk_buff_turns']; // 분 단위로 사용
+                if ($debuff_duration_min <= 0) $debuff_duration_min = 5;
+
+                // 주사위 17~20이면 +1분 보너스
+                if ($dice['roll'] >= ceil(mg_battle_dice_sides() * 0.85)) $debuff_duration_min += 1;
+
+                $expires_at = date('Y-m-d H:i:s', time() + ($debuff_duration_min * 60));
+                $log_target_type = 'monster';
+
+                // 인카운터에 디버프 추가 (같은 스탯은 갱신)
+                $debuffs = json_decode($enc['be_debuffs'] ?? '[]', true);
+                if (!is_array($debuffs)) $debuffs = array();
+
+                $found = false;
+                foreach ($debuffs as &$d) {
+                    if (($d['stat'] ?? '') === $debuff_stat) {
+                        $d['value'] = $debuff_value;
+                        $d['expires_at'] = $expires_at;
+                        $d['caster_ch_id'] = $ch_id;
+                        $found = true;
                         break;
                     }
                 }
-                unset($m);
+                unset($d);
 
-                $result_data['damage'] = -$damage;
-                $result_data['is_crit'] = $is_crit;
-                $result_data['message'] = '일반공격 ' . ($is_crit ? '(크리티컬!) ' : '') . '-' . $damage;
+                if (!$found) {
+                    $debuffs[] = array('stat' => $debuff_stat, 'value' => $debuff_value, 'expires_at' => $expires_at, 'caster_ch_id' => $ch_id);
+                }
 
-                // 기여도 증가
-                sql_query("UPDATE {$g5['mg_battle_slot_table']} SET total_damage = total_damage + {$damage}, bs_action_count = bs_action_count + 1 WHERE bsl_id = " . (int)$my_slot['bsl_id']);
+                $debuffs_json = sql_real_escape_string(json_encode($debuffs));
+                sql_query("UPDATE {$g5['mg_battle_encounter_table']} SET be_debuffs = '{$debuffs_json}' WHERE be_id = {$be_id}");
 
-                // 반격 처리 (도발 큐 기반)
+                $result_data['action_type'] = 'debuff';
+                $result_data['debuff_stat'] = strtoupper($debuff_stat);
+                $result_data['debuff_value'] = $debuff_value;
+                $result_data['message'] = $skill['sk_name'] . ' — 적 ' . strtoupper($debuff_stat) . ' -' . $debuff_value . '% (' . $debuff_duration_min . '분) [🎲' . $dice['roll'] . ']';
+                sql_query("UPDATE {$g5['mg_battle_slot_table']} SET debuff_count = debuff_count + 1, action_count = action_count + 1 WHERE bsl_id = " . (int)$my_slot['bsl_id']);
+
+            // ── 도발/수호 스킬 ──
+            } elseif ($sk_type === 'taunt') {
+                $do_counter = false; // 도발 자체는 반격 안 받음
+                $log_target_type = 'self';
+                $taunt_turns = (int)$skill['sk_buff_turns'];
+                if ($taunt_turns <= 0) $taunt_turns = (int)mg_battle_config('taunt_turns', 5);
+
+                // Natural 20이면 +1회 보너스
+                if ($dice['roll'] >= mg_battle_dice_sides()) $taunt_turns += 1;
+
+                $is_guard = ((int)$skill['sk_guard_reduction'] > 0);
+                $guard_reduction = (int)$skill['sk_guard_reduction'];
+
+                // 도발 큐에 추가
                 $taunt_queue = json_decode($enc['taunt_queue'] ?? '[]', true);
-                $counter_target_ch = $ch_id; // 기본: 행동자에게 반격
+                if (!is_array($taunt_queue)) $taunt_queue = array();
 
-                if (!empty($taunt_queue)) {
-                    $counter_target_ch = (int)$taunt_queue[0]['ch_id'];
-                    $taunt_queue[0]['remaining'] = (int)$taunt_queue[0]['remaining'] - 1;
-                    if ($taunt_queue[0]['remaining'] <= 0) {
-                        array_shift($taunt_queue);
-                    }
-                    sql_query("UPDATE {$g5['mg_battle_encounter_table']} SET taunt_queue = '" . sql_real_escape_string(json_encode($taunt_queue)) . "' WHERE be_id = {$be_id}");
-                }
+                $taunt_queue[] = array(
+                    'ch_id' => $ch_id,
+                    'remaining' => $taunt_turns,
+                    'is_guard' => $is_guard,
+                    'guard_reduction' => $guard_reduction,
+                );
 
-                // 반격 데미지 (몬스터 ATK 기반)
-                $mon_template = sql_fetch("SELECT bm_atk FROM {$g5['mg_battle_monster_table']} WHERE bm_id = " . (int)$enc['bm_id']);
-                if ($mon_template) {
-                    $counter_dmg = max(1, round((int)$mon_template['bm_atk'] * mt_rand(80, 120) / 100));
+                $tq_json = sql_real_escape_string(json_encode($taunt_queue));
+                sql_query("UPDATE {$g5['mg_battle_encounter_table']} SET taunt_queue = '{$tq_json}' WHERE be_id = {$be_id}");
 
-                    // 도발 대상의 방어력 적용
-                    $target_derived = mg_battle_calc_derived($counter_target_ch);
-                    $counter_dmg = max(1, $counter_dmg - (int)($target_derived['def'] ?? 0));
-
-                    // 도발 대상 HP 감소
-                    sql_query("UPDATE {$g5['mg_battle_slot_table']} SET current_hp = GREATEST(0, current_hp - {$counter_dmg}) WHERE be_id = {$be_id} AND ch_id = {$counter_target_ch}");
-
-                    // 반격 로그
-                    $counter_ch_name = sql_fetch("SELECT ch_name FROM {$g5['mg_character_table']} WHERE ch_id = {$counter_target_ch}");
-                    sql_query("INSERT INTO {$g5['mg_battle_log_table']} (be_id, mb_id, ch_id, bl_action, bl_target_type, bl_target_id, bl_damage, bl_counter, bl_counter_target_ch, bl_detail, bl_datetime)
-                               VALUES ({$be_id}, '', 0, 'counter', 'player', {$counter_target_ch}, {$counter_dmg}, {$counter_dmg}, {$counter_target_ch}, '보스 반격" . ($counter_target_ch !== $ch_id ? ' (도발 흡수)' : '') . "', NOW())");
-                }
-                break;
-
-            case 'skill':
-                // TODO: 스킬 선택 UI → 스킬 ID로 처리
-                // 임시: 기본 스킬 공격 (ATK * 1.5)
-                $base_dmg = max(1, round($derived['atk'] * 1.5));
-                $damage = max(1, round($base_dmg * mt_rand(90, 110) / 100));
-
-                foreach ($monsters as &$m) {
-                    if ((int)$m['hp'] > 0) {
-                        $m['hp'] = max(0, (int)$m['hp'] - $damage);
-                        break;
-                    }
-                }
-                unset($m);
-
-                $result_data['damage'] = -$damage;
-                $result_data['message'] = '스킬 공격 -' . $damage;
-                sql_query("UPDATE {$g5['mg_battle_slot_table']} SET total_damage = total_damage + {$damage}, bs_action_count = bs_action_count + 1 WHERE bsl_id = " . (int)$my_slot['bsl_id']);
-                break;
-
-            case 'item':
-                // TODO: 아이템 사용 UI
-                $result_data['message'] = '아이템 기능 준비 중';
-                break;
+                $guard_label = $is_guard ? ' (수호: 피해 ' . $guard_reduction . '% 감소)' : '';
+                $result_data['action_type'] = 'taunt';
+                $result_data['message'] = $skill['sk_name'] . ' — ' . $taunt_turns . '회 반격 흡수' . $guard_label . ' [🎲' . $dice['roll'] . ']';
+                sql_query("UPDATE {$g5['mg_battle_slot_table']} SET action_count = action_count + 1 WHERE bsl_id = " . (int)$my_slot['bsl_id']);
+            }
         }
 
-        // 몬스터 HP 업데이트
+        // ─── 반격 처리 (공격 계열 행동 시에만) ───
+        $counter_data = null;
+        if ($do_counter) {
+            $taunt_queue = json_decode($enc['taunt_queue'] ?? '[]', true);
+            if (!is_array($taunt_queue)) $taunt_queue = array();
+
+            // 도발 큐 리프레시 (수정된 큐가 있을 수 있으므로)
+            if ($type === 'skill' && $skill && $skill['sk_type'] === 'taunt') {
+                $taunt_queue = json_decode(sql_fetch("SELECT taunt_queue FROM {$g5['mg_battle_encounter_table']} WHERE be_id = {$be_id}")['taunt_queue'] ?? '[]', true);
+            }
+
+            $counter_target_ch = $ch_id; // 기본: 행동자
+            $guard_reduction_pct = 0;
+
+            if (!empty($taunt_queue)) {
+                $counter_target_ch = (int)$taunt_queue[0]['ch_id'];
+                $guard_reduction_pct = !empty($taunt_queue[0]['is_guard']) ? (int)$taunt_queue[0]['guard_reduction'] : 0;
+
+                // 도발 횟수 차감
+                $taunt_queue[0]['remaining'] = (int)$taunt_queue[0]['remaining'] - 1;
+                if ($taunt_queue[0]['remaining'] <= 0) {
+                    array_shift($taunt_queue);
+                }
+
+                $tq_json = sql_real_escape_string(json_encode(array_values($taunt_queue)));
+                sql_query("UPDATE {$g5['mg_battle_encounter_table']} SET taunt_queue = '{$tq_json}' WHERE be_id = {$be_id}");
+
+                // 도발 흡수 카운트 증가
+                if ($counter_target_ch !== $ch_id) {
+                    sql_query("UPDATE {$g5['mg_battle_slot_table']} SET taunt_absorb = taunt_absorb + 1
+                               WHERE be_id = {$be_id} AND ch_id = {$counter_target_ch}");
+                }
+            }
+
+            // 반격 데미지 계산
+            $mon_template = sql_fetch("SELECT bm_atk FROM {$g5['mg_battle_monster_table']} WHERE bm_id = " . (int)$enc['bm_id']);
+            if ($mon_template) {
+                $mon_atk = (int)$mon_template['bm_atk'];
+                // 몬스터 ATK 디버프 적용
+                $mon_atk = max(1, round($mon_atk * (100 - ($debuff_mods['atk'] ?? 0)) / 100));
+                $counter_dmg = max(1, round($mon_atk * mt_rand(80, 120) / 100));
+
+                // 대상 방어력 적용
+                $target_derived = mg_battle_calc_derived($counter_target_ch);
+                $target_buffs = json_decode(sql_fetch("SELECT buffs_active FROM {$g5['mg_battle_slot_table']} WHERE be_id = {$be_id} AND ch_id = {$counter_target_ch}")['buffs_active'] ?? '[]', true);
+                $target_derived = mg_battle_apply_buffs($target_derived, $target_buffs);
+                $counter_dmg = max(1, $counter_dmg - (int)($target_derived['def'] ?? 0));
+
+                // 수호 감소율 적용
+                if ($guard_reduction_pct > 0) {
+                    $counter_dmg = max(1, round($counter_dmg * (100 - $guard_reduction_pct) / 100));
+                }
+
+                // 회피 판정
+                $evaded = false;
+                if ((int)($target_derived['evasion'] ?? 0) > 0 && mt_rand(1, 100) <= (int)$target_derived['evasion']) {
+                    $evaded = true;
+                    $counter_dmg = 0;
+                }
+
+                if (!$evaded) {
+                    // HP 감소
+                    sql_query("UPDATE {$g5['mg_battle_slot_table']} SET current_hp = GREATEST(0, current_hp - {$counter_dmg})
+                               WHERE be_id = {$be_id} AND ch_id = {$counter_target_ch}");
+
+                    // 전사 체크
+                    $check_hp = sql_fetch("SELECT current_hp FROM {$g5['mg_battle_slot_table']}
+                                           WHERE be_id = {$be_id} AND ch_id = {$counter_target_ch}");
+                    if ($check_hp && (int)$check_hp['current_hp'] <= 0) {
+                        sql_query("UPDATE {$g5['mg_battle_slot_table']} SET slot_status = 'dead'
+                                   WHERE be_id = {$be_id} AND ch_id = {$counter_target_ch}");
+
+                        // 도발 큐에서 전사자 제거
+                        $tq_refresh = json_decode(sql_fetch("SELECT taunt_queue FROM {$g5['mg_battle_encounter_table']} WHERE be_id = {$be_id}")['taunt_queue'] ?? '[]', true);
+                        if (is_array($tq_refresh)) {
+                            $tq_refresh = array_values(array_filter($tq_refresh, function($t) use ($counter_target_ch) {
+                                return (int)$t['ch_id'] !== $counter_target_ch;
+                            }));
+                            $tq_json = sql_real_escape_string(json_encode($tq_refresh));
+                            sql_query("UPDATE {$g5['mg_battle_encounter_table']} SET taunt_queue = '{$tq_json}' WHERE be_id = {$be_id}");
+                        }
+                    }
+                }
+
+                $counter_data = array(
+                    'target_ch_id' => $counter_target_ch,
+                    'damage' => $counter_dmg,
+                    'evaded' => $evaded,
+                    'guard_reduction' => $guard_reduction_pct,
+                    'is_taunt' => ($counter_target_ch !== $ch_id),
+                );
+
+                $result_data['counter'] = $counter_data;
+
+                // 반격 로그
+                $counter_detail = $evaded ? '회피!' : ('보스 반격 -' . $counter_dmg . ($counter_target_ch !== $ch_id ? ' (도발 흡수)' : '') . ($guard_reduction_pct > 0 ? ' (수호 ' . $guard_reduction_pct . '% 감소)' : ''));
+                sql_query("INSERT INTO {$g5['mg_battle_log_table']} (be_id, mb_id, ch_id, bl_action, bl_target_type, bl_target_id, bl_damage, bl_counter, bl_counter_target_ch, bl_is_evade, bl_detail, bl_datetime)
+                           VALUES ({$be_id}, '', 0, 'counter', 'player', {$counter_target_ch}, {$counter_dmg}, {$counter_dmg}, {$counter_target_ch}, " . ($evaded ? 1 : 0) . ", '" . sql_real_escape_string($counter_detail) . "', NOW())");
+            }
+        }
+
+        // ─── 행동자 버프 턴 소모 ───
+        mg_battle_consume_buff_turn($ch_id, $be_id);
+
+        // ─── 몬스터 HP 업데이트 ───
         $monsters_json = sql_real_escape_string(json_encode($monsters, JSON_UNESCAPED_UNICODE));
         sql_query("UPDATE {$g5['mg_battle_encounter_table']} SET be_monsters = '{$monsters_json}' WHERE be_id = {$be_id}");
 
-        // 행동 로그
-        $log_dmg = abs((int)$result_data['damage']);
-        $log_heal = (int)($result_data['heal'] ?? 0);
+        // ─── 행동 로그 ───
         $log_is_crit = !empty($result_data['is_crit']) ? 1 : 0;
-        sql_query("INSERT INTO {$g5['mg_battle_log_table']} (be_id, mb_id, ch_id, bl_action, bl_target_type, bl_target_id, bl_damage, bl_heal, bl_is_crit, bl_detail, bl_datetime)
-                   VALUES ({$be_id}, '{$mb_id}', {$ch_id}, '" . sql_real_escape_string($type) . "', 'monster', 0, {$log_dmg}, {$log_heal}, {$log_is_crit}, '" . sql_real_escape_string($result_data['message']) . "', NOW())");
+        sql_query("INSERT INTO {$g5['mg_battle_log_table']} (be_id, mb_id, ch_id, bl_action, bl_target_type, bl_target_id, bl_damage, bl_heal, bl_is_crit, bl_dice, bl_detail, bl_datetime)
+                   VALUES ({$be_id}, '{$mb_id}', {$ch_id}, '" . sql_real_escape_string($log_action) . "', '" . sql_real_escape_string($log_target_type) . "', {$log_target_id}, {$log_dmg}, {$log_heal}, {$log_is_crit}, " . (int)$dice['roll'] . ", '" . sql_real_escape_string($result_data['message']) . "', NOW())");
 
-        // 몬스터 전멸 체크
+        // ─── 몬스터 전멸 체크 ───
         $all_dead = true;
         foreach ($monsters as $m) {
             if ((int)$m['hp'] > 0) { $all_dead = false; break; }
         }
         if ($all_dead) {
             sql_query("UPDATE {$g5['mg_battle_encounter_table']} SET be_status = 'cleared', be_ended_at = NOW() WHERE be_id = {$be_id}");
-
-            // 보상 분배
             mg_battle_distribute_rewards($be_id);
-
             $result_data['cleared'] = true;
             $result_data['message'] .= ' — 전투 승리!';
         }
 
         echo json_encode(array('success' => true, 'data' => $result_data));
+        break;
+
+    // ═══ 아이템 사용 (전투 중) ═══
+    case 'use_item':
+        $be_id = (int)($_POST['be_id'] ?? 0);
+        $ch_id = (int)($_POST['ch_id'] ?? 0);
+        $si_id = (int)($_POST['si_id'] ?? 0);
+
+        if (!$be_id || !$ch_id || !$si_id) {
+            echo json_encode(array('success' => false, 'message' => '잘못된 요청'));
+            exit;
+        }
+
+        // 전투/슬롯 확인
+        $enc = sql_fetch("SELECT be_status FROM {$g5['mg_battle_encounter_table']} WHERE be_id = {$be_id}");
+        if (!$enc || !in_array($enc['be_status'], array('discovered', 'active'))) {
+            echo json_encode(array('success' => false, 'message' => '전투가 진행 중이 아닙니다.'));
+            exit;
+        }
+        $my_slot = sql_fetch("SELECT * FROM {$g5['mg_battle_slot_table']} WHERE be_id = {$be_id} AND ch_id = {$ch_id} AND mb_id = '{$mb_id}'");
+        if (!$my_slot) {
+            echo json_encode(array('success' => false, 'message' => '전투에 참여하지 않았습니다.'));
+            exit;
+        }
+
+        // 아이템 확인
+        $item = sql_fetch("SELECT * FROM {$g5['mg_shop_item_table']} WHERE si_id = {$si_id} AND si_type = 'battle_consumable'");
+        if (!$item) {
+            echo json_encode(array('success' => false, 'message' => '전투 소모품이 아닙니다.'));
+            exit;
+        }
+
+        // 인벤토리 보유 확인
+        $inv = sql_fetch("SELECT iv_id, iv_count FROM {$g5['mg_inventory_table']}
+                          WHERE mb_id = '{$mb_id}' AND si_id = {$si_id} AND iv_count > 0");
+        if (!$inv) {
+            echo json_encode(array('success' => false, 'message' => '아이템이 부족합니다.'));
+            exit;
+        }
+
+        $effect = json_decode($item['si_effect'], true);
+        if (!is_array($effect)) $effect = array();
+        $effect_type = $effect['type'] ?? '';
+        $item_msg = '';
+
+        switch ($effect_type) {
+            case 'heal':
+                // HP 회복 포션
+                if ($my_slot['slot_status'] === 'dead') {
+                    echo json_encode(array('success' => false, 'message' => '전사 상태에서는 사용할 수 없습니다.'));
+                    exit;
+                }
+                $heal = (int)($effect['hp_amount'] ?? 50);
+                sql_query("UPDATE {$g5['mg_battle_slot_table']} SET current_hp = LEAST(max_hp, current_hp + {$heal})
+                           WHERE bsl_id = " . (int)$my_slot['bsl_id']);
+                $item_msg = 'HP +' . $heal . ' 회복';
+                break;
+
+            case 'revive':
+                // 자가 부활
+                if ($my_slot['slot_status'] !== 'dead') {
+                    echo json_encode(array('success' => false, 'message' => '전사 상태가 아닙니다.'));
+                    exit;
+                }
+                $hp_pct = (int)($effect['hp_percent'] ?? 50);
+                $revive_hp = max(1, round((int)$my_slot['max_hp'] * $hp_pct / 100));
+                sql_query("UPDATE {$g5['mg_battle_slot_table']} SET current_hp = {$revive_hp}, slot_status = 'active'
+                           WHERE bsl_id = " . (int)$my_slot['bsl_id']);
+                $item_msg = '부활! HP ' . $revive_hp;
+                break;
+
+            case 'stamina':
+                // 기력 충전
+                $amount = (int)($effect['amount'] ?? 3);
+                mg_battle_charge_energy($ch_id, $amount);
+                $item_msg = '기력 +' . $amount . ' 충전';
+                break;
+
+            case 'dice_lock':
+            case 'dice_reroll':
+            case 'dice_bless':
+                // 주사위 아이템
+                mg_battle_add_dice_effect($ch_id, $be_id, $effect);
+                $labels = array('dice_lock' => '주사위 고정권', 'dice_reroll' => '재굴림권', 'dice_bless' => '축복 주사위');
+                $item_msg = ($labels[$effect_type] ?? '주사위 아이템') . ' 활성화';
+                break;
+
+            default:
+                echo json_encode(array('success' => false, 'message' => '알 수 없는 아이템 효과입니다.'));
+                exit;
+        }
+
+        // 인벤토리 차감
+        sql_query("UPDATE {$g5['mg_inventory_table']} SET iv_count = iv_count - 1 WHERE iv_id = " . (int)$inv['iv_id']);
+
+        // 로그
+        sql_query("INSERT INTO {$g5['mg_battle_log_table']} (be_id, mb_id, ch_id, bl_action, bl_target_type, bl_target_id, bl_detail, bl_datetime)
+                   VALUES ({$be_id}, '{$mb_id}', {$ch_id}, 'item', 'self', 0, '" . sql_real_escape_string($item_msg) . "', NOW())");
+
+        echo json_encode(array('success' => true, 'message' => $item_msg));
         break;
 
     // ═══ 스탯 일괄 확정 ═══

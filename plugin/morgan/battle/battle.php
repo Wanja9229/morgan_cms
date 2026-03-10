@@ -741,7 +741,261 @@ function mg_battle_distribute_rewards($be_id) {
 }
 
 // ============================================================
-// 12. 전투 조우 생성 (파견 연동)
+// 12. 주사위 시스템
+// ============================================================
+
+/**
+ * 주사위 배율표 조회
+ * 기본: 1d20 (20단계)
+ * @return array [1 => 0.3, 2 => 0.5, ..., 20 => 1.8]
+ */
+function mg_battle_dice_multipliers() {
+    $default = '0.3,0.5,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95,1.0,1.05,1.1,1.15,1.2,1.25,1.3,1.4,1.5,1.8';
+    $cfg = mg_config('battle_dice_multipliers', $default);
+    $parts = explode(',', $cfg);
+    $result = array();
+    for ($i = 0; $i < count($parts); $i++) {
+        $result[$i + 1] = (float)trim($parts[$i]);
+    }
+    return $result;
+}
+
+/**
+ * 주사위 면 수 (배율표 크기로 자동 결정)
+ * @return int 6 또는 20 등
+ */
+function mg_battle_dice_sides() {
+    $mults = mg_battle_dice_multipliers();
+    return count($mults);
+}
+
+/**
+ * 1d6 주사위 굴림 (아이템 효과 적용)
+ * @param int $ch_id 행동 캐릭터
+ * @param int $be_id 인카운터 ID
+ * @return array [roll => 1~6, multiplier => float, item_used => string|null]
+ */
+function mg_battle_roll_dice($ch_id, $be_id) {
+    global $g5;
+    $ch_id = (int)$ch_id;
+    $be_id = (int)$be_id;
+
+    // 주사위 사용 여부 확인
+    if (mg_config('battle_dice_use', '1') != '1') {
+        return array('roll' => 4, 'multiplier' => 1.0, 'item_used' => null);
+    }
+
+    $multipliers = mg_battle_dice_multipliers();
+    $sides = count($multipliers); // 6 또는 20
+
+    // 슬롯의 주사위 효과 확인
+    $slot = sql_fetch("SELECT dice_effects FROM {$g5['mg_battle_slot_table']}
+                       WHERE be_id = {$be_id} AND ch_id = {$ch_id}");
+    $effects = json_decode($slot['dice_effects'] ?? '[]', true);
+    if (!is_array($effects)) $effects = array();
+
+    $item_used = null;
+    $roll = mt_rand(1, $sides);
+
+    // 효과 처리 (우선순위: dice_lock > dice_bless)
+    foreach ($effects as $idx => $ef) {
+        if ($ef['type'] === 'dice_lock' && (int)$ef['uses'] > 0) {
+            $roll = (int)($ef['value'] ?? 6);
+            $effects[$idx]['uses'] = (int)$ef['uses'] - 1;
+            $item_used = 'dice_lock';
+            break;
+        }
+    }
+
+    if (!$item_used) {
+        foreach ($effects as $idx => $ef) {
+            if ($ef['type'] === 'dice_bless' && (int)$ef['uses'] > 0) {
+                $min_val = (int)($ef['min_value'] ?? 3);
+                if ($roll < $min_val) $roll = $min_val;
+                $effects[$idx]['uses'] = (int)$ef['uses'] - 1;
+                $item_used = 'dice_bless';
+                break;
+            }
+        }
+    }
+
+    // 사용 완료된 효과 제거
+    $effects = array_values(array_filter($effects, function($e) {
+        return (int)$e['uses'] > 0;
+    }));
+
+    // DB 업데이트
+    $effects_json = sql_real_escape_string(json_encode($effects));
+    sql_query("UPDATE {$g5['mg_battle_slot_table']}
+               SET dice_effects = '{$effects_json}'
+               WHERE be_id = {$be_id} AND ch_id = {$ch_id}");
+
+    return array(
+        'roll' => $roll,
+        'multiplier' => isset($multipliers[$roll]) ? $multipliers[$roll] : 1.0,
+        'item_used' => $item_used,
+    );
+}
+
+/**
+ * 주사위 아이템 효과 추가 (전투 중 아이템 사용 시)
+ */
+function mg_battle_add_dice_effect($ch_id, $be_id, $effect) {
+    global $g5;
+    $ch_id = (int)$ch_id;
+    $be_id = (int)$be_id;
+
+    $slot = sql_fetch("SELECT dice_effects FROM {$g5['mg_battle_slot_table']}
+                       WHERE be_id = {$be_id} AND ch_id = {$ch_id}");
+    $effects = json_decode($slot['dice_effects'] ?? '[]', true);
+    if (!is_array($effects)) $effects = array();
+
+    $effects[] = $effect;
+
+    $effects_json = sql_real_escape_string(json_encode($effects));
+    sql_query("UPDATE {$g5['mg_battle_slot_table']}
+               SET dice_effects = '{$effects_json}'
+               WHERE be_id = {$be_id} AND ch_id = {$ch_id}");
+}
+
+// ============================================================
+// 13. 버프/디버프 처리
+// ============================================================
+
+/**
+ * 파생 수치에 활성 버프 보정 적용
+ * @param array $derived mg_battle_calc_derived() 결과
+ * @param array $buffs_active JSON 디코딩된 버프 배열
+ * @return array 보정된 derived
+ */
+function mg_battle_apply_buffs($derived, $buffs_active) {
+    if (!is_array($buffs_active) || empty($buffs_active)) return $derived;
+
+    foreach ($buffs_active as $buff) {
+        $stat = $buff['stat'] ?? '';
+        $value = (int)($buff['value'] ?? 0);
+        if (!$stat || !$value) continue;
+
+        if (isset($derived[$stat])) {
+            // 퍼센트 증감
+            $derived[$stat] = (int)round($derived[$stat] * (100 + $value) / 100);
+        }
+    }
+
+    return $derived;
+}
+
+/**
+ * 행동 후 버프 잔여 횟수 차감
+ * @return array 갱신된 buffs 배열
+ */
+function mg_battle_consume_buff_turn($ch_id, $be_id) {
+    global $g5;
+    $ch_id = (int)$ch_id;
+    $be_id = (int)$be_id;
+
+    $slot = sql_fetch("SELECT buffs_active FROM {$g5['mg_battle_slot_table']}
+                       WHERE be_id = {$be_id} AND ch_id = {$ch_id}");
+    $buffs = json_decode($slot['buffs_active'] ?? '[]', true);
+    if (!is_array($buffs) || empty($buffs)) return array();
+
+    foreach ($buffs as &$b) {
+        $b['remaining'] = (int)($b['remaining'] ?? 0) - 1;
+    }
+    unset($b);
+
+    // 만료된 버프 제거
+    $buffs = array_values(array_filter($buffs, function($b) {
+        return (int)$b['remaining'] > 0;
+    }));
+
+    $buffs_json = sql_real_escape_string(json_encode($buffs));
+    sql_query("UPDATE {$g5['mg_battle_slot_table']}
+               SET buffs_active = '{$buffs_json}'
+               WHERE be_id = {$be_id} AND ch_id = {$ch_id}");
+
+    return $buffs;
+}
+
+/**
+ * 대상에게 버프 추가
+ */
+function mg_battle_add_buff($target_ch_id, $be_id, $stat, $value, $turns) {
+    global $g5;
+    $target_ch_id = (int)$target_ch_id;
+    $be_id = (int)$be_id;
+
+    $slot = sql_fetch("SELECT buffs_active FROM {$g5['mg_battle_slot_table']}
+                       WHERE be_id = {$be_id} AND ch_id = {$target_ch_id}");
+    $buffs = json_decode($slot['buffs_active'] ?? '[]', true);
+    if (!is_array($buffs)) $buffs = array();
+
+    // 같은 스탯 버프는 갱신 (중첩 불가)
+    $found = false;
+    foreach ($buffs as &$b) {
+        if (($b['stat'] ?? '') === $stat) {
+            $b['value'] = (int)$value;
+            $b['remaining'] = (int)$turns;
+            $found = true;
+            break;
+        }
+    }
+    unset($b);
+
+    if (!$found) {
+        $buffs[] = array('stat' => $stat, 'value' => (int)$value, 'remaining' => (int)$turns);
+    }
+
+    $buffs_json = sql_real_escape_string(json_encode($buffs));
+    sql_query("UPDATE {$g5['mg_battle_slot_table']}
+               SET buffs_active = '{$buffs_json}'
+               WHERE be_id = {$be_id} AND ch_id = {$target_ch_id}");
+}
+
+/**
+ * 인카운터 디버프 만료 정리 (시간 기반)
+ * @return array 활성 디버프 목록
+ */
+function mg_battle_clean_debuffs($be_id) {
+    global $g5;
+    $be_id = (int)$be_id;
+
+    $enc = sql_fetch("SELECT be_debuffs FROM {$g5['mg_battle_encounter_table']} WHERE be_id = {$be_id}");
+    $debuffs = json_decode($enc['be_debuffs'] ?? '[]', true);
+    if (!is_array($debuffs)) return array();
+
+    $now = time();
+    $debuffs = array_values(array_filter($debuffs, function($d) use ($now) {
+        return isset($d['expires_at']) && strtotime($d['expires_at']) > $now;
+    }));
+
+    $json = sql_real_escape_string(json_encode($debuffs));
+    sql_query("UPDATE {$g5['mg_battle_encounter_table']} SET be_debuffs = '{$json}' WHERE be_id = {$be_id}");
+
+    return $debuffs;
+}
+
+/**
+ * 몬스터에 디버프 적용 (수치 보정 반환)
+ * @return array [def_mod => int, atk_mod => int] 퍼센트 감소량
+ */
+function mg_battle_get_debuff_mods($be_id) {
+    $debuffs = mg_battle_clean_debuffs($be_id);
+    $mods = array('def' => 0, 'atk' => 0);
+
+    foreach ($debuffs as $d) {
+        $stat = $d['stat'] ?? '';
+        $value = (int)($d['value'] ?? 0);
+        if (isset($mods[$stat])) {
+            $mods[$stat] += $value; // 퍼센트 누적
+        }
+    }
+
+    return $mods;
+}
+
+// ============================================================
+// 14. 전투 조우 생성 (파견 연동)
 // ============================================================
 
 /**

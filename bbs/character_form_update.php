@@ -52,6 +52,17 @@ if ($is_edit) {
     }
 }
 
+$_is_approved = $is_edit && ($char['ch_state'] ?? '') === 'approved';
+
+// 승인된 캐릭터: 기본정보 변경 차단 (칭호/프로필꾸미기/대표캐릭터만 허용)
+if ($_is_approved) {
+    $ch_name = $char['ch_name'];
+    $side_id = (int)($char['side_id'] ?? 0);
+    $class_id = (int)($char['class_id'] ?? 0);
+    $profile_raw = array(); // 프로필 필드 변경 차단
+    $profile = array();
+}
+
 // 삭제 처리
 if ($btn_delete && $is_edit) {
     // 두상 이미지 삭제
@@ -95,6 +106,15 @@ if ($btn_delete && $is_edit) {
     sql_query("INSERT INTO {$g5['mg_character_log_table']} (ch_id, log_action, log_memo) VALUES ({$ch_id}, 'edit', '캐릭터 삭제')");
 
     goto_url(G5_BBS_URL.'/character.php');
+}
+
+// 승인된 캐릭터: 이미지 변경 차단
+if ($_is_approved) {
+    $ch_thumb = $char['ch_thumb'] ?? '';
+    $ch_image = $char['ch_image'] ?? '';
+    $ch_header = $char['ch_header'] ?? '';
+    $ch_profile_bg_image = $char['ch_profile_bg_image'] ?? '';
+    goto skip_image_processing;
 }
 
 // 두상 이미지 처리
@@ -220,13 +240,15 @@ if (mg_has_bg_custom_perm($member['mb_id'])) {
     }
 }
 
+skip_image_processing:
+
 // 프로필 스킨/배경 선택 처리 (보유 여부 검증)
 $ch_profile_skin = isset($_POST['ch_profile_skin']) ? trim($_POST['ch_profile_skin']) : ($is_edit ? ($char['ch_profile_skin'] ?? '') : '');
 $ch_profile_bg = isset($_POST['ch_profile_bg']) ? trim($_POST['ch_profile_bg']) : ($is_edit ? ($char['ch_profile_bg'] ?? '') : '');
 $ch_profile_bg_color = isset($_POST['ch_profile_bg_color']) ? trim($_POST['ch_profile_bg_color']) : ($is_edit ? ($char['ch_profile_bg_color'] ?? '#f59f0a') : '#f59f0a');
 if (!preg_match('/^#[0-9a-fA-F]{6}$/', $ch_profile_bg_color)) $ch_profile_bg_color = '#f59f0a';
 
-if ($ch_profile_skin) {
+if ($ch_profile_skin && $ch_profile_skin !== 'default') {
     $valid_skins = mg_get_profile_skin_list();
     if (!isset($valid_skins[$ch_profile_skin])) {
         $ch_profile_skin = '';
@@ -239,7 +261,7 @@ if ($ch_profile_skin) {
         if (!$own_check['iv_id']) $ch_profile_skin = '';
     }
 }
-if ($ch_profile_bg) {
+if ($ch_profile_bg && $ch_profile_bg !== 'none') {
     $valid_bgs = mg_get_profile_bg_list();
     if (!isset($valid_bgs[$ch_profile_bg])) {
         $ch_profile_bg = '';
@@ -248,7 +270,7 @@ if ($ch_profile_bg) {
         $own_check = sql_fetch("SELECT iv.iv_id FROM {$g5['mg_inventory_table']} iv
             JOIN {$g5['mg_shop_item_table']} si ON iv.si_id = si.si_id
             WHERE iv.mb_id = '{$member['mb_id']}' AND iv.iv_count > 0
-            AND si.si_type = 'profile_bg' AND si.si_effect LIKE '%\"{$ch_profile_bg}\"%'");
+            AND si.si_type = 'profile_effect' AND si.si_effect LIKE '%\"{$ch_profile_bg}\"%'");
         if (!$own_check['iv_id']) $ch_profile_bg = '';
     }
 }

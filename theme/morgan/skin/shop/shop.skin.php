@@ -82,12 +82,12 @@ $item_type_names = $type_labels;
     </div>
 
     <?php if (!empty($emoticon_sets)) { ?>
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 shop-grid-gap">
         <?php foreach ($emoticon_sets as $eset) {
             $owned = mg_owns_emoticon_set($member['mb_id'], $eset['es_id']);
         ?>
-        <div class="card p-0 overflow-hidden cursor-pointer hover:ring-2 hover:ring-mg-accent transition-all group" onclick="showSetDetail(<?php echo $eset['es_id']; ?>)">
-            <div class="aspect-square bg-mg-bg-tertiary relative overflow-hidden flex items-center justify-center">
+        <div class="shop-card card p-0 overflow-hidden cursor-pointer hover:ring-2 hover:ring-mg-accent group" onclick="showSetDetail(<?php echo $eset['es_id']; ?>)">
+            <div class="shop-card-img bg-mg-bg-tertiary relative overflow-hidden flex items-center justify-center">
                 <?php if ($eset['es_preview']) { ?>
                 <img src="<?php echo htmlspecialchars($eset['es_preview']); ?>" alt="" class="w-3/4 h-3/4 object-contain group-hover:scale-110 transition-transform">
                 <?php } else { ?>
@@ -167,7 +167,7 @@ $item_type_names = $type_labels;
     <?php } else { ?>
     <!-- 일반 상품 그리드 -->
     <?php if (count($items) > 0) { ?>
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 shop-grid-gap">
         <?php foreach ($items as $item) {
             $status = mg_get_item_status($item);
             $is_available = ($status == 'selling');
@@ -176,15 +176,22 @@ $item_type_names = $type_labels;
                 $remain = $item['si_stock'] - $item['si_stock_sold'];
                 $stock_text = "남은 수량: {$remain}개";
             }
+            // 보유 여부 체크
+            $owned = false;
+            if ($member['mb_id']) {
+                $own_check = sql_fetch("SELECT ii_id FROM {$g5['mg_inventory_table']} WHERE mb_id = '{$member['mb_id']}' AND si_id = {$item['si_id']} LIMIT 1");
+                $owned = !empty($own_check['ii_id']);
+            }
+            $desc_text = isset($item['si_desc']) ? strip_tags(trim($item['si_desc'])) : '';
         ?>
-        <a href="<?php echo G5_BBS_URL; ?>/shop_view.php?si_id=<?php echo $item['si_id']; ?>" class="card p-0 overflow-hidden group hover:ring-2 hover:ring-mg-accent transition-all <?php echo !$is_available ? 'opacity-60' : ''; ?>">
+        <a href="<?php echo G5_BBS_URL; ?>/shop_view.php?si_id=<?php echo $item['si_id']; ?>" class="shop-card card p-0 overflow-hidden group hover:ring-2 hover:ring-mg-accent cursor-pointer <?php echo !$is_available ? 'opacity-60' : ''; ?>">
             <!-- 이미지 -->
-            <div class="aspect-square bg-mg-bg-tertiary relative overflow-hidden">
+            <div class="shop-card-img bg-mg-bg-tertiary relative overflow-hidden">
                 <?php if ($item['si_image']) { ?>
                 <img src="<?php echo $item['si_image']; ?>" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
                 <?php } else { ?>
                 <div class="w-full h-full flex items-center justify-center">
-                    <i data-lucide="package" class="w-12 h-12 text-mg-text-muted"></i>
+                    <i data-lucide="package" class="w-10 h-10 text-mg-text-muted"></i>
                 </div>
                 <?php } ?>
 
@@ -201,6 +208,11 @@ $item_type_names = $type_labels;
                 </div>
                 <?php } ?>
 
+                <!-- 보유 중 배지 -->
+                <?php if ($owned && $is_available) { ?>
+                <span class="absolute top-2 right-2 px-2 py-0.5 bg-mg-success text-white text-xs font-bold rounded">보유중</span>
+                <?php } ?>
+
                 <!-- 타입 배지 -->
                 <span class="absolute top-2 left-2 px-2 py-0.5 bg-mg-bg-primary/80 text-xs text-mg-text-muted rounded">
                     <?php echo $item_type_names[$item['si_type']] ?? $item['si_type']; ?>
@@ -209,9 +221,12 @@ $item_type_names = $type_labels;
 
             <!-- 정보 -->
             <div class="p-3">
-                <h3 class="font-medium text-mg-text-primary truncate"><?php echo htmlspecialchars($item['si_name']); ?></h3>
-                <div class="mt-1 flex items-center justify-between">
-                    <span class="text-mg-accent font-bold"><?php echo mg_point_format($item['si_price']); ?></span>
+                <h3 class="font-medium text-mg-text-primary truncate text-sm"><?php echo htmlspecialchars($item['si_name']); ?></h3>
+                <?php if ($desc_text) { ?>
+                <p class="text-xs text-mg-text-muted truncate mt-0.5"><?php echo htmlspecialchars(mb_substr($desc_text, 0, 30)); ?></p>
+                <?php } ?>
+                <div class="mt-1.5 flex items-center justify-between">
+                    <span class="text-mg-accent font-bold text-sm"><?php echo mg_point_format($item['si_price']); ?></span>
                     <?php if ($stock_text) { ?>
                     <span class="text-xs text-mg-text-muted"><?php echo $stock_text; ?></span>
                     <?php } ?>

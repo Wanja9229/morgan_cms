@@ -106,6 +106,54 @@ if (!defined('_GNUBOARD_')) exit;
         </div>
     </div>
 
+    <!-- 전투 능력치 -->
+    <?php if ($_battle_use == '1' && $battle_stat) {
+        $_stat_base = (int)mg_config('battle_stat_base', '5');
+        $_bs_hp = (int)($battle_stat['stat_hp'] ?? $_stat_base);
+        $_bs_str = (int)($battle_stat['stat_str'] ?? $_stat_base);
+        $_bs_dex = (int)($battle_stat['stat_dex'] ?? $_stat_base);
+        $_bs_int = (int)($battle_stat['stat_int'] ?? $_stat_base);
+        $_bs_stress = (int)($battle_stat['stat_stress'] ?? 0);
+        $_stress_color = $_bs_stress >= 100 ? '#ef4444' : ($_bs_stress >= 70 ? '#f59e0b' : '#22c55e');
+    ?>
+    <div class="mt-6 bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
+        <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary flex items-center gap-2">
+            <i data-lucide="swords" class="w-4 h-4 text-mg-accent"></i>
+            <h2 class="font-medium text-mg-text-primary">전투 능력치</h2>
+        </div>
+        <div class="p-4">
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="bg-mg-bg-primary/50 rounded-lg p-3 text-center">
+                    <div class="text-xs text-mg-accent font-medium mb-1">HP / 체력</div>
+                    <div class="text-2xl font-bold text-mg-text-primary"><?php echo $_bs_hp; ?></div>
+                </div>
+                <div class="bg-mg-bg-primary/50 rounded-lg p-3 text-center">
+                    <div class="text-xs text-mg-accent font-medium mb-1">STR / 힘</div>
+                    <div class="text-2xl font-bold text-mg-text-primary"><?php echo $_bs_str; ?></div>
+                </div>
+                <div class="bg-mg-bg-primary/50 rounded-lg p-3 text-center">
+                    <div class="text-xs text-mg-accent font-medium mb-1">DEX / 민첩</div>
+                    <div class="text-2xl font-bold text-mg-text-primary"><?php echo $_bs_dex; ?></div>
+                </div>
+                <div class="bg-mg-bg-primary/50 rounded-lg p-3 text-center">
+                    <div class="text-xs text-mg-accent font-medium mb-1">INT / 지능</div>
+                    <div class="text-2xl font-bold text-mg-text-primary"><?php echo $_bs_int; ?></div>
+                </div>
+            </div>
+            <!-- 스트레스 -->
+            <div>
+                <div class="flex items-center justify-between text-sm mb-1">
+                    <span class="text-mg-text-secondary">스트레스</span>
+                    <span class="font-medium" style="color:<?php echo $_stress_color; ?>;"><?php echo $_bs_stress; ?>/100</span>
+                </div>
+                <div class="w-full h-2 bg-mg-bg-tertiary rounded-full overflow-hidden">
+                    <div class="h-full rounded-full transition-all" style="width:<?php echo min(100, $_bs_stress); ?>%;background:<?php echo $_stress_color; ?>;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php } ?>
+
     <!-- 업적 쇼케이스 -->
     <?php if (!empty($achievement_showcase)) {
         $ach_rarity_colors = array(

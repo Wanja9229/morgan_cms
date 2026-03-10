@@ -323,6 +323,51 @@ $ch_date = date('Y.m.d', strtotime($char['ch_datetime']));
                 </div>
             </div>
 
+            <!-- 전투 능력 -->
+            <?php if ($_battle_use == '1' && $battle_stat) {
+                $_stat_base = (int)mg_config('battle_stat_base', '5');
+                $bs_hp = (int)($battle_stat['stat_hp'] ?? $_stat_base);
+                $bs_str = (int)($battle_stat['stat_str'] ?? $_stat_base);
+                $bs_dex = (int)($battle_stat['stat_dex'] ?? $_stat_base);
+                $bs_int = (int)($battle_stat['stat_int'] ?? $_stat_base);
+                $bs_stress = (int)($battle_stat['stat_stress'] ?? 0);
+                $stress_color = $bs_stress >= 100 ? '#ef4444' : ($bs_stress >= 70 ? '#f59e0b' : '#22c55e');
+            ?>
+            <div class="nb-rule"><span class="nb-rule-icon">&#9876;</span></div>
+            <div class="nb-section-title nb-title">전투 능력</div>
+            <table class="nb-table">
+                <tbody>
+                    <tr>
+                        <td class="nb-table-label nb-title">HP / 체력</td>
+                        <td class="nb-table-value" style="font-weight:600;color:#d4a745;"><?php echo $bs_hp; ?></td>
+                    </tr>
+                    <tr>
+                        <td class="nb-table-label nb-title">STR / 힘</td>
+                        <td class="nb-table-value" style="font-weight:600;color:#d4a745;"><?php echo $bs_str; ?></td>
+                    </tr>
+                    <tr>
+                        <td class="nb-table-label nb-title">DEX / 민첩</td>
+                        <td class="nb-table-value" style="font-weight:600;color:#d4a745;"><?php echo $bs_dex; ?></td>
+                    </tr>
+                    <tr>
+                        <td class="nb-table-label nb-title">INT / 지능</td>
+                        <td class="nb-table-value" style="font-weight:600;color:#d4a745;"><?php echo $bs_int; ?></td>
+                    </tr>
+                    <tr>
+                        <td class="nb-table-label nb-title">스트레스</td>
+                        <td class="nb-table-value">
+                            <div style="display:flex;align-items:center;gap:0.75rem;">
+                                <div style="flex:1;height:8px;background:rgba(212,167,69,0.1);border:1px solid rgba(212,167,69,0.2);border-radius:4px;overflow:hidden;">
+                                    <div style="height:100%;width:<?php echo min($bs_stress, 100); ?>%;background:<?php echo $stress_color; ?>;border-radius:4px;transition:width 0.3s;"></div>
+                                </div>
+                                <span style="font-size:0.8125rem;color:<?php echo $stress_color; ?>;font-weight:600;min-width:2.5rem;text-align:right;"><?php echo $bs_stress; ?>%</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <?php } ?>
+
             <!-- 업적 -->
             <?php if (!empty($achievement_showcase)) { ?>
             <div class="nb-rule"><span class="nb-rule-icon">&#9733;</span></div>

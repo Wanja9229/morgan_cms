@@ -143,6 +143,49 @@ $ch_number = str_pad($char['ch_id'], 0, STR_PAD_LEFT);
 
         <div class="tt-divider"><span>&#10022;</span></div>
 
+        <!-- 전투의 별 -->
+        <?php if ($_battle_use == '1' && $battle_stat) {
+            $_stat_base = (int)mg_config('battle_stat_base', '5');
+            $bs_hp = (int)($battle_stat['stat_hp'] ?? $_stat_base);
+            $bs_str = (int)($battle_stat['stat_str'] ?? $_stat_base);
+            $bs_dex = (int)($battle_stat['stat_dex'] ?? $_stat_base);
+            $bs_int = (int)($battle_stat['stat_int'] ?? $_stat_base);
+            $bs_stress = (int)($battle_stat['stat_stress'] ?? 0);
+            $stress_color = $bs_stress >= 100 ? '#ef4444' : ($bs_stress >= 70 ? '#f59e0b' : '#22c55e');
+        ?>
+        <div class="tt-divider"><span>&#9876;</span></div>
+        <div style="position:relative;z-index:1;margin-bottom:1.5rem;">
+            <h3 class="tt-cinzel" style="text-align:center;font-size:0.8125rem;letter-spacing:0.2em;text-transform:uppercase;color:#a78bfa;margin-bottom:1rem;">&#10022; 전투의 별 &#10022;</h3>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:0.75rem;text-align:center;">
+                <div style="background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.2);border-radius:0.375rem;padding:0.75rem;">
+                    <div style="font-size:0.75rem;color:#7c3aed;text-transform:uppercase;letter-spacing:0.1em;" class="tt-cinzel">HP / 체력</div>
+                    <div style="font-size:1.5rem;font-weight:700;color:#c084fc;margin-top:0.25rem;"><?php echo $bs_hp; ?></div>
+                </div>
+                <div style="background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.2);border-radius:0.375rem;padding:0.75rem;">
+                    <div style="font-size:0.75rem;color:#7c3aed;text-transform:uppercase;letter-spacing:0.1em;" class="tt-cinzel">STR / 힘</div>
+                    <div style="font-size:1.5rem;font-weight:700;color:#c084fc;margin-top:0.25rem;"><?php echo $bs_str; ?></div>
+                </div>
+                <div style="background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.2);border-radius:0.375rem;padding:0.75rem;">
+                    <div style="font-size:0.75rem;color:#7c3aed;text-transform:uppercase;letter-spacing:0.1em;" class="tt-cinzel">DEX / 민첩</div>
+                    <div style="font-size:1.5rem;font-weight:700;color:#c084fc;margin-top:0.25rem;"><?php echo $bs_dex; ?></div>
+                </div>
+                <div style="background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.2);border-radius:0.375rem;padding:0.75rem;">
+                    <div style="font-size:0.75rem;color:#7c3aed;text-transform:uppercase;letter-spacing:0.1em;" class="tt-cinzel">INT / 지능</div>
+                    <div style="font-size:1.5rem;font-weight:700;color:#c084fc;margin-top:0.25rem;"><?php echo $bs_int; ?></div>
+                </div>
+            </div>
+            <div style="margin-top:0.75rem;padding:0 0.5rem;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:0.375rem;">
+                    <span style="font-size:0.75rem;color:#7c3aed;text-transform:uppercase;letter-spacing:0.1em;" class="tt-cinzel">스트레스</span>
+                    <span style="font-size:0.75rem;color:<?php echo $stress_color; ?>;font-weight:600;"><?php echo $bs_stress; ?>%</span>
+                </div>
+                <div style="height:6px;background:rgba(124,58,237,0.15);border-radius:9999px;overflow:hidden;">
+                    <div style="height:100%;width:<?php echo min($bs_stress, 100); ?>%;background:<?php echo $stress_color; ?>;border-radius:9999px;transition:width 0.3s;"></div>
+                </div>
+            </div>
+        </div>
+        <?php } ?>
+
         <!-- 업적 -->
         <?php if (!empty($achievement_showcase)) { ?>
         <div style="text-align:center;position:relative;z-index:1;margin-bottom:1.5rem;">

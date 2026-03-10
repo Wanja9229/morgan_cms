@@ -183,6 +183,51 @@ $ch_date = date('Y-m-d', strtotime($char['ch_datetime']));
                 </div>
             </div>
 
+            <!-- 전투 능력 평가 -->
+            <?php if ($_battle_use == '1' && $battle_stat) {
+                $_stat_base = (int)mg_config('battle_stat_base', '5');
+                $bs_hp = (int)($battle_stat['stat_hp'] ?? $_stat_base);
+                $bs_str = (int)($battle_stat['stat_str'] ?? $_stat_base);
+                $bs_dex = (int)($battle_stat['stat_dex'] ?? $_stat_base);
+                $bs_int = (int)($battle_stat['stat_int'] ?? $_stat_base);
+                $bs_stress = (int)($battle_stat['stat_stress'] ?? 0);
+                $stress_color = $bs_stress >= 100 ? '#ff4d4d' : ($bs_stress >= 70 ? '#f59e0b' : '#22c55e');
+            ?>
+            <div style="background:#151c2c;border:1px solid #2d3a54;display:flex;flex-direction:column;">
+                <div style="background:rgba(45,58,84,0.5);padding:0.5rem 1rem;display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-size:0.75rem;font-weight:bold;color:#f1f5f9;letter-spacing:0.2em;">COMBAT_ASSESSMENT</span>
+                    <span style="font-size:0.625rem;" class="nib-data nib-accent">THREAT_LVL: <?php echo ($bs_str + $bs_dex + $bs_int > 20) ? 'HIGH' : 'MODERATE'; ?></span>
+                </div>
+                <div style="padding:1rem;font-size:0.875rem;" class="nib-data">
+                    <div class="nib-field-row" style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
+                        <span style="color:#64748b;text-transform:uppercase;">HP / 체력:</span>
+                        <span class="nib-accent"><?php echo $bs_hp; ?></span>
+                    </div>
+                    <div class="nib-field-row" style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
+                        <span style="color:#64748b;text-transform:uppercase;">STR / 힘:</span>
+                        <span class="nib-accent"><?php echo $bs_str; ?></span>
+                    </div>
+                    <div class="nib-field-row" style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
+                        <span style="color:#64748b;text-transform:uppercase;">DEX / 민첩:</span>
+                        <span class="nib-accent"><?php echo $bs_dex; ?></span>
+                    </div>
+                    <div class="nib-field-row" style="display:flex;justify-content:space-between;margin-bottom:0.75rem;">
+                        <span style="color:#64748b;text-transform:uppercase;">INT / 지능:</span>
+                        <span class="nib-accent"><?php echo $bs_int; ?></span>
+                    </div>
+                    <div style="border-top:1px solid #2d3a54;padding-top:0.75rem;">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:0.375rem;">
+                            <span style="color:#64748b;text-transform:uppercase;">STRESS_INDEX:</span>
+                            <span style="color:<?php echo $stress_color; ?>;"><?php echo $bs_stress; ?>%</span>
+                        </div>
+                        <div style="height:6px;background:#0a0f1a;border:1px solid #2d3a54;overflow:hidden;">
+                            <div style="height:100%;width:<?php echo min($bs_stress, 100); ?>%;background:<?php echo $stress_color; ?>;transition:width 0.3s;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php } ?>
+
             <!-- 수사 기록 (나머지 프로필 필드) -->
             <?php if (!empty($remaining_fields)) { ?>
             <?php foreach ($remaining_fields as $category => $fields) { ?>
@@ -215,6 +260,7 @@ $ch_date = date('Y-m-d', strtotime($char['ch_datetime']));
                 <?php } ?>
             </div>
             <?php } ?>
+
         </div>
     </main>
 

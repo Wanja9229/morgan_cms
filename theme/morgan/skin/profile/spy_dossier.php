@@ -141,6 +141,53 @@ $ch_owner = htmlspecialchars($char['mb_nick']);
                     </div>
                 </div>
 
+                <!-- 전투 능력 -->
+                <?php if ($_battle_use == '1' && $battle_stat) {
+                    $_stat_base = (int)mg_config('battle_stat_base', '5');
+                    $bs_hp = (int)($battle_stat['stat_hp'] ?? $_stat_base);
+                    $bs_str = (int)($battle_stat['stat_str'] ?? $_stat_base);
+                    $bs_dex = (int)($battle_stat['stat_dex'] ?? $_stat_base);
+                    $bs_int = (int)($battle_stat['stat_int'] ?? $_stat_base);
+                    $bs_stress = (int)($battle_stat['stat_stress'] ?? 0);
+                    $stress_color = $bs_stress >= 100 ? '#f87171' : ($bs_stress >= 70 ? '#f59e0b' : '#22c55e');
+                ?>
+                <section>
+                    <h3 style="font-size:1.125rem;font-weight:bold;color:#f1f5f9;margin-bottom:1rem;display:flex;align-items:center;">
+                        <span style="width:8px;height:24px;background:#3b82f6;margin-right:0.75rem;display:inline-block;"></span>
+                        <span style="letter-spacing:0.1em;" class="spy-mono">COMBAT CAPABILITIES</span>
+                    </h3>
+                    <div style="background:rgba(30,41,59,0.3);border-left:2px solid #334155;padding:1rem;border-radius:0 0.25rem 0.25rem 0;font-size:0.875rem;" class="spy-mono">
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:1rem;margin-bottom:1rem;">
+                            <div class="spy-field-row">
+                                <span style="color:#64748b;display:block;margin-bottom:0.25rem;font-size:0.75rem;text-transform:uppercase;">HP / 체력:</span>
+                                <span class="spy-accent" style="font-size:1.125rem;font-weight:bold;"><?php echo $bs_hp; ?></span>
+                            </div>
+                            <div class="spy-field-row">
+                                <span style="color:#64748b;display:block;margin-bottom:0.25rem;font-size:0.75rem;text-transform:uppercase;">STR / 힘:</span>
+                                <span class="spy-accent" style="font-size:1.125rem;font-weight:bold;"><?php echo $bs_str; ?></span>
+                            </div>
+                            <div class="spy-field-row">
+                                <span style="color:#64748b;display:block;margin-bottom:0.25rem;font-size:0.75rem;text-transform:uppercase;">DEX / 민첩:</span>
+                                <span class="spy-accent" style="font-size:1.125rem;font-weight:bold;"><?php echo $bs_dex; ?></span>
+                            </div>
+                            <div class="spy-field-row">
+                                <span style="color:#64748b;display:block;margin-bottom:0.25rem;font-size:0.75rem;text-transform:uppercase;">INT / 지능:</span>
+                                <span class="spy-accent" style="font-size:1.125rem;font-weight:bold;"><?php echo $bs_int; ?></span>
+                            </div>
+                        </div>
+                        <div style="border-top:1px solid #334155;padding-top:0.75rem;">
+                            <div style="display:flex;justify-content:space-between;margin-bottom:0.375rem;font-size:0.75rem;text-transform:uppercase;">
+                                <span style="color:#64748b;">STRESS LEVEL:</span>
+                                <span style="color:<?php echo $stress_color; ?>;"><?php echo $bs_stress; ?>%</span>
+                            </div>
+                            <div class="spy-bar">
+                                <div class="spy-bar-fill" style="width:<?php echo min($bs_stress, 100); ?>%;background:<?php echo $stress_color; ?>;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <?php } ?>
+
                 <!-- PERSONAL DATA -->
                 <?php if (count($grouped_fields) > 0) { ?>
                 <?php foreach ($grouped_fields as $category => $fields) { ?>
@@ -185,6 +232,7 @@ $ch_owner = htmlspecialchars($char['mb_nick']);
                     </div>
                 </section>
                 <?php } ?>
+
             </div>
         </div>
 
