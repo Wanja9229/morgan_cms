@@ -137,6 +137,21 @@ mt_srand();
                 $_bs_stress = (int)($battle_stat['stat_stress'] ?? 0);
                 $_stress_color = $_bs_stress >= 100 ? '#ff0033' : ($_bs_stress >= 70 ? '#ffe600' : '#00ff88');
             ?>
+            <?php if ($battle_hp && $battle_hp['max_hp'] > 0) {
+                $_hp_pct = round($battle_hp['current_hp'] / $battle_hp['max_hp'] * 100);
+                $_hp_color = $_hp_pct > 60 ? '#00ff88' : ($_hp_pct > 30 ? '#ffe600' : '#ff0033');
+            ?>
+            <div style="margin-top:1.5rem;border-top:2px solid #333;padding-top:1rem;">
+                <div class="arc-neon-yellow" style="margin-bottom:0.5rem;text-align:center;">== HP STATUS ==</div>
+                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.375rem;">
+                    <span style="width:2.5rem;text-align:right;color:<?php echo $_hp_color; ?>;">HP</span>
+                    <div class="arc-bar" style="flex:1;">
+                        <div class="arc-bar-fill" style="width:<?php echo $_hp_pct; ?>%;background:<?php echo $_hp_color; ?>;"></div>
+                    </div>
+                    <span style="color:<?php echo $_hp_color; ?>;"><?php echo $battle_hp['current_hp']; ?>/<?php echo $battle_hp['max_hp']; ?></span>
+                </div>
+            </div>
+            <?php } ?>
             <div style="margin-top:1.5rem;border-top:2px solid #333;padding-top:1rem;">
                 <div class="arc-neon-yellow" style="margin-bottom:0.75rem;text-align:center;">== BATTLE STATUS ==</div>
                 <?php foreach ($_arc_stats as $label => $s) {

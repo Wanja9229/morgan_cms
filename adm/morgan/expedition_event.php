@@ -32,7 +32,8 @@ require_once __DIR__.'/_head.php';
 <!-- 안내 -->
 <div class="mg-alert mg-alert-info" style="margin-bottom:1rem;">
     파견 이벤트는 파견 완료 시 확률적으로 발동되어 추가 보상이나 패널티를 부여합니다.
-    이벤트를 생성한 후 파견지 관리에서 파견지에 매칭하세요.
+    이벤트를 생성한 후 <a href="./expedition_area.php" style="color:var(--mg-accent);text-decoration:underline;">파견지 관리</a>에서 파견지에 매칭하세요.
+    "전투 조우" 타입은 <a href="./battle_monster.php" style="color:var(--mg-accent);text-decoration:underline;">전투 &gt; 몬스터 관리</a>에서 등록한 몬스터를 사용합니다.
 </div>
 
 <!-- 통계 -->

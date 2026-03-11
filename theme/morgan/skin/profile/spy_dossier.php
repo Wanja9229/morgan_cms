@@ -151,6 +151,26 @@ $ch_owner = htmlspecialchars($char['mb_nick']);
                     $bs_stress = (int)($battle_stat['stat_stress'] ?? 0);
                     $stress_color = $bs_stress >= 100 ? '#f87171' : ($bs_stress >= 70 ? '#f59e0b' : '#22c55e');
                 ?>
+                <?php if ($battle_hp && $battle_hp['max_hp'] > 0) {
+                    $_hp_pct = round($battle_hp['current_hp'] / $battle_hp['max_hp'] * 100);
+                    $_hp_color = $_hp_pct > 60 ? '#22c55e' : ($_hp_pct > 30 ? '#f59e0b' : '#f87171');
+                ?>
+                <section>
+                    <h3 style="font-size:1.125rem;font-weight:bold;color:#f1f5f9;margin-bottom:1rem;display:flex;align-items:center;">
+                        <span style="width:8px;height:24px;background:#3b82f6;margin-right:0.75rem;display:inline-block;"></span>
+                        <span style="letter-spacing:0.1em;" class="spy-mono">HP STATUS</span>
+                    </h3>
+                    <div style="background:rgba(30,41,59,0.3);border-left:2px solid #334155;padding:1rem;border-radius:0 0.25rem 0.25rem 0;font-size:0.875rem;" class="spy-mono">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
+                            <span style="color:#64748b;font-size:0.75rem;text-transform:uppercase;">CURRENT HP:</span>
+                            <span class="spy-accent" style="font-weight:bold;color:<?php echo $_hp_color; ?>;"><?php echo $battle_hp['current_hp']; ?> / <?php echo $battle_hp['max_hp']; ?></span>
+                        </div>
+                        <div style="width:100%;height:6px;background:rgba(30,41,59,0.5);border-radius:3px;overflow:hidden;">
+                            <div style="width:<?php echo $_hp_pct; ?>%;height:100%;background:<?php echo $_hp_color; ?>;border-radius:3px;transition:width 0.3s;"></div>
+                        </div>
+                    </div>
+                </section>
+                <?php } ?>
                 <section>
                     <h3 style="font-size:1.125rem;font-weight:bold;color:#f1f5f9;margin-bottom:1rem;display:flex;align-items:center;">
                         <span style="width:8px;height:24px;background:#3b82f6;margin-right:0.75rem;display:inline-block;"></span>

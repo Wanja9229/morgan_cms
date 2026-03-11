@@ -333,6 +333,28 @@ $ch_date = date('Y.m.d', strtotime($char['ch_datetime']));
                 $bs_stress = (int)($battle_stat['stat_stress'] ?? 0);
                 $stress_color = $bs_stress >= 100 ? '#ef4444' : ($bs_stress >= 70 ? '#f59e0b' : '#22c55e');
             ?>
+            <?php if ($battle_hp && $battle_hp['max_hp'] > 0) {
+                $_hp_pct = round($battle_hp['current_hp'] / $battle_hp['max_hp'] * 100);
+                $_hp_color = $_hp_pct > 60 ? '#22c55e' : ($_hp_pct > 30 ? '#d4a745' : '#ef4444');
+            ?>
+            <div class="nb-rule"><span class="nb-rule-icon">&#9829;</span></div>
+            <div class="nb-section-title nb-title">생명력</div>
+            <table class="nb-table">
+                <tbody>
+                    <tr>
+                        <td class="nb-table-label nb-title">HP</td>
+                        <td class="nb-table-value">
+                            <div style="display:flex;align-items:center;gap:0.5rem;">
+                                <div style="flex:1;height:8px;background:rgba(212,167,69,0.15);border-radius:4px;overflow:hidden;">
+                                    <div style="width:<?php echo $_hp_pct; ?>%;height:100%;background:<?php echo $_hp_color; ?>;border-radius:4px;transition:width 0.3s;"></div>
+                                </div>
+                                <span style="font-weight:600;color:<?php echo $_hp_color; ?>;"><?php echo $battle_hp['current_hp']; ?> / <?php echo $battle_hp['max_hp']; ?></span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <?php } ?>
             <div class="nb-rule"><span class="nb-rule-icon">&#9876;</span></div>
             <div class="nb-section-title nb-title">전투 능력</div>
             <table class="nb-table">

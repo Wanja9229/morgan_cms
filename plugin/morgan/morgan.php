@@ -130,6 +130,8 @@ $g5['mg_battle_skill_table'] = 'mg_battle_skill';
 $g5['mg_training_class_table'] = 'mg_training_class';
 $g5['mg_training_schedule_table'] = 'mg_training_schedule';
 $g5['mg_training_progress_table'] = 'mg_training_progress';
+// 캐릭터 수정 이력
+$g5['mg_character_edit_log_table'] = 'mg_character_edit_log';
 
 // [MT-1] 멀티테넌트 파일 경로 분기
 if (defined('MG_MULTITENANT_ENABLED') && MG_MULTITENANT_ENABLED
@@ -249,6 +251,8 @@ $mg['battle_skill_table'] = $g5['mg_battle_skill_table'];
 $mg['training_class_table'] = $g5['mg_training_class_table'];
 $mg['training_schedule_table'] = $g5['mg_training_schedule_table'];
 $mg['training_progress_table'] = $g5['mg_training_progress_table'];
+// 캐릭터 수정 이력
+$mg['character_edit_log_table'] = $g5['mg_character_edit_log_table'];
 
 // 상점 이미지 저장 경로
 define('MG_SHOP_IMAGE_PATH', $_mg_data_base_path.'/shop');
@@ -547,7 +551,7 @@ $mg['shop_type_groups'] = array(
     'system' => array(
         'label' => '이용권',
         'icon' => 'ticket',
-        'types' => array('char_slot', 'relation_slot', 'emoticon_reg', 'concierge_extra', 'concierge_direct_pick', 'radio_song', 'radio_ment')
+        'types' => array('char_slot', 'relation_slot', 'emoticon_reg', 'concierge_extra', 'concierge_direct_pick', 'radio_song', 'radio_ment', 'stat_reset')
     ),
     'material' => array(
         'label' => '재료',
@@ -610,6 +614,7 @@ function mg_get_item_types() {
         'achievement_slot' => array('name' => '업적 쇼케이스 확장권', 'desc' => '업적 쇼케이스 슬롯을 추가합니다 (영구)', 'group' => 'system'),
         'concierge_boost' => array('name' => '의뢰 보상 부스터', 'desc' => '의뢰 보상을 추가로 받습니다 (1회 소모)', 'group' => 'system'),
         'stamina_recover' => array('name' => '스태미나 회복 물약', 'desc' => '스태미나를 풀 충전합니다 (일일 상한 적용, 소모품)', 'group' => 'system'),
+        'stat_reset' => array('name' => '스탯 초기화권', 'desc' => '배분 스탯 초기화 (소모품)', 'group' => 'system'),
         'nick_bg' => array('name' => '이름표 배경색', 'desc' => '닉네임에 배경색을 적용합니다', 'group' => 'decor'),
         // 전투
         'battle_weapon' => array('name' => '전투 무기', 'desc' => '전투 시스템 무기 장비', 'group' => 'battle'),
@@ -1891,6 +1896,31 @@ function mg_use_item($mb_id, $si_id, $ch_id = null) {
         return array('success' => true, 'message' => '업적 쇼케이스 슬롯이 추가되었습니다.');
     }
 
+    // 스탯 초기화권: 캐릭터 선택 필수, 소모품
+    if ($item['si_type'] === 'stat_reset') {
+        if (!$ch_id) {
+            return array('success' => false, 'message' => '캐릭터를 선택해주세요.');
+        }
+        $ch_id = (int)$ch_id;
+        $ch = sql_fetch("SELECT ch_id, mb_id FROM {$mg['character_table']} WHERE ch_id = {$ch_id}");
+        if (!$ch || $ch['mb_id'] !== $mb_id) {
+            return array('success' => false, 'message' => '권한이 없는 캐릭터입니다.');
+        }
+        // stat_locked 체크
+        $bs = sql_fetch("SELECT stat_locked FROM {$mg['battle_stat_table']} WHERE ch_id = {$ch_id}");
+        if (!$bs || !(int)$bs['stat_locked']) {
+            return array('success' => false, 'message' => '이미 초기화된 상태이거나 스탯이 확정되지 않았습니다.');
+        }
+        $reset_result = mg_stat_reset($ch_id);
+        if (!$reset_result) {
+            return array('success' => false, 'message' => '초기화에 실패했습니다.');
+        }
+        // 인벤토리에서 차감
+        sql_query("UPDATE {$mg['inventory_table']} SET iv_count = iv_count - 1 WHERE mb_id = '{$mb_id}' AND si_id = {$si_id}");
+        sql_query("DELETE FROM {$mg['inventory_table']} WHERE mb_id = '{$mb_id}' AND si_id = {$si_id} AND iv_count <= 0");
+        return array('success' => true, 'message' => '스탯이 초기화되었습니다. 캐릭터 수정 페이지에서 재분배하세요. (회수: ' . $reset_result['reclaimed'] . 'P)');
+    }
+
     // 이미 사용중인지 확인
     if (mg_is_item_active($mb_id, $si_id)) {
         return array('success' => false, 'message' => '이미 사용 중인 아이템입니다.');
@@ -1989,17 +2019,25 @@ function mg_get_active_items($mb_id, $type = null) {
  */
 function mg_get_profile_skin_list() {
     return array(
-        'spy_dossier'       => '요원 인사기록',
-        'fantasy_parchment' => '길드 모험가 프로필',
-        'nib_database'      => 'NIB 수사 데이터베이스',
-        'wanted_poster'     => 'WANTED 수배전단',
-        'sns_profile'       => 'SNS 프로필',
-        'medical_chart'     => '의료 차트',
-        'tarot_card'        => '타로 카드',
-        'military_record'   => '군 인사기록',
-        'arcade_game'       => '아케이드 게임',
-        'newspaper'         => '신문 기사',
-        'noble_crest'       => '귀족 문장',
+        'spy_dossier'         => '요원 인사기록',
+        'fantasy_parchment'   => '길드 모험가 프로필',
+        'nib_database'        => 'NIB 수사 데이터베이스',
+        'wanted_poster'       => 'WANTED 수배전단',
+        'sns_profile'         => 'SNS 프로필',
+        'medical_chart'       => '의료 차트',
+        'tarot_card'          => '타로 카드',
+        'military_record'     => '군 인사기록',
+        'arcade_game'         => '아케이드 게임',
+        'newspaper'           => '신문 기사',
+        'noble_crest'         => '귀족 문장',
+        'win98_classic'       => 'Windows 98 클래식',
+        'dos_terminal'        => 'DOS 터미널',
+        'mac_modern'          => 'macOS 모던',
+        'echo_terminal'       => 'ECHO-4 전술 터미널',
+        'vscode_json'         => 'VS Code IDE',
+        'jrpg_classic'        => '클래식 JRPG',
+        'magazine_editorial'  => '매거진 화보',
+        'legendary_card'      => '전설 카드',
     );
 }
 
@@ -6813,6 +6851,60 @@ function mg_consume_direct_pick($mb_id) {
     sql_query("DELETE FROM {$g5['mg_inventory_table']}
                WHERE mb_id = '{$mb_id_esc}' AND si_id = {$si_id} AND iv_count <= 0");
     return true;
+}
+
+/**
+ * 캐릭터 스탯 초기화 — 수업 보너스는 유지, 유저 배분 포인트만 회수
+ * @param int $ch_id 캐릭터 ID
+ * @return array|false 성공 시 ['reclaimed' => 회수포인트, 'training_bonus' => [...]]
+ */
+function mg_stat_reset($ch_id) {
+    global $g5;
+    $ch_id = (int)$ch_id;
+
+    $bs = sql_fetch("SELECT * FROM {$g5['mg_battle_stat_table']} WHERE ch_id = {$ch_id}");
+    if (!$bs) return false;
+
+    $base = (int)mg_config('battle_stat_base', '5');
+    $bonus_points = (int)mg_config('battle_stat_bonus_points', '15');
+
+    // 수업으로 얻은 스탯 계산
+    $training_bonus = array('stat_hp' => 0, 'stat_str' => 0, 'stat_dex' => 0, 'stat_int' => 0);
+    $result = sql_query("SELECT p.tp_completed, c.tc_stat, c.tc_stat_amount
+        FROM {$g5['mg_training_progress_table']} p
+        JOIN {$g5['mg_training_class_table']} c ON p.tc_id = c.tc_id
+        WHERE p.ch_id = {$ch_id} AND c.tc_stat != 'none' AND p.tp_completed > 0");
+    if ($result) {
+        while ($row = sql_fetch_array($result)) {
+            $stat_col = $row['tc_stat'];
+            if (isset($training_bonus[$stat_col])) {
+                $training_bonus[$stat_col] += (int)$row['tp_completed'] * (int)$row['tc_stat_amount'];
+            }
+        }
+    }
+
+    // 각 스탯 = base + training_bonus, stat_points = bonus_points로 복원
+    // stat_locked = 0 → 재배분 가능
+    $stat_keys = array('stat_hp', 'stat_str', 'stat_dex', 'stat_int');
+    $sets = array();
+    $reclaimed = 0;
+    foreach ($stat_keys as $k) {
+        $current = (int)$bs[$k];
+        $new_val = $base + $training_bonus[$k];
+        $reclaimed += max(0, $current - $new_val);
+        $sets[] = "{$k} = {$new_val}";
+    }
+    $sets[] = "stat_points = {$bonus_points}";
+    $sets[] = "stat_locked = 0";
+
+    sql_query("UPDATE {$g5['mg_battle_stat_table']} SET " . implode(', ', $sets) . " WHERE ch_id = {$ch_id}");
+
+    // Global HP 동기화
+    if (function_exists('mg_battle_sync_max_hp')) {
+        mg_battle_sync_max_hp($ch_id);
+    }
+
+    return array('reclaimed' => $reclaimed, 'training_bonus' => $training_bonus);
 }
 
 /**

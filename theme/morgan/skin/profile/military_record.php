@@ -157,6 +157,25 @@ $serial = strtoupper(substr(md5($char['ch_id'] . $char['ch_name']), 0, 8));
                 $_bs_stress = (int)($battle_stat['stat_stress'] ?? 0);
                 $_stress_color = $_bs_stress >= 100 ? '#dc2626' : ($_bs_stress >= 70 ? '#d97706' : '#365314');
             ?>
+            <?php if ($battle_hp && $battle_hp['max_hp'] > 0) {
+                $_hp_pct = round($battle_hp['current_hp'] / $battle_hp['max_hp'] * 100);
+                $_hp_color = $_hp_pct > 60 ? '#365314' : ($_hp_pct > 30 ? '#d97706' : '#dc2626');
+            ?>
+            <div class="mil-section">
+                <div class="mil-section-header" style="border-bottom:1px dashed #84cc16;">HP STATUS</div>
+                <div class="mil-row" style="border-bottom:none;">
+                    <div class="mil-label">CURRENT HP</div>
+                    <div class="mil-val">
+                        <div style="display:flex;align-items:center;gap:0.5rem;">
+                            <div style="flex:1;height:6px;background:#e7e5e4;border-radius:2px;overflow:hidden;">
+                                <div style="width:<?php echo $_hp_pct; ?>%;height:100%;background:<?php echo $_hp_color; ?>;"></div>
+                            </div>
+                            <span style="font-weight:700;font-size:0.75rem;color:<?php echo $_hp_color; ?>;"><?php echo $battle_hp['current_hp']; ?>/<?php echo $battle_hp['max_hp']; ?></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php } ?>
             <div class="mil-section">
                 <div class="mil-section-header" style="border-bottom:1px dashed #84cc16;">COMBAT ASSESSMENT</div>
                 <?php foreach ($_mil_stats as $ms) { ?>

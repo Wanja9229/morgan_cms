@@ -55,6 +55,13 @@ $g5['title'] = '파견지 관리';
 require_once __DIR__.'/_head.php';
 ?>
 
+<!-- 안내 -->
+<div class="mg-alert mg-alert-info" style="margin-bottom:1rem;">
+    파견지를 생성하고 드롭 보상, 이벤트를 설정합니다.
+    전투 조우를 포함한 이벤트는 <a href="./expedition_event.php" style="color:var(--mg-accent);text-decoration:underline;">파견 이벤트</a>에서 먼저 등록한 후 각 파견지에 매칭하세요.
+    몬스터 템플릿은 <a href="./battle_monster.php" style="color:var(--mg-accent);text-decoration:underline;">전투 &gt; 몬스터 관리</a>에서 관리합니다.
+</div>
+
 <!-- 통계 -->
 <div class="mg-stats-grid">
     <div class="mg-stat-card">

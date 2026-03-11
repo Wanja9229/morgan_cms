@@ -158,6 +158,28 @@ foreach ($grouped_fields as $fields) { $field_count += count($fields); }
             $bs_stress = (int)($battle_stat['stat_stress'] ?? 0);
             $stress_color = $bs_stress >= 100 ? '#ef4444' : ($bs_stress >= 70 ? '#f59e0b' : '#22c55e');
         ?>
+        <?php if ($battle_hp && $battle_hp['max_hp'] > 0) {
+            $_hp_pct = round($battle_hp['current_hp'] / $battle_hp['max_hp'] * 100);
+            $_hp_color = $_hp_pct > 60 ? '#22c55e' : ($_hp_pct > 30 ? '#f59e0b' : '#ef4444');
+        ?>
+        <div style="padding:0.75rem 1.5rem;background:#f7f9f9;font-size:0.8125rem;font-weight:700;color:#536471;border-bottom:1px solid #eff3f4;">
+            <span style="display:inline-flex;align-items:center;gap:0.25rem;">
+                <i data-lucide="heart" style="width:14px;height:14px;color:<?php echo $_hp_color; ?>;"></i>
+                HP
+            </span>
+        </div>
+        <div style="padding:1rem 1.5rem;border-bottom:1px solid #eff3f4;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
+                <span class="sns-stat">
+                    <span class="sns-stat-num" style="color:<?php echo $_hp_color; ?>;"><?php echo $battle_hp['current_hp']; ?></span>
+                    <span class="sns-stat-label"> / <?php echo $battle_hp['max_hp']; ?></span>
+                </span>
+            </div>
+            <div style="width:100%;height:6px;background:#eff3f4;border-radius:9999px;overflow:hidden;">
+                <div style="width:<?php echo $_hp_pct; ?>%;height:100%;background:<?php echo $_hp_color; ?>;border-radius:9999px;transition:width 0.3s;"></div>
+            </div>
+        </div>
+        <?php } ?>
         <div style="padding:0.75rem 1.5rem;background:#f7f9f9;font-size:0.8125rem;font-weight:700;color:#536471;border-bottom:1px solid #eff3f4;">
             <span style="display:inline-flex;align-items:center;gap:0.25rem;">
                 <i data-lucide="swords" style="width:14px;height:14px;"></i>

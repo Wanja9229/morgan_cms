@@ -131,6 +131,7 @@ if (!empty($profile_bg_color) && $profile_bg_color !== '#f59f0a') {
 
 // 전투 스탯 조회
 $battle_stat = null;
+$battle_hp = null;
 $_battle_use = function_exists('mg_config') ? mg_config('battle_use', '1') : '1';
 if ($_battle_use == '1') {
     $battle_stat = sql_fetch("SELECT * FROM {$g5['mg_battle_stat_table']} WHERE ch_id = {$ch_id}");
@@ -145,6 +146,10 @@ if ($_battle_use == '1') {
             'stat_int' => $_stat_base,
             'stat_stress' => 0,
         );
+    }
+    // 글로벌 HP 조회 (lazy regen 적용)
+    if (function_exists('mg_battle_get_global_hp')) {
+        $battle_hp = mg_battle_get_global_hp($ch_id);
     }
 }
 

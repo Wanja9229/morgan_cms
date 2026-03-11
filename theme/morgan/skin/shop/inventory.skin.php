@@ -21,6 +21,20 @@ if ($is_member) {
         }
     }
 }
+
+// 스탯 초기화권용: 승인 캐릭터 + 스탯 locked 여부
+$_statreset_chars = array();
+if ($is_member) {
+    $_sr_result = sql_query("SELECT c.ch_id, c.ch_name, c.ch_thumb, COALESCE(b.stat_locked, 0) as stat_locked
+                              FROM {$g5['mg_character_table']} c
+                              LEFT JOIN {$g5['mg_battle_stat_table']} b ON c.ch_id = b.ch_id
+                              WHERE c.mb_id = '{$member['mb_id']}' AND c.ch_state = 'approved' ORDER BY c.ch_id");
+    if ($_sr_result) {
+        while ($_sr_row = sql_fetch_array($_sr_result)) {
+            $_statreset_chars[] = $_sr_row;
+        }
+    }
+}
 ?>
 
 <div class="mg-inner">
@@ -332,6 +346,10 @@ if ($is_member) {
                 <div style="display:flex;gap:0.25rem;align-items:center;">
                     <span class="text-xs text-mg-text-muted" style="flex:1;text-align:center;">추첨 시 사용 가능</span>
                 </div>
+                <?php } elseif ($item['si_type'] === 'stat_reset') { ?>
+                <button type="button" onclick="openStatResetModal(<?php echo $item['si_id']; ?>, '<?php echo htmlspecialchars(addslashes($item['si_name']), ENT_QUOTES); ?>')" class="w-full btn-primary text-sm font-medium py-2 rounded-lg transition-colors">
+                    스탯 초기화
+                </button>
                 <?php } elseif ($item['si_type'] === 'rp_pin') { ?>
                 <div style="display:flex;gap:0.25rem;align-items:center;">
                     <span class="text-xs text-mg-text-muted" style="flex:1;text-align:center;">역극 목록에서 사용</span>
@@ -525,6 +543,58 @@ if ($is_member) {
         <div style="display:flex;gap:0.5rem;">
             <button type="button" onclick="closeRelSlotModal()" style="flex:1;padding:0.6rem;background:var(--mg-bg-tertiary);color:var(--mg-text-secondary);border:none;border-radius:0.5rem;cursor:pointer;font-size:0.9rem;">취소</button>
             <button type="button" id="relslot-submit-btn" onclick="submitRelSlot()" style="flex:1;padding:0.6rem;background:var(--mg-button);color:var(--mg-button-text);border:none;border-radius:0.5rem;cursor:pointer;font-size:0.9rem;font-weight:500;">사용</button>
+        </div>
+    </div>
+</div>
+
+<!-- 스탯 초기화 - 캐릭터 선택 모달 -->
+<div id="statreset-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;">
+    <div style="background:var(--mg-bg-secondary);border-radius:0.75rem;padding:1.5rem;width:90%;max-width:440px;max-height:90vh;overflow-y:auto;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+            <h3 style="font-size:1.1rem;font-weight:600;color:var(--mg-text-primary);display:flex;align-items:center;gap:0.5rem;">
+                스탯 초기화
+            </h3>
+            <button type="button" onclick="closeStatResetModal()" style="color:var(--mg-text-muted);font-size:1.5rem;line-height:1;background:none;border:none;cursor:pointer;">&times;</button>
+        </div>
+
+        <div id="statreset-item-name" style="padding:0.75rem;background:var(--mg-bg-primary);border-radius:0.5rem;margin-bottom:1rem;font-size:0.9rem;color:var(--mg-text-primary);font-weight:500;"></div>
+
+        <div style="padding:0.75rem;background:var(--mg-bg-primary);border-radius:0.5rem;margin-bottom:1rem;font-size:0.75rem;color:var(--mg-text-muted);line-height:1.5;">
+            배분한 스탯 포인트가 전부 회수되고, 수업으로 획득한 보너스는 유지됩니다.<br>
+            캐릭터 수정 페이지에서 재분배할 수 있습니다.
+        </div>
+
+        <div style="margin-bottom:1rem;">
+            <label style="display:block;font-size:0.85rem;color:var(--mg-text-secondary);margin-bottom:0.5rem;">초기화할 캐릭터 선택</label>
+            <?php if (empty($_statreset_chars)) { ?>
+            <p style="font-size:0.85rem;color:var(--mg-text-muted);padding:1rem;text-align:center;">승인된 캐릭터가 없습니다.</p>
+            <?php } else { ?>
+            <div style="display:flex;flex-direction:column;gap:0.5rem;" id="statreset-char-list">
+                <?php foreach ($_statreset_chars as $_src) { ?>
+                <label style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem;background:var(--mg-bg-primary);border-radius:0.5rem;cursor:pointer;border:2px solid transparent;transition:border-color 0.15s;<?php echo !(int)$_src['stat_locked'] ? 'opacity:0.5;pointer-events:none;' : ''; ?>" class="statreset-char-option" onmouseenter="this.style.borderColor='var(--mg-bg-tertiary)'" onmouseleave="if(!this.querySelector('input').checked)this.style.borderColor='transparent'">
+                    <input type="radio" name="statreset_ch_id" value="<?php echo $_src['ch_id']; ?>" <?php echo !(int)$_src['stat_locked'] ? 'disabled' : ''; ?> style="accent-color:var(--mg-accent);width:1rem;height:1rem;flex-shrink:0;">
+                    <?php if ($_src['ch_thumb']) { ?>
+                    <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.$_src['ch_thumb']; ?>" style="width:2rem;height:2rem;border-radius:50%;object-fit:cover;flex-shrink:0;" alt="">
+                    <?php } else { ?>
+                    <div style="width:2rem;height:2rem;border-radius:50%;background:var(--mg-bg-tertiary);display:flex;align-items:center;justify-content:center;color:var(--mg-text-muted);font-size:0.75rem;flex-shrink:0;">?</div>
+                    <?php } ?>
+                    <div style="flex:1;min-width:0;">
+                        <span style="font-size:0.9rem;color:var(--mg-text-primary);font-weight:500;"><?php echo htmlspecialchars($_src['ch_name']); ?></span>
+                        <?php if (!(int)$_src['stat_locked']) { ?>
+                        <span style="font-size:0.75rem;color:var(--mg-text-muted);margin-left:0.5rem;">미확정/이미 초기화</span>
+                        <?php } else { ?>
+                        <span style="font-size:0.75rem;color:var(--mg-accent);margin-left:0.5rem;">초기화 가능</span>
+                        <?php } ?>
+                    </div>
+                </label>
+                <?php } ?>
+            </div>
+            <?php } ?>
+        </div>
+
+        <div style="display:flex;gap:0.5rem;">
+            <button type="button" onclick="closeStatResetModal()" style="flex:1;padding:0.6rem;background:var(--mg-bg-tertiary);color:var(--mg-text-secondary);border:none;border-radius:0.5rem;cursor:pointer;font-size:0.9rem;">취소</button>
+            <button type="button" id="statreset-submit-btn" onclick="submitStatReset()" style="flex:1;padding:0.6rem;background:var(--mg-button);color:var(--mg-button-text);border:none;border-radius:0.5rem;cursor:pointer;font-size:0.9rem;font-weight:500;">초기화</button>
         </div>
     </div>
 </div>
@@ -854,6 +924,72 @@ function submitRelSlot() {
         mgToast('오류가 발생했습니다.', 'error');
         btn.disabled = false;
         btn.textContent = '사용';
+    });
+}
+
+// ─── 스탯 초기화 모달 ───
+var _statResetSiId = 0;
+
+function openStatResetModal(si_id, itemName) {
+    _statResetSiId = si_id;
+    document.getElementById('statreset-item-name').textContent = itemName;
+    // 라디오 버튼 초기화
+    var radios = document.querySelectorAll('input[name="statreset_ch_id"]');
+    radios.forEach(function(r) { r.checked = false; r.closest('label').style.borderColor = 'transparent'; });
+    document.getElementById('statreset-modal').style.display = 'flex';
+}
+
+function closeStatResetModal() {
+    document.getElementById('statreset-modal').style.display = 'none';
+    _statResetSiId = 0;
+}
+
+// 라디오 선택 시 하이라이트
+document.querySelectorAll('.statreset-char-option input').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+        document.querySelectorAll('.statreset-char-option').forEach(function(l) { l.style.borderColor = 'transparent'; });
+        if (this.checked) this.closest('label').style.borderColor = 'var(--mg-accent)';
+    });
+});
+
+document.getElementById('statreset-modal').addEventListener('click', function(e) {
+    if (e.target === this && document._mgMdTarget === this) closeStatResetModal();
+});
+
+function submitStatReset() {
+    var selected = document.querySelector('input[name="statreset_ch_id"]:checked');
+    if (!selected) {
+        mgToast('캐릭터를 선택해주세요.', 'warning');
+        return;
+    }
+
+    mgConfirm('정말 이 캐릭터의 스탯을 초기화하시겠습니까? 배분한 포인트가 회수됩니다.', function() {
+        var btn = document.getElementById('statreset-submit-btn');
+        btn.disabled = true;
+        btn.textContent = '처리 중...';
+
+        fetch('<?php echo G5_BBS_URL; ?>/inventory_use.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'action=use&si_id=' + _statResetSiId + '&ch_id=' + selected.value
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                mgToast(data.message, 'success');
+                closeStatResetModal();
+                location.reload();
+            } else {
+                mgToast(data.message, 'error');
+                btn.disabled = false;
+                btn.textContent = '초기화';
+            }
+        })
+        .catch(function() {
+            mgToast('오류가 발생했습니다.', 'error');
+            btn.disabled = false;
+            btn.textContent = '초기화';
+        });
     });
 }
 

@@ -142,14 +142,16 @@ switch ($action) {
             $contribution = (int)$s['total_damage'] + (int)$s['total_heal']
                           + (int)$s['buff_count'] * 50 + (int)$s['debuff_count'] * 50
                           + (int)$s['taunt_absorb'] * 80;
+            // 글로벌 HP 사용
+            $ghp = mg_battle_get_global_hp((int)$s['ch_id']);
             $slots[] = array(
                 'ch_id' => (int)$s['ch_id'],
                 'mb_id' => $s['mb_id'],
                 'ch_name' => $ch ? $ch['ch_name'] : '',
                 'ch_thumb' => $ch ? $ch['ch_thumb'] : '',
-                'hp' => (int)$s['current_hp'],
-                'max_hp' => (int)$s['max_hp'],
-                'status' => $s['slot_status'],
+                'hp' => $ghp['current_hp'],
+                'max_hp' => $ghp['max_hp'],
+                'status' => $ghp['current_hp'] <= 0 ? 'dead' : $s['slot_status'],
                 'contribution' => $contribution,
                 'role' => $s['slot_role'],
                 'buffs' => json_decode($s['buffs_active'] ?? '[]', true),
@@ -174,6 +176,10 @@ switch ($action) {
             );
         }
 
+        // 내 글로벌 HP (내 슬롯에서 ch_id 조회)
+        $my_poll_slot = sql_fetch("SELECT ch_id FROM {$g5['mg_battle_slot_table']} WHERE be_id = {$be_id} AND mb_id = '{$mb_id}'");
+        $my_ghp = $my_poll_slot ? mg_battle_get_global_hp((int)$my_poll_slot['ch_id']) : array('current_hp' => 0, 'max_hp' => 0);
+        // 참여자 = slots (JS 호환)
         echo json_encode(array('success' => true, 'data' => array(
             'status' => $enc['be_status'],
             'boss_hp' => $boss_hp,
@@ -181,6 +187,9 @@ switch ($action) {
             'monsters' => $monsters,
             'time_remaining' => $time_remaining,
             'slots' => $slots,
+            'participants' => $slots,
+            'my_hp' => $my_ghp['current_hp'],
+            'my_max_hp' => $my_ghp['max_hp'],
             'logs' => $logs,
             'taunt_queue' => json_decode($enc['taunt_queue'] ?? '[]', true),
             'debuffs' => json_decode($enc['be_debuffs'] ?? '[]', true),
@@ -267,13 +276,12 @@ switch ($action) {
             echo json_encode(array('success' => false, 'message' => '전투에 참여하지 않았습니다.'));
             exit;
         }
-        if ($my_slot['slot_status'] === 'dead' || (int)$my_slot['current_hp'] <= 0) {
+        // 글로벌 HP 체크
+        $my_ghp = mg_battle_get_global_hp($ch_id);
+        if ($my_slot['slot_status'] === 'dead' || $my_ghp['current_hp'] <= 0) {
             echo json_encode(array('success' => false, 'message' => '전사 상태에서는 행동할 수 없습니다.'));
             exit;
         }
-
-        // HP 자동회복 (lazy)
-        mg_battle_apply_hp_regen($ch_id, $be_id);
 
         // 스킬 정보 로드 (type=skill 시)
         $skill = null;
@@ -468,11 +476,12 @@ switch ($action) {
 
                     foreach ($target_ch_ids as $tch) {
                         if ($tch <= 0) continue;
-                        $dead_slot = sql_fetch("SELECT bsl_id, max_hp FROM {$g5['mg_battle_slot_table']}
+                        $dead_slot = sql_fetch("SELECT bsl_id FROM {$g5['mg_battle_slot_table']}
                                                 WHERE be_id = {$be_id} AND ch_id = {$tch} AND slot_status = 'dead'");
                         if ($dead_slot) {
-                            $revive_final = min($revive_hp, (int)$dead_slot['max_hp']);
-                            sql_query("UPDATE {$g5['mg_battle_slot_table']} SET current_hp = {$revive_final}, slot_status = 'active' WHERE bsl_id = " . (int)$dead_slot['bsl_id']);
+                            // 글로벌 HP 부활
+                            $revive_final = mg_battle_revive_global_hp($tch, $revive_hp);
+                            sql_query("UPDATE {$g5['mg_battle_slot_table']} SET slot_status = 'active' WHERE bsl_id = " . (int)$dead_slot['bsl_id']);
                             $revived++;
                             break; // 부활은 1명만
                         }
@@ -490,36 +499,26 @@ switch ($action) {
                     $total_healed = 0;
 
                     if ($sk_target === 'ally_all') {
-                        // 전체힐: 생존 아군 전체
-                        $allies = sql_query("SELECT ch_id, current_hp, max_hp FROM {$g5['mg_battle_slot_table']}
+                        // 전체힐: 생존 아군 전체 (글로벌 HP)
+                        $allies = sql_query("SELECT ch_id FROM {$g5['mg_battle_slot_table']}
                                              WHERE be_id = {$be_id} AND slot_status = 'active'");
                         while ($ally = sql_fetch_array($allies)) {
-                            $can_heal = (int)$ally['max_hp'] - (int)$ally['current_hp'];
-                            if ($can_heal > 0) {
-                                $actual_heal = min($heal_amount, $can_heal);
-                                sql_query("UPDATE {$g5['mg_battle_slot_table']} SET current_hp = current_hp + {$actual_heal}
-                                           WHERE be_id = {$be_id} AND ch_id = " . (int)$ally['ch_id']);
-                                $total_healed += $actual_heal;
-                            }
+                            $actual_heal = mg_battle_heal_global_hp((int)$ally['ch_id'], $heal_amount);
+                            $total_healed += $actual_heal;
                         }
                     } else {
-                        // 아군 N명 선택 힐
+                        // 아군 N명 선택 힐 (글로벌 HP)
                         $target_ch_ids = array_map('intval', explode(',', $target_ch_ids_raw));
                         $max_targets = (int)$skill['sk_target_count'];
                         $healed_count = 0;
 
                         foreach ($target_ch_ids as $tch) {
                             if ($tch <= 0 || $healed_count >= $max_targets) continue;
-                            $ally = sql_fetch("SELECT current_hp, max_hp FROM {$g5['mg_battle_slot_table']}
+                            $ally = sql_fetch("SELECT slot_status FROM {$g5['mg_battle_slot_table']}
                                                WHERE be_id = {$be_id} AND ch_id = {$tch} AND slot_status = 'active'");
                             if ($ally) {
-                                $can_heal = (int)$ally['max_hp'] - (int)$ally['current_hp'];
-                                if ($can_heal > 0) {
-                                    $actual_heal = min($heal_amount, $can_heal);
-                                    sql_query("UPDATE {$g5['mg_battle_slot_table']} SET current_hp = current_hp + {$actual_heal}
-                                               WHERE be_id = {$be_id} AND ch_id = {$tch}");
-                                    $total_healed += $actual_heal;
-                                }
+                                $actual_heal = mg_battle_heal_global_hp($tch, $heal_amount);
+                                $total_healed += $actual_heal;
                                 $healed_count++;
                             }
                         }
@@ -701,14 +700,11 @@ switch ($action) {
                 }
 
                 if (!$evaded) {
-                    // HP 감소
-                    sql_query("UPDATE {$g5['mg_battle_slot_table']} SET current_hp = GREATEST(0, current_hp - {$counter_dmg})
-                               WHERE be_id = {$be_id} AND ch_id = {$counter_target_ch}");
+                    // 글로벌 HP에 데미지 적용
+                    $counter_hp_result = mg_battle_damage_global_hp($counter_target_ch, $counter_dmg);
 
                     // 전사 체크
-                    $check_hp = sql_fetch("SELECT current_hp FROM {$g5['mg_battle_slot_table']}
-                                           WHERE be_id = {$be_id} AND ch_id = {$counter_target_ch}");
-                    if ($check_hp && (int)$check_hp['current_hp'] <= 0) {
+                    if ($counter_hp_result['is_dead']) {
                         sql_query("UPDATE {$g5['mg_battle_slot_table']} SET slot_status = 'dead'
                                    WHERE be_id = {$be_id} AND ch_id = {$counter_target_ch}");
 
@@ -813,28 +809,31 @@ switch ($action) {
 
         switch ($effect_type) {
             case 'heal':
-                // HP 회복 포션
-                if ($my_slot['slot_status'] === 'dead') {
+                // HP 회복 포션 (글로벌 HP)
+                $item_ghp = mg_battle_get_global_hp($ch_id);
+                if ($item_ghp['current_hp'] <= 0) {
                     echo json_encode(array('success' => false, 'message' => '전사 상태에서는 사용할 수 없습니다.'));
                     exit;
                 }
                 $heal = (int)($effect['hp_amount'] ?? 50);
-                sql_query("UPDATE {$g5['mg_battle_slot_table']} SET current_hp = LEAST(max_hp, current_hp + {$heal})
-                           WHERE bsl_id = " . (int)$my_slot['bsl_id']);
-                $item_msg = 'HP +' . $heal . ' 회복';
+                $actual_heal = mg_battle_heal_global_hp($ch_id, $heal);
+                $item_msg = 'HP +' . $actual_heal . ' 회복';
                 break;
 
             case 'revive':
-                // 자가 부활
-                if ($my_slot['slot_status'] !== 'dead') {
+                // 자가 부활 (글로벌 HP)
+                $item_ghp = mg_battle_get_global_hp($ch_id);
+                if ($item_ghp['current_hp'] > 0) {
                     echo json_encode(array('success' => false, 'message' => '전사 상태가 아닙니다.'));
                     exit;
                 }
                 $hp_pct = (int)($effect['hp_percent'] ?? 50);
-                $revive_hp = max(1, round((int)$my_slot['max_hp'] * $hp_pct / 100));
-                sql_query("UPDATE {$g5['mg_battle_slot_table']} SET current_hp = {$revive_hp}, slot_status = 'active'
-                           WHERE bsl_id = " . (int)$my_slot['bsl_id']);
-                $item_msg = '부활! HP ' . $revive_hp;
+                $revive_hp = max(1, round($item_ghp['max_hp'] * $hp_pct / 100));
+                $final_hp = mg_battle_revive_global_hp($ch_id, $revive_hp);
+                // 슬롯 상태도 active로 복구
+                sql_query("UPDATE {$g5['mg_battle_slot_table']} SET slot_status = 'active'
+                           WHERE be_id = {$be_id} AND ch_id = {$ch_id}");
+                $item_msg = '부활! HP ' . $final_hp;
                 break;
 
             case 'stamina':
@@ -911,6 +910,8 @@ switch ($action) {
                 {$vals['stat_hp']}, {$vals['stat_str']}, {$vals['stat_dex']},
                 {$vals['stat_int']}, {$remaining}, 1)");
         }
+        // 글로벌 max_hp 동기화
+        mg_battle_sync_max_hp($ch_id);
         echo json_encode(array('success' => true, 'message' => '스탯이 확정되었습니다.'));
         break;
 

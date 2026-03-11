@@ -213,7 +213,7 @@ CREATE TABLE IF NOT EXISTS `mg_shop_item` (
     `si_desc` text COMMENT '설명',
     `si_image` varchar(500) DEFAULT NULL COMMENT '이미지',
     `si_price` int NOT NULL COMMENT '가격',
-    `si_type` enum('title','badge','nick_color','nick_effect','profile_border','equip','emoticon_set','emoticon_reg','furniture','material','seal_bg','seal_frame','seal_hover','seal_effect','profile_skin','profile_bg','profile_effect','char_slot','concierge_extra','title_prefix','title_suffix','radio_song','radio_ment','relation_slot','concierge_direct_pick','rp_pin','expedition_time','expedition_reward','expedition_stamina','expedition_slot','write_expand','achievement_slot','concierge_boost','nick_bg','stamina_recover','battle_weapon','battle_armor','battle_accessory','battle_consumable','battle_skill_book','etc') NOT NULL DEFAULT 'etc' COMMENT '타입',
+    `si_type` enum('title','badge','nick_color','nick_effect','profile_border','equip','emoticon_set','emoticon_reg','furniture','material','seal_bg','seal_frame','seal_hover','seal_effect','profile_skin','profile_bg','profile_effect','char_slot','concierge_extra','title_prefix','title_suffix','radio_song','radio_ment','relation_slot','concierge_direct_pick','rp_pin','expedition_time','expedition_reward','expedition_stamina','expedition_slot','write_expand','achievement_slot','concierge_boost','nick_bg','stamina_recover','battle_weapon','battle_armor','battle_accessory','battle_consumable','battle_skill_book','stat_reset','etc') NOT NULL DEFAULT 'etc' COMMENT '타입',
     `si_effect` text COMMENT '효과 데이터 (JSON)',
     `si_stock` int NOT NULL DEFAULT -1 COMMENT '재고 (-1=무제한)',
     `si_stock_sold` int NOT NULL DEFAULT 0 COMMENT '판매 수량',
@@ -2473,6 +2473,12 @@ SELECT 'stamina_recover', '스태미나 회복 물약', '스태미나를 풀 충
  COALESCE((SELECT sc_id FROM mg_shop_category WHERE sc_name = '이용권' LIMIT 1), 0), 1, 1 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_type = 'stamina_recover' AND si_name = '스태미나 회복 물약');
 
+-- 스탯 초기화권
+INSERT IGNORE INTO mg_shop_item (si_type, si_name, si_desc, si_price, si_image, si_effect, si_use, sc_id, si_consumable, si_display)
+SELECT 'stat_reset', '스탯 초기화권', '배분한 전투 스탯을 초기화하고 재분배할 수 있습니다 (수업 보너스 유지)', 500, '', '{}', 1,
+ COALESCE((SELECT sc_id FROM mg_shop_category WHERE sc_name = '이용권' LIMIT 1), 0), 1, 1 FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_type = 'stat_reset');
+
 -- ======================================
 -- 25. 히든 이벤트 시스템
 -- ======================================
@@ -2583,6 +2589,8 @@ CREATE TABLE IF NOT EXISTS `mg_battle_energy` (
     `current_energy`  INT DEFAULT 5,
     `max_energy`      INT DEFAULT 10,
     `last_charge_at`  DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `current_hp`      INT NOT NULL DEFAULT 0,
+    `max_hp`          INT NOT NULL DEFAULT 100,
     `last_hp_regen_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY (`ch_id`),
     KEY (`mb_id`)
@@ -2756,6 +2764,20 @@ CREATE TABLE IF NOT EXISTS `mg_training_progress` (
     `tp_completed`    INT NOT NULL DEFAULT 0 COMMENT '이수 완료 횟수',
     `tp_updated`      DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY `uk_ch_class` (`ch_id`, `tc_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 캐릭터 수정 이력
+CREATE TABLE IF NOT EXISTS `mg_character_edit_log` (
+    `cel_id`        INT AUTO_INCREMENT PRIMARY KEY,
+    `ch_id`         INT NOT NULL,
+    `mb_id`         VARCHAR(20) NOT NULL,
+    `cel_field`     VARCHAR(100) NOT NULL COMMENT '변경된 필드명',
+    `cel_old_value` TEXT COMMENT '변경 전 값',
+    `cel_new_value` TEXT COMMENT '변경 후 값',
+    `cel_created`   DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_ch_id` (`ch_id`),
+    INDEX `idx_mb_id` (`mb_id`),
+    INDEX `idx_created` (`cel_created`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 SET FOREIGN_KEY_CHECKS = 1;

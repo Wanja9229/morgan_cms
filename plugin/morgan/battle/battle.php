@@ -56,9 +56,14 @@ function mg_battle_init_energy($ch_id, $mb_id) {
 
     $initial = (int)mg_battle_config('energy_initial', '5');
     $max = (int)mg_battle_config('energy_max', '10');
+
+    // 글로벌 HP: 파생 수치에서 max_hp 계산
+    $derived = mg_battle_calc_derived($ch_id);
+    $max_hp = $derived ? $derived['max_hp'] : (int)mg_battle_config('base_hp', '100');
+
     sql_query("INSERT IGNORE INTO {$g5['mg_battle_energy_table']}
-        (ch_id, mb_id, current_energy, max_energy)
-        VALUES ({$ch_id}, '{$mb_id_esc}', {$initial}, {$max})");
+        (ch_id, mb_id, current_energy, max_energy, current_hp, max_hp)
+        VALUES ({$ch_id}, '{$mb_id_esc}', {$initial}, {$max}, {$max_hp}, {$max_hp})");
 
     return sql_fetch("SELECT * FROM {$g5['mg_battle_energy_table']} WHERE ch_id = {$ch_id}");
 }
@@ -271,21 +276,16 @@ function mg_battle_calc_derived($ch_id) {
 // ============================================================
 
 /**
- * 행동 시점에 lazy HP 회복 적용
- * 전투 슬롯(be_id + ch_id)의 current_hp를 시간 경과분만큼 회복
+ * 행동 시점에 lazy HP 회복 적용 (글로벌 HP)
+ * battle_energy 테이블의 current_hp를 시간 경과분만큼 회복
  * @return int 회복된 HP량
  */
-function mg_battle_apply_hp_regen($ch_id, $be_id) {
+function mg_battle_apply_hp_regen($ch_id) {
     global $g5;
     $ch_id = (int)$ch_id;
-    $be_id = (int)$be_id;
 
-    $energy_row = sql_fetch("SELECT last_hp_regen_at FROM {$g5['mg_battle_energy_table']} WHERE ch_id = {$ch_id}");
+    $energy_row = sql_fetch("SELECT current_hp, max_hp, last_hp_regen_at FROM {$g5['mg_battle_energy_table']} WHERE ch_id = {$ch_id}");
     if (!$energy_row) return 0;
-
-    $slot = sql_fetch("SELECT current_hp, max_hp, slot_status FROM {$g5['mg_battle_slot_table']}
-                       WHERE be_id = {$be_id} AND ch_id = {$ch_id}");
-    if (!$slot || $slot['slot_status'] === 'dead') return 0;
 
     $interval = (int)mg_battle_config('energy_interval', '1800');
     $regen_pct = (int)mg_battle_config('hp_regen_pct', '5');
@@ -298,26 +298,137 @@ function mg_battle_apply_hp_regen($ch_id, $be_id) {
 
     if ($charge_count <= 0) return 0;
 
-    $max_hp = (int)$slot['max_hp'];
-    $current_hp = (int)$slot['current_hp'];
-    $heal_per_tick = (int)floor($max_hp * $regen_pct / 100);
+    $max_hp = (int)$energy_row['max_hp'];
+    $current_hp = (int)$energy_row['current_hp'];
+
+    // 이미 만피면 시간만 갱신
+    if ($current_hp >= $max_hp) {
+        $new_regen_at = date('Y-m-d H:i:s', $last_regen + ($charge_count * $interval));
+        sql_query("UPDATE {$g5['mg_battle_energy_table']} SET last_hp_regen_at = '{$new_regen_at}' WHERE ch_id = {$ch_id}");
+        return 0;
+    }
+
+    $heal_per_tick = max(1, (int)floor($max_hp * $regen_pct / 100));
     $total_heal = $heal_per_tick * $charge_count;
     $new_hp = min($current_hp + $total_heal, $max_hp);
     $actual_heal = $new_hp - $current_hp;
 
-    if ($actual_heal > 0) {
-        sql_query("UPDATE {$g5['mg_battle_slot_table']}
-            SET current_hp = {$new_hp}
-            WHERE be_id = {$be_id} AND ch_id = {$ch_id}");
-    }
-
-    // last_hp_regen_at 갱신
+    // last_hp_regen_at 갱신 + HP 업데이트
     $new_regen_at = date('Y-m-d H:i:s', $last_regen + ($charge_count * $interval));
     sql_query("UPDATE {$g5['mg_battle_energy_table']}
-        SET last_hp_regen_at = '{$new_regen_at}'
+        SET current_hp = {$new_hp}, last_hp_regen_at = '{$new_regen_at}'
         WHERE ch_id = {$ch_id}");
 
     return $actual_heal;
+}
+
+/**
+ * 글로벌 HP 조회 (regen 적용 후)
+ * @return array [current_hp, max_hp]
+ */
+function mg_battle_get_global_hp($ch_id) {
+    global $g5;
+    $ch_id = (int)$ch_id;
+
+    // lazy regen 적용
+    mg_battle_apply_hp_regen($ch_id);
+
+    $row = sql_fetch("SELECT current_hp, max_hp FROM {$g5['mg_battle_energy_table']} WHERE ch_id = {$ch_id}");
+    if (!$row) return array('current_hp' => 0, 'max_hp' => 0);
+
+    return array(
+        'current_hp' => (int)$row['current_hp'],
+        'max_hp' => (int)$row['max_hp'],
+    );
+}
+
+/**
+ * 글로벌 HP에 데미지 적용
+ * @return array [new_hp, is_dead]
+ */
+function mg_battle_damage_global_hp($ch_id, $damage) {
+    global $g5;
+    $ch_id = (int)$ch_id;
+    $damage = max(0, (int)$damage);
+
+    sql_query("UPDATE {$g5['mg_battle_energy_table']}
+        SET current_hp = GREATEST(0, current_hp - {$damage})
+        WHERE ch_id = {$ch_id}");
+
+    $row = sql_fetch("SELECT current_hp, max_hp FROM {$g5['mg_battle_energy_table']} WHERE ch_id = {$ch_id}");
+    $new_hp = $row ? (int)$row['current_hp'] : 0;
+
+    return array('new_hp' => $new_hp, 'is_dead' => ($new_hp <= 0));
+}
+
+/**
+ * 글로벌 HP 회복 (힐 스킬/아이템)
+ * @return int 실제 회복량
+ */
+function mg_battle_heal_global_hp($ch_id, $amount) {
+    global $g5;
+    $ch_id = (int)$ch_id;
+    $amount = max(0, (int)$amount);
+
+    $row = sql_fetch("SELECT current_hp, max_hp FROM {$g5['mg_battle_energy_table']} WHERE ch_id = {$ch_id}");
+    if (!$row) return 0;
+
+    $can_heal = (int)$row['max_hp'] - (int)$row['current_hp'];
+    $actual = min($amount, $can_heal);
+    if ($actual <= 0) return 0;
+
+    sql_query("UPDATE {$g5['mg_battle_energy_table']}
+        SET current_hp = LEAST(max_hp, current_hp + {$actual})
+        WHERE ch_id = {$ch_id}");
+
+    return $actual;
+}
+
+/**
+ * 글로벌 HP 부활 (0 → 지정 HP로)
+ * @return int 부활 후 HP
+ */
+function mg_battle_revive_global_hp($ch_id, $revive_hp) {
+    global $g5;
+    $ch_id = (int)$ch_id;
+    $revive_hp = max(1, (int)$revive_hp);
+
+    $row = sql_fetch("SELECT max_hp FROM {$g5['mg_battle_energy_table']} WHERE ch_id = {$ch_id}");
+    if (!$row) return 0;
+
+    $final_hp = min($revive_hp, (int)$row['max_hp']);
+    sql_query("UPDATE {$g5['mg_battle_energy_table']} SET current_hp = {$final_hp} WHERE ch_id = {$ch_id}");
+
+    return $final_hp;
+}
+
+/**
+ * max_hp 동기화 (스탯 변경/장비 변경 후 호출)
+ * max_hp가 증가하면 current_hp도 같은 비율로 조정
+ */
+function mg_battle_sync_max_hp($ch_id) {
+    global $g5;
+    $ch_id = (int)$ch_id;
+
+    $derived = mg_battle_calc_derived($ch_id);
+    if (!$derived) return;
+
+    $new_max = $derived['max_hp'];
+    $row = sql_fetch("SELECT current_hp, max_hp FROM {$g5['mg_battle_energy_table']} WHERE ch_id = {$ch_id}");
+    if (!$row) return;
+
+    $old_max = (int)$row['max_hp'];
+    $old_hp = (int)$row['current_hp'];
+
+    if ($old_max === $new_max) return;
+
+    // 비율 유지: current_hp = (old_hp / old_max) * new_max
+    $new_hp = $old_max > 0 ? (int)round($old_hp * $new_max / $old_max) : $new_max;
+    $new_hp = max(0, min($new_hp, $new_max));
+
+    sql_query("UPDATE {$g5['mg_battle_energy_table']}
+        SET max_hp = {$new_max}, current_hp = {$new_hp}
+        WHERE ch_id = {$ch_id}");
 }
 
 // ============================================================
@@ -359,6 +470,9 @@ function mg_battle_allocate_stats($ch_id, $alloc) {
         stat_points = stat_points - {$total}
         WHERE ch_id = {$ch_id}");
 
+    // 글로벌 max_hp 동기화
+    mg_battle_sync_max_hp($ch_id);
+
     return array('success' => true, 'message' => '스탯이 배분되었습니다.');
 }
 
@@ -381,6 +495,9 @@ function mg_battle_reset_stats($ch_id) {
         stat_hp = {$base}, stat_str = {$base}, stat_dex = {$base}, stat_int = {$base}, stat_con = {$base}, stat_luk = {$base},
         stat_points = {$refund}
         WHERE ch_id = {$ch_id}");
+
+    // 글로벌 max_hp 동기화
+    mg_battle_sync_max_hp($ch_id);
 
     return array('success' => true, 'message' => '스탯이 초기화되었습니다.', 'refunded_points' => $refund);
 }
@@ -420,6 +537,9 @@ function mg_battle_equip($ch_id, $mb_id, $slot, $si_id) {
 
     sql_query("UPDATE {$g5['mg_battle_stat_table']} SET {$col} = {$si_id} WHERE ch_id = {$ch_id}");
 
+    // 글로벌 max_hp 동기화
+    mg_battle_sync_max_hp($ch_id);
+
     return array('success' => true, 'message' => '장비를 장착했습니다.');
 }
 
@@ -437,6 +557,9 @@ function mg_battle_unequip($ch_id, $slot) {
     $col = $valid_slots[$slot];
 
     sql_query("UPDATE {$g5['mg_battle_stat_table']} SET {$col} = 0 WHERE ch_id = {$ch_id}");
+
+    // 글로벌 max_hp 동기화
+    mg_battle_sync_max_hp($ch_id);
 
     return array('success' => true, 'message' => '장비를 해제했습니다.');
 }
@@ -624,12 +747,21 @@ function mg_battle_join($be_id, $ch_id, $mb_id, $role = 'participant') {
     $derived = mg_battle_calc_derived($ch_id);
     if (!$derived) return array('success' => false, 'message' => '전투 스탯이 설정되지 않았습니다.');
 
-    $max_hp = $derived['max_hp'];
+    // 글로벌 HP 동기화 (max_hp가 바뀌었을 수 있음)
+    mg_battle_sync_max_hp($ch_id);
+
+    // 글로벌 HP 확인 — 전사 상태면 참여 불가
+    $global_hp = mg_battle_get_global_hp($ch_id);
+    if ($global_hp['current_hp'] <= 0) {
+        return array('success' => false, 'message' => 'HP가 0입니다. 회복 후 참여해주세요.');
+    }
+
     $role_esc = sql_real_escape_string($role);
 
+    // 슬롯에는 글로벌 HP 스냅샷 저장 (표시용)
     sql_query("INSERT INTO {$g5['mg_battle_slot_table']}
         (be_id, mb_id, ch_id, slot_role, slot_status, current_hp, max_hp)
-        VALUES ({$be_id}, '{$mb_id_esc}', {$ch_id}, '{$role_esc}', 'active', {$max_hp}, {$max_hp})");
+        VALUES ({$be_id}, '{$mb_id_esc}', {$ch_id}, '{$role_esc}', 'active', {$global_hp['current_hp']}, {$global_hp['max_hp']})");
 
     $bsl_id = sql_insert_id();
 

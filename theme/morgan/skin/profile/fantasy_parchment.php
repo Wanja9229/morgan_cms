@@ -374,6 +374,30 @@ $ch_date_roman = date('d.m.Y', strtotime($char['ch_datetime']));
             $_bs_stress = (int)($battle_stat['stat_stress'] ?? 0);
             $_stress_color = $_bs_stress >= 100 ? '#b91c1c' : ($_bs_stress >= 70 ? '#d97706' : '#365314');
         ?>
+        <?php if ($battle_hp && $battle_hp['max_hp'] > 0) {
+            $_hp_pct = round($battle_hp['current_hp'] / $battle_hp['max_hp'] * 100);
+            $_hp_color = $_hp_pct > 60 ? '#365314' : ($_hp_pct > 30 ? '#d97706' : '#b91c1c');
+        ?>
+        <div class="fp-rule" style="padding:0 2rem;"><span class="fp-rule-icon">&#9829;</span></div>
+        <div style="padding:0 2rem;">
+            <h3 class="fp-display" style="text-align:center;font-size:1rem;color:#c5a55a;margin-bottom:1rem;">&#9829; 생명력</h3>
+            <table class="fp-field-table">
+                <tbody>
+                    <tr>
+                        <td class="fp-field-label fp-heading">HP</td>
+                        <td class="fp-field-value">
+                            <div style="display:flex;align-items:center;gap:0.5rem;">
+                                <div style="flex:1;height:6px;background:rgba(197,165,90,0.15);border-radius:2px;overflow:hidden;">
+                                    <div style="width:<?php echo $_hp_pct; ?>%;height:100%;background:<?php echo $_hp_color; ?>;border-radius:2px;transition:width 0.3s;"></div>
+                                </div>
+                                <span style="font-weight:700;font-size:0.875rem;color:<?php echo $_hp_color; ?>;"><?php echo $battle_hp['current_hp']; ?> / <?php echo $battle_hp['max_hp']; ?></span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <?php } ?>
         <div class="fp-rule" style="padding:0 2rem;"><span class="fp-rule-icon">&#9876;</span></div>
         <div style="padding:0 2rem;">
             <h3 class="fp-display" style="text-align:center;font-size:1rem;color:#c5a55a;margin-bottom:1rem;">&#9876; 전투 능력</h3>

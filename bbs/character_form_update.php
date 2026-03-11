@@ -54,8 +54,23 @@ if ($is_edit) {
 
 $_is_approved = $is_edit && ($char['ch_state'] ?? '') === 'approved';
 
-// 승인된 캐릭터: 기본정보 변경 차단 (칭호/프로필꾸미기/대표캐릭터만 허용)
+// 신청 기간 중인지 확인 (승인 캐릭터도 수정 가능)
+$_is_edit_period = false;
 if ($_is_approved) {
+    $_char_reg_start = mg_config('char_reg_start', '');
+    $_char_reg_end = mg_config('char_reg_end', '');
+    $_char_reg_stop = mg_config('char_reg_stop', '0');
+    if ($_char_reg_start && $_char_reg_end && $_char_reg_stop !== '1') {
+        $now = date('Y-m-d\TH:i');
+        $_is_edit_period = ($now >= $_char_reg_start && $now <= $_char_reg_end);
+    }
+}
+
+// 실제 잠금 여부
+$_is_locked = $_is_approved && !$_is_edit_period;
+
+// 승인된 캐릭터: 기본정보 변경 차단 (칭호/프로필꾸미기/대표캐릭터만 허용)
+if ($_is_locked) {
     $ch_name = $char['ch_name'];
     $side_id = (int)($char['side_id'] ?? 0);
     $class_id = (int)($char['class_id'] ?? 0);
@@ -108,8 +123,8 @@ if ($btn_delete && $is_edit) {
     goto_url(G5_BBS_URL.'/character.php');
 }
 
-// 승인된 캐릭터: 이미지 변경 차단
-if ($_is_approved) {
+// 승인된 캐릭터: 이미지 변경 차단 (수정 기간이 아닌 경우만)
+if ($_is_locked) {
     $ch_thumb = $char['ch_thumb'] ?? '';
     $ch_image = $char['ch_image'] ?? '';
     $ch_header = $char['ch_header'] ?? '';
@@ -311,6 +326,27 @@ if ($is_edit) {
     // 로그
     $log_action = $btn_submit ? 'submit' : 'edit';
     sql_query("INSERT INTO {$g5['mg_character_log_table']} (ch_id, log_action) VALUES ({$ch_id}, '{$log_action}')");
+
+    // 수정 기간 중 승인 캐릭터 수정 이력 기록
+    if ($_is_approved && $_is_edit_period) {
+        $edit_fields = array(
+            'ch_name' => array('old' => $char['ch_name'], 'new' => $ch_name),
+            'side_id' => array('old' => (string)($char['side_id'] ?? ''), 'new' => (string)$side_id),
+            'class_id' => array('old' => (string)($char['class_id'] ?? ''), 'new' => (string)$class_id),
+            'ch_thumb' => array('old' => $char['ch_thumb'] ?? '', 'new' => $ch_thumb),
+            'ch_image' => array('old' => $char['ch_image'] ?? '', 'new' => $ch_image),
+            'ch_header' => array('old' => $char['ch_header'] ?? '', 'new' => $ch_header),
+        );
+        foreach ($edit_fields as $field_key => $f) {
+            if ((string)$f['old'] !== (string)$f['new']) {
+                $old_esc = sql_real_escape_string($f['old'] ?? '');
+                $new_esc = sql_real_escape_string($f['new'] ?? '');
+                sql_query("INSERT INTO {$g5['mg_character_edit_log_table']}
+                    (ch_id, mb_id, cel_field, cel_old_value, cel_new_value)
+                    VALUES ({$ch_id}, '{$member['mb_id']}', '{$field_key}', '{$old_esc}', '{$new_esc}')");
+            }
+        }
+    }
 } else {
     // 신규 생성: 슬롯 제한 검증
     $cnt_row = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_character_table']}
@@ -398,6 +434,17 @@ if (isset($_FILES['profile_image']) && is_array($_FILES['profile_image']['name']
 }
 
 // 프로필 값 저장
+// 수정 기간 중이면 이전 프로필 값을 기록용으로 보존
+$_prev_profile_values = array();
+if ($_is_approved && $_is_edit_period && $is_edit) {
+    $pv_result = sql_query("SELECT pf_id, pv_value FROM {$g5['mg_profile_value_table']} WHERE ch_id = {$ch_id}");
+    if ($pv_result) {
+        while ($pv_row = sql_fetch_array($pv_result)) {
+            $_prev_profile_values[(int)$pv_row['pf_id']] = $pv_row['pv_value'] ?? '';
+        }
+    }
+}
+
 foreach ($profile as $pf_id => $pv_value) {
     $pf_id = (int)$pf_id;
 
@@ -409,8 +456,21 @@ foreach ($profile as $pf_id => $pv_value) {
     }
 
     // 필드 존재 여부 확인
-    $field = sql_fetch("SELECT pf_id FROM {$g5['mg_profile_field_table']} WHERE pf_id = {$pf_id} AND pf_use = 1");
+    $field = sql_fetch("SELECT pf_id, pf_name FROM {$g5['mg_profile_field_table']} WHERE pf_id = {$pf_id} AND pf_use = 1");
     if (!$field['pf_id']) continue;
+
+    // 수정 기간 중 프로필 필드 변경 이력 기록
+    if ($_is_approved && $_is_edit_period) {
+        $prev_val = $_prev_profile_values[$pf_id] ?? '';
+        if ((string)$prev_val !== (string)$pv_value) {
+            $log_field_name = 'profile_' . $pf_id;
+            $old_esc = sql_real_escape_string($prev_val);
+            $new_esc = sql_real_escape_string($pv_value);
+            sql_query("INSERT INTO {$g5['mg_character_edit_log_table']}
+                (ch_id, mb_id, cel_field, cel_old_value, cel_new_value)
+                VALUES ({$ch_id}, '{$member['mb_id']}', '{$log_field_name}', '{$old_esc}', '{$new_esc}')");
+        }
+    }
 
     // UPSERT
     $exists = sql_fetch("SELECT pv_id FROM {$g5['mg_profile_value_table']} WHERE ch_id = {$ch_id} AND pf_id = {$pf_id}");

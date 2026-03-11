@@ -153,6 +153,24 @@ $ch_number = str_pad($char['ch_id'], 0, STR_PAD_LEFT);
             $bs_stress = (int)($battle_stat['stat_stress'] ?? 0);
             $stress_color = $bs_stress >= 100 ? '#ef4444' : ($bs_stress >= 70 ? '#f59e0b' : '#22c55e');
         ?>
+        <?php if ($battle_hp && $battle_hp['max_hp'] > 0) {
+            $_hp_pct = round($battle_hp['current_hp'] / $battle_hp['max_hp'] * 100);
+            $_hp_color = $_hp_pct > 60 ? '#a78bfa' : ($_hp_pct > 30 ? '#f59e0b' : '#ef4444');
+        ?>
+        <div class="tt-divider"><span>&#9829;</span></div>
+        <div style="position:relative;z-index:1;margin-bottom:1.5rem;">
+            <h3 class="tt-cinzel" style="text-align:center;font-size:0.8125rem;letter-spacing:0.2em;text-transform:uppercase;color:#a78bfa;margin-bottom:1rem;">&#9829; 생명력 &#9829;</h3>
+            <div style="background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.2);border-radius:0.375rem;padding:0.75rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                    <span style="font-size:0.75rem;color:#7c3aed;text-transform:uppercase;letter-spacing:0.1em;" class="tt-cinzel">HP</span>
+                    <span style="font-size:1rem;font-weight:700;color:<?php echo $_hp_color; ?>;"><?php echo $battle_hp['current_hp']; ?> / <?php echo $battle_hp['max_hp']; ?></span>
+                </div>
+                <div style="width:100%;height:6px;background:rgba(124,58,237,0.15);border-radius:9999px;overflow:hidden;">
+                    <div style="width:<?php echo $_hp_pct; ?>%;height:100%;background:<?php echo $_hp_color; ?>;border-radius:9999px;transition:width 0.3s;"></div>
+                </div>
+            </div>
+        </div>
+        <?php } ?>
         <div class="tt-divider"><span>&#9876;</span></div>
         <div style="position:relative;z-index:1;margin-bottom:1.5rem;">
             <h3 class="tt-cinzel" style="text-align:center;font-size:0.8125rem;letter-spacing:0.2em;text-transform:uppercase;color:#a78bfa;margin-bottom:1rem;">&#10022; 전투의 별 &#10022;</h3>

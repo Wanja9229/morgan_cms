@@ -66,6 +66,21 @@ if ($is_edit) {
 // 승인된 캐릭터: 기본정보/이미지/프로필 필드 수정 불가
 $_is_approved = $is_edit && ($char['ch_state'] ?? '') === 'approved';
 
+// 신청 기간 중인지 확인 (승인 캐릭터도 수정 가능)
+$_is_edit_period = false;
+if ($_is_approved) {
+    $_char_reg_start = mg_config('char_reg_start', '');
+    $_char_reg_end = mg_config('char_reg_end', '');
+    $_char_reg_stop = mg_config('char_reg_stop', '0');
+    if ($_char_reg_start && $_char_reg_end && $_char_reg_stop !== '1') {
+        $now = date('Y-m-d\TH:i');
+        $_is_edit_period = ($now >= $_char_reg_start && $now <= $_char_reg_end);
+    }
+}
+
+// 실제 잠금 여부: 승인됨 AND 수정 기간이 아님
+$_is_locked = $_is_approved && !$_is_edit_period;
+
 // 세력/종족 목록
 $_use_side = mg_config('use_side', '1') == '1';
 $_use_class = mg_config('use_class', '1') == '1';
@@ -163,6 +178,18 @@ include_once(G5_THEME_PATH.'/head.php');
         <h1 class="text-2xl font-bold text-mg-text-primary"><?php echo $is_edit ? '캐릭터 수정' : '새 캐릭터 만들기'; ?></h1>
     </div>
 
+    <?php if ($_is_approved && $_is_edit_period) { ?>
+    <div class="rounded-lg p-4 mb-4" style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);">
+        <div class="flex items-start gap-3">
+            <i data-lucide="info" class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5"></i>
+            <div>
+                <p class="font-medium text-blue-400">캐릭터 신청 기간 중입니다</p>
+                <p class="text-sm text-mg-text-secondary mt-1">승인된 캐릭터의 프로필을 수정할 수 있습니다. (기간: <?php echo str_replace('T', ' ', $_char_reg_start); ?> ~ <?php echo str_replace('T', ' ', $_char_reg_end); ?>)</p>
+            </div>
+        </div>
+    </div>
+    <?php } ?>
+
     <?php
     // 반려 알림 표시
     if ($is_edit && $char['ch_state'] == 'editing') {
@@ -215,9 +242,9 @@ include_once(G5_THEME_PATH.'/head.php');
                     <!-- 캐릭터명 -->
                     <div>
                         <label for="ch_name" class="block text-sm font-medium text-mg-text-secondary mb-1.5">
-                            캐릭터명 <?php if (!$_is_approved) { ?><span class="text-red-400">*</span><?php } ?>
+                            캐릭터명 <?php if (!$_is_locked) { ?><span class="text-red-400">*</span><?php } ?>
                         </label>
-                        <?php if ($_is_approved) { ?>
+                        <?php if ($_is_locked) { ?>
                         <input type="hidden" name="ch_name" value="<?php echo htmlspecialchars($char['ch_name']); ?>">
                         <p class="text-mg-text-primary px-4 py-2.5"><?php echo htmlspecialchars($char['ch_name']); ?></p>
                         <?php } else { ?>
@@ -234,7 +261,7 @@ include_once(G5_THEME_PATH.'/head.php');
                             <label for="side_id" class="block text-sm font-medium text-mg-text-secondary mb-1.5">
                                 <?php echo mg_config('side_title', '소속'); ?>
                             </label>
-                            <?php if ($_is_approved) {
+                            <?php if ($_is_locked) {
                                 $cur_side_name = '';
                                 foreach ($sides as $side) { if ($side['side_id'] == ($char['side_id'] ?? '')) $cur_side_name = $side['side_name']; }
                             ?>
@@ -256,7 +283,7 @@ include_once(G5_THEME_PATH.'/head.php');
                             <label for="class_id" class="block text-sm font-medium text-mg-text-secondary mb-1.5">
                                 <?php echo mg_config('class_title', '유형'); ?>
                             </label>
-                            <?php if ($_is_approved) {
+                            <?php if ($_is_locked) {
                                 $cur_class_name = '';
                                 foreach ($classes as $class) { if ($class['class_id'] == ($char['class_id'] ?? '')) $cur_class_name = $class['class_name']; }
                             ?>
@@ -417,7 +444,7 @@ include_once(G5_THEME_PATH.'/head.php');
             <?php } // end battle_use ?>
 
             <!-- 캐릭터 이미지 카드 -->
-            <?php if ($_is_approved) { ?>
+            <?php if ($_is_locked) { ?>
             <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
                 <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary">
                     <h2 class="font-medium text-mg-text-primary flex items-center gap-2">캐릭터 이미지 <span class="text-xs text-mg-text-muted flex items-center gap-1"><i data-lucide="lock" class="w-3.5 h-3.5"></i>승인됨</span></h2>
@@ -616,17 +643,17 @@ include_once(G5_THEME_PATH.'/head.php');
             <?php foreach ($grouped_fields as $category => $fields) { ?>
             <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
                 <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary">
-                    <h2 class="font-medium text-mg-text-primary flex items-center gap-2"><?php echo $category; ?><?php if ($_is_approved) { ?> <span class="text-xs text-mg-text-muted flex items-center gap-1"><i data-lucide="lock" class="w-3.5 h-3.5"></i>승인됨</span><?php } ?></h2>
+                    <h2 class="font-medium text-mg-text-primary flex items-center gap-2"><?php echo $category; ?><?php if ($_is_locked) { ?> <span class="text-xs text-mg-text-muted flex items-center gap-1"><i data-lucide="lock" class="w-3.5 h-3.5"></i>승인됨</span><?php } ?></h2>
                 </div>
                 <div class="p-4 space-y-4">
                     <?php foreach ($fields as $field) { ?>
                     <div>
                         <label class="block text-sm font-medium text-mg-text-secondary mb-1.5">
                             <?php echo $field['pf_name']; ?>
-                            <?php if (!$_is_approved && $field['pf_required']) { ?><span class="text-red-400">*</span><?php } ?>
+                            <?php if (!$_is_locked && $field['pf_required']) { ?><span class="text-red-400">*</span><?php } ?>
                         </label>
 
-                        <?php if ($_is_approved) { ?>
+                        <?php if ($_is_locked) { ?>
                             <?php // 승인된 캐릭터: 읽기전용 텍스트 표시 ?>
                             <?php if ($field['pf_type'] == 'image' && $field['value']) { ?>
                             <div class="rounded-lg overflow-hidden border border-mg-bg-tertiary" style="max-width:16rem;max-height:12rem;">

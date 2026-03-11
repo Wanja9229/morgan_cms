@@ -179,6 +179,24 @@ $ch_initial = mb_substr($char['ch_name'], 0, 1);
                     $_bs_stress = (int)($battle_stat['stat_stress'] ?? 0);
                     $_stress_color = $_bs_stress >= 100 ? '#ef4444' : ($_bs_stress >= 70 ? '#f59e0b' : '#0d9488');
                 ?>
+                <?php if ($battle_hp && $battle_hp['max_hp'] > 0) {
+                    $_hp_pct = round($battle_hp['current_hp'] / $battle_hp['max_hp'] * 100);
+                    $_hp_color = $_hp_pct > 60 ? '#0d9488' : ($_hp_pct > 30 ? '#f59e0b' : '#ef4444');
+                ?>
+                <div style="padding:1rem 1.5rem;border-bottom:1px solid #e2e8f0;">
+                    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;">
+                        <span style="color:<?php echo $_hp_color; ?>;font-size:1.125rem;">&#9829;</span>
+                        <span style="font-size:0.6875rem;color:#64748b;text-transform:uppercase;letter-spacing:0.1em;font-weight:600;" class="med-mono">HP STATUS</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.75rem;">
+                        <span style="width:70px;font-size:0.8125rem;font-weight:600;color:<?php echo $_hp_color; ?>;" class="med-mono">HP</span>
+                        <div style="flex:1;height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden;">
+                            <div style="width:<?php echo $_hp_pct; ?>%;height:100%;background:<?php echo $_hp_color; ?>;border-radius:4px;transition:width 0.3s;"></div>
+                        </div>
+                        <span style="width:60px;text-align:right;font-size:0.8125rem;font-weight:700;color:<?php echo $_hp_color; ?>;" class="med-mono"><?php echo $battle_hp['current_hp']; ?>/<?php echo $battle_hp['max_hp']; ?></span>
+                    </div>
+                </div>
+                <?php } ?>
                 <div style="padding:1rem 1.5rem;border-bottom:1px solid #e2e8f0;">
                     <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;">
                         <span style="color:#0d9488;font-size:1.125rem;">&#9829;</span>

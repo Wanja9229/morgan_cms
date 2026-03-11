@@ -314,6 +314,61 @@ require_once __DIR__.'/_head.php';
     <?php } ?>
 </form>
 
+<?php
+// 캐릭터 수정 이력
+$edit_logs = array();
+$el_result = sql_query("SELECT cel.*, m.mb_nick
+    FROM {$g5['mg_character_edit_log_table']} cel
+    LEFT JOIN {$g5['member_table']} m ON cel.mb_id = m.mb_id
+    WHERE cel.ch_id = {$ch_id}
+    ORDER BY cel.cel_created DESC LIMIT 20");
+if ($el_result) {
+    while ($el_row = sql_fetch_array($el_result)) {
+        $edit_logs[] = $el_row;
+    }
+}
+
+if (!empty($edit_logs)) {
+?>
+<div class="mg-card" style="margin-top:1.5rem;">
+    <div class="mg-card-header">캐릭터 수정 이력 (<?php echo count($edit_logs); ?>건)</div>
+    <div class="mg-card-body" style="padding:0;overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.8125rem;">
+            <thead>
+                <tr style="background:var(--mg-bg-tertiary);text-align:left;">
+                    <th style="padding:0.5rem 0.75rem;">날짜</th>
+                    <th style="padding:0.5rem 0.75rem;">수정자</th>
+                    <th style="padding:0.5rem 0.75rem;">필드</th>
+                    <th style="padding:0.5rem 0.75rem;">변경 전</th>
+                    <th style="padding:0.5rem 0.75rem;">변경 후</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($edit_logs as $el) {
+                    $el_field = $el['cel_field'];
+                    if (strpos($el_field, 'profile_') === 0) {
+                        $pf_id = (int)str_replace('profile_', '', $el_field);
+                        $pf_row = sql_fetch("SELECT pf_name FROM {$g5['mg_profile_field_table']} WHERE pf_id = {$pf_id}");
+                        $el_field = $pf_row['pf_name'] ?? $el_field;
+                    } else {
+                        $fn = array('ch_name' => '캐릭터명', 'side_id' => '소속', 'class_id' => '유형', 'ch_thumb' => '두상', 'ch_image' => '전신', 'ch_header' => '헤더');
+                        $el_field = $fn[$el_field] ?? $el_field;
+                    }
+                ?>
+                <tr style="border-bottom:1px solid var(--mg-bg-tertiary);">
+                    <td style="padding:0.5rem 0.75rem;color:var(--mg-text-muted);white-space:nowrap;"><?php echo substr($el['cel_created'], 0, 16); ?></td>
+                    <td style="padding:0.5rem 0.75rem;"><?php echo htmlspecialchars($el['mb_nick'] ?: $el['mb_id']); ?></td>
+                    <td style="padding:0.5rem 0.75rem;font-weight:600;color:var(--mg-accent);"><?php echo htmlspecialchars($el_field); ?></td>
+                    <td style="padding:0.5rem 0.75rem;color:var(--mg-text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?php echo htmlspecialchars(mb_strimwidth($el['cel_old_value'] ?: '-', 0, 50, '..')); ?></td>
+                    <td style="padding:0.5rem 0.75rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?php echo htmlspecialchars(mb_strimwidth($el['cel_new_value'] ?: '-', 0, 50, '..')); ?></td>
+                </tr>
+                <?php } ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+<?php } ?>
+
 <style>
 @media (max-width: 900px) {
     div[style*="grid-template-columns:1fr 1fr"] {

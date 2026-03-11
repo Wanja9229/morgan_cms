@@ -31,6 +31,7 @@ $my_characters = mg_get_usable_characters($mb_id);
 // 내 전투 프로필 (첫 번째 캐릭터 기준, 캐릭터 선택 시 변경)
 $my_battle_profile = null;
 $my_energy = null;
+$my_global_hp = null;
 $selected_ch_id = isset($_GET['ch_id']) ? (int)$_GET['ch_id'] : 0;
 
 if (!empty($my_characters)) {
@@ -50,6 +51,7 @@ if (!empty($my_characters)) {
 
     $my_battle_profile = mg_battle_get_profile($selected_ch_id, $mb_id);
     $my_energy = mg_battle_get_energy($selected_ch_id);
+    $my_global_hp = mg_battle_get_global_hp($selected_ch_id);
 
     // 장비 아이템 정보 로드
     $my_equipment = array('weapon' => null, 'armor' => null, 'accessory' => null);
@@ -373,14 +375,14 @@ $_training_use = mg_config('battle_training_use', '1');
                             <?php echo htmlspecialchars($ch['ch_name'] ?? ''); ?>
                         </div>
                         <?php if ($my_slot) { ?>
-                        <!-- HP -->
+                        <!-- HP (글로벌) -->
                         <div class="flex items-center gap-2 mb-1">
                             <span class="text-xs font-bold" style="color:#22c55e; font-family:'Bebas Neue',sans-serif; width:24px; text-align:right;">HP</span>
                             <div class="flex-1 bg-mg-bg-primary border border-mg-bg-tertiary rounded overflow-hidden" style="max-width:280px; height:12px;">
-                                <div id="my-hp-fill" class="h-full rounded transition-all duration-500" style="width:<?php echo (int)$my_slot['max_hp'] > 0 ? round((int)$my_slot['current_hp'] / (int)$my_slot['max_hp'] * 100, 1) : 0; ?>%; background:linear-gradient(90deg, #16a34a, #22c55e);"></div>
+                                <div id="my-hp-fill" class="h-full rounded transition-all duration-500" style="width:<?php echo $my_global_hp && $my_global_hp['max_hp'] > 0 ? round($my_global_hp['current_hp'] / $my_global_hp['max_hp'] * 100, 1) : 0; ?>%; background:linear-gradient(90deg, #16a34a, #22c55e);"></div>
                             </div>
                             <span id="my-hp-text" class="text-xs font-bold text-mg-text-primary" style="font-family:'Bebas Neue',sans-serif; white-space:nowrap;">
-                                <?php echo (int)$my_slot['current_hp']; ?> / <?php echo (int)$my_slot['max_hp']; ?>
+                                <?php echo $my_global_hp ? $my_global_hp['current_hp'] : 0; ?> / <?php echo $my_global_hp ? $my_global_hp['max_hp'] : 0; ?>
                             </span>
                         </div>
                         <?php } ?>
@@ -403,7 +405,7 @@ $_training_use = mg_config('battle_training_use', '1');
 
                     <!-- 커맨드 버튼 -->
                     <div id="battle-commands" class="flex gap-1 flex-wrap">
-                        <?php if ($my_slot && (int)$my_slot['current_hp'] > 0 && $encounter['be_status'] === 'active') { ?>
+                        <?php if ($my_slot && $my_global_hp && $my_global_hp['current_hp'] > 0 && $encounter['be_status'] === 'active') { ?>
                         <button onclick="battleAction('attack')" class="cmd-btn cmd-primary" data-cost="1">
                             <i data-lucide="swords" class="w-4 h-4"></i>
                             ATTACK
@@ -442,9 +444,10 @@ $_training_use = mg_config('battle_training_use', '1');
             </div>
             <div id="participants-list" class="flex-1 overflow-y-auto" style="scrollbar-width:thin;">
                 <?php foreach ($encounter_slots as $slot) {
-                    $hp_pct = (int)$slot['max_hp'] > 0 ? round((int)$slot['current_hp'] / (int)$slot['max_hp'] * 100) : 0;
+                    $_slot_ghp = mg_battle_get_global_hp((int)$slot['ch_id']);
+                    $hp_pct = $_slot_ghp['max_hp'] > 0 ? round($_slot_ghp['current_hp'] / $_slot_ghp['max_hp'] * 100) : 0;
                     $hp_class = $hp_pct > 60 ? '#22c55e' : ($hp_pct > 25 ? '#eab308' : '#ef4444');
-                    $is_dead = (int)$slot['current_hp'] <= 0;
+                    $is_dead = $_slot_ghp['current_hp'] <= 0;
                     $is_discoverer = ($slot['mb_id'] === $encounter['discoverer_mb_id']);
                 ?>
                 <div class="flex items-center gap-2 px-3 py-2 border-b border-white/[0.02] hover:bg-mg-accent/[0.04] transition-colors <?php echo $is_dead ? 'opacity-40' : ''; ?>" data-ch-id="<?php echo (int)$slot['ch_id']; ?>" style="position:relative;">
@@ -465,7 +468,7 @@ $_training_use = mg_config('battle_training_use', '1');
                         <div class="h-1 bg-mg-bg-primary rounded-sm overflow-hidden mt-0.5">
                             <div class="h-full rounded-sm transition-all duration-500" style="width:<?php echo $hp_pct; ?>%; background:<?php echo $hp_class; ?>;"></div>
                         </div>
-                        <div class="text-[10px] text-mg-text-muted mt-0.5"><?php echo (int)$slot['current_hp']; ?> / <?php echo (int)$slot['max_hp']; ?><?php echo $is_dead ? ' (전사)' : ''; ?></div>
+                        <div class="text-[10px] text-mg-text-muted mt-0.5"><?php echo $_slot_ghp['current_hp']; ?> / <?php echo $_slot_ghp['max_hp']; ?><?php echo $is_dead ? ' (전사)' : ''; ?></div>
                     </div>
                 </div>
                 <?php } ?>
@@ -1485,21 +1488,23 @@ function pollBattle() {
                 BATTLE.myEnergy = d.my_energy;
             }
             // 참여자 HP 갱신
-            if (d.participants) {
-                d.participants.forEach(function(p) {
+            if (d.participants || d.slots) {
+                (d.participants || d.slots).forEach(function(p) {
                     var row = document.querySelector('#participants-list [data-ch-id="' + p.ch_id + '"]');
                     if (!row) return;
+                    var hp = p.hp !== undefined ? p.hp : (p.current_hp || 0);
+                    var maxHp = p.max_hp || 0;
                     var hpBar = row.querySelector('.h-1 > div');
                     var hpText = row.querySelector('.text-\\[10px\\]');
-                    if (hpBar && p.max_hp > 0) {
-                        var pct = Math.round(p.current_hp / p.max_hp * 100);
+                    if (hpBar && maxHp > 0) {
+                        var pct = Math.round(hp / maxHp * 100);
                         hpBar.style.width = pct + '%';
                         hpBar.style.background = pct > 60 ? '#22c55e' : (pct > 25 ? '#eab308' : '#ef4444');
                     }
                     if (hpText) {
-                        hpText.textContent = p.current_hp + ' / ' + p.max_hp + (p.current_hp <= 0 ? ' (전사)' : '');
+                        hpText.textContent = hp + ' / ' + maxHp + (hp <= 0 ? ' (전사)' : '');
                     }
-                    if (p.current_hp <= 0) row.classList.add('opacity-40');
+                    if (hp <= 0) row.classList.add('opacity-40');
                     else row.classList.remove('opacity-40');
                 });
             }

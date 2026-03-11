@@ -131,6 +131,20 @@ $ch_owner = htmlspecialchars($char['mb_nick']);
             $bs_stress = (int)($battle_stat['stat_stress'] ?? 0);
             $stress_color = $bs_stress >= 100 ? '#8b0000' : ($bs_stress >= 70 ? '#b45309' : '#15803d');
         ?>
+        <?php if ($battle_hp && $battle_hp['max_hp'] > 0) {
+            $_hp_pct = round($battle_hp['current_hp'] / $battle_hp['max_hp'] * 100);
+            $_hp_color = $_hp_pct > 60 ? '#15803d' : ($_hp_pct > 30 ? '#b45309' : '#8b0000');
+        ?>
+        <div class="wt-field-row" style="background:rgba(0,0,0,0.05);padding:0.75rem 1rem;border-radius:0.25rem;margin-top:1rem;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:0.375rem;">
+                <strong class="wt-western">HP STATUS:</strong>
+                <span style="color:<?php echo $_hp_color; ?>;font-weight:bold;" class="wt-western"><?php echo $battle_hp['current_hp']; ?> / <?php echo $battle_hp['max_hp']; ?></span>
+            </div>
+            <div style="height:10px;background:rgba(58,42,26,0.15);border:1px solid rgba(58,42,26,0.3);overflow:hidden;">
+                <div style="height:100%;width:<?php echo $_hp_pct; ?>%;background:<?php echo $_hp_color; ?>;transition:width 0.3s;"></div>
+            </div>
+        </div>
+        <?php } ?>
         <div class="wt-field-row" style="background:rgba(0,0,0,0.05);padding:1rem;border-radius:0.25rem;margin-top:1rem;margin-bottom:1rem;">
             <p class="wt-western" style="font-weight:bold;text-decoration:underline;margin-bottom:0.75rem;font-size:1.125rem;">COMBAT RECORD:</p>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 1.5rem;">

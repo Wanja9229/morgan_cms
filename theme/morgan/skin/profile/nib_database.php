@@ -193,6 +193,22 @@ $ch_date = date('Y-m-d', strtotime($char['ch_datetime']));
                 $bs_stress = (int)($battle_stat['stat_stress'] ?? 0);
                 $stress_color = $bs_stress >= 100 ? '#ff4d4d' : ($bs_stress >= 70 ? '#f59e0b' : '#22c55e');
             ?>
+            <?php if ($battle_hp && $battle_hp['max_hp'] > 0) {
+                $_hp_pct = round($battle_hp['current_hp'] / $battle_hp['max_hp'] * 100);
+                $_hp_color = $_hp_pct > 60 ? '#22c55e' : ($_hp_pct > 30 ? '#f59e0b' : '#ff4d4d');
+            ?>
+            <div style="background:#151c2c;border:1px solid #2d3a54;display:flex;flex-direction:column;margin-bottom:0.5rem;">
+                <div style="background:rgba(45,58,84,0.5);padding:0.5rem 1rem;display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-size:0.75rem;font-weight:bold;color:#f1f5f9;letter-spacing:0.2em;">HP_STATUS</span>
+                    <span style="font-size:0.75rem;font-weight:bold;" class="nib-data" style="color:<?php echo $_hp_color; ?>;"><?php echo $battle_hp['current_hp']; ?> / <?php echo $battle_hp['max_hp']; ?></span>
+                </div>
+                <div style="padding:0.75rem 1rem;" class="nib-data">
+                    <div style="width:100%;height:8px;background:#0a0f1a;border:1px solid #2d3a54;border-radius:2px;overflow:hidden;">
+                        <div style="width:<?php echo $_hp_pct; ?>%;height:100%;background:<?php echo $_hp_color; ?>;transition:width 0.3s;"></div>
+                    </div>
+                </div>
+            </div>
+            <?php } ?>
             <div style="background:#151c2c;border:1px solid #2d3a54;display:flex;flex-direction:column;">
                 <div style="background:rgba(45,58,84,0.5);padding:0.5rem 1rem;display:flex;justify-content:space-between;align-items:center;">
                     <span style="font-size:0.75rem;font-weight:bold;color:#f1f5f9;letter-spacing:0.2em;">COMBAT_ASSESSMENT</span>

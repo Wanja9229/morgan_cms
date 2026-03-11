@@ -179,6 +179,20 @@ while ($row = sql_fetch_array($result)) {
     $recent_completions[] = $row;
 }
 
+// ─── 최근 캐릭터 수정 이력 ───
+$recent_char_edits = array();
+$result = sql_query("SELECT cel.cel_id, cel.ch_id, cel.mb_id, cel.cel_field, cel.cel_old_value, cel.cel_new_value, cel.cel_created,
+        c.ch_name, m.mb_nick
+    FROM {$g5['mg_character_edit_log_table']} cel
+    LEFT JOIN {$g5['mg_character_table']} c ON cel.ch_id = c.ch_id
+    LEFT JOIN {$g5['member_table']} m ON cel.mb_id = m.mb_id
+    ORDER BY cel.cel_created DESC LIMIT 10");
+if ($result) {
+    while ($row = sql_fetch_array($result)) {
+        $recent_char_edits[] = $row;
+    }
+}
+
 $g5['title'] = '대시보드';
 require_once __DIR__.'/_head.php';
 ?>
@@ -457,6 +471,44 @@ require_once __DIR__.'/_head.php';
                         <span class="wl-main"><?php echo htmlspecialchars($pu['si_name'] ?: '(삭제된 상품)'); ?></span>
                         <span class="wl-price"><?php echo number_format($pu['sl_price']); ?>P</span>
                         <span class="wl-sub"><?php echo mg_time_ago($pu['sl_datetime']); ?></span>
+                    </li>
+                    <?php } ?>
+                </ul>
+                <?php } ?>
+            </div>
+        </div>
+        <!-- 최근 캐릭터 수정 이력 -->
+        <div class="mg-card mg-widget mg-widget-collapsible" data-widget-id="recent-char-edits">
+            <div class="mg-card-header">
+                <h3>캐릭터 수정 이력</h3>
+                <a href="./character_list.php">캐릭터 관리 &rarr;</a>
+            </div>
+            <div class="mg-card-body">
+                <?php if (empty($recent_char_edits)) { ?>
+                <div class="mg-widget-empty">캐릭터 수정 이력이 없습니다.</div>
+                <?php } else { ?>
+                <ul class="mg-widget-list">
+                    <?php foreach ($recent_char_edits as $ce) {
+                        $field_label = $ce['cel_field'];
+                        if (strpos($field_label, 'profile_') === 0) {
+                            $pf_id = (int)str_replace('profile_', '', $field_label);
+                            $pf_row = sql_fetch("SELECT pf_name FROM {$g5['mg_profile_field_table']} WHERE pf_id = {$pf_id}");
+                            $field_label = $pf_row['pf_name'] ?? $field_label;
+                        } else {
+                            $field_names = array('ch_name' => '캐릭터명', 'side_id' => '소속', 'class_id' => '유형', 'ch_thumb' => '두상', 'ch_image' => '전신', 'ch_header' => '헤더');
+                            $field_label = $field_names[$field_label] ?? $field_label;
+                        }
+                        $old_short = mb_strimwidth($ce['cel_old_value'] ?: '-', 0, 15, '..');
+                        $new_short = mb_strimwidth($ce['cel_new_value'] ?: '-', 0, 15, '..');
+                    ?>
+                    <li>
+                        <span class="wl-badge" style="background:rgba(59,130,246,0.15);color:var(--mg-info);"><?php echo htmlspecialchars($field_label); ?></span>
+                        <span class="wl-main">
+                            <a href="./character_form.php?ch_id=<?php echo $ce['ch_id']; ?>"><?php echo htmlspecialchars($ce['ch_name'] ?: '(삭제됨)'); ?></a>
+                            <span style="color:var(--mg-text-muted);font-size:0.7rem;"> <?php echo htmlspecialchars($old_short); ?> &rarr; <?php echo htmlspecialchars($new_short); ?></span>
+                        </span>
+                        <span class="wl-nick"><?php echo htmlspecialchars($ce['mb_nick'] ?: $ce['mb_id']); ?></span>
+                        <span class="wl-sub"><?php echo mg_time_ago($ce['cel_created']); ?></span>
                     </li>
                     <?php } ?>
                 </ul>

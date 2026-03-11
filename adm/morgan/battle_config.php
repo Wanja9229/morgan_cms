@@ -81,6 +81,12 @@ $cfg = array(
 );
 ?>
 
+<!-- 안내 -->
+<div class="mg-alert mg-alert-info" style="margin-bottom:1rem;">
+    전투 조우는 <a href="./expedition_event.php" style="color:var(--mg-accent);text-decoration:underline;">파견 &gt; 파견 이벤트</a>에서 "전투 조우" 타입으로 등록하고, 파견지별 발생 확률을 개별 설정합니다.
+    여기서는 전투 시스템의 기본 수치만 관리합니다.
+</div>
+
 <form method="post" action="./battle_config.php">
 
 <!-- 기본 설정 -->
@@ -95,7 +101,8 @@ $cfg = array(
                     <option value="0" <?php echo $cfg['battle_use'] == '0' ? 'selected' : ''; ?>>미사용</option>
                 </select>
             </div>
-            <div class="mg-form-group">
+            <!-- 현재 미사용: 실제 전투 발생은 파견 이벤트 시스템(파견지별 개별 확률)으로 작동 -->
+            <div class="mg-form-group" style="display:none">
                 <label class="mg-form-label">탐사 전투 발생 확률 (%)</label>
                 <input type="number" name="battle_encounter_rate" value="<?php echo $cfg['battle_encounter_rate']; ?>" class="mg-form-input" min="0" max="100">
             </div>

@@ -116,6 +116,23 @@ if (!defined('_GNUBOARD_')) exit;
         $_bs_stress = (int)($battle_stat['stat_stress'] ?? 0);
         $_stress_color = $_bs_stress >= 100 ? '#ef4444' : ($_bs_stress >= 70 ? '#f59e0b' : '#22c55e');
     ?>
+    <?php if ($battle_hp && $battle_hp['max_hp'] > 0) {
+        $_hp_pct = round($battle_hp['current_hp'] / $battle_hp['max_hp'] * 100);
+        $_hp_color = $_hp_pct > 60 ? '#22c55e' : ($_hp_pct > 30 ? '#f59e0b' : '#ef4444');
+    ?>
+    <div class="mt-6 bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
+        <div class="p-4">
+            <div class="flex items-center justify-between text-sm mb-2">
+                <span class="flex items-center gap-1.5 text-mg-text-secondary"><i data-lucide="heart" class="w-4 h-4" style="color:<?php echo $_hp_color; ?>;"></i>HP</span>
+                <span class="font-bold" style="color:<?php echo $_hp_color; ?>;"><?php echo $battle_hp['current_hp']; ?> / <?php echo $battle_hp['max_hp']; ?></span>
+            </div>
+            <div class="w-full h-3 bg-mg-bg-tertiary rounded-full overflow-hidden">
+                <div class="h-full rounded-full transition-all" style="width:<?php echo $_hp_pct; ?>%;background:<?php echo $_hp_color; ?>;"></div>
+            </div>
+        </div>
+    </div>
+    <?php } ?>
+
     <div class="mt-6 bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
         <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary flex items-center gap-2">
             <i data-lucide="swords" class="w-4 h-4 text-mg-accent"></i>

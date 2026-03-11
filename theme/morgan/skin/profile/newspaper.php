@@ -133,6 +133,21 @@ $edition = 'Vol. ' . ceil($char['ch_id'] / 10) . ', No. ' . $char['ch_id'];
                 $_bs_stress = (int)($battle_stat['stat_stress'] ?? 0);
                 $_stress_color = $_bs_stress >= 100 ? '#b91c1c' : ($_bs_stress >= 70 ? '#92400e' : '#166534');
             ?>
+            <?php if ($battle_hp && $battle_hp['max_hp'] > 0) {
+                $_hp_pct = round($battle_hp['current_hp'] / $battle_hp['max_hp'] * 100);
+                $_hp_color = $_hp_pct > 60 ? '#166534' : ($_hp_pct > 30 ? '#92400e' : '#b91c1c');
+            ?>
+            <hr class="nw-rule" style="margin-top:1.5rem;">
+            <div style="margin-top:1rem;">
+                <h3 class="nw-playfair" style="font-size:1.125rem;font-weight:700;margin:0 0 0.5rem;">&#9829; HP</h3>
+                <div style="display:flex;align-items:center;gap:0.75rem;font-size:0.9375rem;">
+                    <span style="display:inline-block;flex:1;height:8px;background:#e7e0d2;border-radius:2px;overflow:hidden;">
+                        <span style="display:block;width:<?php echo $_hp_pct; ?>%;height:100%;background:<?php echo $_hp_color; ?>;border-radius:2px;"></span>
+                    </span>
+                    <span style="color:<?php echo $_hp_color; ?>;font-weight:700;"><?php echo $battle_hp['current_hp']; ?> / <?php echo $battle_hp['max_hp']; ?></span>
+                </div>
+            </div>
+            <?php } ?>
             <hr class="nw-rule" style="margin-top:1.5rem;">
             <div style="margin-top:1rem;">
                 <h3 class="nw-playfair" style="font-size:1.125rem;font-weight:700;margin:0 0 0.75rem;">&#9632; 전투 능력치</h3>
