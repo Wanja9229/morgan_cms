@@ -428,6 +428,8 @@
                             activeId = 'mission';
                         } else if (boTable === 'concierge_result') {
                             activeId = 'concierge';
+                        } else if (boTable === 'vent') {
+                            activeId = 'vent';
                         } else {
                             activeId = 'board';
                             isCommunity = true;

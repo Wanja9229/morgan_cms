@@ -63,7 +63,8 @@ $_current_script = basename($_SERVER['SCRIPT_NAME'] ?? '');
 $_is_rp_page = in_array($_current_script, array('rp_list.php', 'rp_close.php', 'rp_reply.php'));
 // 역극/의뢰수행 페이지에서는 게시판 포커싱 제거
 $_is_concierge_result = (isset($bo_table) && $bo_table === 'concierge_result');
-$_current_bo_table = ($_is_rp_page || $_is_concierge_result || !isset($bo_table)) ? '' : $bo_table;
+$_is_vent_page = (isset($bo_table) && $bo_table === 'vent');
+$_current_bo_table = ($_is_rp_page || $_is_concierge_result || $_is_vent_page || !isset($bo_table)) ? '' : $bo_table;
 $_is_mission_page = ($_current_bo_table === 'mission');
 $_is_board_page = !empty($_current_bo_table);
 $_is_community_section = $_is_board_page && !$_is_mission_page;
@@ -344,6 +345,11 @@ if (isset($is_ajax_request) && $is_ajax_request) {
         </a>
         <?php } ?>
 
+        <!-- 앓이란 -->
+        <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=vent" class="sidebar-icon group <?php echo $_is_vent_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="앓이란" data-sidebar-id="vent">
+            <i data-lucide="sticky-note" class="w-6 h-6"></i>
+        </a>
+
         <!-- 상점 -->
         <a href="<?php echo G5_BBS_URL; ?>/shop.php" class="sidebar-icon group <?php echo $_is_shop_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="상점" data-sidebar-id="shop">
             <i data-lucide="shopping-bag" class="w-6 h-6"></i>
@@ -403,7 +409,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
         <nav class="flex-1 overflow-y-auto px-2 pb-3">
             <div class="space-y-0.5">
             <?php foreach ($sidebar_boards as $sb) {
-                if (in_array($sb['bo_table'], array('mission', 'concierge_result'))) continue;
+                if (in_array($sb['bo_table'], array('mission', 'concierge_result', 'vent'))) continue;
                 $bo_url = G5_BBS_URL . '/board.php?bo_table=' . $sb['bo_table'];
                 $is_current = ($_current_bo_table === $sb['bo_table']);
                 $active_class = $is_current
