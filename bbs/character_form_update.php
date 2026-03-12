@@ -13,6 +13,14 @@ if (!$is_member) {
 // Morgan 플러그인 로드
 include_once(G5_PATH.'/plugin/morgan/morgan.php');
 
+// [DEBUG] 업로드 디버깅 — 원인 파악 후 제거
+error_log('[MG CharForm DEBUG] FILES=' . json_encode(array_map(function($f) {
+    return is_array($f['name']) ? array('names' => $f['name'], 'errors' => $f['error'], 'sizes' => $f['size'])
+        : array('name' => $f['name'], 'error' => $f['error'], 'size' => $f['size']);
+}, $_FILES ?: [])));
+error_log('[MG CharForm DEBUG] POST_keys=' . implode(',', array_keys($_POST ?: [])));
+error_log('[MG CharForm DEBUG] CONTENT_LENGTH=' . ($_SERVER['CONTENT_LENGTH'] ?? 'N/A') . ' REQUEST_METHOD=' . ($_SERVER['REQUEST_METHOD'] ?? 'N/A'));
+
 // 입력값
 $ch_id = isset($_POST['ch_id']) ? (int)$_POST['ch_id'] : 0;
 $ch_name = isset($_POST['ch_name']) ? clean_xss_tags(trim($_POST['ch_name'])) : '';
