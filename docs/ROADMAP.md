@@ -727,6 +727,11 @@
 - [x] 앓이란(vent) 게시판 2뎁스 → 1뎁스 분리 (sticky-note 아이콘, 의뢰 하단 배치)
 - [ ] 전투 몬스터 기본 에셋 번들 (CC0/OGA-BY 라이선스 에셋 선정 중)
 
+### 크레딧 & 라이선스
+- [x] README.md 서드파티 라이선스 목록 추가 (game-icons CC BY 3.0, Lucide, Tailwind 등)
+- [x] 프론트 크레딧 페이지 (bbs/credits.php) — 아이콘/폰트/라이브러리/플랫폼 4섹션
+- [x] footer에 Credits 링크 추가
+
 ### 프론트엔드 UX 통일 (브라우저 alert/confirm 제거)
 - [x] `mgToast(msg, type, duration)` 글로벌 함수 구현 (상단 중앙, 위→아래 슬라이드, 4타입)
 - [x] `mgConfirm(msg, onOk, onCancel)` 콜백 기반 확인 모달 구현
@@ -1000,7 +1005,7 @@ new_cms/
 | 2026-03-09 | 마이그레이션 MySQL 호환성 수정 (11파일), install.sql 전투/훈련 테이블 추가, 테넌트 프로비저닝 수정, 기본 설정 fallback '0'→'1' (전투/수업/개척), pioneer_use 키 불일치 수정, CON/LUK 스탯 숨김, 캐릭터 뷰 스탯 기본값 표시, 관리자 폼 CSS 표준화, 프로필 필드 중복 검증/삭제 개선, 캐릭터 신청 기간+모집 중단 설정 |
 | 2026-03-10 | 전투 1d20 주사위 모달+이펙트 애니메이션, 스킬 슬롯/소모품 UI, 12개 프로필 스킨 전투 스탯 통합, 승인 캐릭터 수정 제한(읽기전용), 스킨/이펙트 저장 버그 수정, 모바일 위젯 사이드바 z-index, 관계도 저장 버튼 위치 개선 |
 | 2026-03-11 | 글로벌 HP 시스템 (per-slot → per-character HP 전환, lazy regen, sync_max_hp), 신규 프로필 스킨 8종 (win98/dos/mac/echo/vscode/jrpg/magazine/legendary), 전체 20개 스킨 HP바 추가, 스탯 초기화권 아이템 (수업 보너스 유지+재배분), 신청 기간 중 승인 캐릭터 수정 허용+이력 추적, 관리자 메뉴 파견 독립 그룹 분리, 전투 설정 탐사 확률 UI 숨김+연동 가이드 텍스트 |
-| 2026-03-12 | 서버 mg_character 스키마 불일치 해결 (프로필 스킨 5컬럼 누락 → UPDATE 무음 실패), 앓이란(vent) 사이드바 1뎁스 분리 (sticky-note 아이콘, 의뢰 하단 배치) |
+| 2026-03-12 | 서버 mg_character 스키마 불일치 해결 (프로필 스킨 5컬럼 누락 → UPDATE 무음 실패), 앓이란(vent) 사이드바 1뎁스 분리 (sticky-note 아이콘, 의뢰 하단 배치), README 크레딧 + 프론트 크레딧 페이지 추가 |
 
 ---
 
