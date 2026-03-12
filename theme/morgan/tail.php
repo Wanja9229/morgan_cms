@@ -838,6 +838,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
                 <a href="<?php echo G5_BBS_URL; ?>/content.php?co_id=provision" class="hover:text-mg-text-primary transition-colors">이용약관</a>
                 <a href="<?php echo G5_BBS_URL; ?>/content.php?co_id=privacy" class="hover:text-mg-text-primary transition-colors">개인정보처리방침</a>
                 <a href="mailto:morgan_29@naver.com" class="hover:text-mg-text-primary transition-colors">빌더 문의</a>
+                <a href="<?php echo G5_BBS_URL; ?>/credits.php" class="hover:text-mg-text-primary transition-colors">Credits</a>
             </nav>
         </div>
     </div>
