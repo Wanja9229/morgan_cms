@@ -169,6 +169,8 @@ if (isset($_FILES['ch_thumb']) && $_FILES['ch_thumb']['error'] == UPLOAD_ERR_OK)
     $upload = mg_upload_character_image($_FILES['ch_thumb'], $member['mb_id'], 'thumb');
     if ($upload['success']) {
         $ch_thumb = $upload['filename'];
+    } elseif (!empty($upload['error'])) {
+        error_log('[MG CharForm] thumb upload failed: ' . $upload['error']);
     }
 }
 
@@ -196,6 +198,8 @@ if (isset($_FILES['ch_image']) && $_FILES['ch_image']['error'] == UPLOAD_ERR_OK)
     $upload = mg_upload_character_image($_FILES['ch_image'], $member['mb_id'], 'image');
     if ($upload['success']) {
         $ch_image = $upload['filename'];
+    } elseif (!empty($upload['error'])) {
+        error_log('[MG CharForm] image upload failed: ' . $upload['error']);
     }
 }
 
@@ -223,6 +227,8 @@ if (isset($_FILES['ch_header']) && $_FILES['ch_header']['error'] == UPLOAD_ERR_O
     $upload = mg_upload_character_image($_FILES['ch_header'], $member['mb_id'], 'header');
     if ($upload['success']) {
         $ch_header = $upload['filename'];
+    } elseif (!empty($upload['error'])) {
+        error_log('[MG CharForm] header upload failed: ' . $upload['error']);
     }
 }
 
@@ -251,6 +257,8 @@ if (mg_has_bg_custom_perm($member['mb_id'])) {
         $upload = mg_upload_character_image($_FILES['ch_profile_bg_image'], $member['mb_id'], 'bg');
         if ($upload['success']) {
             $ch_profile_bg_image = $upload['filename'];
+        } elseif (!empty($upload['error'])) {
+            error_log('[MG CharForm] bg upload failed: ' . $upload['error']);
         }
     }
 }
@@ -416,6 +424,8 @@ if (isset($_FILES['profile_image']) && is_array($_FILES['profile_image']['name']
             $upload = mg_upload_character_image($file_arr, $member['mb_id'], 'profile');
             if ($upload['success']) {
                 $profile[$pf_id] = $upload['filename'];
+            } elseif (!empty($upload['error'])) {
+                error_log('[MG CharForm] profile_image[' . $pf_id . '] upload failed: ' . $upload['error']);
             }
         }
     }

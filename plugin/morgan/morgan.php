@@ -432,9 +432,11 @@ function mg_create_thumbnail($source_path, $dest_path, $max_size = 200) {
  * @return array ['success' => bool, 'filename' => string, 'thumb' => string]
  */
 function mg_upload_character_image($file, $mb_id, $type = 'thumb') {
-    $result = array('success' => false, 'filename' => '', 'thumb' => '');
+    $result = array('success' => false, 'filename' => '', 'thumb' => '', 'error' => '');
 
     if ($file['error'] != UPLOAD_ERR_OK) {
+        $result['error'] = 'upload_error_code_' . $file['error'];
+        error_log('[MG Upload] File upload error code: ' . $file['error'] . ' for ' . $file['name']);
         return $result;
     }
 
@@ -442,23 +444,30 @@ function mg_upload_character_image($file, $mb_id, $type = 'thumb') {
     $allowed = array('jpg', 'jpeg', 'png', 'gif', 'webp');
 
     if (!in_array($ext, $allowed)) {
+        $result['error'] = 'invalid_extension: ' . $ext;
         return $result;
     }
 
     // 파일 크기 체크
     if ($file['size'] > mg_upload_max_file()) {
+        $result['error'] = 'file_too_large: ' . $file['size'] . ' > ' . mg_upload_max_file();
         return $result;
     }
 
     // [MT-4] 스토리지 쿼터 체크
     if (!mg_check_upload_allowed($file['size'])) {
+        $result['error'] = 'storage_quota_exceeded';
         return $result;
     }
 
     $storage = mg_storage();
 
     // 디렉토리 확보
-    $storage->ensureDir('character/' . $mb_id);
+    if (!$storage->ensureDir('character/' . $mb_id)) {
+        $result['error'] = 'mkdir_failed: character/' . $mb_id;
+        error_log('[MG Upload] ensureDir failed: character/' . $mb_id);
+        return $result;
+    }
 
     // 파일명 생성
     $type_prefixes = array('thumb' => 'head_', 'header' => 'banner_', 'image' => 'body_', 'bg' => 'bg_', 'profile' => 'pf_');
@@ -479,6 +488,8 @@ function mg_upload_character_image($file, $mb_id, $type = 'thumb') {
 
     // 원본 저장
     if (!$storage->put($storagePath, $file['tmp_name'], ['is_upload' => true])) {
+        $result['error'] = 'put_failed: ' . $storagePath . ' (tmp=' . $file['tmp_name'] . ', exists=' . (file_exists($file['tmp_name']) ? 'Y' : 'N') . ')';
+        error_log('[MG Upload] put failed: ' . $storagePath . ' from ' . $file['tmp_name']);
         if ($tmpThumb) @unlink($tmpThumb);
         return $result;
     }

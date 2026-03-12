@@ -65,13 +65,19 @@ class MG_LocalStorage implements MG_StorageInterface
         $dir = dirname($fullPath);
 
         if (!is_dir($dir)) {
-            @mkdir($dir, 0755, true);
+            if (!mkdir($dir, 0755, true)) {
+                error_log('[MG Storage] mkdir failed: ' . $dir . ' (parent_exists=' . (is_dir(dirname($dir)) ? 'Y' : 'N') . ', parent_writable=' . (is_writable(dirname($dir)) ? 'Y' : 'N') . ')');
+                return false;
+            }
         }
 
         $isUpload = !empty($options['is_upload']);
 
         if ($isUpload) {
             $result = move_uploaded_file($source, $fullPath);
+            if (!$result) {
+                error_log('[MG Storage] move_uploaded_file failed: ' . $source . ' -> ' . $fullPath . ' (dir_writable=' . (is_writable($dir) ? 'Y' : 'N') . ', source_exists=' . (file_exists($source) ? 'Y' : 'N') . ')');
+            }
         } else {
             if (is_file($source)) {
                 $result = copy($source, $fullPath);
