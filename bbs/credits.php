@@ -110,6 +110,19 @@ $site_name = function_exists('mg_config') ? mg_config('site_name', 'Morgan Editi
         </div>
     </section>
 
+    <!-- Morgan Edition License -->
+    <section class="mb-8">
+        <h2 class="text-lg font-semibold text-mg-text-primary mb-3 flex items-center gap-2">
+            <i data-lucide="scroll-text" class="w-5 h-5 text-mg-accent"></i>
+            라이선스
+        </h2>
+        <div class="bg-mg-bg-secondary rounded-lg p-4 border border-mg-bg-tertiary">
+            <p class="text-sm text-mg-text-secondary">
+                Morgan Edition CMS는 <a href="https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html" target="_blank" rel="noopener" class="text-mg-accent hover:underline">GNU Lesser General Public License v2.1 (LGPL 2.1)</a> 하에 배포됩니다.
+            </p>
+        </div>
+    </section>
+
     <!-- Built with -->
     <div class="text-center text-sm text-mg-text-muted pt-4 border-t border-mg-bg-tertiary">
         Built with Morgan Edition CMS
