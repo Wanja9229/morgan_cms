@@ -54,25 +54,35 @@ class MG_Slider_Widget extends MG_Widget_Base {
         <div class="mg-size-guide" style="background:var(--mg-bg-tertiary);padding:0.75rem 1rem;border-radius:0.5rem;margin-bottom:1rem;">
             <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-bottom:0.25rem;">권장 슬라이드 이미지 사이즈</div>
             <div id="slider_size_guide" style="font-size:0.9rem;color:var(--mg-accent);font-weight:600;">
-                컬럼 너비 선택 시 가이드가 표시됩니다
+                계산 중...
             </div>
         </div>
         <script>
         (function() {
-            var ROW_HEIGHT = <?php echo $row_height; ?>;
-            var GRID_WIDTH = <?php echo $grid_width; ?>;
-            var GAP = 16;
-            function updateSliderGuide() {
-                var colSelect = document.querySelector('[name="widget_cols"]');
-                var guide = document.getElementById('slider_size_guide');
-                if (!colSelect || !guide) return;
-                var cols = parseInt(colSelect.value) || 12;
-                var width = Math.round((GRID_WIDTH / 12) * cols - GAP);
-                guide.innerHTML = width + ' x ' + ROW_HEIGHT + ' px';
+            var guide = document.getElementById('slider_size_guide');
+            if (!guide) return;
+
+            var canvas = document.getElementById('gridCanvas');
+            var cols = (typeof currentGridColumns !== 'undefined') ? currentGridColumns : 12;
+            var cellW = canvas ? Math.round(canvas.clientWidth / cols) : 50;
+
+            var ww = 6, wh = 2;
+            if (typeof currentWidgetId !== 'undefined' && currentWidgetId && typeof grid !== 'undefined' && grid) {
+                var items = grid.getGridItems();
+                for (var i = 0; i < items.length; i++) {
+                    var node = items[i].gridstackNode;
+                    if (node && node.id == currentWidgetId) {
+                        ww = node.w || 6;
+                        wh = node.h || 2;
+                        break;
+                    }
+                }
             }
-            setTimeout(updateSliderGuide, 100);
-            var colSelect = document.querySelector('[name="widget_cols"]');
-            if (colSelect) colSelect.addEventListener('change', updateSliderGuide);
+
+            var pxW = cellW * ww;
+            var pxH = cellW * wh;
+            guide.innerHTML = pxW + ' x ' + pxH + ' px'
+                + ' <span style="font-weight:normal;color:var(--mg-text-muted);">(' + ww + '×' + wh + '칸, 모바일 자동 조절)</span>';
         })();
         </script>
         <div class="mg-form-group">

@@ -12,48 +12,106 @@ if (!defined('_GNUBOARD_')) exit;
 
 $_cal_id = 'mg-cal-' . uniqid();
 ?>
-<div class="card mg-widget mg-widget-calendar h-full flex flex-col" id="<?php echo $_cal_id; ?>">
-    <h2 class="card-header">
-        <i data-lucide="calendar" class="w-5 h-5 text-mg-accent"></i>
-        <?php echo htmlspecialchars($title); ?>
-    </h2>
-
-    <!-- 달력 네비게이션 -->
-    <div class="flex items-center justify-between mb-1">
-        <button type="button" class="cal-nav-btn text-mg-text-secondary hover:text-mg-accent p-1" data-dir="-1">
-            <i data-lucide="chevron-left" class="w-5 h-5"></i>
+<div class="mg-widget-calendar" id="<?php echo $_cal_id; ?>">
+    <!-- 헤더: 제목 + 네비게이션 -->
+    <div class="cal-header">
+        <button type="button" class="cal-nav-btn" data-dir="-1">
+            <i data-lucide="chevron-left" style="width:14px;height:14px;"></i>
         </button>
-        <span class="cal-month-label text-sm font-semibold text-mg-text-primary"></span>
-        <button type="button" class="cal-nav-btn text-mg-text-secondary hover:text-mg-accent p-1" data-dir="1">
-            <i data-lucide="chevron-right" class="w-5 h-5"></i>
+        <span class="cal-month-label"></span>
+        <button type="button" class="cal-nav-btn" data-dir="1">
+            <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
         </button>
     </div>
 
-    <!-- 달력 그리드 -->
-    <div class="cal-grid mb-1">
-        <div class="grid grid-cols-7 text-center text-xs text-mg-text-muted">
-            <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+    <!-- 요일 헤더 -->
+    <div class="cal-weekdays">
+        <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+    </div>
+
+    <!-- 날짜 그리드 -->
+    <div class="cal-days"></div>
+
+    <!-- 날짜 클릭 시 미션 팝오버 -->
+    <div class="cal-popover" style="display:none;">
+        <div class="cal-popover-header">
+            <span class="cal-popover-date"></span>
+            <button type="button" class="cal-popover-close">&times;</button>
         </div>
-        <div class="cal-days grid grid-cols-7 text-center text-sm"></div>
-    </div>
-
-    <!-- 선택된 날짜의 미션 목록 -->
-    <div class="cal-detail flex-1 overflow-auto border-t border-mg-bg-tertiary pt-1" style="min-height:40px;">
-        <div class="cal-detail-list space-y-1"></div>
+        <div class="cal-popover-body"></div>
     </div>
 </div>
 
 <style>
-.mg-widget-calendar .card-header {
-    padding: 0.5rem 0.75rem;
+.mg-widget-calendar {
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem;
+    font-size: 0.8rem;
+    background: var(--mg-bg-secondary);
+    border-radius: 0.5rem;
+    border: 1px solid var(--mg-bg-tertiary);
+}
+.mg-widget-calendar .cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.35rem;
+}
+.mg-widget-calendar .cal-month-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--mg-text-primary);
+}
+.mg-widget-calendar .cal-nav-btn {
+    background: none;
+    border: none;
+    color: var(--mg-text-muted);
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+}
+.mg-widget-calendar .cal-nav-btn:hover {
+    color: var(--mg-accent);
+    background: var(--mg-bg-tertiary);
+}
+.mg-widget-calendar .cal-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-size: 0.65rem;
+    color: var(--mg-text-muted);
+    margin-bottom: 2px;
+}
+.mg-widget-calendar .cal-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    flex: 1;
 }
 .mg-widget-calendar .cal-day {
     position: relative;
-    padding: 2px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1px 0;
     border-radius: 4px;
     cursor: default;
-    transition: background 0.15s;
-    line-height: 1.2;
+    font-size: 0.75rem;
+    line-height: 1;
+    min-height: 0;
+}
+.mg-widget-calendar .cal-day.other-month {
+    opacity: 0.3;
+}
+.mg-widget-calendar .cal-day.today .cal-num {
+    color: var(--mg-accent);
+    font-weight: 700;
 }
 .mg-widget-calendar .cal-day.has-mission {
     cursor: pointer;
@@ -61,22 +119,13 @@ $_cal_id = 'mg-cal-' . uniqid();
 .mg-widget-calendar .cal-day.has-mission:hover {
     background: var(--mg-bg-tertiary);
 }
-.mg-widget-calendar .cal-day.today {
-    font-weight: 700;
-    color: var(--mg-accent);
-}
 .mg-widget-calendar .cal-day.selected {
     background: var(--mg-bg-tertiary);
 }
-.mg-widget-calendar .cal-day.other-month {
-    color: var(--mg-text-muted);
-    opacity: 0.4;
-}
 .mg-widget-calendar .cal-dots {
     display: flex;
-    justify-content: center;
     gap: 1px;
-    height: 4px;
+    height: 3px;
     margin-top: 1px;
 }
 .mg-widget-calendar .cal-dot {
@@ -84,27 +133,62 @@ $_cal_id = 'mg-cal-' . uniqid();
     height: 3px;
     border-radius: 50%;
 }
-.mg-widget-calendar .cal-dot.active {
-    background: var(--mg-accent);
+.mg-widget-calendar .cal-dot.active { background: var(--mg-accent); }
+.mg-widget-calendar .cal-dot.closed { background: var(--mg-text-muted); }
+
+/* 팝오버 */
+.mg-widget-calendar .cal-popover {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--mg-bg-secondary);
+    border: 1px solid var(--mg-bg-tertiary);
+    border-radius: 6px;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.3);
+    z-index: 10;
+    max-height: 60%;
+    overflow: auto;
 }
-.mg-widget-calendar .cal-dot.closed {
-    background: var(--mg-text-muted);
+.mg-widget-calendar .cal-popover-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.35rem 0.5rem;
+    border-bottom: 1px solid var(--mg-bg-tertiary);
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--mg-text-secondary);
+}
+.mg-widget-calendar .cal-popover-close {
+    background: none;
+    border: none;
+    color: var(--mg-text-muted);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0 2px;
+}
+.mg-widget-calendar .cal-popover-close:hover { color: var(--mg-text-primary); }
+.mg-widget-calendar .cal-popover-body {
+    padding: 0.35rem 0.5rem;
 }
 .mg-widget-calendar .cal-mission-item {
     display: flex;
     align-items: center;
     gap: 4px;
-    padding: 2px 4px;
+    padding: 3px 4px;
     border-radius: 4px;
-    font-size: 0.75rem;
-    transition: background 0.15s;
+    font-size: 0.7rem;
+    text-decoration: none;
+    color: var(--mg-text-primary);
 }
 .mg-widget-calendar .cal-mission-item:hover {
     background: var(--mg-bg-tertiary);
 }
 .mg-widget-calendar .cal-mission-dot {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
     border-radius: 50%;
     flex-shrink: 0;
 }
@@ -123,7 +207,9 @@ $_cal_id = 'mg-cal-' . uniqid();
 
     var monthLabel = container.querySelector('.cal-month-label');
     var daysGrid = container.querySelector('.cal-days');
-    var detailList = container.querySelector('.cal-detail-list');
+    var popover = container.querySelector('.cal-popover');
+    var popoverDate = container.querySelector('.cal-popover-date');
+    var popoverBody = container.querySelector('.cal-popover-body');
     var navBtns = container.querySelectorAll('.cal-nav-btn');
 
     // 미션을 날짜별 맵으로 변환
@@ -148,7 +234,7 @@ $_cal_id = 'mg-cal-' . uniqid();
         currentYear = year;
         currentMonth = month;
 
-        var monthNames = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
+        var monthNames = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
         monthLabel.textContent = year + '년 ' + monthNames[month];
 
         var firstDay = new Date(year, month, 1).getDay();
@@ -159,9 +245,9 @@ $_cal_id = 'mg-cal-' . uniqid();
 
         var html = '';
 
-        // 이전 달 빈 칸
+        // 이전 달
         for (var i = firstDay - 1; i >= 0; i--) {
-            html += '<div class="cal-day other-month"><span>' + (prevDays - i) + '</span><div class="cal-dots"></div></div>';
+            html += '<div class="cal-day other-month"><span class="cal-num">' + (prevDays - i) + '</span></div>';
         }
 
         // 현재 달
@@ -169,100 +255,79 @@ $_cal_id = 'mg-cal-' . uniqid();
             var dateKey = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
             var dayMissions = dateMap[dateKey] || [];
             var isToday = dateKey === todayStr;
-            var isSelected = selectedDate === dateKey;
             var classes = 'cal-day';
             if (isToday) classes += ' today';
-            if (isSelected) classes += ' selected';
             if (dayMissions.length > 0) classes += ' has-mission';
 
             var dots = '';
             if (dayMissions.length > 0) {
                 dots = '<div class="cal-dots">';
-                var shown = dayMissions.slice(0, 3);
-                shown.forEach(function(m) {
+                dayMissions.slice(0, 3).forEach(function(m) {
                     dots += '<span class="cal-dot ' + (m.status === 'active' ? 'active' : 'closed') + '"></span>';
                 });
                 dots += '</div>';
-            } else {
-                dots = '<div class="cal-dots"></div>';
             }
 
-            html += '<div class="' + classes + '" data-date="' + dateKey + '"><span>' + d + '</span>' + dots + '</div>';
+            html += '<div class="' + classes + '" data-date="' + dateKey + '"><span class="cal-num">' + d + '</span>' + dots + '</div>';
         }
 
-        // 다음 달 빈 칸
+        // 다음 달
         var totalCells = firstDay + daysInMonth;
         var remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
         for (var j = 1; j <= remaining; j++) {
-            html += '<div class="cal-day other-month"><span>' + j + '</span><div class="cal-dots"></div></div>';
+            html += '<div class="cal-day other-month"><span class="cal-num">' + j + '</span></div>';
         }
 
         daysGrid.innerHTML = html;
+        closePopover();
 
         // 클릭 이벤트
         daysGrid.querySelectorAll('.cal-day.has-mission').forEach(function(el) {
-            el.addEventListener('click', function() {
-                selectedDate = this.getAttribute('data-date');
-                // 선택 표시 갱신
+            el.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var date = this.getAttribute('data-date');
+                // 토글
+                if (selectedDate === date) {
+                    closePopover();
+                    return;
+                }
+                selectedDate = date;
                 daysGrid.querySelectorAll('.cal-day').forEach(function(d) { d.classList.remove('selected'); });
                 this.classList.add('selected');
-                renderDetail(selectedDate);
+                showPopover(date);
             });
         });
-
-        // 기본: 오늘 날짜 또는 첫 미션 날짜의 디테일 표시
-        if (!selectedDate) {
-            if (dateMap[todayStr] && dateMap[todayStr].length > 0) {
-                selectedDate = todayStr;
-            }
-        }
-        renderDetail(selectedDate);
     }
 
-    function renderDetail(dateKey) {
-        if (!dateKey || !dateMap[dateKey]) {
-            // 이번 달 전체 미션 요약
-            var monthMissions = missions.filter(function(m) {
-                var s = m.start ? new Date(m.start) : null;
-                var e = m.end ? new Date(m.end) : null;
-                var mStart = new Date(currentYear, currentMonth, 1);
-                var mEnd = new Date(currentYear, currentMonth + 1, 0);
-                return (s && s <= mEnd && e && e >= mStart) || (!s && !e);
-            });
-            if (monthMissions.length === 0) {
-                detailList.innerHTML = '<div class="text-xs text-mg-text-muted text-center py-2">이번 달 미션이 없습니다.</div>';
-                return;
-            }
-            var html = '';
-            monthMissions.forEach(function(m) {
-                html += renderMissionItem(m);
-            });
-            detailList.innerHTML = html;
-            return;
-        }
+    function showPopover(dateKey) {
+        var dayMissions = dateMap[dateKey] || [];
+        if (dayMissions.length === 0) { closePopover(); return; }
 
-        var dayMissions = dateMap[dateKey];
-        var html = '<div class="text-xs text-mg-text-muted mb-1">' + dateKey + '</div>';
+        var parts = dateKey.split('-');
+        popoverDate.textContent = parseInt(parts[1]) + '/' + parseInt(parts[2]) + ' (' + dayMissions.length + '건)';
+
+        var html = '';
         dayMissions.forEach(function(m) {
-            html += renderMissionItem(m);
+            var dotClass = m.status === 'active' ? 'active' : 'closed';
+            var dateRange = '';
+            if (m.start) dateRange += m.start.slice(5).replace('-', '/');
+            if (m.end) dateRange += '~' + m.end.slice(5).replace('-', '/');
+            var href = '<?php echo G5_BBS_URL; ?>/board.php?bo_table=' + encodeURIComponent(m.bo_table) + '&pm_id=' + m.pm_id;
+
+            html += '<a href="' + href + '" class="cal-mission-item" data-no-spa>'
+                + '<span class="cal-mission-dot ' + dotClass + '" style="background:' + (m.status === 'active' ? 'var(--mg-accent)' : 'var(--mg-text-muted)') + ';"></span>'
+                + '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(m.title) + '</span>'
+                + '<span style="color:var(--mg-accent);font-weight:600;flex-shrink:0;">' + m.point.toLocaleString() + 'P</span>'
+                + '</a>';
         });
-        detailList.innerHTML = html;
+        popoverBody.innerHTML = html;
+        popover.style.display = '';
     }
 
-    function renderMissionItem(m) {
-        var dotClass = m.status === 'active' ? 'active' : 'closed';
-        var statusLabel = m.status === 'active' ? '진행중' : '종료';
-        var dateRange = '';
-        if (m.start) dateRange += m.start.slice(5).replace('-', '/');
-        if (m.end) dateRange += '~' + m.end.slice(5).replace('-', '/');
-        var href = '<?php echo G5_BBS_URL; ?>/board.php?bo_table=' + encodeURIComponent(m.bo_table) + '&pm_id=' + m.pm_id;
-
-        return '<a href="' + href + '" class="cal-mission-item">'
-            + '<span class="cal-mission-dot ' + dotClass + '"></span>'
-            + '<span class="flex-1 truncate text-mg-text-primary">' + escapeHtml(m.title) + '</span>'
-            + '<span class="text-xs text-mg-text-muted">' + dateRange + '</span>'
-            + '<span class="text-xs text-mg-accent font-medium">' + m.point.toLocaleString() + 'P</span>'
-            + '</a>';
+    function closePopover() {
+        selectedDate = null;
+        popover.style.display = 'none';
+        daysGrid.querySelectorAll('.cal-day').forEach(function(d) { d.classList.remove('selected'); });
     }
 
     function escapeHtml(str) {
@@ -270,6 +335,9 @@ $_cal_id = 'mg-cal-' . uniqid();
         div.textContent = str;
         return div.innerHTML;
     }
+
+    // 팝오버 닫기
+    container.querySelector('.cal-popover-close').addEventListener('click', closePopover);
 
     // 네비게이션
     navBtns.forEach(function(btn) {
@@ -279,7 +347,6 @@ $_cal_id = 'mg-cal-' . uniqid();
             var newYear = currentYear;
             if (newMonth < 0) { newMonth = 11; newYear--; }
             if (newMonth > 11) { newMonth = 0; newYear++; }
-            selectedDate = null;
             renderMonth(newYear, newMonth);
         });
     });

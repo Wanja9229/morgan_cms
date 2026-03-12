@@ -31,7 +31,7 @@ class MG_Image_Widget extends MG_Widget_Base {
         <div class="mg-size-guide" style="background:var(--mg-bg-tertiary);padding:0.75rem 1rem;border-radius:0.5rem;margin-bottom:1rem;">
             <div style="font-size:0.75rem;color:var(--mg-text-muted);margin-bottom:0.25rem;">권장 이미지 사이즈</div>
             <div id="image_size_guide" style="font-size:0.9rem;color:var(--mg-accent);font-weight:600;">
-                컬럼 너비 선택 시 가이드가 표시됩니다
+                계산 중...
             </div>
         </div>
         <div class="mg-form-group">
@@ -61,29 +61,32 @@ class MG_Image_Widget extends MG_Widget_Base {
         </div>
         <script>
         (function() {
-            var ROW_HEIGHT = <?php echo $row_height; ?>;
-            var GRID_WIDTH = <?php echo $grid_width; ?>;
-            var GAP = 16; // gap-4 = 1rem = 16px
+            // GridStack 기반: 현재 위젯의 w/h와 그리드 셀 크기로 권장 사이즈 계산
+            var guide = document.getElementById('image_size_guide');
+            if (!guide) return;
 
-            function updateSizeGuide() {
-                var colSelect = document.querySelector('[name="widget_cols"]');
-                var guide = document.getElementById('image_size_guide');
-                if (!colSelect || !guide) return;
+            var canvas = document.getElementById('gridCanvas');
+            var cols = (typeof currentGridColumns !== 'undefined') ? currentGridColumns : 12;
+            var cellW = canvas ? Math.round(canvas.clientWidth / cols) : 50;
 
-                var cols = parseInt(colSelect.value) || 12;
-                var width = Math.round((GRID_WIDTH / 12) * cols);
-                var ratio = (width / ROW_HEIGHT).toFixed(1);
-                guide.innerHTML = width + ' x ' + ROW_HEIGHT + ' px <span style="font-weight:normal;color:var(--mg-text-muted);">(비율 ' + ratio + ':1, 모바일 자동 조절)</span>';
+            // 현재 편집 중인 위젯의 w/h 가져오기
+            var ww = 6, wh = 2;
+            if (typeof currentWidgetId !== 'undefined' && currentWidgetId && typeof grid !== 'undefined' && grid) {
+                var items = grid.getGridItems();
+                for (var i = 0; i < items.length; i++) {
+                    var node = items[i].gridstackNode;
+                    if (node && node.id == currentWidgetId) {
+                        ww = node.w || 6;
+                        wh = node.h || 2;
+                        break;
+                    }
+                }
             }
 
-            // 초기 실행
-            setTimeout(updateSizeGuide, 100);
-
-            // 컬럼 변경 시 업데이트
-            var colSelect = document.querySelector('[name="widget_cols"]');
-            if (colSelect) {
-                colSelect.addEventListener('change', updateSizeGuide);
-            }
+            var pxW = cellW * ww;
+            var pxH = cellW * wh;
+            guide.innerHTML = pxW + ' x ' + pxH + ' px'
+                + ' <span style="font-weight:normal;color:var(--mg-text-muted);">(' + ww + '×' + wh + '칸, 모바일 자동 조절)</span>';
         })();
         </script>
         <?php

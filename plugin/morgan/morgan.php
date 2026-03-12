@@ -1193,21 +1193,48 @@ function mg_render_main() {
     $widgets = mg_get_main_widgets();
 
     if (empty($widgets)) {
-        return mg_render_default_main();
+        // 위젯 없어도 빌더 설정된 그리드 영역은 확보
+        $grid_columns = (int)mg_config('grid_columns', 12);
+        if ($grid_columns < 1) $grid_columns = 12;
+        $grid_rows = (int)mg_config('grid_rows', 40);
+        if ($grid_rows < 1) $grid_rows = 40;
+        $canvas_id = 'mgGridCanvas' . mt_rand(1000, 9999);
+        $html = '<div class="mg-grid-canvas" id="'.$canvas_id.'" data-columns="'.$grid_columns.'" data-rows="'.$grid_rows.'" style="'
+              . 'display:grid;'
+              . 'grid-template-columns:repeat('.$grid_columns.',1fr);'
+              . 'grid-auto-rows:1fr;'
+              . 'gap:0.5rem;">'
+              . '</div>';
+        $html .= '<script>
+(function(){
+    var el = document.getElementById("'.$canvas_id.'");
+    if (!el) return;
+    var cols = parseInt(el.dataset.columns) || 12;
+    var rows = parseInt(el.dataset.rows) || 1;
+    function setSquare() {
+        var cellW = el.clientWidth / cols;
+        el.style.gridTemplateRows = "repeat(" + rows + "," + Math.round(cellW) + "px)";
+    }
+    setSquare();
+    var t; window.addEventListener("resize", function(){ clearTimeout(t); t = setTimeout(setSquare, 150); });
+})();
+</script>';
+        return $html;
     }
 
     require_once(MG_PLUGIN_PATH.'/widgets/widget.factory.php');
 
     $grid_columns = (int)mg_config('grid_columns', 12);
     if ($grid_columns < 1) $grid_columns = 12;
+    $grid_rows = (int)mg_config('grid_rows', 40);
+    if ($grid_rows < 1) $grid_rows = 40;
 
-    // 실제 사용된 최대 행 계산 (불필요한 빈 공간 제거)
-    $max_row = 0;
+    // 위젯이 설정 행 수를 초과하면 확장, 아니면 설정값 유지 (빈 영역 확보)
+    $max_row = $grid_rows;
     foreach ($widgets as $w) {
         $end = (int)($w['widget_y'] ?? 0) + (int)($w['widget_h'] ?? 2);
         if ($end > $max_row) $max_row = $end;
     }
-    if ($max_row < 1) $max_row = 1;
 
     // 정사각형 셀: row 높이를 JS로 계산 (컨테이너 너비 / columns)
     $canvas_id = 'mgGridCanvas' . mt_rand(1000, 9999);
@@ -1332,7 +1359,9 @@ function mg_get_widget_types() {
             'name' => '미션 달력',
             'desc' => '월별 미션 일정을 달력으로 표시',
             'allowed_cols' => array(6, 8, 12),
-            'icon' => 'calendar'
+            'icon' => 'calendar',
+            'min_h_px' => 120,
+            'min_w' => 4
         )
     );
 }

@@ -11,7 +11,7 @@ class MG_Calendar_Widget extends MG_Widget_Base {
     protected $type = 'calendar';
     protected $name = '미션 달력';
     protected $allowed_cols = array(6, 8, 12);
-    protected $min_h_px = 200;
+    protected $min_h_px = 120;
     protected $default_config = array(
         'title' => '미션 달력',
         'show_closed' => true

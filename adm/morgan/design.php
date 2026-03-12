@@ -534,10 +534,11 @@ function resetColors() {
                         <label style="font-size:0.8rem;color:var(--mg-text-secondary);white-space:nowrap;">세로 칸 수</label>
                         <input type="number" id="gridRowsInput" value="<?php echo $grid_rows; ?>" min="4" max="100" step="1" class="mg-form-input" style="width:70px;padding:0.375rem 0.5rem;">
                     </div>
-                    <button type="button" class="mg-btn mg-btn-sm mg-btn-primary" onclick="saveGridSettings()">적용</button>
+                    <button type="button" class="mg-btn mg-btn-sm mg-btn-secondary" onclick="applyGridSettings()">미리보기</button>
+                    <button type="button" class="mg-btn mg-btn-sm mg-btn-primary" id="btnSaveGrid" onclick="saveGridSettings()" style="display:none;">저장</button>
                 </div>
                 <div style="font-size:0.7rem;color:var(--mg-text-muted);margin-top:0.5rem;">
-                    가로 칸 수를 늘리면 한 칸의 크기가 작아져 더 세밀한 배치가 가능합니다. 칸 수 변경 시 기존 위젯 위치가 자동 변환됩니다.
+                    가로 칸 수를 늘리면 한 칸의 크기가 작아져 더 세밀한 배치가 가능합니다. '미리보기'로 확인 후 '저장'을 눌러 확정하세요.
                 </div>
             </div>
         </div>
@@ -667,10 +668,16 @@ foreach ($widgets as $w) {
         case 'editor':
             $preview = htmlspecialchars($cfg['title'] ?? strip_tags($cfg['content'] ?? '') ?: '(내용 없음)');
             break;
+        case 'calendar':
+            $preview = htmlspecialchars($cfg['title'] ?? '미션 달력');
+            break;
         default:
             $preview = '(설정 필요)';
     }
-    $preview = mb_substr($preview, 0, 80);
+    // HTML 태그가 포함된 미리보기는 자르지 않음 (태그 깨짐 방지)
+    if (strpos($preview, '<') === false) {
+        $preview = mb_substr($preview, 0, 80);
+    }
 
     $widgets_json[] = array(
         'id' => (int)$w['widget_id'],
@@ -687,6 +694,7 @@ foreach ($widgets as $w) {
 
 var widgetData = <?php echo json_encode($widgets_json, JSON_UNESCAPED_UNICODE); ?>;
 var widgetMinHPx = <?php echo json_encode(array_map(function($t) { return $t['min_h_px'] ?? 0; }, $widget_types)); ?>;
+var widgetMinW = <?php echo json_encode(array_map(function($t) { return $t['min_w'] ?? 1; }, $widget_types)); ?>;
 
 function buildWidgetContent(w) {
     return '<div class="gs-item-header">'
@@ -764,10 +772,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // 위젯 로드 (content 없이 추가 후 innerHTML 수동 설정)
     widgetData.forEach(function(w) {
         var minH = calcMinH(w.type, squareH);
+        var minW = widgetMinW[w.type] || 1;
         grid.addWidget({
-            x: w.x, y: w.y, w: w.w, h: Math.max(w.h, minH),
+            x: w.x, y: w.y, w: Math.max(w.w, minW), h: Math.max(w.h, minH),
             id: String(w.id),
-            minH: minH > 1 ? minH : undefined
+            minH: minH > 1 ? minH : undefined,
+            minW: minW > 1 ? minW : undefined
         });
     });
 
@@ -782,20 +792,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // 리사이즈/이동 시 사이즈 라벨 업데이트
+    // 리사이즈/이동 시 사이즈 라벨 업데이트 + 자동 레이아웃 저장
+    var _layoutSaveTimer = null;
     grid.on('resizestop dragstop', function(event, el) {
         var node = el.gridstackNode;
         var sizeEl = el.querySelector('.gs-item-size');
         if (sizeEl && node) {
             sizeEl.textContent = node.w + '×' + node.h;
         }
+        // 디바운스: 연속 조작 후 500ms 뒤 자동 저장
+        clearTimeout(_layoutSaveTimer);
+        _layoutSaveTimer = setTimeout(function() { saveLayout(true); }, 500);
     });
 });
 
 // ====================================
 // 레이아웃 저장 (GridStack 2D 좌표)
 // ====================================
-function saveLayout() {
+function saveLayout(silent) {
     var items = grid.getGridItems().map(function(el) {
         var node = el.gridstackNode;
         return { id: parseInt(node.id), x: node.x, y: node.y, w: node.w, h: node.h };
@@ -808,39 +822,99 @@ function saveLayout() {
     })
     .then(r => r.json())
     .then(data => {
-        if (data.success) alert('레이아웃이 저장되었습니다.');
-        else alert(data.message || '저장 실패');
+        if (!silent) {
+            if (data.success) alert('레이아웃이 저장되었습니다.');
+            else alert(data.message || '저장 실패');
+        }
     })
-    .catch(err => alert('저장 중 오류가 발생했습니다.'));
+    .catch(err => { if (!silent) alert('저장 중 오류가 발생했습니다.'); });
 }
 
 // ====================================
 // 그리드 설정 저장
 // ====================================
-function saveGridSettings() {
-    var gridColumns = parseInt(document.getElementById('gridColumnsInput').value, 10);
-    var gridRows = parseInt(document.getElementById('gridRowsInput').value, 10);
+// JS 즉시 적용 (서버 저장 없이 미리보기)
+function applyGridSettings() {
+    var newCols = parseInt(document.getElementById('gridColumnsInput').value, 10);
+    var newRows = parseInt(document.getElementById('gridRowsInput').value, 10);
 
-    if (isNaN(gridColumns) || gridColumns < 12 || gridColumns > 48) {
+    if (isNaN(newCols) || newCols < 12 || newCols > 48) {
         alert('가로 칸 수는 12~48 사이로 입력해주세요.');
         return;
     }
-    if (isNaN(gridRows) || gridRows < 4 || gridRows > 100) {
+    if (isNaN(newRows) || newRows < 4 || newRows > 100) {
         alert('세로 칸 수는 4~100 사이로 입력해주세요.');
         return;
     }
 
-    // 칸 수 변경 시 위젯 좌표도 서버에서 자동 변환됨
+    var canvas = document.getElementById('gridCanvas');
+
+    // 1) 칼럼 변경: 드래그 비활성 → column 변경 → CSS 갱신 → 드래그 재활성
+    if (newCols !== currentGridColumns) {
+        grid.disable();
+        grid.column(newCols, 'moveScale');
+        currentGridColumns = newCols;
+        canvas.style.setProperty('--gs-columns', newCols);
+        grid.enable();
+    }
+
+    // 2) 세로 칸 수 변경
+    currentGridRows = newRows;
+    canvas.style.setProperty('--gs-rows', newRows);
+
+    // 3) GridStack 엔진에 maxRow 반영 (드래그 제한)
+    grid.opts.maxRow = newRows;
+    if (grid.engine) grid.engine.maxRow = newRows;
+
+    // 4) 셀 높이 재계산 (CSS 반영 후 실제 너비 기준)
+    var newCellH = Math.floor(canvas.clientWidth / currentGridColumns);
+    grid.cellHeight(newCellH);
+    updateCanvasSize(newCellH);
+
+    // 5) minH/minW 재계산
+    grid.getGridItems().forEach(function(el) {
+        var node = el.gridstackNode;
+        if (!node) return;
+        var w = widgetData.find(function(d) { return String(d.id) === String(node.id); });
+        if (w) {
+            var minH = calcMinH(w.type, newCellH);
+            var minW = widgetMinW[w.type] || 1;
+            grid.update(el, { minH: minH > 1 ? minH : undefined, minW: minW > 1 ? minW : undefined });
+        }
+        // 사이즈 라벨 갱신
+        var sizeEl = el.querySelector('.gs-item-size');
+        if (sizeEl && node) sizeEl.textContent = node.w + '×' + node.h;
+    });
+
+    // 저장 버튼 표시
+    document.getElementById('btnSaveGrid').style.display = '';
+}
+
+// 서버에 확정 저장
+function saveGridSettings() {
+    // 먼저 현재 레이아웃 저장 (위젯 좌표 반영)
+    var items = grid.getGridItems().map(function(el) {
+        var node = el.gridstackNode;
+        return { id: parseInt(node.id), x: node.x, y: node.y, w: node.w, h: node.h };
+    });
+
     fetch('./main_builder_update.php', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({action: 'save_grid_settings', grid_columns: gridColumns, grid_rows: gridRows})
+        body: JSON.stringify({action: 'save_layout', widgets: items})
+    })
+    .then(function() {
+        return fetch('./main_builder_update.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({action: 'save_grid_settings', grid_columns: currentGridColumns, grid_rows: currentGridRows})
+        });
     })
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            alert('그리드 설정이 저장되었습니다. 페이지를 새로고침합니다.');
-            location.reload();
+            alert('그리드 설정이 저장되었습니다.');
+            document.getElementById('btnSaveGrid').style.display = 'none';
         } else {
             alert(data.message || '저장 실패');
         }
@@ -856,6 +930,15 @@ function selectType(type) {
     document.querySelectorAll('.mg-type-item').forEach(function(el) {
         el.classList.toggle('selected', el.dataset.type === type);
     });
+    // 최소 크기 반영
+    var minW = widgetMinW[type] || 1;
+    var minH = calcMinH(type, calcSquareCellHeight());
+    var wInput = document.getElementById('addWidgetW');
+    var hInput = document.getElementById('addWidgetH');
+    if (minW > 1) { wInput.min = minW; if (parseInt(wInput.value) < minW) wInput.value = minW; }
+    else { wInput.min = 1; }
+    if (minH > 1) { hInput.min = minH; if (parseInt(hInput.value) < minH) hInput.value = minH; }
+    else { hInput.min = 1; }
 }
 
 // ====================================
@@ -881,7 +964,9 @@ function addWidget() {
     var w = parseInt(document.getElementById('addWidgetW').value, 10);
     var h = parseInt(document.getElementById('addWidgetH').value, 10);
     var minH = calcMinH(selectedType, calcSquareCellHeight());
+    var minW = widgetMinW[selectedType] || 1;
     if (minH > 1) h = Math.max(h, minH);
+    if (minW > 1) w = Math.max(w, minW);
 
     fetch('./main_builder_update.php', {
         method: 'POST',
@@ -927,7 +1012,21 @@ function saveWidgetConfig(e) {
     formData.append('action', 'update_widget_config');
     formData.append('widget_id', currentWidgetId);
 
-    fetch('./main_builder_update.php', { method: 'POST', body: formData })
+    // 레이아웃을 먼저 저장한 후 설정 저장 (위치/크기 유실 방지)
+    var items = grid.getGridItems().map(function(el) {
+        var node = el.gridstackNode;
+        return { id: parseInt(node.id), x: node.x, y: node.y, w: node.w, h: node.h };
+    });
+
+    fetch('./main_builder_update.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action: 'save_layout', widgets: items})
+    })
+    .then(function() {
+        // 레이아웃 저장 후 설정 저장
+        return fetch('./main_builder_update.php', { method: 'POST', body: formData });
+    })
     .then(r => r.json())
     .then(data => {
         if (data.success) location.reload();
@@ -941,10 +1040,21 @@ function saveWidgetConfig(e) {
 function deleteWidget(widgetId) {
     if (!confirm('이 위젯을 삭제하시겠습니까?')) return;
 
+    // 삭제 전 현재 레이아웃 저장
+    var items = grid.getGridItems().map(function(el) {
+        var node = el.gridstackNode;
+        return { id: parseInt(node.id), x: node.x, y: node.y, w: node.w, h: node.h };
+    });
     fetch('./main_builder_update.php', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({action: 'delete_widget', widget_id: widgetId})
+        body: JSON.stringify({action: 'save_layout', widgets: items})
+    }).then(function() {
+        return fetch('./main_builder_update.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({action: 'delete_widget', widget_id: widgetId})
+        });
     })
     .then(r => r.json())
     .then(data => {
