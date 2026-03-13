@@ -213,7 +213,7 @@ CREATE TABLE IF NOT EXISTS `mg_shop_item` (
     `si_desc` text COMMENT '설명',
     `si_image` varchar(500) DEFAULT NULL COMMENT '이미지',
     `si_price` int NOT NULL COMMENT '가격',
-    `si_type` enum('title','badge','nick_color','nick_effect','profile_border','equip','emoticon_set','emoticon_reg','furniture','material','seal_bg','seal_frame','seal_hover','seal_effect','profile_skin','profile_bg','profile_effect','char_slot','concierge_extra','title_prefix','title_suffix','radio_song','radio_ment','relation_slot','concierge_direct_pick','rp_pin','expedition_time','expedition_reward','expedition_stamina','expedition_slot','write_expand','achievement_slot','concierge_boost','nick_bg','stamina_recover','battle_weapon','battle_armor','battle_accessory','battle_consumable','battle_skill_book','stat_reset','etc') NOT NULL DEFAULT 'etc' COMMENT '타입',
+    `si_type` enum('title','badge','nick_color','nick_effect','profile_border','equip','emoticon_set','emoticon_reg','furniture','material','seal_bg','seal_frame','seal_hover','seal_effect','profile_skin','profile_bg','profile_effect','char_slot','concierge_extra','title_prefix','title_suffix','radio_song','radio_ment','relation_slot','concierge_direct_pick','rp_pin','expedition_time','expedition_reward','expedition_stamina','expedition_slot','write_expand','achievement_slot','concierge_boost','nick_bg','stamina_recover','battle_weapon','battle_armor','battle_accessory','battle_consumable','battle_skill_book','stat_reset','roulette_nullify','roulette_transfer_random','roulette_transfer_target','etc') NOT NULL DEFAULT 'etc' COMMENT '타입',
     `si_effect` text COMMENT '효과 데이터 (JSON)',
     `si_stock` int NOT NULL DEFAULT -1 COMMENT '재고 (-1=무제한)',
     `si_stock_sold` int NOT NULL DEFAULT 0 COMMENT '판매 수량',
@@ -367,7 +367,16 @@ INSERT INTO `mg_config` (`cf_key`, `cf_value`, `cf_desc`) VALUES
 ('prompt_notify_submit', '1', '제출 시 관리자 알림'),
 ('prompt_notify_approve', '1', '승인 시 유저 알림'),
 ('prompt_notify_reject', '1', '반려 시 유저 알림'),
-('prompt_banner_max_size', '1024', '배너 이미지 최대 크기 (KB)')
+('prompt_banner_max_size', '1024', '배너 이미지 최대 크기 (KB)'),
+-- 룰렛
+('roulette_use', '0', '룰렛 활성화'),
+('roulette_cost', '100', '룰렛 1회 비용'),
+('roulette_daily_limit', '3', '1일 제한 횟수'),
+('roulette_cooldown', '0', '쿨다운(분)'),
+('roulette_board', 'roulette', '벌칙 로그 게시판'),
+('roulette_jackpot_pool', '0', '잭팟 누적 풀'),
+('roulette_transfer_reveal', '0', '떠넘기기 보낸 사람 공개'),
+('roulette_pending_hours', '24', '미확인 벌칙 자동 확정 시간')
 ON DUPLICATE KEY UPDATE `cf_value` = VALUES(`cf_value`);
 
 -- ======================================
@@ -2817,5 +2826,32 @@ CREATE TABLE IF NOT EXISTS `mg_roulette_log` (
     INDEX `idx_mb_status` (`mb_id`, `rl_status`),
     INDEX `idx_expires` (`rl_status`, `rl_expires_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='룰렛 이력';
+
+-- ── 룰렛 시드 상점 아이템 ──
+INSERT IGNORE INTO mg_shop_item (si_type, si_name, si_desc, si_price, si_image, si_effect, si_use, sc_id, si_consumable, si_display)
+SELECT 'roulette_nullify', '벌칙 무효화권', '룰렛 벌칙을 즉시 무효화합니다.', 300, '', '{}', 1,
+ COALESCE((SELECT sc_id FROM mg_shop_category WHERE sc_name = '이용권' LIMIT 1), 0), 1, 1 FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_type = 'roulette_nullify');
+
+INSERT IGNORE INTO mg_shop_item (si_type, si_name, si_desc, si_price, si_image, si_effect, si_use, sc_id, si_consumable, si_display)
+SELECT 'roulette_transfer_random', '랜덤 떠넘기기권', '룰렛 벌칙을 랜덤 회원에게 전달합니다.', 200, '', '{}', 1,
+ COALESCE((SELECT sc_id FROM mg_shop_category WHERE sc_name = '이용권' LIMIT 1), 0), 1, 1 FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_type = 'roulette_transfer_random');
+
+INSERT IGNORE INTO mg_shop_item (si_type, si_name, si_desc, si_price, si_image, si_effect, si_use, sc_id, si_consumable, si_display)
+SELECT 'roulette_transfer_target', '지목 떠넘기기권', '룰렛 벌칙을 특정 회원에게 전달합니다.', 400, '', '{}', 1,
+ COALESCE((SELECT sc_id FROM mg_shop_category WHERE sc_name = '이용권' LIMIT 1), 0), 1, 1 FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_type = 'roulette_transfer_target');
+
+-- ── 룰렛 시드 상품 ──
+INSERT IGNORE INTO mg_roulette_prize (rp_name, rp_type, rp_reward_type, rp_reward_value, rp_weight, rp_color, rp_icon, rp_desc, rp_duration_hours, rp_require_log, rp_use, rp_order) VALUES
+('100 포인트', 'reward', 'point', '100', 30, '#4ade80', '💰', '100 포인트를 획득합니다', 0, 0, 1, 1),
+('300 포인트', 'reward', 'point', '300', 15, '#22d3ee', '💎', '300 포인트를 획득합니다', 0, 0, 1, 2),
+('500 포인트', 'reward', 'point', '500', 5, '#a78bfa', '🌟', '500 포인트를 획득합니다', 0, 0, 1, 3),
+('꽝', 'blank', 'none', '', 25, '#6b7280', '💨', '아쉽지만 꽝입니다', 0, 0, 1, 4),
+('닉네임 변경', 'penalty', 'nickname', '🐔치킨러버', 10, '#f87171', '🔥', '닉네임이 강제 변경됩니다', 24, 1, 1, 5),
+('프사 변경', 'penalty', 'profile_image', '', 8, '#fb923c', '😈', '프로필 이미지가 강제 변경됩니다', 24, 1, 1, 6),
+('잭팟!', 'jackpot', 'none', '', 2, '#fbbf24', '🎉', '축적된 잭팟 포인트를 모두 획득합니다!', 0, 0, 1, 7),
+('50 포인트', 'reward', 'point', '50', 5, '#86efac', '🪙', '50 포인트를 획득합니다', 0, 0, 1, 8);
 
 SET FOREIGN_KEY_CHECKS = 1;

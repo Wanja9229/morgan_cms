@@ -38,13 +38,13 @@ $menu["menu800"] = array(
     array('801400', '라디오 관리', $mg_admin_url . '/radio.php', 'mg_radio'),
     array('801410', '히든 이벤트', $mg_admin_url . '/hidden_event.php', 'mg_hidden_event'),
     array('801800', '의뢰 관리', $mg_admin_url . '/concierge.php', 'mg_concierge'),
+    array('800960', '룰렛 관리', $mg_admin_url . '/roulette.php', 'mg_roulette'),
     // 재화 / 상점
     array('800550', '포인트 관리', $mg_admin_url . '/point_manage.php', 'mg_point', '재화 / 상점'),
     array('800570', '보상 관리', $mg_admin_url . '/reward.php', 'mg_reward'),
     array('800700', '상점 관리', $mg_admin_url . '/shop_item_list.php', 'mg_shop'),
     array('800900', '구매/선물 내역', $mg_admin_url . '/shop_log.php', 'mg_shop_log'),
     array('800950', '이모티콘 관리', $mg_admin_url . '/emoticon_list.php', 'mg_emoticon'),
-    array('800960', '룰렛 관리', $mg_admin_url . '/roulette.php', 'mg_roulette'),
     // 개척
     array('801000', '개척지 관리', $mg_admin_url . '/pioneer_facility.php', 'mg_pioneer', '개척'),
     array('801100', '재료 관리', $mg_admin_url . '/pioneer_material.php', 'mg_pioneer_material'),

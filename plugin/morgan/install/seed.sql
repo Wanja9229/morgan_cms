@@ -107,7 +107,8 @@ INSERT IGNORE INTO g5_board (bo_table, gr_id, bo_subject, bo_device, bo_list_lev
     ('log',     'community', '로그',       'both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/morgan/skin/board/basic', 'theme/morgan/skin/board/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
     ('gallery', 'community', '로그(이미지)', 'both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/morgan/skin/board/gallery', 'theme/morgan/skin/board/gallery', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
     ('owner',   'community', '오너게시판',   'both', 1, 1, 5, 5, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/morgan/skin/board/basic', 'theme/morgan/skin/board/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
-    ('vent',    'community', '앓이란',      'both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/morgan/skin/board/basic', 'theme/morgan/skin/board/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150);
+    ('vent',    'community', '앓이란',      'both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/morgan/skin/board/basic', 'theme/morgan/skin/board/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
+    ('roulette','community', '룰렛 벌칙 로그','both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/morgan/skin/board/basic', 'theme/morgan/skin/board/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150);
 
 -- ============================================================
 -- 6. mg_config 기본값 (Morgan 설정)
@@ -126,7 +127,15 @@ INSERT IGNORE INTO mg_config (cf_key, cf_value) VALUES
     ('character_approval', '1'),
     ('attendance_point', '100'),
     ('attendance_bonus_7', '200'),
-    ('attendance_bonus_30', '500');
+    ('attendance_bonus_30', '500'),
+    ('roulette_use', '0'),
+    ('roulette_cost', '100'),
+    ('roulette_daily_limit', '3'),
+    ('roulette_cooldown', '0'),
+    ('roulette_board', 'roulette'),
+    ('roulette_jackpot_pool', '0'),
+    ('roulette_transfer_reveal', '0'),
+    ('roulette_pending_hours', '24');
 
 -- ============================================================
 -- 7. 기본 상점 카테고리

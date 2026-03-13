@@ -54,18 +54,18 @@ INSERT IGNORE INTO mg_config (cf_key, cf_value, cf_desc) VALUES
 ('roulette_pending_hours', '24', '미확인 벌칙 자동 확정 시간');
 
 -- 5. 시드 상점 아이템
-INSERT INTO mg_shop_item (si_type, si_name, si_desc, si_price, si_effect, si_use, sc_id, si_consumable, si_display)
-SELECT 'roulette_nullify', '벌칙 무효화권', '룰렛 벌칙을 즉시 무효화합니다.', 300, '{}', 1,
+INSERT IGNORE INTO mg_shop_item (si_type, si_name, si_desc, si_price, si_image, si_effect, si_use, sc_id, si_consumable, si_display)
+SELECT 'roulette_nullify', '벌칙 무효화권', '룰렛 벌칙을 즉시 무효화합니다.', 300, '', '{}', 1,
  COALESCE((SELECT sc_id FROM mg_shop_category WHERE sc_name = '이용권' LIMIT 1), 0), 1, 1 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_type = 'roulette_nullify');
 
-INSERT INTO mg_shop_item (si_type, si_name, si_desc, si_price, si_effect, si_use, sc_id, si_consumable, si_display)
-SELECT 'roulette_transfer_random', '랜덤 떠넘기기권', '룰렛 벌칙을 랜덤 회원에게 전달합니다.', 200, '{}', 1,
+INSERT IGNORE INTO mg_shop_item (si_type, si_name, si_desc, si_price, si_image, si_effect, si_use, sc_id, si_consumable, si_display)
+SELECT 'roulette_transfer_random', '랜덤 떠넘기기권', '룰렛 벌칙을 랜덤 회원에게 전달합니다.', 200, '', '{}', 1,
  COALESCE((SELECT sc_id FROM mg_shop_category WHERE sc_name = '이용권' LIMIT 1), 0), 1, 1 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_type = 'roulette_transfer_random');
 
-INSERT INTO mg_shop_item (si_type, si_name, si_desc, si_price, si_effect, si_use, sc_id, si_consumable, si_display)
-SELECT 'roulette_transfer_target', '지목 떠넘기기권', '룰렛 벌칙을 특정 회원에게 전달합니다.', 400, '{}', 1,
+INSERT IGNORE INTO mg_shop_item (si_type, si_name, si_desc, si_price, si_image, si_effect, si_use, sc_id, si_consumable, si_display)
+SELECT 'roulette_transfer_target', '지목 떠넘기기권', '룰렛 벌칙을 특정 회원에게 전달합니다.', 400, '', '{}', 1,
  COALESCE((SELECT sc_id FROM mg_shop_category WHERE sc_name = '이용권' LIMIT 1), 0), 1, 1 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM mg_shop_item WHERE si_type = 'roulette_transfer_target');
 
