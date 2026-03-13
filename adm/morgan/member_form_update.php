@@ -54,10 +54,7 @@ $sql_set = "mb_nick = '{$mb_nick}',
 
 // 비밀번호 변경
 if ($mb_password) {
-    $mb_password_hash = password_hash($mb_password, PASSWORD_DEFAULT);
-    if (!$mb_password_hash) {
-        $mb_password_hash = md5($mb_password);
-    }
+    $mb_password_hash = get_encrypt_string($mb_password);
     $sql_set .= ", mb_password = '".sql_real_escape_string($mb_password_hash)."'";
 }
 
