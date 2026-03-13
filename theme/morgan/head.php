@@ -357,10 +357,10 @@ if (isset($is_ajax_request) && $is_ajax_request) {
             <i data-lucide="shopping-bag" class="w-6 h-6"></i>
         </a>
 
-        <!-- 룰렛 -->
+        <!-- 슬롯 -->
         <?php if ($_show_roulette == '1') { ?>
-        <a href="<?php echo G5_BBS_URL; ?>/roulette.php" class="sidebar-icon group <?php echo $_is_roulette_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="룰렛" data-sidebar-id="roulette">
-            <i data-lucide="disc" class="w-6 h-6"></i>
+        <a href="<?php echo G5_BBS_URL; ?>/roulette.php" class="sidebar-icon group <?php echo $_is_roulette_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="슬롯" data-sidebar-id="roulette">
+            <i data-lucide="dices" class="w-6 h-6"></i>
         </a>
         <?php } ?>
 

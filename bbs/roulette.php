@@ -1,6 +1,6 @@
 <?php
 /**
- * Morgan Edition - 룰렛 페이지
+ * Morgan Edition - 룰렛 페이지 (슬롯머신 스타일)
  */
 include_once('./_common.php');
 
@@ -15,7 +15,7 @@ if (!mg_roulette_enabled()) {
     alert_close('룰렛이 비활성화되어 있습니다.');
 }
 
-$g5['title'] = '운명의 룰렛';
+$g5['title'] = '운명의 슬롯';
 include_once(G5_THEME_PATH.'/head.php');
 
 // 데이터
@@ -68,31 +68,54 @@ foreach ($prizes as $p) {
 
     <!-- 탭 -->
     <div class="flex border-b border-mg-bg-tertiary mb-4">
-        <button class="px-4 py-2 text-sm font-medium border-b-2 border-mg-accent text-mg-accent" id="tab-wheel" onclick="switchTab('wheel')">
-            <i data-lucide="disc" class="w-4 h-4 inline-block mr-1" style="vertical-align:-2px"></i> 룰렛
+        <button class="px-4 py-2 text-sm font-medium border-b-2 border-mg-accent text-mg-accent" id="tab-slot" onclick="switchTab('slot')">
+            <i data-lucide="disc" class="w-4 h-4 inline-block mr-1" style="vertical-align:-2px"></i> 슬롯
         </button>
         <button class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-mg-text-muted hover:text-mg-text-primary" id="tab-feed" onclick="switchTab('feed')">
             <i data-lucide="scroll-text" class="w-4 h-4 inline-block mr-1" style="vertical-align:-2px"></i> 결과 피드
         </button>
     </div>
 
-    <!-- 룰렛 탭 -->
-    <div id="panel-wheel">
+    <!-- 슬롯 탭 -->
+    <div id="panel-slot">
         <?php if (count($prizes) < 2) { ?>
         <div class="bg-mg-bg-secondary rounded-lg p-8 text-center text-mg-text-muted">
-            관리자가 룰렛 항목을 아직 등록하지 않았습니다.
+            관리자가 슬롯 항목을 아직 등록하지 않았습니다.
         </div>
         <?php } else { ?>
 
-        <!-- 룰렛 휠 -->
-        <div class="flex flex-col items-center mb-6">
-            <div class="relative" style="width:300px;height:300px;">
-                <canvas id="roulette-canvas" width="300" height="300" style="border-radius:50%;"></canvas>
-                <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1" style="width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-top:18px solid var(--mg-accent);z-index:10;"></div>
+        <!-- 슬롯머신 -->
+        <div class="slot-machine-wrap">
+            <!-- 슬롯 본체 -->
+            <div class="slot-body">
+                <!-- 3릴 슬롯 디스플레이 -->
+                <div class="slot-display">
+                    <div class="slot-reel-wrap">
+                        <div class="slot-reel" id="reel-0"></div>
+                    </div>
+                    <div class="slot-reel-wrap">
+                        <div class="slot-reel" id="reel-1"></div>
+                    </div>
+                    <div class="slot-reel-wrap">
+                        <div class="slot-reel" id="reel-2"></div>
+                    </div>
+                    <!-- 스캔라인 -->
+                    <div class="slot-scanline"></div>
+                    <!-- 중앙 라인 -->
+                    <div class="slot-payline"></div>
+                </div>
+
+                <!-- 결과 오버레이 (숨김) -->
+                <div class="slot-result" id="slot-result" style="display:none;">
+                    <div class="slot-result-icon" id="slot-result-icon"></div>
+                    <div class="slot-result-name" id="slot-result-name"></div>
+                    <div class="slot-result-desc" id="slot-result-desc"></div>
+                </div>
             </div>
 
+            <!-- 비용/횟수 정보 -->
             <div class="mt-4 text-center">
-                <p class="text-sm text-mg-text-secondary mb-2">
+                <p class="text-sm text-mg-text-secondary mb-3">
                     비용: <span class="text-mg-accent font-bold"><?php echo number_format($cost); ?> P</span>
                     &nbsp;|&nbsp; 보유: <span class="font-bold" id="my-point"><?php echo number_format($my_point); ?> P</span>
                     <?php if ($daily_limit > 0) { ?>
@@ -100,9 +123,9 @@ foreach ($prizes as $p) {
                     <?php } ?>
                 </p>
 
-                <button id="spin-btn" class="px-8 py-3 rounded-lg font-bold text-lg transition-all <?php echo $can_spin['ok'] ? 'bg-mg-accent text-white hover:bg-mg-accent-hover' : 'bg-mg-bg-tertiary text-mg-text-muted cursor-not-allowed'; ?>"
+                <button id="spin-btn" class="slot-lever-btn <?php echo $can_spin['ok'] ? '' : 'disabled'; ?>"
                     <?php echo $can_spin['ok'] ? '' : 'disabled'; ?>>
-                    돌리기
+                    <i data-lucide="play" class="w-5 h-5 inline-block mr-1" style="vertical-align:-3px"></i> 돌리기
                 </button>
                 <?php if (!$can_spin['ok'] && $can_spin['reason']) { ?>
                 <p class="text-xs text-red-400 mt-2"><?php echo $can_spin['reason']; ?></p>
@@ -114,7 +137,7 @@ foreach ($prizes as $p) {
 
         <!-- 활성 벌칙 상태 -->
         <?php if ($active_penalty && $active_penalty['rl_id']) { ?>
-        <div class="bg-red-900/20 border border-red-800/30 rounded-lg p-4 mb-4">
+        <div class="bg-red-900/20 border border-red-800/30 rounded-lg p-4 mb-4 mt-6">
             <div class="flex items-center gap-2 mb-2">
                 <i data-lucide="alert-triangle" class="w-5 h-5 text-red-400"></i>
                 <span class="font-medium text-red-300">벌칙 수행 중</span>
@@ -195,7 +218,6 @@ foreach ($prizes as $p) {
             <?php } ?>
         </div>
         <?php
-        // 벌칙 로그 게시판 최근 글
         $log_board = $roulette_board;
         $write_table = $g5['write_prefix'] . $log_board;
         $log_result = sql_query("SELECT wr_id, wr_subject, mb_id, wr_datetime, wr_comment
@@ -223,65 +245,247 @@ foreach ($prizes as $p) {
 </div>
 </div>
 
+<style>
+/* ── 슬롯머신 ── */
+.slot-machine-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.slot-body {
+    position: relative;
+    width: 100%;
+    max-width: 380px;
+    background: #0a0a0a;
+    border: 2px solid #333;
+    border-radius: 12px;
+    padding: 24px 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.6), inset 0 0 30px rgba(0,0,0,.8);
+}
+
+.slot-display {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    position: relative;
+    padding: 8px 0;
+}
+
+.slot-reel-wrap {
+    width: 100px;
+    height: 180px;
+    overflow: hidden;
+    border-radius: 6px;
+    background: #111;
+    border: 1px solid #2a2a2a;
+    position: relative;
+    /* 상하 페이드 마스크 */
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
+}
+
+.slot-reel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: none;
+}
+
+.slot-reel .slot-item {
+    width: 100%;
+    height: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    gap: 2px;
+}
+
+.slot-reel .slot-item-icon {
+    font-size: 1.4rem;
+    line-height: 1;
+}
+
+.slot-reel .slot-item-name {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #999;
+    text-align: center;
+    max-width: 90px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.slot-scanline {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(255,255,255,.012) 2px,
+        rgba(255,255,255,.012) 4px
+    );
+    pointer-events: none;
+    border-radius: 6px;
+}
+
+.slot-payline {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    top: 50%;
+    height: 2px;
+    background: var(--mg-accent);
+    opacity: 0.4;
+    transform: translateY(-1px);
+    box-shadow: 0 0 8px rgba(245,159,10,.3);
+    pointer-events: none;
+}
+
+/* 결과 오버레이 */
+.slot-result {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10,10,10,.92);
+    border-radius: 10px;
+    z-index: 10;
+    animation: slotResultIn .4s ease;
+}
+
+@keyframes slotResultIn {
+    from { opacity: 0; transform: scale(.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.slot-result-icon {
+    font-size: 2.5rem;
+    margin-bottom: 8px;
+}
+
+.slot-result-name {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 4px;
+}
+
+.slot-result-desc {
+    font-size: 0.85rem;
+    color: var(--mg-text-muted);
+}
+
+.slot-result.type-reward .slot-result-name { color: #4ade80; }
+.slot-result.type-penalty .slot-result-name { color: #f87171; }
+.slot-result.type-jackpot .slot-result-name { color: #fbbf24; text-shadow: 0 0 12px rgba(251,191,36,.5); }
+.slot-result.type-blank .slot-result-name { color: #6b7280; }
+
+/* 레버 버튼 */
+.slot-lever-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 36px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, var(--mg-accent), #d97706);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all .2s;
+    box-shadow: 0 4px 12px rgba(245,159,10,.25);
+}
+
+.slot-lever-btn:hover:not(.disabled):not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(245,159,10,.35);
+}
+
+.slot-lever-btn:active:not(.disabled):not(:disabled) {
+    transform: translateY(0);
+}
+
+.slot-lever-btn.disabled,
+.slot-lever-btn:disabled {
+    background: var(--mg-bg-tertiary);
+    color: var(--mg-text-muted);
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.slot-lever-btn.spinning {
+    animation: slotBtnPulse 1s infinite;
+}
+
+@keyframes slotBtnPulse {
+    0%, 100% { box-shadow: 0 4px 12px rgba(245,159,10,.25); }
+    50% { box-shadow: 0 4px 20px rgba(245,159,10,.5); }
+}
+
+/* 반응형 */
+@media (max-width: 480px) {
+    .slot-body { padding: 16px 10px; }
+    .slot-reel-wrap { width: 80px; height: 150px; }
+    .slot-reel .slot-item { height: 50px; }
+    .slot-reel .slot-item-icon { font-size: 1.1rem; }
+    .slot-reel .slot-item-name { font-size: 0.6rem; }
+}
+</style>
+
 <script>
-var ROULETTE = {
+var SLOT = {
     prizes: <?php echo json_encode($prizes_json, JSON_UNESCAPED_UNICODE); ?>,
     spinning: false,
-    canvas: null,
-    ctx: null,
-    currentAngle: 0,
+    reelHeight: 60,  // .slot-item height
 
     init: function() {
-        this.canvas = document.getElementById('roulette-canvas');
-        if (!this.canvas) return;
-        this.ctx = this.canvas.getContext('2d');
-        this.draw(0);
+        if (!document.getElementById('reel-0')) return;
+        // 초기 릴 채우기
+        for (var i = 0; i < 3; i++) {
+            this.fillReel(i);
+        }
     },
 
-    draw: function(rotation) {
-        if (!this.canvas || !this.ctx) return;
-        var ctx = this.ctx;
-        var w = this.canvas.width, h = this.canvas.height;
-        var cx = w/2, cy = h/2, r = w/2 - 4;
-        var n = this.prizes.length;
-        if (n < 2) return;
-        var arc = (Math.PI * 2) / n;
-
-        ctx.clearRect(0, 0, w, h);
-
-        for (var i = 0; i < n; i++) {
-            var angle = rotation + arc * i - Math.PI/2;
-            ctx.beginPath();
-            ctx.moveTo(cx, cy);
-            ctx.arc(cx, cy, r, angle, angle + arc);
-            ctx.closePath();
-            ctx.fillStyle = this.prizes[i].rp_color || '#6b7280';
-            ctx.fill();
-            ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-            ctx.lineWidth = 1;
-            ctx.stroke();
-
-            // 텍스트
-            ctx.save();
-            ctx.translate(cx, cy);
-            ctx.rotate(angle + arc/2);
-            ctx.fillStyle = '#fff';
-            ctx.font = 'bold 11px Pretendard, sans-serif';
-            ctx.textAlign = 'center';
-            var name = this.prizes[i].rp_name;
-            if (name.length > 6) name = name.substring(0, 6) + '…';
-            ctx.fillText(name, r * 0.6, 4);
-            ctx.restore();
+    fillReel: function(reelIdx) {
+        var reel = document.getElementById('reel-' + reelIdx);
+        if (!reel) return;
+        reel.innerHTML = '';
+        // 3칸 보이므로 여러 번 반복
+        var items = this.prizes.slice();
+        // 릴별로 다른 시작 위치
+        for (var s = 0; s < reelIdx; s++) {
+            items.push(items.shift());
         }
+        // 4세트 채움 (순환)
+        for (var set = 0; set < 4; set++) {
+            for (var j = 0; j < items.length; j++) {
+                reel.appendChild(this.createItemEl(items[j]));
+            }
+        }
+        // 중앙 정렬 (1번째 아이템이 가운데 오도록)
+        reel.style.transform = 'translateY(-' + this.reelHeight + 'px)';
+    },
 
-        // 중심 원
-        ctx.beginPath();
-        ctx.arc(cx, cy, 20, 0, Math.PI*2);
-        ctx.fillStyle = '#1e1f22';
-        ctx.fill();
-        ctx.strokeStyle = 'var(--mg-accent, #f59f0a)';
-        ctx.lineWidth = 3;
-        ctx.stroke();
+    createItemEl: function(prize) {
+        var div = document.createElement('div');
+        div.className = 'slot-item';
+        div.innerHTML = '<span class="slot-item-icon">' + (prize.rp_icon || '❓') + '</span>' +
+            '<span class="slot-item-name" style="color:' + (prize.rp_color || '#999') + '">' +
+            this.truncate(prize.rp_name, 8) + '</span>';
+        return div;
+    },
+
+    truncate: function(str, max) {
+        return str.length > max ? str.substring(0, max) + '…' : str;
     },
 
     spin: function() {
@@ -291,7 +495,13 @@ var ROULETTE = {
 
         this.spinning = true;
         btn.disabled = true;
-        btn.textContent = '돌리는 중...';
+        btn.classList.add('spinning');
+        btn.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 inline-block mr-1 animate-spin" style="vertical-align:-3px"></i> 돌리는 중…';
+        if (typeof lucide !== 'undefined') lucide.createIcons({ nodes: [btn] });
+
+        // 결과 오버레이 숨기기
+        var resultEl = document.getElementById('slot-result');
+        if (resultEl) resultEl.style.display = 'none';
 
         var self = this;
         fetch('<?php echo G5_BBS_URL; ?>/roulette_spin.php', {
@@ -303,120 +513,169 @@ var ROULETTE = {
         .then(function(data) {
             if (data.error) {
                 if (typeof mgToast === 'function') mgToast(data.error, 'error');
-                self.spinning = false;
-                btn.disabled = false;
-                btn.textContent = '돌리기';
+                self.resetBtn();
                 return;
             }
-            self.animateSpin(data);
+            self.animateReels(data);
         })
         .catch(function() {
             if (typeof mgToast === 'function') mgToast('오류가 발생했습니다.', 'error');
-            self.spinning = false;
-            btn.disabled = false;
-            btn.textContent = '돌리기';
+            self.resetBtn();
         });
     },
 
-    animateSpin: function(data) {
+    animateReels: function(data) {
         var self = this;
+        var prize = data.prize;
         var n = this.prizes.length;
-        var arc = (Math.PI * 2) / n;
 
-        // 당첨 칸 인덱스 찾기
+        // 당첨 인덱스
         var targetIdx = 0;
         for (var i = 0; i < n; i++) {
-            if (this.prizes[i].rp_id === data.prize.rp_id) { targetIdx = i; break; }
+            if (this.prizes[i].rp_id === prize.rp_id) { targetIdx = i; break; }
         }
 
-        // 목표 각도: 해당 칸 중앙이 12시(상단)에 오도록
-        var targetAngle = -(arc * targetIdx + arc/2) + Math.PI * 2 * (5 + Math.random() * 3);
-        var startAngle = this.currentAngle;
-        var duration = 4000;
-        var startTime = null;
+        // 각 릴별로 시차를 두고 롤링
+        var reelDelays = [0, 400, 800];
+        var reelDurations = [2000, 2600, 3200];
 
-        function ease(t) {
-            return 1 - Math.pow(1 - t, 4);
+        for (var r = 0; r < 3; r++) {
+            this.animateOneReel(r, targetIdx, reelDurations[r], reelDelays[r]);
         }
 
-        function animate(ts) {
-            if (!startTime) startTime = ts;
-            var elapsed = ts - startTime;
-            var progress = Math.min(elapsed / duration, 1);
-            var eased = ease(progress);
-            var angle = startAngle + (targetAngle - startAngle) * eased;
-            self.draw(angle);
-            self.currentAngle = angle;
+        // 마지막 릴 종료 후 결과 표시
+        var totalTime = reelDelays[2] + reelDurations[2] + 300;
+        setTimeout(function() {
+            self.onSpinComplete(data);
+        }, totalTime);
+    },
 
-            if (progress < 1) {
-                requestAnimationFrame(animate);
-            } else {
-                self.onSpinComplete(data);
+    animateOneReel: function(reelIdx, targetIdx, duration, delay) {
+        var self = this;
+        var reel = document.getElementById('reel-' + reelIdx);
+        if (!reel) return;
+
+        var n = this.prizes.length;
+        var h = this.reelHeight;
+        // 모바일 대응
+        var wrap = reel.parentElement;
+        if (wrap) {
+            var itemEl = reel.querySelector('.slot-item');
+            if (itemEl) h = itemEl.offsetHeight || h;
+        }
+
+        // 릴 재구성 — 많은 아이템으로 채워서 스크롤 공간 확보
+        setTimeout(function() {
+            reel.innerHTML = '';
+            var items = self.prizes.slice();
+
+            // 릴별 오프셋 (각 릴이 다른 위치에서 시작)
+            for (var s = 0; s < reelIdx * 3; s++) {
+                items.push(items.shift());
             }
-        }
-        requestAnimationFrame(animate);
+
+            // 넉넉히 10세트 + 타겟
+            var totalSets = 10;
+            for (var set = 0; set < totalSets; set++) {
+                for (var j = 0; j < items.length; j++) {
+                    reel.appendChild(self.createItemEl(items[j]));
+                }
+            }
+            // 마지막에 타겟 3개 추가 (가운데 정렬용)
+            var prevIdx = (targetIdx - 1 + n) % n;
+            var nextIdx = (targetIdx + 1) % n;
+            reel.appendChild(self.createItemEl(self.prizes[prevIdx]));
+            reel.appendChild(self.createItemEl(self.prizes[targetIdx]));
+            reel.appendChild(self.createItemEl(self.prizes[nextIdx]));
+
+            var totalItems = totalSets * n + 3;
+            // 타겟이 가운데 오는 위치: (totalSets * n + 1) 번째 아이템
+            var stopAt = (totalSets * n + 1) * h - h; // 가운데 정렬
+
+            reel.style.transition = 'none';
+            reel.style.transform = 'translateY(0)';
+
+            // 약간의 딜레이 후 스크롤 시작
+            requestAnimationFrame(function() {
+                requestAnimationFrame(function() {
+                    reel.style.transition = 'transform ' + duration + 'ms cubic-bezier(.15,.6,.2,1)';
+                    reel.style.transform = 'translateY(-' + stopAt + 'px)';
+                });
+            });
+        }, delay);
     },
 
     onSpinComplete: function(data) {
         this.spinning = false;
-        var btn = document.getElementById('spin-btn');
         var prize = data.prize;
 
-        // 잭팟 풀 업데이트
+        // 결과 오버레이 표시
+        var resultEl = document.getElementById('slot-result');
+        var iconEl = document.getElementById('slot-result-icon');
+        var nameEl = document.getElementById('slot-result-name');
+        var descEl = document.getElementById('slot-result-desc');
+
+        if (resultEl) {
+            resultEl.className = 'slot-result type-' + prize.rp_type;
+            resultEl.style.display = '';
+            if (iconEl) iconEl.textContent = prize.rp_icon || '❓';
+            if (nameEl) nameEl.textContent = prize.rp_name;
+            if (descEl) {
+                if (prize.rp_type === 'jackpot') descEl.textContent = '잭팟 풀 전액 획득!';
+                else if (prize.rp_type === 'penalty') descEl.textContent = '벌칙 당첨…';
+                else if (prize.rp_type === 'reward') descEl.textContent = '보상 획득!';
+                else descEl.textContent = '다음 기회에!';
+            }
+        }
+
+        // UI 업데이트
         var poolEl = document.getElementById('jackpot-pool');
-        if (poolEl && data.pool !== undefined) {
-            poolEl.textContent = Number(data.pool).toLocaleString() + ' P';
-        }
+        if (poolEl && data.pool !== undefined) poolEl.textContent = Number(data.pool).toLocaleString() + ' P';
 
-        // 포인트 업데이트
         var ptEl = document.getElementById('my-point');
-        if (ptEl && data.my_point !== undefined) {
-            ptEl.textContent = Number(data.my_point).toLocaleString() + ' P';
-        }
+        if (ptEl && data.my_point !== undefined) ptEl.textContent = Number(data.my_point).toLocaleString() + ' P';
 
-        // 오늘 횟수
         var tcEl = document.getElementById('today-count');
-        if (tcEl && data.today_count !== undefined) {
-            tcEl.textContent = data.today_count;
-        }
+        if (tcEl && data.today_count !== undefined) tcEl.textContent = data.today_count;
 
-        // 결과 표시
+        // 토스트
         var msg = '', type = 'info';
-        if (prize.rp_type === 'jackpot') {
-            msg = '🏆 잭팟!! ' + prize.rp_name;
-            type = 'success';
-        } else if (prize.rp_type === 'reward') {
-            msg = '🎉 ' + prize.rp_name;
-            type = 'success';
-        } else if (prize.rp_type === 'penalty') {
-            msg = '😈 벌칙: ' + prize.rp_name;
-            type = 'warning';
-        } else {
-            msg = '꽝!';
-            type = 'info';
-        }
+        if (prize.rp_type === 'jackpot') { msg = '🏆 잭팟!! ' + prize.rp_name; type = 'success'; }
+        else if (prize.rp_type === 'reward') { msg = '🎉 ' + prize.rp_name; type = 'success'; }
+        else if (prize.rp_type === 'penalty') { msg = '😈 벌칙: ' + prize.rp_name; type = 'warning'; }
+        else { msg = '💨 꽝!'; type = 'info'; }
         if (typeof mgToast === 'function') mgToast(msg, type, 5000);
 
-        // 페이지 리로드 (벌칙 상태 갱신)
+        // 벌칙/잭팟은 리로드 (벌칙 UI 갱신)
         if (prize.rp_type === 'penalty' || prize.rp_type === 'jackpot') {
-            setTimeout(function() { location.reload(); }, 2000);
+            setTimeout(function() { location.reload(); }, 2500);
         } else {
-            // 계속 돌릴 수 있는지 체크
-            if (data.can_spin) {
-                btn.disabled = false;
-                btn.textContent = '돌리기';
-            } else {
-                btn.disabled = true;
-                btn.textContent = '돌리기';
-                btn.classList.remove('bg-mg-accent', 'hover:bg-mg-accent-hover');
-                btn.classList.add('bg-mg-bg-tertiary', 'text-mg-text-muted', 'cursor-not-allowed');
+            this.resetBtn();
+            // can_spin 체크
+            if (!data.can_spin) {
+                var btn = document.getElementById('spin-btn');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.classList.add('disabled');
+                }
             }
+        }
+    },
+
+    resetBtn: function() {
+        this.spinning = false;
+        var btn = document.getElementById('spin-btn');
+        if (btn) {
+            btn.disabled = false;
+            btn.classList.remove('spinning', 'disabled');
+            btn.innerHTML = '<i data-lucide="play" class="w-5 h-5 inline-block mr-1" style="vertical-align:-3px"></i> 돌리기';
+            if (typeof lucide !== 'undefined') lucide.createIcons({ nodes: [btn] });
         }
     }
 };
 
 function switchTab(tab) {
-    var tabs = ['wheel', 'feed'];
+    var tabs = ['slot', 'feed'];
     tabs.forEach(function(t) {
         var panel = document.getElementById('panel-' + t);
         var btn = document.getElementById('tab-' + t);
@@ -459,22 +718,22 @@ function rouletteTransferTarget(rl_id) {
 
 // 초기화 — SPA/일반 양쪽 대응
 (function() {
-    function initRoulette() {
-        ROULETTE.init();
+    function initSlot() {
+        SLOT.init();
         var spinBtn = document.getElementById('spin-btn');
-        if (spinBtn) spinBtn.addEventListener('click', function() { ROULETTE.spin(); });
+        if (spinBtn && !spinBtn._bound) {
+            spinBtn._bound = true;
+            spinBtn.addEventListener('click', function() { SLOT.spin(); });
+        }
     }
 
-    // SPA 진입: executeScripts()에서 실행 시 canvas가 이미 DOM에 있음
-    if (document.getElementById('roulette-canvas')) {
-        initRoulette();
+    if (document.getElementById('reel-0')) {
+        initSlot();
     }
-    // 일반 페이지 로드
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initRoulette);
+        document.addEventListener('DOMContentLoaded', initSlot);
     }
-    // SPA mg:pageLoaded (fallback)
-    window.addEventListener('mg:pageLoaded', initRoulette, { once: true });
+    window.addEventListener('mg:pageLoaded', initSlot, { once: true });
 })();
 </script>
 
