@@ -27,6 +27,11 @@ $ch_name = isset($_POST['ch_name']) ? clean_xss_tags(trim($_POST['ch_name'])) : 
 $side_id = isset($_POST['side_id']) ? (int)$_POST['side_id'] : 0;
 $class_id = isset($_POST['class_id']) ? (int)$_POST['class_id'] : 0;
 $ch_main = isset($_POST['ch_main']) ? 1 : 0;
+if ($is_admin === 'super') {
+    $ch_is_npc = isset($_POST['ch_is_npc']) ? 1 : 0;
+} else {
+    $ch_is_npc = $is_edit ? (int)($char['ch_is_npc'] ?? 0) : 0;
+}
 $profile_raw = isset($_POST['profile']) ? $_POST['profile'] : array();
 $profile = array();
 foreach ($profile_raw as $k => $v) {
@@ -327,6 +332,7 @@ if ($is_edit) {
             side_id = ".($side_id ?: 'NULL').",
             class_id = ".($class_id ?: 'NULL').",
             ch_main = {$ch_main},
+            ch_is_npc = {$ch_is_npc},
             ch_thumb = '".sql_real_escape_string($ch_thumb)."',
             ch_image = '".sql_real_escape_string($ch_image)."',
             ch_header = '".sql_real_escape_string($ch_header)."',
@@ -378,6 +384,7 @@ if ($is_edit) {
             side_id = ".($side_id ?: 'NULL').",
             class_id = ".($class_id ?: 'NULL').",
             ch_main = {$ch_main},
+            ch_is_npc = {$ch_is_npc},
             ch_thumb = '".sql_real_escape_string($ch_thumb)."',
             ch_image = '".sql_real_escape_string($ch_image)."',
             ch_header = '".sql_real_escape_string($ch_header)."',

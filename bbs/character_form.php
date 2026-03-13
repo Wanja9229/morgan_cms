@@ -258,6 +258,18 @@ include_once(G5_THEME_PATH.'/head.php');
                         <?php } ?>
                     </div>
 
+                    <!-- NPC 설정 (관리자 전용) -->
+                    <?php if ($is_admin === 'super') { ?>
+                    <div>
+                        <label class="flex items-center gap-2 cursor-pointer text-sm text-mg-text-secondary">
+                            <input type="checkbox" name="ch_is_npc" value="1" <?php echo !empty($char['ch_is_npc']) ? 'checked' : ''; ?>
+                                   class="w-4 h-4 rounded border-mg-bg-tertiary bg-mg-bg-primary text-mg-accent focus:ring-mg-accent">
+                            <span>NPC 캐릭터</span>
+                        </label>
+                        <p class="text-xs text-mg-text-muted mt-1">NPC로 설정하면 캐릭터 목록에서 NPC 탭에 표시됩니다.</p>
+                    </div>
+                    <?php } ?>
+
                     <!-- 세력/종족 -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <?php if (count($sides) > 0) { ?>
