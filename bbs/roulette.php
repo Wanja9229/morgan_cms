@@ -239,6 +239,7 @@ var ROULETTE = {
     },
 
     draw: function(rotation) {
+        if (!this.canvas || !this.ctx) return;
         var ctx = this.ctx;
         var w = this.canvas.width, h = this.canvas.height;
         var cx = w/2, cy = h/2, r = w/2 - 4;
@@ -456,12 +457,25 @@ function rouletteTransferTarget(rl_id) {
     if (target) rouletteAction('transfer_target', rl_id, target.trim());
 }
 
-// 초기화
-document.addEventListener('DOMContentLoaded', function() { ROULETTE.init(); });
-document.addEventListener('mg:pageLoaded', function() { ROULETTE.init(); });
+// 초기화 — SPA/일반 양쪽 대응
+(function() {
+    function initRoulette() {
+        ROULETTE.init();
+        var spinBtn = document.getElementById('spin-btn');
+        if (spinBtn) spinBtn.addEventListener('click', function() { ROULETTE.spin(); });
+    }
 
-var spinBtn = document.getElementById('spin-btn');
-if (spinBtn) spinBtn.addEventListener('click', function() { ROULETTE.spin(); });
+    // SPA 진입: executeScripts()에서 실행 시 canvas가 이미 DOM에 있음
+    if (document.getElementById('roulette-canvas')) {
+        initRoulette();
+    }
+    // 일반 페이지 로드
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initRoulette);
+    }
+    // SPA mg:pageLoaded (fallback)
+    window.addEventListener('mg:pageLoaded', initRoulette, { once: true });
+})();
 </script>
 
 <?php
