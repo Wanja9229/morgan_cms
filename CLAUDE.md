@@ -210,3 +210,4 @@ include(G5_THEME_PATH.'/skin/emoticon/picker.skin.php');
 | 디자인 에셋 목록 | `docs/plans/DESIGN_ASSETS.md` |
 | DB 전체 스키마 | `docs/plans/DB.md` |
 | Phase별 기획서 | `docs/plans/{시스템명}.md` |
+| 룰렛 시스템 기획 | `docs/plans/ROULETTE.md` |
