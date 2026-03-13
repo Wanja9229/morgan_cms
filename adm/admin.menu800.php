@@ -44,6 +44,7 @@ $menu["menu800"] = array(
     array('800700', '상점 관리', $mg_admin_url . '/shop_item_list.php', 'mg_shop'),
     array('800900', '구매/선물 내역', $mg_admin_url . '/shop_log.php', 'mg_shop_log'),
     array('800950', '이모티콘 관리', $mg_admin_url . '/emoticon_list.php', 'mg_emoticon'),
+    array('800960', '룰렛 관리', $mg_admin_url . '/roulette.php', 'mg_roulette'),
     // 개척
     array('801000', '개척지 관리', $mg_admin_url . '/pioneer_facility.php', 'mg_pioneer', '개척'),
     array('801100', '재료 관리', $mg_admin_url . '/pioneer_material.php', 'mg_pioneer_material'),

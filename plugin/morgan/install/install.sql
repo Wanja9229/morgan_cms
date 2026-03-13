@@ -2780,4 +2780,42 @@ CREATE TABLE IF NOT EXISTS `mg_character_edit_log` (
     INDEX `idx_created` (`cel_created`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- ── 룰렛 시스템 ──
+CREATE TABLE IF NOT EXISTS `mg_roulette_prize` (
+    `rp_id`            INT AUTO_INCREMENT PRIMARY KEY,
+    `rp_name`          VARCHAR(100) NOT NULL COMMENT '표시명',
+    `rp_desc`          TEXT COMMENT '상세 설명',
+    `rp_type`          ENUM('reward','penalty','blank','jackpot') NOT NULL DEFAULT 'blank',
+    `rp_icon`          VARCHAR(200) COMMENT 'game-icons 아이콘명',
+    `rp_image`         VARCHAR(500) COMMENT '벌칙 프사 이미지',
+    `rp_color`         VARCHAR(7) NOT NULL DEFAULT '#6b7280' COMMENT '룰렛 칸 색상',
+    `rp_reward_type`   ENUM('point','material','item','title','nickname','profile_image','log','log_nickname','log_image','none') NOT NULL DEFAULT 'none',
+    `rp_reward_value`  TEXT COMMENT 'JSON',
+    `rp_duration_hours` INT NOT NULL DEFAULT 0 COMMENT '시간제 벌칙 지속시간',
+    `rp_require_log`   TINYINT(1) NOT NULL DEFAULT 0 COMMENT '벌칙 로그 제출 필요',
+    `rp_weight`        INT NOT NULL DEFAULT 10 COMMENT '확률 가중치',
+    `rp_order`         INT NOT NULL DEFAULT 0,
+    `rp_use`           TINYINT(1) NOT NULL DEFAULT 1,
+    `rp_created`       DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='룰렛 항목';
+
+CREATE TABLE IF NOT EXISTS `mg_roulette_log` (
+    `rl_id`            INT AUTO_INCREMENT PRIMARY KEY,
+    `mb_id`            VARCHAR(20) NOT NULL,
+    `rp_id`            INT NOT NULL COMMENT '당첨 항목',
+    `rl_source`        ENUM('spin','transfer_random','transfer_target') NOT NULL DEFAULT 'spin',
+    `rl_from_mb_id`    VARCHAR(20) DEFAULT NULL COMMENT '떠넘기기 원래 주인',
+    `rl_status`        ENUM('pending','active','completed','nullified','transferred') NOT NULL DEFAULT 'pending',
+    `rl_transfer_count` TINYINT NOT NULL DEFAULT 0 COMMENT '전달 횟수',
+    `rl_original_nick` VARCHAR(255) DEFAULT NULL COMMENT '닉변 시 원래 닉네임',
+    `rl_penalty_image` VARCHAR(500) DEFAULT NULL COMMENT '프사 강제 변경 이미지',
+    `rl_bo_table`      VARCHAR(20) DEFAULT NULL COMMENT '벌칙 로그 게시판',
+    `rl_wr_id`         INT DEFAULT NULL COMMENT '벌칙 로그 글 ID',
+    `rl_expires_at`    DATETIME DEFAULT NULL COMMENT '시간제 벌칙 만료',
+    `rl_cost`          INT NOT NULL DEFAULT 0 COMMENT '소모 포인트',
+    `rl_datetime`      DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_mb_status` (`mb_id`, `rl_status`),
+    INDEX `idx_expires` (`rl_status`, `rl_expires_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='룰렛 이력';
+
 SET FOREIGN_KEY_CHECKS = 1;

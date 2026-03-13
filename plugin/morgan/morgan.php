@@ -132,6 +132,9 @@ $g5['mg_training_schedule_table'] = 'mg_training_schedule';
 $g5['mg_training_progress_table'] = 'mg_training_progress';
 // 캐릭터 수정 이력
 $g5['mg_character_edit_log_table'] = 'mg_character_edit_log';
+// 룰렛 시스템
+$g5['mg_roulette_prize_table'] = 'mg_roulette_prize';
+$g5['mg_roulette_log_table'] = 'mg_roulette_log';
 
 // [MT-1] 멀티테넌트 파일 경로 분기
 if (defined('MG_MULTITENANT_ENABLED') && MG_MULTITENANT_ENABLED
@@ -253,6 +256,9 @@ $mg['training_schedule_table'] = $g5['mg_training_schedule_table'];
 $mg['training_progress_table'] = $g5['mg_training_progress_table'];
 // 캐릭터 수정 이력
 $mg['character_edit_log_table'] = $g5['mg_character_edit_log_table'];
+// 룰렛 시스템
+$mg['roulette_prize_table'] = $g5['mg_roulette_prize_table'];
+$mg['roulette_log_table'] = $g5['mg_roulette_log_table'];
 
 // 상점 이미지 저장 경로
 define('MG_SHOP_IMAGE_PATH', $_mg_data_base_path.'/shop');
@@ -310,6 +316,16 @@ if (!defined('MG_MIGRATION_CHECKED')) {
     if ($mig_count > 0 && $mig_cache !== $mig_count) {
         mg_run_migrations();
         $_SESSION['mg_mig_count'] = $mig_count;
+    }
+}
+
+// 룰렛 벌칙 만료 + pending 타임아웃 체크 (세션당 1회)
+if (!empty($member['mb_id']) && !isset($_SESSION['mg_roulette_checked'])) {
+    $_SESSION['mg_roulette_checked'] = true;
+    if (file_exists(G5_PLUGIN_PATH . '/morgan/roulette.php')) {
+        include_once(G5_PLUGIN_PATH . '/morgan/roulette.php');
+        mg_roulette_check_expiry($member['mb_id']);
+        mg_roulette_check_pending_timeout($member['mb_id']);
     }
 }
 

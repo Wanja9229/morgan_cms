@@ -80,6 +80,7 @@ $_is_concierge_page = in_array($_current_script, array('concierge.php', 'concier
 $_is_pioneer_page = ($_current_script === 'pioneer.php');
 $_is_battle_page = ($_current_script === 'battle.php');
 $_is_training_page = ($_current_script === 'training.php');
+$_is_roulette_page = ($_current_script === 'roulette.php');
 $_is_mypage = in_array($_current_script, array('mypage.php', 'seal_edit.php'));
 $_is_lore_page = in_array($_current_script, array('lore.php', 'lore_view.php', 'lore_timeline.php', 'lore_map.php'));
 $_current_la_id = ($_current_script === 'lore_view.php' && isset($_GET['la_id'])) ? (int)$_GET['la_id'] : 0;
@@ -90,6 +91,7 @@ $_show_mission = function_exists('mg_config') ? mg_config('prompt_enable', '1') 
 $_show_concierge = function_exists('mg_config') ? mg_config('concierge_use', '1') : '1';
 $_show_battle = function_exists('mg_config') ? mg_config('battle_use', '1') : '1';
 $_show_training = ($_show_battle === '1' && (function_exists('mg_config') ? mg_config('battle_training_use', '1') : '1') === '1');
+$_show_roulette = function_exists('mg_config') ? mg_config('roulette_use', '0') : '0';
 
 // 개척 시스템: 유저 스테미나
 $_user_stamina = null;
@@ -354,6 +356,13 @@ if (isset($is_ajax_request) && $is_ajax_request) {
         <a href="<?php echo G5_BBS_URL; ?>/shop.php" class="sidebar-icon group <?php echo $_is_shop_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="상점" data-sidebar-id="shop">
             <i data-lucide="shopping-bag" class="w-6 h-6"></i>
         </a>
+
+        <!-- 룰렛 -->
+        <?php if ($_show_roulette == '1') { ?>
+        <a href="<?php echo G5_BBS_URL; ?>/roulette.php" class="sidebar-icon group <?php echo $_is_roulette_page ? '!bg-mg-accent !text-white !rounded-xl' : ''; ?>" title="룰렛" data-sidebar-id="roulette">
+            <i data-lucide="disc" class="w-6 h-6"></i>
+        </a>
+        <?php } ?>
 
         <div class="w-8 h-px bg-mg-bg-tertiary my-1"></div>
 

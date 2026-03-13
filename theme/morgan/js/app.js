@@ -462,6 +462,8 @@
                         activeId = 'battle';
                     } else if (script === 'training.php') {
                         activeId = 'training';
+                    } else if (script === 'roulette.php') {
+                        activeId = 'roulette';
                     }
 
                     var isLore = (activeId === 'lore');
