@@ -24,7 +24,6 @@ class MG_Widget_Factory {
             'image' => 'image.widget.php',
             'link_button' => 'link_button.widget.php',
             'latest' => 'latest.widget.php',
-            'notice' => 'notice.widget.php',
             'slider' => 'slider.widget.php',
             'editor' => 'editor.widget.php',  // legacy
             'calendar' => 'calendar.widget.php'

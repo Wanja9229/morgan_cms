@@ -1373,12 +1373,6 @@ function mg_get_widget_types() {
             'allowed_cols' => array(3, 4, 6, 8, 12),
             'icon' => 'list'
         ),
-        'notice' => array(
-            'name' => '공지사항',
-            'desc' => '공지 게시판 글 목록 표시',
-            'allowed_cols' => array(3, 4, 6, 8, 12),
-            'icon' => 'bell'
-        ),
         'slider' => array(
             'name' => '슬라이더',
             'desc' => '이미지 슬라이더/캐러셀',
@@ -1466,7 +1460,7 @@ function mg_get_relation_count($ch_id) {
     $ch_id = (int)$ch_id;
     $row = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['mg_relation_table']}
                       WHERE (ch_id_a = {$ch_id} OR ch_id_b = {$ch_id})
-                      AND cr_status IN ('active','pending')");
+                      AND cr_status IN ('active','accepted','pending')");
     return (int)($row['cnt'] ?? 0);
 }
 
@@ -9197,7 +9191,7 @@ function mg_accept_relation($cr_id, $label_b = '', $memo_b = '', $color = '')
     }
 
     // 승인자는 신청자의 반대쪽
-    $sets = array("cr_status = 'active'", "cr_accept_datetime = NOW()");
+    $sets = array("cr_status = 'accepted'", "cr_accept_datetime = NOW()");
     $approver_ch_id = ($rel['ch_id_from'] == $rel['ch_id_a']) ? $rel['ch_id_b'] : $rel['ch_id_a'];
 
     if ($label_b) {
@@ -9222,27 +9216,25 @@ function mg_accept_relation($cr_id, $label_b = '', $memo_b = '', $color = '')
 
     sql_query("UPDATE {$g5['mg_relation_table']} SET " . implode(', ', $sets) . " WHERE cr_id = {$cr_id}");
 
-    // 신청자에게 승인 알림
+    // 신청자에게 승인 알림 — 양쪽 관계 로그 제출 안내
     $from_char = mg_get_character($rel['ch_id_from']);
     $approver_char = mg_get_character($approver_ch_id);
+    $rellog_board = mg_config('relation_log_board', 'rellog');
     if ($from_char && $from_char['mb_id']) {
-        $noti_title = $approver_char['ch_name'] . '이(가) 관계를 승인했습니다.';
+        $noti_title = $approver_char['ch_name'] . '이(가) 관계를 승인했습니다. 관계 로그를 작성해주세요.';
         $noti_content = $label_b ?: $rel['cr_label_a'] ?: $rel['cr_label_b'];
         mg_notify($from_char['mb_id'], 'relation_accepted', $noti_title, $noti_content,
-            G5_BBS_URL . '/relation.php');
+            G5_BBS_URL . '/board.php?bo_table=' . $rellog_board);
+    }
+    // 승인자에게도 로그 작성 안내
+    if ($approver_char && $approver_char['mb_id']) {
+        $noti_title = '관계가 승인되었습니다. 관계 로그를 작성해주세요.';
+        $noti_content = $label_b ?: $rel['cr_label_a'] ?: $rel['cr_label_b'];
+        mg_notify($approver_char['mb_id'], 'relation_accepted', $noti_title, $noti_content,
+            G5_BBS_URL . '/board.php?bo_table=' . $rellog_board);
     }
 
-    // 업적 트리거: 양쪽 회원 모두 관계 수 달성 체크
-    if (function_exists('mg_trigger_achievement')) {
-        if ($from_char && $from_char['mb_id']) {
-            mg_trigger_achievement($from_char['mb_id'], 'relation_count');
-        }
-        if ($approver_char && $approver_char['mb_id']) {
-            mg_trigger_achievement($approver_char['mb_id'], 'relation_count');
-        }
-    }
-
-    return array('success' => true, 'message' => '관계를 승인했습니다.');
+    return array('success' => true, 'message' => '관계를 승인했습니다. 양쪽 모두 관계 로그를 작성하면 관계가 성립됩니다.');
 }
 
 /**
@@ -9333,6 +9325,108 @@ function mg_update_relation_side($cr_id, $ch_id, $label = '', $memo = '', $color
     sql_query("UPDATE {$g5['mg_relation_table']} SET ".implode(', ', $sets)." WHERE cr_id = {$cr_id}");
 
     return array('success' => true, 'message' => '관계 정보를 수정했습니다.');
+}
+
+/**
+ * 관계 로그 제출 처리
+ *
+ * rellog 게시판에 글 작성 시 호출.
+ * 작성자의 캐릭터가 accepted 상태 관계에 속하면 해당 쪽 wr_id 기록.
+ * 양쪽 모두 제출 완료 시 active로 전환 + 업적 트리거.
+ *
+ * @param string $bo_table 게시판 테이블명
+ * @param int $wr_id 작성된 글 ID
+ * @param int $ch_id 작성자의 캐릭터 ID
+ * @param string $mb_id 작성자 회원 ID
+ * @return array
+ */
+function mg_relation_submit_log($bo_table, $wr_id, $ch_id, $mb_id)
+{
+    global $g5;
+    $wr_id = (int)$wr_id;
+    $ch_id = (int)$ch_id;
+    if (!$ch_id || !$wr_id) {
+        return array('success' => false, 'message' => '캐릭터 또는 글 정보가 없습니다.');
+    }
+
+    // accepted 상태인 관계 중 이 캐릭터가 속한 것 찾기
+    $rels = mg_get_relations($ch_id, 'accepted');
+    if (empty($rels)) {
+        return array('success' => false, 'message' => '로그를 제출할 수 있는 관계가 없습니다.');
+    }
+
+    $submitted = 0;
+    foreach ($rels as $rel) {
+        // 이 캐릭터가 A쪽인지 B쪽인지
+        $side = ($ch_id == $rel['ch_id_a']) ? 'a' : 'b';
+        $wr_col = "cr_wr_id_{$side}";
+
+        // 이미 로그 제출한 쪽이면 스킵
+        if (!empty($rel[$wr_col])) continue;
+
+        // 해당 쪽에 wr_id 기록
+        sql_query("UPDATE {$g5['mg_relation_table']}
+                   SET {$wr_col} = {$wr_id}, cr_bo_table = '".sql_real_escape_string($bo_table)."'
+                   WHERE cr_id = {$rel['cr_id']}");
+
+        $submitted++;
+
+        // 양쪽 모두 제출했는지 확인
+        $other_side = ($side === 'a') ? 'b' : 'a';
+        $other_wr_col = "cr_wr_id_{$other_side}";
+
+        if (!empty($rel[$other_wr_col])) {
+            // 양쪽 모두 제출 완료 → active 전환
+            sql_query("UPDATE {$g5['mg_relation_table']}
+                       SET cr_status = 'active'
+                       WHERE cr_id = {$rel['cr_id']}");
+
+            // 양쪽에 관계 성립 알림
+            $char_a = mg_get_character($rel['ch_id_a']);
+            $char_b = mg_get_character($rel['ch_id_b']);
+            $label_display = $rel['cr_label_a'] ?: $rel['cr_label_b'] ?: '관계';
+
+            if ($char_a && $char_a['mb_id']) {
+                mg_notify($char_a['mb_id'], 'relation_active',
+                    $char_b['ch_name'] . '과(와)의 관계가 성립되었습니다.',
+                    $label_display, G5_BBS_URL . '/relation.php');
+            }
+            if ($char_b && $char_b['mb_id']) {
+                mg_notify($char_b['mb_id'], 'relation_active',
+                    $char_a['ch_name'] . '과(와)의 관계가 성립되었습니다.',
+                    $label_display, G5_BBS_URL . '/relation.php');
+            }
+
+            // 업적 트리거: 관계 성립 시 양쪽 모두
+            if (function_exists('mg_trigger_achievement')) {
+                if ($char_a && $char_a['mb_id']) {
+                    mg_trigger_achievement($char_a['mb_id'], 'relation_count');
+                }
+                if ($char_b && $char_b['mb_id']) {
+                    mg_trigger_achievement($char_b['mb_id'], 'relation_count');
+                }
+            }
+        } else {
+            // 상대에게 로그 제출 안내 알림
+            $other_ch_id = ($side === 'a') ? $rel['ch_id_b'] : $rel['ch_id_a'];
+            $other_char = mg_get_character($other_ch_id);
+            $my_char = mg_get_character($ch_id);
+            if ($other_char && $other_char['mb_id']) {
+                mg_notify($other_char['mb_id'], 'relation_log_submitted',
+                    $my_char['ch_name'] . '이(가) 관계 로그를 제출했습니다. 관계 로그를 작성해주세요.',
+                    '', G5_BBS_URL . '/board.php?bo_table=' . $bo_table);
+            }
+        }
+
+        // 첫 번째 매칭 관계만 처리 (여러 accepted 관계가 있을 수 있으므로)
+        break;
+    }
+
+    if ($submitted === 0) {
+        return array('success' => false, 'message' => '이미 로그를 제출한 관계이거나 해당 관계가 없습니다.');
+    }
+
+    return array('success' => true, 'message' => '관계 로그가 제출되었습니다.');
 }
 
 /**

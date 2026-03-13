@@ -108,7 +108,8 @@ INSERT IGNORE INTO g5_board (bo_table, gr_id, bo_subject, bo_device, bo_list_lev
     ('gallery', 'community', '로그(이미지)', 'both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/gallery', 'theme/gallery', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
     ('owner',   'community', '오너게시판',   'both', 1, 1, 5, 5, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/basic', 'theme/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
     ('vent',    'community', '앓이란',      'both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/basic', 'theme/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
-    ('roulette','community', '룰렛 로그','both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/basic', 'theme/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150);
+    ('roulette','community', '룰렛 로그','both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/basic', 'theme/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
+    ('rellog',  'community', '관계 로그','both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/basic', 'theme/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150);
 
 -- ============================================================
 -- 6. mg_config 기본값 (Morgan 설정)
@@ -135,7 +136,8 @@ INSERT IGNORE INTO mg_config (cf_key, cf_value) VALUES
     ('roulette_board', 'roulette'),
     ('roulette_jackpot_pool', '0'),
     ('roulette_transfer_reveal', '0'),
-    ('roulette_pending_hours', '24');
+    ('roulette_pending_hours', '24'),
+    ('relation_log_board', 'rellog');
 
 -- ============================================================
 -- 7. 기본 상점 카테고리

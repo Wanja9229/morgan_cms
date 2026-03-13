@@ -535,10 +535,9 @@ function resetColors() {
                         <input type="number" id="gridRowsInput" value="<?php echo $grid_rows; ?>" min="4" max="100" step="1" class="mg-form-input" style="width:70px;padding:0.375rem 0.5rem;">
                     </div>
                     <button type="button" class="mg-btn mg-btn-sm mg-btn-secondary" onclick="applyGridSettings()">미리보기</button>
-                    <button type="button" class="mg-btn mg-btn-sm mg-btn-primary" id="btnSaveGrid" onclick="saveGridSettings()" style="display:none;">저장</button>
                 </div>
                 <div style="font-size:0.7rem;color:var(--mg-text-muted);margin-top:0.5rem;">
-                    가로 칸 수를 늘리면 한 칸의 크기가 작아져 더 세밀한 배치가 가능합니다. '미리보기'로 확인 후 '저장'을 눌러 확정하세요.
+                    가로 칸 수를 늘리면 한 칸의 크기가 작아져 더 세밀한 배치가 가능합니다. '미리보기'로 확인 후 '레이아웃 저장'을 눌러 확정하세요.
                 </div>
             </div>
         </div>
@@ -569,7 +568,7 @@ function resetColors() {
                 <label class="mg-form-label">위젯 타입 선택</label>
                 <div class="mg-type-grid">
                     <?php
-                    $type_icons = array('text' => 'document-text', 'image' => 'photo', 'link_button' => 'link', 'latest' => 'queue-list', 'notice' => 'bell', 'slider' => 'squares-2x2', 'editor' => 'pencil-square');
+                    $type_icons = array('text' => 'document-text', 'image' => 'photo', 'link_button' => 'link', 'latest' => 'queue-list', 'slider' => 'squares-2x2', 'editor' => 'pencil-square');
                     foreach ($widget_types as $type => $info):
                         $icon_name = isset($type_icons[$type]) ? $type_icons[$type] : 'cube';
                     ?>
@@ -630,7 +629,7 @@ var currentWidgetId = null;
 // ====================================
 <?php
 // PHP에서 위젯 데이터를 JSON으로 출력
-$type_icons_map = array('text' => 'document-text', 'image' => 'photo', 'link_button' => 'link', 'latest' => 'queue-list', 'notice' => 'bell', 'slider' => 'squares-2x2', 'editor' => 'pencil-square');
+$type_icons_map = array('text' => 'document-text', 'image' => 'photo', 'link_button' => 'link', 'latest' => 'queue-list', 'slider' => 'squares-2x2', 'editor' => 'pencil-square');
 $widgets_json = array();
 foreach ($widgets as $w) {
     $cfg = $w['widget_config'] ?: array();
@@ -653,7 +652,7 @@ foreach ($widgets as $w) {
                 $preview = htmlspecialchars(($cfg['text'] ?? '버튼') . ' → ' . ($cfg['link_url'] ?? '#'));
             }
             break;
-        case 'latest': case 'notice':
+        case 'latest':
             $preview = htmlspecialchars($cfg['title'] ?? (!empty($cfg['bo_table']) ? $cfg['bo_table'] : '(게시판 미선택)'));
             break;
         case 'slider':
@@ -713,6 +712,8 @@ function buildWidgetContent(w) {
 // 관리자 빌더: 정사각형 셀 (셀 높이 = 셀 너비 = 캔버스/columns)
 var currentGridColumns = <?php echo $grid_columns; ?>;
 var currentGridRows = <?php echo $grid_rows; ?>;
+var savedGridColumns = currentGridColumns;
+var savedGridRows = currentGridRows;
 
 function calcSquareCellHeight() {
     var canvas = document.getElementById('gridCanvas');
@@ -815,25 +816,45 @@ function saveLayout(silent) {
         return { id: parseInt(node.id), x: node.x, y: node.y, w: node.w, h: node.h };
     });
 
-    fetch('./main_builder_update.php', {
+    // 1) 레이아웃(위젯 좌표) 저장
+    var layoutPromise = fetch('./main_builder_update.php', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({action: 'save_layout', widgets: items})
-    })
-    .then(r => r.json())
-    .then(data => {
+    }).then(r => r.json());
+
+    // 2) 그리드 설정 변경이 있으면 함께 저장
+    var gridChanged = (currentGridColumns !== savedGridColumns || currentGridRows !== savedGridRows);
+    var gridPromise = gridChanged
+        ? fetch('./main_builder_update.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({action: 'save_grid_settings', grid_columns: currentGridColumns, grid_rows: currentGridRows})
+        }).then(r => r.json())
+        : Promise.resolve(null);
+
+    Promise.all([layoutPromise, gridPromise])
+    .then(function(results) {
+        var layoutData = results[0];
+        var gridData = results[1];
+        if (gridData) {
+            savedGridColumns = currentGridColumns;
+            savedGridRows = currentGridRows;
+        }
         if (!silent) {
-            if (data.success) alert('레이아웃이 저장되었습니다.');
-            else alert(data.message || '저장 실패');
+            if (layoutData.success && (!gridData || gridData.success)) {
+                alert(gridChanged ? '레이아웃과 그리드 설정이 저장되었습니다.' : '레이아웃이 저장되었습니다.');
+            } else {
+                alert(layoutData.message || (gridData && gridData.message) || '저장 실패');
+            }
         }
     })
     .catch(err => { if (!silent) alert('저장 중 오류가 발생했습니다.'); });
 }
 
 // ====================================
-// 그리드 설정 저장
+// 그리드 설정 미리보기
 // ====================================
-// JS 즉시 적용 (서버 저장 없이 미리보기)
 function applyGridSettings() {
     var newCols = parseInt(document.getElementById('gridColumnsInput').value, 10);
     var newRows = parseInt(document.getElementById('gridRowsInput').value, 10);
@@ -886,40 +907,6 @@ function applyGridSettings() {
         if (sizeEl && node) sizeEl.textContent = node.w + '×' + node.h;
     });
 
-    // 저장 버튼 표시
-    document.getElementById('btnSaveGrid').style.display = '';
-}
-
-// 서버에 확정 저장
-function saveGridSettings() {
-    // 먼저 현재 레이아웃 저장 (위젯 좌표 반영)
-    var items = grid.getGridItems().map(function(el) {
-        var node = el.gridstackNode;
-        return { id: parseInt(node.id), x: node.x, y: node.y, w: node.w, h: node.h };
-    });
-
-    fetch('./main_builder_update.php', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({action: 'save_layout', widgets: items})
-    })
-    .then(function() {
-        return fetch('./main_builder_update.php', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({action: 'save_grid_settings', grid_columns: currentGridColumns, grid_rows: currentGridRows})
-        });
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            alert('그리드 설정이 저장되었습니다.');
-            document.getElementById('btnSaveGrid').style.display = 'none';
-        } else {
-            alert(data.message || '저장 실패');
-        }
-    })
-    .catch(err => alert('저장 중 오류가 발생했습니다.'));
 }
 
 // ====================================

@@ -118,6 +118,7 @@ foreach ($profile_fields as $field) {
 
 // 관계 데이터 (수정 모드일 때만)
 $my_relations = array();
+$accepted_relations = array();
 $received_pending = array();
 $sent_pending = array();
 $relation_icons = array();
@@ -126,6 +127,9 @@ $pending_count = 0;
 if ($is_edit) {
     // 내 활성 관계
     $my_relations = mg_get_relations($ch_id, 'active');
+
+    // 로그 대기중 관계 (accepted — 양쪽 로그 제출 대기)
+    $accepted_relations = mg_get_relations($ch_id, 'accepted');
 
     // 받은 대기 신청 (이 캐릭터가 대상인 pending)
     $sql = "SELECT r.*,
@@ -850,6 +854,66 @@ include_once(G5_THEME_PATH.'/head.php');
             </div>
             <?php } ?>
         </div>
+
+        <!-- 로그 대기중 (accepted 상태) -->
+        <?php if (!empty($accepted_relations)) { ?>
+        <div class="mb-6">
+            <h2 class="text-lg font-bold text-mg-text-primary mb-3">
+                로그 대기중
+                <span class="text-sm bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full ml-1"><?php echo count($accepted_relations); ?></span>
+            </h2>
+            <div class="space-y-3">
+                <?php
+                $rellog_board = mg_config('relation_log_board', 'rellog');
+                foreach ($accepted_relations as $rel) {
+                    $is_a = ($ch_id == $rel['ch_id_a']);
+                    $other_name = $is_a ? $rel['name_b'] : $rel['name_a'];
+                    $other_thumb = $is_a ? $rel['thumb_b'] : $rel['thumb_a'];
+                    $other_ch_id = $is_a ? $rel['ch_id_b'] : $rel['ch_id_a'];
+                    $my_label = $is_a ? ($rel['cr_label_a'] ?: $rel['cr_label_b']) : ($rel['cr_label_b'] ?: $rel['cr_label_a']);
+                    $my_wr_id = $is_a ? $rel['cr_wr_id_a'] : $rel['cr_wr_id_b'];
+                    $other_wr_id = $is_a ? $rel['cr_wr_id_b'] : $rel['cr_wr_id_a'];
+                    $my_submitted = !empty($my_wr_id);
+                    $other_submitted = !empty($other_wr_id);
+                ?>
+                <div class="bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary p-4">
+                    <div class="flex items-center gap-3">
+                        <?php if ($other_thumb) { ?>
+                        <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.$other_thumb; ?>" class="w-10 h-10 rounded-full object-cover flex-shrink-0" alt="">
+                        <?php } else { ?>
+                        <div class="w-10 h-10 rounded-full bg-mg-bg-tertiary flex items-center justify-center text-mg-text-muted text-sm flex-shrink-0">?</div>
+                        <?php } ?>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:<?php echo htmlspecialchars($rel['cr_color'] ?: '#95a5a6'); ?>"></span>
+                                <span class="text-sm font-medium text-mg-text-primary"><?php echo htmlspecialchars($my_label); ?></span>
+                                <span class="text-xs text-mg-text-muted">→</span>
+                                <span class="text-sm text-mg-accent"><?php echo htmlspecialchars($other_name); ?></span>
+                            </div>
+                            <div class="flex gap-3 mt-1.5 text-xs">
+                                <span class="<?php echo $my_submitted ? 'text-green-400' : 'text-yellow-400'; ?>">
+                                    내 로그: <?php echo $my_submitted ? '제출 완료' : '미제출'; ?>
+                                </span>
+                                <span class="<?php echo $other_submitted ? 'text-green-400' : 'text-mg-text-muted'; ?>">
+                                    상대 로그: <?php echo $other_submitted ? '제출 완료' : '미제출'; ?>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0 flex gap-1">
+                            <?php if (!$my_submitted) { ?>
+                            <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=<?php echo $rellog_board; ?>&w=write" class="text-xs bg-mg-accent text-white px-3 py-1.5 rounded-lg hover:opacity-80 transition-opacity">로그 작성</a>
+                            <?php } ?>
+                            <button type="button" onclick="cfDeleteRelation(<?php echo $rel['cr_id']; ?>, <?php echo $ch_id; ?>)" class="text-xs text-red-400 hover:text-red-300 px-2 py-1.5 rounded hover:bg-mg-bg-tertiary transition-colors" title="해제">
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <?php } ?>
+            </div>
+            <p class="text-xs text-mg-text-muted mt-2">양쪽 모두 관계 로그를 작성하면 관계가 성립됩니다.</p>
+        </div>
+        <?php } ?>
 
         <!-- 내 관계 -->
         <div class="mb-6">
