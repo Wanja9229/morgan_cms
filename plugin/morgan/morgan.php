@@ -642,6 +642,9 @@ function mg_get_item_types() {
         'concierge_boost' => array('name' => '의뢰 보상 부스터', 'desc' => '의뢰 보상을 추가로 받습니다 (1회 소모)', 'group' => 'system'),
         'stamina_recover' => array('name' => '스태미나 회복 물약', 'desc' => '스태미나를 풀 충전합니다 (일일 상한 적용, 소모품)', 'group' => 'system'),
         'stat_reset' => array('name' => '스탯 초기화권', 'desc' => '배분 스탯 초기화 (소모품)', 'group' => 'system'),
+        'roulette_nullify' => array('name' => '벌칙 무효화권', 'desc' => '슬롯 벌칙을 즉시 무효화 (소모품)', 'group' => 'system'),
+        'roulette_transfer_random' => array('name' => '랜덤 패스권', 'desc' => '슬롯 벌칙을 랜덤 회원에게 전달 (소모품)', 'group' => 'system'),
+        'roulette_transfer_target' => array('name' => '지목 패스권', 'desc' => '슬롯 벌칙을 지정 회원에게 전달 (소모품)', 'group' => 'system'),
         'nick_bg' => array('name' => '이름표 배경색', 'desc' => '닉네임에 배경색을 적용합니다', 'group' => 'decor'),
         // 전투
         'battle_weapon' => array('name' => '전투 무기', 'desc' => '전투 시스템 무기 장비', 'group' => 'battle'),

@@ -219,8 +219,14 @@ $reward_type_labels = array('point' => '포인트', 'material' => '재료', 'ite
             </select>
         </div>
         <div class="mg-form-group">
-            <label class="mg-form-label">아이콘 (game-icons 이름)</label>
-            <input type="text" name="rp_icon" value="<?php echo htmlspecialchars($item['rp_icon'] ?? ''); ?>" class="mg-form-input" placeholder="예: health-potion">
+            <label class="mg-form-label">아이콘 (Lucide 아이콘명)</label>
+            <div style="display:flex;gap:8px;align-items:center;">
+                <input type="text" name="rp_icon" value="<?php echo htmlspecialchars($item['rp_icon'] ?? ''); ?>" class="mg-form-input" style="flex:1;" placeholder="예: coins, gem, star, flame" id="rp_icon_input">
+                <span id="rp_icon_preview" style="font-size:1.2rem;width:32px;text-align:center;"><i data-lucide="<?php echo htmlspecialchars($item['rp_icon'] ?? 'help-circle'); ?>" style="width:24px;height:24px;"></i></span>
+            </div>
+            <p class="text-xs text-mg-text-muted mt-1">
+                <a href="https://lucide.dev/icons/" target="_blank" style="color:var(--mg-accent);">아이콘 목록 보기 &rarr;</a>
+            </p>
         </div>
         <div class="mg-form-group">
             <label class="mg-form-label">룰렛 칸 색상</label>
@@ -290,7 +296,7 @@ $reward_type_labels = array('point' => '포인트', 'material' => '재료', 'ite
                 <tr>
                     <th style="width:30px"><input type="checkbox" onclick="var c=this.checked;document.querySelectorAll('input[name=\\'chk[]\\']').forEach(function(e){e.checked=c;})"></th>
                     <th>ID</th>
-                    <th>색상</th>
+                    <th>아이콘</th>
                     <th>이름</th>
                     <th>유형</th>
                     <th>보상</th>
@@ -310,7 +316,7 @@ $reward_type_labels = array('point' => '포인트', 'material' => '재료', 'ite
                 <tr>
                     <td><input type="checkbox" name="chk[]" value="<?php echo $it['rp_id']; ?>"></td>
                     <td><?php echo $it['rp_id']; ?></td>
-                    <td><span style="display:inline-block;width:20px;height:20px;border-radius:4px;background:<?php echo htmlspecialchars($it['rp_color'] ?? '#6b7280'); ?>;vertical-align:middle;"></span></td>
+                    <td style="text-align:center;"><i data-lucide="<?php echo htmlspecialchars($it['rp_icon'] ?? 'help-circle'); ?>" style="width:20px;height:20px;color:<?php echo htmlspecialchars($it['rp_color'] ?? '#6b7280'); ?>;"></i></td>
                     <td><?php echo htmlspecialchars($it['rp_name'] ?? ''); ?></td>
                     <td><?php echo $type_labels[$it['rp_type']] ?? $it['rp_type']; ?></td>
                     <td><?php echo $reward_type_labels[$it['rp_reward_type']] ?? $it['rp_reward_type']; ?></td>

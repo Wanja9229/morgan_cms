@@ -342,7 +342,7 @@ function mg_roulette_transfer($rl_id, $from_mb_id, $to_mb_id, $type = 'transfer_
     // 알림
     $reveal = mg_config('roulette_transfer_reveal', '0') == '1';
     $from_name = $reveal ? get_text(sql_fetch("SELECT mb_nick FROM {$g5['member_table']} WHERE mb_id = '{$from_mb_esc}'")['mb_nick']) : '누군가';
-    mg_notify($to_mb_id, 'roulette', $from_name.'가 벌칙을 떠넘겼습니다: '.$log['rp_name'], '', G5_BBS_URL.'/roulette.php');
+    mg_notify($to_mb_id, 'roulette', $from_name.'가 벌칙을 패스했습니다: '.$log['rp_name'], '', G5_BBS_URL.'/roulette.php');
 
     return true;
 }

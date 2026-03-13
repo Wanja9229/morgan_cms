@@ -1,6 +1,6 @@
 <?php
 /**
- * Morgan Edition - 룰렛 페이지 (슬롯머신 스타일)
+ * Morgan Edition - 슬롯머신 페이지
  */
 include_once('./_common.php');
 
@@ -15,7 +15,7 @@ if (!mg_roulette_enabled()) {
     alert_close('룰렛이 비활성화되어 있습니다.');
 }
 
-$g5['title'] = '운명의 슬롯';
+$g5['title'] = '슬롯';
 include_once(G5_THEME_PATH.'/head.php');
 
 // 데이터
@@ -29,14 +29,14 @@ $active_penalty = mg_roulette_get_active_penalty($member['mb_id']);
 $my_point = (int)$member['mb_point'];
 $roulette_board = mg_config('roulette_board', 'roulette');
 
-// 최근 결과 (피드)
+// 최근 결과 피드 (최근 20건)
 $feed_result = sql_query("SELECT rl.*, rp.rp_name, rp.rp_type, rp.rp_icon, rp.rp_color,
-    m.mb_nick, m.mb_id
+    m.mb_nick
     FROM {$g5['mg_roulette_log_table']} rl
     JOIN {$g5['mg_roulette_prize_table']} rp ON rl.rp_id = rp.rp_id
     JOIN {$g5['member_table']} m ON rl.mb_id = m.mb_id
     WHERE rl.rl_source = 'spin'
-    ORDER BY rl.rl_id DESC LIMIT 50");
+    ORDER BY rl.rl_id DESC LIMIT 20");
 $feed_items = array();
 if ($feed_result !== false) {
     while ($row = sql_fetch_array($feed_result)) {
@@ -66,127 +66,104 @@ foreach ($prizes as $p) {
         <p class="text-3xl font-bold text-mg-accent" id="jackpot-pool"><?php echo number_format($jackpot_pool); ?> P</p>
     </div>
 
-    <!-- 탭 -->
-    <div class="flex border-b border-mg-bg-tertiary mb-4">
-        <button class="px-4 py-2 text-sm font-medium border-b-2 border-mg-accent text-mg-accent" id="tab-slot" onclick="switchTab('slot')">
-            <i data-lucide="disc" class="w-4 h-4 inline-block mr-1" style="vertical-align:-2px"></i> 슬롯
-        </button>
-        <button class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-mg-text-muted hover:text-mg-text-primary" id="tab-feed" onclick="switchTab('feed')">
-            <i data-lucide="scroll-text" class="w-4 h-4 inline-block mr-1" style="vertical-align:-2px"></i> 결과 피드
-        </button>
+    <!-- 슬롯머신 -->
+    <?php if (count($prizes) < 2) { ?>
+    <div class="bg-mg-bg-secondary rounded-lg p-8 text-center text-mg-text-muted">
+        관리자가 슬롯 항목을 아직 등록하지 않았습니다.
     </div>
+    <?php } else { ?>
 
-    <!-- 슬롯 탭 -->
-    <div id="panel-slot">
-        <?php if (count($prizes) < 2) { ?>
-        <div class="bg-mg-bg-secondary rounded-lg p-8 text-center text-mg-text-muted">
-            관리자가 슬롯 항목을 아직 등록하지 않았습니다.
-        </div>
-        <?php } else { ?>
-
-        <!-- 슬롯머신 -->
-        <div class="slot-machine-wrap">
-            <!-- 슬롯 본체 -->
-            <div class="slot-body">
-                <!-- 3릴 슬롯 디스플레이 -->
-                <div class="slot-display">
-                    <div class="slot-reel-wrap">
-                        <div class="slot-reel" id="reel-0"></div>
-                    </div>
-                    <div class="slot-reel-wrap">
-                        <div class="slot-reel" id="reel-1"></div>
-                    </div>
-                    <div class="slot-reel-wrap">
-                        <div class="slot-reel" id="reel-2"></div>
-                    </div>
-                    <!-- 스캔라인 -->
-                    <div class="slot-scanline"></div>
-                    <!-- 중앙 라인 -->
-                    <div class="slot-payline"></div>
+    <div class="slot-machine-wrap">
+        <div class="slot-body">
+            <div class="slot-display">
+                <div class="slot-reel-wrap">
+                    <div class="slot-reel" id="reel-0"></div>
                 </div>
-
-                <!-- 결과 오버레이 (숨김) -->
-                <div class="slot-result" id="slot-result" style="display:none;">
-                    <div class="slot-result-icon" id="slot-result-icon"></div>
-                    <div class="slot-result-name" id="slot-result-name"></div>
-                    <div class="slot-result-desc" id="slot-result-desc"></div>
+                <div class="slot-reel-wrap">
+                    <div class="slot-reel" id="reel-1"></div>
                 </div>
+                <div class="slot-reel-wrap">
+                    <div class="slot-reel" id="reel-2"></div>
+                </div>
+                <div class="slot-scanline"></div>
+                <div class="slot-payline"></div>
             </div>
 
-            <!-- 비용/횟수 정보 -->
-            <div class="mt-4 text-center">
-                <p class="text-sm text-mg-text-secondary mb-3">
-                    비용: <span class="text-mg-accent font-bold"><?php echo number_format($cost); ?> P</span>
-                    &nbsp;|&nbsp; 보유: <span class="font-bold" id="my-point"><?php echo number_format($my_point); ?> P</span>
-                    <?php if ($daily_limit > 0) { ?>
-                    &nbsp;|&nbsp; 오늘: <span id="today-count"><?php echo $today_count; ?></span>/<?php echo $daily_limit; ?>
-                    <?php } ?>
-                </p>
+            <!-- 결과 오버레이 -->
+            <div class="slot-result" id="slot-result" style="display:none;">
+                <div class="slot-result-icon" id="slot-result-icon"></div>
+                <div class="slot-result-name" id="slot-result-name"></div>
+                <div class="slot-result-desc" id="slot-result-desc"></div>
+            </div>
+        </div>
 
-                <button id="spin-btn" class="slot-lever-btn <?php echo $can_spin['ok'] ? '' : 'disabled'; ?>"
-                    <?php echo $can_spin['ok'] ? '' : 'disabled'; ?>>
-                    <i data-lucide="play" class="w-5 h-5 inline-block mr-1" style="vertical-align:-3px"></i> 돌리기
-                </button>
-                <?php if (!$can_spin['ok'] && $can_spin['reason']) { ?>
-                <p class="text-xs text-red-400 mt-2"><?php echo $can_spin['reason']; ?></p>
+        <!-- 비용/횟수 정보 -->
+        <div class="mt-4 text-center">
+            <p class="text-sm text-mg-text-secondary mb-3">
+                비용: <span class="text-mg-accent font-bold"><?php echo number_format($cost); ?> P</span>
+                &nbsp;|&nbsp; 보유: <span class="font-bold" id="my-point"><?php echo number_format($my_point); ?> P</span>
+                <?php if ($daily_limit > 0) { ?>
+                &nbsp;|&nbsp; 오늘: <span id="today-count"><?php echo $today_count; ?></span>/<?php echo $daily_limit; ?>
                 <?php } ?>
-            </div>
-        </div>
+            </p>
 
-        <?php } ?>
-
-        <!-- 활성 벌칙 상태 -->
-        <?php if ($active_penalty && $active_penalty['rl_id']) { ?>
-        <div class="bg-red-900/20 border border-red-800/30 rounded-lg p-4 mb-4 mt-6">
-            <div class="flex items-center gap-2 mb-2">
-                <i data-lucide="alert-triangle" class="w-5 h-5 text-red-400"></i>
-                <span class="font-medium text-red-300">벌칙 수행 중</span>
-                <span class="text-xs px-2 py-0.5 rounded bg-red-900/40 text-red-300 ml-auto">
-                    <?php echo $active_penalty['rl_status'] === 'pending' ? '대기중' : '수행중'; ?>
-                </span>
-            </div>
-            <p class="text-sm text-mg-text-secondary mb-2"><?php echo htmlspecialchars($active_penalty['rp_name'] ?? ''); ?></p>
-            <?php if ($active_penalty['rp_desc']) { ?>
-            <p class="text-xs text-mg-text-muted mb-3"><?php echo htmlspecialchars($active_penalty['rp_desc']); ?></p>
-            <?php } ?>
-
-            <?php if ($active_penalty['rl_status'] === 'pending') { ?>
-            <div class="flex gap-2 flex-wrap">
-                <button onclick="rouletteAction('nullify', <?php echo $active_penalty['rl_id']; ?>)"
-                    class="px-3 py-1.5 text-xs rounded bg-mg-bg-tertiary text-mg-text-primary hover:bg-mg-bg-tertiary/80 transition-colors">
-                    <i data-lucide="shield-off" class="w-3 h-3 inline-block mr-1" style="vertical-align:-1px"></i> 무효화
-                </button>
-                <button onclick="rouletteAction('transfer_random', <?php echo $active_penalty['rl_id']; ?>)"
-                    class="px-3 py-1.5 text-xs rounded bg-mg-bg-tertiary text-mg-text-primary hover:bg-mg-bg-tertiary/80 transition-colors">
-                    <i data-lucide="shuffle" class="w-3 h-3 inline-block mr-1" style="vertical-align:-1px"></i> 랜덤 떠넘기기
-                </button>
-                <button onclick="rouletteTransferTarget(<?php echo $active_penalty['rl_id']; ?>)"
-                    class="px-3 py-1.5 text-xs rounded bg-mg-bg-tertiary text-mg-text-primary hover:bg-mg-bg-tertiary/80 transition-colors">
-                    <i data-lucide="user-check" class="w-3 h-3 inline-block mr-1" style="vertical-align:-1px"></i> 지목 떠넘기기
-                </button>
-            </div>
-            <?php } elseif ($active_penalty['rp_require_log'] || in_array($active_penalty['rp_reward_type'], array('log', 'log_nickname', 'log_image'))) { ?>
-            <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=<?php echo $roulette_board; ?>&w=w&rl_id=<?php echo $active_penalty['rl_id']; ?>"
-                class="inline-block px-3 py-1.5 text-xs rounded bg-mg-accent text-white hover:bg-mg-accent-hover transition-colors">
-                <i data-lucide="pencil" class="w-3 h-3 inline-block mr-1" style="vertical-align:-1px"></i> 벌칙 로그 작성
-            </a>
-            <?php } ?>
-
-            <?php if ($active_penalty['rl_expires_at']) { ?>
-            <p class="text-xs text-mg-text-muted mt-2">만료: <?php echo date('m/d H:i', strtotime($active_penalty['rl_expires_at'])); ?></p>
+            <button id="spin-btn" class="slot-lever-btn <?php echo $can_spin['ok'] ? '' : 'disabled'; ?>"
+                <?php echo $can_spin['ok'] ? '' : 'disabled'; ?>>
+                <i data-lucide="play" class="w-5 h-5 inline-block mr-1" style="vertical-align:-3px"></i> 돌리기
+            </button>
+            <?php if (!$can_spin['ok'] && $can_spin['reason']) { ?>
+            <p class="text-xs text-red-400 mt-2"><?php echo $can_spin['reason']; ?></p>
             <?php } ?>
         </div>
-        <?php } ?>
     </div>
 
-    <!-- 결과 피드 탭 -->
-    <div id="panel-feed" class="hidden">
-        <?php if (empty($feed_items)) { ?>
-        <div class="bg-mg-bg-secondary rounded-lg p-8 text-center text-mg-text-muted">
-            아직 결과가 없습니다.
+    <?php } ?>
+
+    <!-- 활성 벌칙 상태 -->
+    <?php if ($active_penalty && $active_penalty['rl_id']) { ?>
+    <div class="bg-red-900/20 border border-red-800/30 rounded-lg p-4 mb-4 mt-6">
+        <div class="flex items-center gap-2 mb-2">
+            <i data-lucide="alert-triangle" class="w-5 h-5 text-red-400"></i>
+            <span class="font-medium text-red-300">벌칙 수행 중</span>
+            <span class="text-xs px-2 py-0.5 rounded bg-red-900/40 text-red-300 ml-auto">
+                <?php echo $active_penalty['rl_status'] === 'pending' ? '대기중' : '수행중'; ?>
+            </span>
         </div>
+        <p class="text-sm text-mg-text-secondary mb-2"><?php echo htmlspecialchars($active_penalty['rp_name'] ?? ''); ?></p>
+        <?php if ($active_penalty['rp_desc']) { ?>
+        <p class="text-xs text-mg-text-muted mb-3"><?php echo htmlspecialchars($active_penalty['rp_desc']); ?></p>
+        <?php } ?>
+
+        <?php if ($active_penalty['rl_status'] === 'pending') { ?>
+        <div class="flex gap-2 flex-wrap">
+            <button onclick="rouletteAction('nullify', <?php echo $active_penalty['rl_id']; ?>)"
+                class="px-3 py-1.5 text-xs rounded bg-mg-bg-tertiary text-mg-text-primary hover:bg-mg-bg-tertiary/80 transition-colors">
+                <i data-lucide="shield-off" class="w-3 h-3 inline-block mr-1" style="vertical-align:-1px"></i> 무효화
+            </button>
+            <button onclick="rouletteAction('transfer_random', <?php echo $active_penalty['rl_id']; ?>)"
+                class="px-3 py-1.5 text-xs rounded bg-mg-bg-tertiary text-mg-text-primary hover:bg-mg-bg-tertiary/80 transition-colors">
+                <i data-lucide="shuffle" class="w-3 h-3 inline-block mr-1" style="vertical-align:-1px"></i> 랜덤 패스
+            </button>
+            <button onclick="rouletteTransferTarget(<?php echo $active_penalty['rl_id']; ?>)"
+                class="px-3 py-1.5 text-xs rounded bg-mg-bg-tertiary text-mg-text-primary hover:bg-mg-bg-tertiary/80 transition-colors">
+                <i data-lucide="user-check" class="w-3 h-3 inline-block mr-1" style="vertical-align:-1px"></i> 지목 패스
+            </button>
+        </div>
+        <?php } ?>
+
+        <?php if ($active_penalty['rl_expires_at']) { ?>
+        <p class="text-xs text-mg-text-muted mt-2">만료: <?php echo date('m/d H:i', strtotime($active_penalty['rl_expires_at'])); ?></p>
+        <?php } ?>
+    </div>
+    <?php } ?>
+
+    <!-- 최근 결과 피드 -->
+    <div class="mt-6">
+        <h2 class="text-sm font-semibold text-mg-text-muted uppercase tracking-wide mb-3">최근 결과</h2>
+        <?php if (empty($feed_items)) { ?>
+        <p class="text-sm text-mg-text-muted text-center py-4">아직 결과가 없습니다.</p>
         <?php } else { ?>
-        <div class="space-y-2">
+        <div class="space-y-1">
             <?php foreach ($feed_items as $fi) {
                 $type_class = '';
                 $type_icon = '';
@@ -195,7 +172,7 @@ foreach ($prizes as $p) {
                 elseif ($fi['rp_type'] === 'jackpot') { $type_class = 'text-yellow-400'; $type_icon = 'crown'; }
                 else { $type_class = 'text-mg-text-muted'; $type_icon = 'minus'; }
             ?>
-            <div class="flex items-center gap-3 bg-mg-bg-secondary rounded-lg px-4 py-2.5 border border-mg-bg-tertiary">
+            <div class="flex items-center gap-3 bg-mg-bg-secondary rounded px-3 py-2 border border-mg-bg-tertiary">
                 <i data-lucide="<?php echo $type_icon; ?>" class="w-4 h-4 <?php echo $type_class; ?> flex-shrink-0"></i>
                 <span class="text-sm text-mg-text-primary font-medium"><?php echo htmlspecialchars($fi['mb_nick'] ?? ''); ?></span>
                 <span class="text-sm <?php echo $type_class; ?>"><?php echo htmlspecialchars($fi['rp_name'] ?? ''); ?></span>
@@ -206,42 +183,15 @@ foreach ($prizes as $p) {
         <?php } ?>
     </div>
 
-    <!-- 벌칙 로그 게시판 -->
-    <div class="mt-8 border-t border-mg-bg-tertiary pt-6">
-        <div class="flex items-center justify-between mb-3">
-            <h2 class="text-lg font-semibold text-mg-text-primary">룰렛 로그</h2>
-            <?php if ($active_penalty && $active_penalty['rl_status'] === 'active') { ?>
-            <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=<?php echo $roulette_board; ?>&w=w&rl_id=<?php echo $active_penalty['rl_id']; ?>"
-                class="text-xs px-3 py-1.5 rounded bg-mg-accent text-white hover:bg-mg-accent-hover transition-colors">
-                벌칙 로그 작성
-            </a>
-            <?php } ?>
-        </div>
-        <?php
-        $log_board = $roulette_board;
-        $write_table = $g5['write_prefix'] . $log_board;
-        $log_result = sql_query("SELECT wr_id, wr_subject, mb_id, wr_datetime, wr_comment
-            FROM {$write_table} WHERE wr_is_comment = 0 ORDER BY wr_id DESC LIMIT 10");
-        ?>
-        <?php if ($log_result !== false) { ?>
-        <div class="space-y-1">
-            <?php while ($lr = sql_fetch_array($log_result)) { ?>
-            <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=<?php echo $log_board; ?>&wr_id=<?php echo $lr['wr_id']; ?>"
-                class="flex items-center gap-3 px-3 py-2 rounded hover:bg-mg-bg-tertiary/50 transition-colors">
-                <span class="text-sm text-mg-text-primary flex-1 truncate"><?php echo htmlspecialchars($lr['wr_subject'] ?? ''); ?></span>
-                <span class="text-xs text-mg-text-muted"><?php echo htmlspecialchars($lr['mb_id']); ?></span>
-                <span class="text-xs text-mg-text-muted"><?php echo substr($lr['wr_datetime'], 5, 11); ?></span>
-            </a>
-            <?php } ?>
-        </div>
-        <?php } else { ?>
-        <p class="text-sm text-mg-text-muted text-center py-4">게시판이 준비되지 않았습니다.</p>
-        <?php } ?>
-        <div class="mt-2 text-center">
-            <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=<?php echo $log_board; ?>"
-                class="text-xs text-mg-text-muted hover:text-mg-text-primary transition-colors">전체 보기 &rarr;</a>
-        </div>
+    <!-- 룰렛 로그 게시판 링크 -->
+    <div class="mt-6 text-center">
+        <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=<?php echo $roulette_board; ?>"
+            class="inline-flex items-center gap-1.5 text-sm text-mg-text-muted hover:text-mg-accent transition-colors">
+            <i data-lucide="book-open" class="w-4 h-4"></i>
+            룰렛 로그 게시판 바로가기 &rarr;
+        </a>
     </div>
+
 </div>
 </div>
 
@@ -281,7 +231,6 @@ foreach ($prizes as $p) {
     background: #111;
     border: 1px solid #2a2a2a;
     position: relative;
-    /* 상하 페이드 마스크 */
     -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
     mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
 }
@@ -366,22 +315,9 @@ foreach ($prizes as $p) {
     to { opacity: 1; transform: scale(1); }
 }
 
-.slot-result-icon {
-    font-size: 2.5rem;
-    margin-bottom: 8px;
-}
-
-.slot-result-name {
-    font-size: 1.3rem;
-    font-weight: 800;
-    color: #fff;
-    margin-bottom: 4px;
-}
-
-.slot-result-desc {
-    font-size: 0.85rem;
-    color: var(--mg-text-muted);
-}
+.slot-result-icon { font-size: 2.5rem; margin-bottom: 8px; }
+.slot-result-name { font-size: 1.3rem; font-weight: 800; color: #fff; margin-bottom: 4px; }
+.slot-result-desc { font-size: 0.85rem; color: var(--mg-text-muted); }
 
 .slot-result.type-reward .slot-result-name { color: #4ade80; }
 .slot-result.type-penalty .slot-result-name { color: #f87171; }
@@ -431,7 +367,6 @@ foreach ($prizes as $p) {
     50% { box-shadow: 0 4px 20px rgba(245,159,10,.5); }
 }
 
-/* 반응형 */
 @media (max-width: 480px) {
     .slot-body { padding: 16px 10px; }
     .slot-reel-wrap { width: 80px; height: 150px; }
@@ -445,11 +380,10 @@ foreach ($prizes as $p) {
 var SLOT = {
     prizes: <?php echo json_encode($prizes_json, JSON_UNESCAPED_UNICODE); ?>,
     spinning: false,
-    reelHeight: 60,  // .slot-item height
+    reelHeight: 60,
 
     init: function() {
         if (!document.getElementById('reel-0')) return;
-        // 초기 릴 채우기
         for (var i = 0; i < 3; i++) {
             this.fillReel(i);
         }
@@ -459,28 +393,26 @@ var SLOT = {
         var reel = document.getElementById('reel-' + reelIdx);
         if (!reel) return;
         reel.innerHTML = '';
-        // 3칸 보이므로 여러 번 반복
         var items = this.prizes.slice();
-        // 릴별로 다른 시작 위치
         for (var s = 0; s < reelIdx; s++) {
             items.push(items.shift());
         }
-        // 4세트 채움 (순환)
         for (var set = 0; set < 4; set++) {
             for (var j = 0; j < items.length; j++) {
                 reel.appendChild(this.createItemEl(items[j]));
             }
         }
-        // 중앙 정렬 (1번째 아이템이 가운데 오도록)
         reel.style.transform = 'translateY(-' + this.reelHeight + 'px)';
     },
 
     createItemEl: function(prize) {
         var div = document.createElement('div');
         div.className = 'slot-item';
-        div.innerHTML = '<span class="slot-item-icon">' + (prize.rp_icon || '❓') + '</span>' +
+        var iconName = prize.rp_icon || 'help-circle';
+        div.innerHTML = '<span class="slot-item-icon"><i data-lucide="' + iconName + '" style="width:1.4rem;height:1.4rem;color:' + (prize.rp_color || '#999') + ';"></i></span>' +
             '<span class="slot-item-name" style="color:' + (prize.rp_color || '#999') + '">' +
             this.truncate(prize.rp_name, 8) + '</span>';
+        if (typeof lucide !== 'undefined') lucide.createIcons({ nodes: [div] });
         return div;
     },
 
@@ -499,7 +431,6 @@ var SLOT = {
         btn.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 inline-block mr-1 animate-spin" style="vertical-align:-3px"></i> 돌리는 중…';
         if (typeof lucide !== 'undefined') lucide.createIcons({ nodes: [btn] });
 
-        // 결과 오버레이 숨기기
         var resultEl = document.getElementById('slot-result');
         if (resultEl) resultEl.style.display = 'none';
 
@@ -529,13 +460,11 @@ var SLOT = {
         var prize = data.prize;
         var n = this.prizes.length;
 
-        // 당첨 인덱스
         var targetIdx = 0;
         for (var i = 0; i < n; i++) {
             if (this.prizes[i].rp_id === prize.rp_id) { targetIdx = i; break; }
         }
 
-        // 각 릴별로 시차를 두고 롤링
         var reelDelays = [0, 400, 800];
         var reelDurations = [2000, 2600, 3200];
 
@@ -543,7 +472,6 @@ var SLOT = {
             this.animateOneReel(r, targetIdx, reelDurations[r], reelDelays[r]);
         }
 
-        // 마지막 릴 종료 후 결과 표시
         var totalTime = reelDelays[2] + reelDurations[2] + 300;
         setTimeout(function() {
             self.onSpinComplete(data);
@@ -557,45 +485,37 @@ var SLOT = {
 
         var n = this.prizes.length;
         var h = this.reelHeight;
-        // 모바일 대응
         var wrap = reel.parentElement;
         if (wrap) {
             var itemEl = reel.querySelector('.slot-item');
             if (itemEl) h = itemEl.offsetHeight || h;
         }
 
-        // 릴 재구성 — 많은 아이템으로 채워서 스크롤 공간 확보
         setTimeout(function() {
             reel.innerHTML = '';
             var items = self.prizes.slice();
 
-            // 릴별 오프셋 (각 릴이 다른 위치에서 시작)
             for (var s = 0; s < reelIdx * 3; s++) {
                 items.push(items.shift());
             }
 
-            // 넉넉히 10세트 + 타겟
             var totalSets = 10;
             for (var set = 0; set < totalSets; set++) {
                 for (var j = 0; j < items.length; j++) {
                     reel.appendChild(self.createItemEl(items[j]));
                 }
             }
-            // 마지막에 타겟 3개 추가 (가운데 정렬용)
             var prevIdx = (targetIdx - 1 + n) % n;
             var nextIdx = (targetIdx + 1) % n;
             reel.appendChild(self.createItemEl(self.prizes[prevIdx]));
             reel.appendChild(self.createItemEl(self.prizes[targetIdx]));
             reel.appendChild(self.createItemEl(self.prizes[nextIdx]));
 
-            var totalItems = totalSets * n + 3;
-            // 타겟이 가운데 오는 위치: (totalSets * n + 1) 번째 아이템
-            var stopAt = (totalSets * n + 1) * h - h; // 가운데 정렬
+            var stopAt = (totalSets * n + 1) * h - h;
 
             reel.style.transition = 'none';
             reel.style.transform = 'translateY(0)';
 
-            // 약간의 딜레이 후 스크롤 시작
             requestAnimationFrame(function() {
                 requestAnimationFrame(function() {
                     reel.style.transition = 'transform ' + duration + 'ms cubic-bezier(.15,.6,.2,1)';
@@ -609,7 +529,6 @@ var SLOT = {
         this.spinning = false;
         var prize = data.prize;
 
-        // 결과 오버레이 표시
         var resultEl = document.getElementById('slot-result');
         var iconEl = document.getElementById('slot-result-icon');
         var nameEl = document.getElementById('slot-result-name');
@@ -618,7 +537,11 @@ var SLOT = {
         if (resultEl) {
             resultEl.className = 'slot-result type-' + prize.rp_type;
             resultEl.style.display = '';
-            if (iconEl) iconEl.textContent = prize.rp_icon || '❓';
+            if (iconEl) {
+                var iconName = prize.rp_icon || 'help-circle';
+                iconEl.innerHTML = '<i data-lucide="' + iconName + '" style="width:2.5rem;height:2.5rem;color:' + (prize.rp_color || '#999') + ';"></i>';
+                if (typeof lucide !== 'undefined') lucide.createIcons({ nodes: [iconEl] });
+            }
             if (nameEl) nameEl.textContent = prize.rp_name;
             if (descEl) {
                 if (prize.rp_type === 'jackpot') descEl.textContent = '잭팟 풀 전액 획득!';
@@ -628,7 +551,6 @@ var SLOT = {
             }
         }
 
-        // UI 업데이트
         var poolEl = document.getElementById('jackpot-pool');
         if (poolEl && data.pool !== undefined) poolEl.textContent = Number(data.pool).toLocaleString() + ' P';
 
@@ -638,7 +560,6 @@ var SLOT = {
         var tcEl = document.getElementById('today-count');
         if (tcEl && data.today_count !== undefined) tcEl.textContent = data.today_count;
 
-        // 토스트
         var msg = '', type = 'info';
         if (prize.rp_type === 'jackpot') { msg = '🏆 잭팟!! ' + prize.rp_name; type = 'success'; }
         else if (prize.rp_type === 'reward') { msg = '🎉 ' + prize.rp_name; type = 'success'; }
@@ -646,12 +567,10 @@ var SLOT = {
         else { msg = '💨 꽝!'; type = 'info'; }
         if (typeof mgToast === 'function') mgToast(msg, type, 5000);
 
-        // 벌칙/잭팟은 리로드 (벌칙 UI 갱신)
         if (prize.rp_type === 'penalty' || prize.rp_type === 'jackpot') {
             setTimeout(function() { location.reload(); }, 2500);
         } else {
             this.resetBtn();
-            // can_spin 체크
             if (!data.can_spin) {
                 var btn = document.getElementById('spin-btn');
                 if (btn) {
@@ -673,23 +592,6 @@ var SLOT = {
         }
     }
 };
-
-function switchTab(tab) {
-    var tabs = ['slot', 'feed'];
-    tabs.forEach(function(t) {
-        var panel = document.getElementById('panel-' + t);
-        var btn = document.getElementById('tab-' + t);
-        if (t === tab) {
-            panel.classList.remove('hidden');
-            btn.classList.add('border-mg-accent', 'text-mg-accent');
-            btn.classList.remove('border-transparent', 'text-mg-text-muted');
-        } else {
-            panel.classList.add('hidden');
-            btn.classList.remove('border-mg-accent', 'text-mg-accent');
-            btn.classList.add('border-transparent', 'text-mg-text-muted');
-        }
-    });
-}
 
 function rouletteAction(action, rl_id, target_mb_id) {
     var body = { action: action, rl_id: rl_id };

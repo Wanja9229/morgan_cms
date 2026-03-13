@@ -101,14 +101,14 @@ INSERT IGNORE INTO g5_group (gr_id, gr_subject) VALUES ('community', '커뮤니�
 -- 5. 기본 게시판 7개
 -- ============================================================
 INSERT IGNORE INTO g5_board (bo_table, gr_id, bo_subject, bo_device, bo_list_level, bo_read_level, bo_write_level, bo_reply_level, bo_comment_level, bo_upload_level, bo_download_level, bo_html_level, bo_link_level, bo_read_point, bo_write_point, bo_comment_point, bo_download_point, bo_use_dhtml_editor, bo_page_rows, bo_mobile_page_rows, bo_subject_len, bo_mobile_subject_len, bo_new, bo_hot, bo_image_width, bo_skin, bo_mobile_skin, bo_include_head, bo_include_tail, bo_gallery_cols, bo_gallery_width, bo_gallery_height, bo_mobile_gallery_width, bo_mobile_gallery_height) VALUES
-    ('notice',  'community', '공지사항',    'both', 1, 1, 5, 5, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/morgan/skin/board/basic', 'theme/morgan/skin/board/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
-    ('qa',      'community', '문의',       'both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/morgan/skin/board/basic', 'theme/morgan/skin/board/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
-    ('qna',     'community', '질문답변',    'both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/morgan/skin/board/basic', 'theme/morgan/skin/board/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
-    ('log',     'community', '로그',       'both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/morgan/skin/board/basic', 'theme/morgan/skin/board/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
-    ('gallery', 'community', '로그(이미지)', 'both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/morgan/skin/board/gallery', 'theme/morgan/skin/board/gallery', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
-    ('owner',   'community', '오너게시판',   'both', 1, 1, 5, 5, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/morgan/skin/board/basic', 'theme/morgan/skin/board/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
-    ('vent',    'community', '앓이란',      'both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/morgan/skin/board/basic', 'theme/morgan/skin/board/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
-    ('roulette','community', '룰렛 로그','both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/morgan/skin/board/basic', 'theme/morgan/skin/board/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150);
+    ('notice',  'community', '공지사항',    'both', 1, 1, 5, 5, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/basic', 'theme/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
+    ('qa',      'community', '문의',       'both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/basic', 'theme/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
+    ('qna',     'community', '질문답변',    'both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/basic', 'theme/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
+    ('log',     'community', '로그',       'both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/basic', 'theme/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
+    ('gallery', 'community', '로그(이미지)', 'both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/gallery', 'theme/gallery', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
+    ('owner',   'community', '오너게시판',   'both', 1, 1, 5, 5, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/basic', 'theme/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
+    ('vent',    'community', '앓이란',      'both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/basic', 'theme/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
+    ('roulette','community', '룰렛 로그','both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/basic', 'theme/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150);
 
 -- ============================================================
 -- 6. mg_config 기본값 (Morgan 설정)
