@@ -563,6 +563,11 @@ if ($_battle_use == '1' && isset($_POST['battle_stat']) && is_array($_POST['batt
                 VALUES ({$ch_id}, '{$member['mb_id']}',
                 {$stat_vals['stat_hp']}, {$stat_vals['stat_str']}, {$stat_vals['stat_dex']},
                 {$stat_vals['stat_int']}, {$remaining}, 1)");
+
+            // 기력/HP 레코드도 생성 (없으면)
+            if (function_exists('mg_battle_init_energy')) {
+                mg_battle_init_energy($ch_id, $member['mb_id']);
+            }
         }
     }
 }

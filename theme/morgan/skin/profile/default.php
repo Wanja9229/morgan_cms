@@ -133,7 +133,7 @@ if (!defined('_GNUBOARD_')) exit;
     </div>
     <?php } ?>
 
-    <div class="mt-6 bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
+    <div class="mt-6 mb-6 bg-mg-bg-secondary rounded-xl border border-mg-bg-tertiary overflow-hidden">
         <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary flex items-center gap-2">
             <i data-lucide="swords" class="w-4 h-4 text-mg-accent"></i>
             <h2 class="font-medium text-mg-text-primary">전투 능력치</h2>

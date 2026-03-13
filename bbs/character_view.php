@@ -147,7 +147,10 @@ if ($_battle_use == '1') {
             'stat_stress' => 0,
         );
     }
-    // 글로벌 HP 조회 (lazy regen 적용)
+    // 글로벌 HP 조회 (lazy init + lazy regen)
+    if (function_exists('mg_battle_init_energy')) {
+        mg_battle_init_energy($ch_id, $char['mb_id']);
+    }
     if (function_exists('mg_battle_get_global_hp')) {
         $battle_hp = mg_battle_get_global_hp($ch_id);
     }
