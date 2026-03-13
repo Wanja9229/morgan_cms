@@ -108,7 +108,7 @@ INSERT IGNORE INTO g5_board (bo_table, gr_id, bo_subject, bo_device, bo_list_lev
     ('gallery', 'community', '로그(이미지)', 'both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/morgan/skin/board/gallery', 'theme/morgan/skin/board/gallery', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
     ('owner',   'community', '오너게시판',   'both', 1, 1, 5, 5, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/morgan/skin/board/basic', 'theme/morgan/skin/board/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
     ('vent',    'community', '앓이란',      'both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/morgan/skin/board/basic', 'theme/morgan/skin/board/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150),
-    ('roulette','community', '룰렛 벌칙 로그','both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/morgan/skin/board/basic', 'theme/morgan/skin/board/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150);
+    ('roulette','community', '룰렛 로그','both', 1, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0, 1, 15, 15, 60, 30, 24, 100, 835, 'theme/morgan/skin/board/basic', 'theme/morgan/skin/board/basic', '_head.php', '_tail.php', 4, 202, 150, 172, 150);
 
 -- ============================================================
 -- 6. mg_config 기본값 (Morgan 설정)

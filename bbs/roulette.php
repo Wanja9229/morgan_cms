@@ -209,7 +209,7 @@ foreach ($prizes as $p) {
     <!-- 벌칙 로그 게시판 -->
     <div class="mt-8 border-t border-mg-bg-tertiary pt-6">
         <div class="flex items-center justify-between mb-3">
-            <h2 class="text-lg font-semibold text-mg-text-primary">벌칙 수행 로그</h2>
+            <h2 class="text-lg font-semibold text-mg-text-primary">룰렛 로그</h2>
             <?php if ($active_penalty && $active_penalty['rl_status'] === 'active') { ?>
             <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=<?php echo $roulette_board; ?>&w=w&rl_id=<?php echo $active_penalty['rl_id']; ?>"
                 class="text-xs px-3 py-1.5 rounded bg-mg-accent text-white hover:bg-mg-accent-hover transition-colors">
