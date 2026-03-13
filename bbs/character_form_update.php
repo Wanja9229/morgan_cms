@@ -513,22 +513,26 @@ if ($_battle_use == '1' && isset($_POST['battle_stat']) && is_array($_POST['batt
     $_stat_base = (int)mg_config('battle_stat_base', '5');
     $_stat_bonus = (int)mg_config('battle_stat_bonus_points', '15');
 
-    // 이미 확정된 스탯은 수정 불가
+    // NPC 여부 확인
+    $_is_npc_char = (int)($ch_is_npc ?? 0);
+
+    // 이미 확정된 스탯은 수정 불가 (NPC는 예외)
     $existing_stat = sql_fetch("SELECT bs_id, stat_locked FROM {$g5['mg_battle_stat_table']} WHERE ch_id = {$ch_id}");
-    if (!$existing_stat || !(int)($existing_stat['stat_locked'] ?? 0)) {
+    if ($_is_npc_char || !$existing_stat || !(int)($existing_stat['stat_locked'] ?? 0)) {
         $stat_keys = array('stat_hp', 'stat_str', 'stat_dex', 'stat_int');
         $stat_vals = array();
         $total_used = 0;
 
         foreach ($stat_keys as $sk) {
             $v = isset($_POST['battle_stat'][$sk]) ? (int)$_POST['battle_stat'][$sk] : $_stat_base;
-            if ($v < $_stat_base) $v = $_stat_base;
+            if (!$_is_npc_char && $v < $_stat_base) $v = $_stat_base;
+            if ($v < 0) $v = 0;
             $stat_vals[$sk] = $v;
-            $total_used += ($v - $_stat_base);
+            $total_used += max(0, $v - $_stat_base);
         }
 
-        // 분배 초과 방지
-        if ($total_used > $_stat_bonus) {
+        // 분배 초과 방지 (NPC는 제한 없음)
+        if (!$_is_npc_char && $total_used > $_stat_bonus) {
             $over = $total_used - $_stat_bonus;
             foreach (array_reverse($stat_keys) as $sk) {
                 $excess = $stat_vals[$sk] - $_stat_base;
@@ -541,10 +545,9 @@ if ($_battle_use == '1' && isset($_POST['battle_stat']) && is_array($_POST['batt
             $total_used = $_stat_bonus;
         }
 
-        $remaining = $_stat_bonus - $total_used;
-        if ($remaining < 0) $remaining = 0;
+        $remaining = $_is_npc_char ? 0 : max(0, $_stat_bonus - $total_used);
 
-        // 스탯 확정 (locked = 1)
+        // 스탯 확정 (locked = 1, NPC도 locked로 저장)
         if ($existing_stat && $existing_stat['bs_id']) {
             sql_query("UPDATE {$g5['mg_battle_stat_table']} SET
                 stat_hp = {$stat_vals['stat_hp']},

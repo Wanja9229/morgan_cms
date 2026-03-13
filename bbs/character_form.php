@@ -406,7 +406,11 @@ include_once(G5_THEME_PATH.'/head.php');
                 <div class="px-4 py-3 bg-mg-bg-tertiary/50 border-b border-mg-bg-tertiary">
                     <h2 class="font-medium text-mg-text-primary flex items-center gap-2">
                         전투 스탯
-                        <?php if ($_stat_locked) { ?>
+                        <?php
+                        $_is_npc = !empty($char['ch_is_npc']);
+                        if ($_is_npc) { ?>
+                        <span class="text-xs text-yellow-400 flex items-center gap-1">NPC - 자유 입력</span>
+                        <?php } elseif ($_stat_locked) { ?>
                         <span class="text-xs text-mg-text-muted flex items-center gap-1">
                             <i data-lucide="lock" class="w-3.5 h-3.5"></i>
                             확정됨
@@ -417,7 +421,19 @@ include_once(G5_THEME_PATH.'/head.php');
                     </h2>
                 </div>
                 <div class="p-4">
-                    <?php if ($_stat_locked) { ?>
+                    <?php if ($_is_npc) { ?>
+                    <p class="text-xs text-mg-text-muted mb-4">NPC 캐릭터는 포인트 제한 없이 스탯을 직접 입력할 수 있습니다.</p>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <?php foreach ($_stat_labels as $skey => $slabel) { ?>
+                        <div class="text-center p-2 rounded-lg bg-mg-bg-primary/50">
+                            <div class="text-xs font-bold text-mg-accent" style="font-family:'Bebas Neue',monospace;letter-spacing:0.1em;"><?php echo $slabel[0]; ?></div>
+                            <input type="number" name="battle_stat[<?php echo $skey; ?>]" value="<?php echo $_stat_values[$skey]; ?>" min="0" max="999"
+                                   class="w-16 text-center bg-mg-bg-primary border border-mg-bg-tertiary rounded text-lg font-bold text-mg-text-primary py-1 mx-auto" style="display:block;">
+                            <div class="text-[10px] text-mg-text-muted mt-1"><?php echo $slabel[1]; ?></div>
+                        </div>
+                        <?php } ?>
+                    </div>
+                    <?php } elseif ($_stat_locked) { ?>
                     <p class="text-xs text-mg-text-muted mb-4">스탯이 확정되었습니다. 스탯 초기화 아이템을 사용하면 재분배할 수 있습니다.</p>
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <?php foreach ($_stat_labels as $skey => $slabel) { ?>
