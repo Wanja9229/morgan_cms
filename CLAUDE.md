@@ -47,6 +47,51 @@ docker exec morgan_mysql mysql -u morgan_user -pmorgan_pass --default-character-
 - `morgan.php` 로드 시 세션당 1회 자동 체크 → 미적용 파일 순서대로 실행
 - 관련 파일: `db/migrations/*.sql`, `plugin/morgan/migrate.php`, `docs/MIGRATION_GUIDE.md`
 
+### 3파일 동기화 규칙 (필수)
+
+DB 스키마나 시드 데이터를 변경할 때, **반드시 아래 3곳을 동시에 수정**해야 한다.
+누락 시 새 테넌트에서 기능이 깨지거나 기존 테넌트에 변경이 적용되지 않는다.
+
+| 파일 | 역할 | 적용 대상 |
+|------|------|-----------|
+| `db/migrations/YYYYMMDD_*.sql` | 기존 테넌트에 변경 적용 | 이미 운영 중인 모든 테넌트 |
+| `plugin/morgan/install/install.sql` | 새 테넌트 초기 스키마 | 새로 생성되는 테넌트 |
+| `plugin/morgan/install/seed.sql` | 새 테넌트 초기 데이터 | 새로 생성되는 테넌트 |
+
+**핵심 원리**: 새 테넌트 생성 시 `install.sql` + `seed.sql`만 실행되고, `db/migrations/`는 **실행되지 않고 applied로 마킹**된다. 따라서 `install.sql`과 `seed.sql`이 항상 최신 완성 스키마를 반영해야 한다.
+
+#### 변경 유형별 체크리스트
+
+**새 테이블 추가 시:**
+1. `db/migrations/` — `CREATE TABLE IF NOT EXISTS` 작성
+2. `install.sql` — 같은 `CREATE TABLE IF NOT EXISTS` 추가
+3. `morgan.php` — `$g5['mg_*_table']` + `$mg['*_table']` 등록
+
+**ENUM 확장 시 (예: `si_type` 추가):**
+1. `db/migrations/` — `ALTER TABLE ... MODIFY COLUMN` 작성
+2. `install.sql` — 해당 `CREATE TABLE`의 ENUM 정의에 새 값 추가 (ALTER 아님!)
+
+**mg_config 설정 추가 시:**
+1. `db/migrations/` — `INSERT IGNORE INTO mg_config` 작성
+2. `install.sql` — mg_config INSERT 블록에 추가
+3. `seed.sql` — mg_config INSERT 블록에 추가
+
+**시드 상품/데이터 추가 시:**
+1. `db/migrations/` — `INSERT IGNORE` 또는 `INSERT ... WHERE NOT EXISTS` 작성
+2. `install.sql` — 같은 INSERT 추가
+
+**게시판 추가 시:**
+1. `seed.sql` — `g5_board` INSERT에 추가 (TenantManager가 write 테이블 자동 생성)
+
+**컬럼 추가 시:**
+1. `db/migrations/` — `information_schema` + `PREPARE/EXECUTE` 패턴 사용
+2. `install.sql` — 해당 `CREATE TABLE`에 컬럼 추가
+
+#### INSERT 패턴 통일
+- 시드 데이터는 `INSERT IGNORE` 사용
+- 서브쿼리 필요 시 `INSERT IGNORE INTO ... SELECT ... FROM DUAL WHERE NOT EXISTS` 패턴
+- `INSERT INTO` (IGNORE 없음) 금지 — 재실행 시 duplicate key 에러 발생
+
 ## 코드 패턴
 
 ### 핵심 함수
