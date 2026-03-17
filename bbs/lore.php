@@ -87,7 +87,9 @@ include_once(G5_THEME_PATH.'/head.php');
                     <?php if (!empty($article['lc_name'])) { ?>
                     <span class="text-xs text-mg-accent bg-mg-accent/10 px-2 py-0.5 rounded-full"><?php echo htmlspecialchars($article['lc_name']); ?></span>
                     <?php } ?>
-                    <span class="text-xs text-mg-text-muted"><?php echo number_format((int)$article['la_hit']); ?>회</span>
+                    <?php if (!empty($article['la_summary'])) { ?>
+                    <span class="text-xs text-mg-text-muted truncate"><?php echo htmlspecialchars($article['la_summary']); ?></span>
+                    <?php } ?>
                 </div>
             </div>
             <!-- 화살표 -->
