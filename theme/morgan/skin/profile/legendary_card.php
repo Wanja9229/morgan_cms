@@ -94,6 +94,15 @@ $card_subtitle = $card_subtitle_parts ? implode(' / ', $card_subtitle_parts) : '
         <span>뒤로</span>
     </a>
 
+    <!-- 헤더 배너 -->
+    <?php if ($char_header) { ?>
+    <div class="lc-gold-frame" style="margin-bottom:1.5rem;">
+        <div style="max-height:12rem;overflow:hidden;border-radius:0.75rem;">
+            <img src="<?php echo $char_header; ?>" alt="" style="width:100%;height:100%;object-fit:cover;filter:brightness(70%) saturate(120%);">
+        </div>
+    </div>
+    <?php } ?>
+
     <!-- 카드 -->
     <div class="lc-card" style="max-width:26rem;margin:0 auto;position:relative;padding-top:1.5rem;padding-bottom:2rem;">
         <!-- 레벨 보석 (좌상단) -->

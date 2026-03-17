@@ -118,6 +118,14 @@ $ch_initial = mb_substr($char['ch_name'], 0, 1);
             profile.json - <?php echo $ch_name; ?> - Visual Studio Code
         </div>
 
+        <!-- 헤더 배너 (에디터 상단 배너처럼) -->
+        <?php if ($char_header) { ?>
+        <div style="max-height:8rem;overflow:hidden;border-bottom:1px solid #333333;position:relative;">
+            <img src="<?php echo $char_header; ?>" alt="" style="width:100%;height:100%;object-fit:cover;filter:brightness(60%) saturate(80%);">
+            <div style="position:absolute;inset:0;background:linear-gradient(to right, rgba(30,30,30,0.7), transparent 50%, rgba(30,30,30,0.7));"></div>
+        </div>
+        <?php } ?>
+
         <div style="display:flex;min-height:400px;">
             <!-- 사이드바 (파일 탐색기) -->
             <div class="vs-sidebar" style="display:flex;flex-direction:column;">

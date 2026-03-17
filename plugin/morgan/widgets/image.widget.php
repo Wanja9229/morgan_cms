@@ -14,7 +14,8 @@ class MG_Image_Widget extends MG_Widget_Base {
     protected $default_config = array(
         'image_url' => '',
         'alt_text' => '',
-        'border_radius' => 'none'
+        'border_radius' => 'none',
+        'object_fit' => 'cover'
     );
 
     public function render($config) {
@@ -57,6 +58,15 @@ class MG_Image_Widget extends MG_Widget_Base {
                 <option value="md" <?php echo $config['border_radius'] == 'md' ? 'selected' : ''; ?>>보통</option>
                 <option value="lg" <?php echo $config['border_radius'] == 'lg' ? 'selected' : ''; ?>>크게</option>
                 <option value="full" <?php echo $config['border_radius'] == 'full' ? 'selected' : ''; ?>>원형</option>
+            </select>
+        </div>
+        <div class="mg-form-group">
+            <label class="mg-form-label">이미지 맞춤</label>
+            <select name="widget_config[object_fit]" class="mg-form-select">
+                <option value="cover" <?php echo ($config['object_fit'] ?? 'cover') == 'cover' ? 'selected' : ''; ?>>채우기 (Cover) — 영역을 꽉 채움, 넘치는 부분 잘림</option>
+                <option value="contain" <?php echo ($config['object_fit'] ?? '') == 'contain' ? 'selected' : ''; ?>>맞추기 (Contain) — 전체 이미지 표시, 여백 가능</option>
+                <option value="fill" <?php echo ($config['object_fit'] ?? '') == 'fill' ? 'selected' : ''; ?>>늘리기 (Fill) — 비율 무시하고 영역에 맞춤</option>
+                <option value="none" <?php echo ($config['object_fit'] ?? '') == 'none' ? 'selected' : ''; ?>>원본 (None) — 원본 크기 그대로 표시</option>
             </select>
         </div>
         <script>

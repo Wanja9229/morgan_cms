@@ -85,6 +85,15 @@ $ch_initial = mb_substr($char['ch_name'], 0, 1);
         <span>뒤로</span>
     </a>
 
+    <!-- 헤더 배너 -->
+    <?php if ($char_header) { ?>
+    <div class="jrpg-box" style="padding:0;margin-bottom:1rem;overflow:hidden;">
+        <div style="max-height:10rem;overflow:hidden;">
+            <img src="<?php echo $char_header; ?>" alt="" style="width:100%;height:100%;object-fit:cover;filter:contrast(120%) brightness(80%);">
+        </div>
+    </div>
+    <?php } ?>
+
     <!-- 캐릭터 정보 박스 (상단) -->
     <div class="jrpg-box" style="padding:1.25rem;display:flex;align-items:flex-start;gap:1.5rem;margin-bottom:1rem;">
         <!-- 초상화 -->

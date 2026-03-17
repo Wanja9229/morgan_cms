@@ -114,6 +114,16 @@ $subtitle = $subtitle_parts ? implode(' / ', $subtitle_parts) : '@'.$ch_owner;
         <span>뒤로</span>
     </a>
 
+    <!-- 헤더 배너 -->
+    <?php if ($char_header) { ?>
+    <div style="margin-bottom:0;overflow:hidden;position:relative;">
+        <div style="max-height:15rem;overflow:hidden;">
+            <img src="<?php echo $char_header; ?>" alt="" style="width:100%;height:100%;object-fit:cover;filter:grayscale(30%) contrast(110%);">
+        </div>
+        <div style="position:absolute;inset:0;background:linear-gradient(to bottom, transparent 50%, #f4f4f0 100%);"></div>
+    </div>
+    <?php } ?>
+
     <!-- 매거진 표지 스프레드 -->
     <div class="mg-spread" style="margin-bottom:0;">
         <!-- 워터마크 (배경 대형 텍스트) -->
