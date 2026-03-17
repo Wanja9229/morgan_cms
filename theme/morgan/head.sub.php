@@ -80,8 +80,18 @@ if (strstr($g5['lo_url'], '/'.G5_ADMIN_DIR.'/') || $is_admin == 'super') $g5['lo
     <title><?php echo $g5_head_title; ?></title>
 
     <!-- Favicon -->
+    <?php
+    $_mg_favicon = function_exists('mg_config') ? mg_config('site_favicon', '') : '';
+    if ($_mg_favicon) {
+        $_fav_ext = strtolower(pathinfo($_mg_favicon, PATHINFO_EXTENSION));
+        $_fav_types = array('svg' => 'image/svg+xml', 'png' => 'image/png', 'webp' => 'image/webp');
+        $_fav_type = isset($_fav_types[$_fav_ext]) ? $_fav_types[$_fav_ext] : 'image/x-icon';
+    ?>
+    <link rel="icon" type="<?php echo $_fav_type; ?>" href="<?php echo htmlspecialchars($_mg_favicon); ?>">
+    <?php } else { ?>
     <link rel="icon" type="image/svg+xml" href="<?php echo G5_THEME_URL; ?>/img/favicon.svg">
     <link rel="icon" type="image/x-icon" href="<?php echo G5_THEME_URL; ?>/img/favicon.ico">
+    <?php } ?>
 
     <!-- Google Fonts (사이트 폰트) -->
     <?php

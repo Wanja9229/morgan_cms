@@ -85,6 +85,30 @@ function _cfg_radio($name, $configs, $default = '1', $labels = array('사용', '
                 </div>
             </div>
 
+            <div class="mg-form-group" style="max-width:500px;">
+                <label class="mg-form-label">파비콘</label>
+                <input type="file" name="site_favicon" id="site_favicon" accept=".png,.svg,.webp" class="mg-form-input" onchange="previewFavicon(this)">
+                <input type="hidden" name="site_favicon_action" id="site_favicon_action" value="">
+                <small style="color:var(--mg-text-muted);font-size:0.75rem;">브라우저 탭에 표시되는 아이콘 (권장: 32×32px PNG 또는 SVG, 최대 <?php echo round(mg_upload_max_icon() / 1024); ?>KB)</small>
+                <div id="site_favicon_preview" style="margin-top:0.75rem;">
+                    <?php if (!empty($mg_configs['site_favicon'])): ?>
+                    <div style="display:flex;align-items:center;gap:1rem;">
+                        <div style="background:var(--mg-bg-tertiary);padding:8px 12px;border-radius:6px;display:inline-flex;align-items:center;">
+                            <img src="<?php echo htmlspecialchars($mg_configs['site_favicon']); ?>" alt="파비콘" style="width:32px;height:32px;">
+                        </div>
+                        <button type="button" class="mg-btn mg-btn-sm" style="background:var(--mg-error);color:#fff;" onclick="removeFavicon()">삭제</button>
+                    </div>
+                    <?php else: ?>
+                    <div style="display:flex;align-items:center;gap:0.75rem;">
+                        <div style="background:var(--mg-bg-tertiary);padding:8px 12px;border-radius:6px;display:inline-flex;align-items:center;">
+                            <img src="<?php echo G5_THEME_URL; ?>/img/favicon.svg" alt="기본 파비콘" style="width:32px;height:32px;">
+                        </div>
+                        <span style="font-size:0.75rem;color:var(--mg-text-muted);">기본 파비콘 사용 중</span>
+                    </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+
             <hr style="border:0;border-top:1px solid var(--mg-bg-tertiary);margin:1.5rem 0;">
 
             <h4 style="font-size:0.9rem;font-weight:600;margin-bottom:1rem;color:var(--mg-text-secondary);">포인트 / 캐릭터</h4>
@@ -270,6 +294,41 @@ function removeLogo() {
     document.getElementById('site_logo_action').value = '__DELETE__';
     document.getElementById('site_logo').value = '';
     document.getElementById('site_logo_preview').innerHTML = '<span style="color:var(--mg-text-muted);font-size:0.8rem;">로고가 삭제됩니다 (저장 시 적용)</span>';
+}
+
+function previewFavicon(input) {
+    if (input.files && input.files[0]) {
+        var file = input.files[0];
+        if (file.size > <?php echo mg_upload_max_icon(); ?>) {
+            alert('파일 크기가 너무 큽니다.');
+            input.value = '';
+            return;
+        }
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('site_favicon_preview').innerHTML =
+                '<div style="display:flex;align-items:center;gap:1rem;">' +
+                '<div style="background:var(--mg-bg-tertiary);padding:8px 12px;border-radius:6px;display:inline-flex;align-items:center;">' +
+                '<img src="' + e.target.result + '" alt="미리보기" style="width:32px;height:32px;">' +
+                '</div>' +
+                '<span style="color:var(--mg-accent);font-size:0.8rem;">새 파비콘 선택됨</span>' +
+                '</div>';
+            document.getElementById('site_favicon_action').value = '';
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function removeFavicon() {
+    document.getElementById('site_favicon_action').value = '__DELETE__';
+    document.getElementById('site_favicon').value = '';
+    document.getElementById('site_favicon_preview').innerHTML =
+        '<div style="display:flex;align-items:center;gap:0.75rem;">' +
+        '<div style="background:var(--mg-bg-tertiary);padding:8px 12px;border-radius:6px;display:inline-flex;align-items:center;">' +
+        '<img src="<?php echo G5_THEME_URL; ?>/img/favicon.svg" alt="기본 파비콘" style="width:32px;height:32px;">' +
+        '</div>' +
+        '<span style="color:var(--mg-text-muted);font-size:0.8rem;">기본 파비콘으로 복원됩니다 (저장 시 적용)</span>' +
+        '</div>';
 }
 
 </script>

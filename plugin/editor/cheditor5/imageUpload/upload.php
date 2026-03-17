@@ -93,6 +93,11 @@ if ($found != true || $filename_len != 23) {
     exit;
 }
 
+// 파일 크기 제한 (Morgan 설정 연동)
+if (function_exists('mg_upload_max_file') && $_FILES['file']['size'] > mg_upload_max_file()) {
+    exit;
+}
+
 // 저장 파일 이름: 년월일시분초_렌덤문자8자
 // 20140327125959_abcdefghi.jpg
 // 원본 파일 이름: $_POST["origname"]

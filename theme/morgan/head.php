@@ -401,7 +401,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
 
         <!-- 설정 (관리자만) -->
         <?php if ($is_admin) { ?>
-        <a href="<?php echo G5_ADMIN_URL; ?>/morgan/config.php" class="sidebar-icon group" title="관리자">
+        <a href="<?php echo G5_ADMIN_URL; ?>/morgan/dashboard.php" class="sidebar-icon group" title="관리자">
             <i data-lucide="settings" class="w-6 h-6"></i>
         </a>
         <?php } ?>

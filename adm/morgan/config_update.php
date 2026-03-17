@@ -227,6 +227,14 @@ if ($g5_updates) {
     sql_query("UPDATE `{$g5['config_table']}` SET ".implode(', ', $g5_updates));
 }
 
+// 파일 업로드 제한 변경 시 전 게시판 bo_upload_size 일괄 동기화
+if (isset($_POST['upload_max_file'])) {
+    $new_upload_bytes = (int)$_POST['upload_max_file'] * 1024;
+    if ($new_upload_bytes > 0) {
+        sql_query("UPDATE `{$g5['board_table']}` SET `bo_upload_size` = {$new_upload_bytes}");
+    }
+}
+
 // 업로드 디렉토리
 $upload_dir = MG_MORGAN_DATA_PATH;
 $upload_url = MG_MORGAN_DATA_URL;
@@ -294,6 +302,39 @@ elseif (isset($_FILES['site_logo']) && $_FILES['site_logo']['error'] === UPLOAD_
     } else {
         $max_mb = round(mg_upload_max_file() / 1024 / 1024, 1);
         alert('로고 업로드 실패: 허용 확장자(jpg, jpeg, png, gif, webp, svg) 또는 용량 제한('.$max_mb.'MB)을 확인해주세요.');
+    }
+}
+
+// --- 파비콘 처리 ---
+$sql = "SELECT cf_value FROM {$g5['mg_config_table']} WHERE cf_key = 'site_favicon'";
+$fav_row = sql_fetch($sql);
+$old_favicon = isset($fav_row['cf_value']) ? $fav_row['cf_value'] : '';
+
+if (isset($_POST['site_favicon_action']) && $_POST['site_favicon_action'] === '__DELETE__') {
+    if ($old_favicon) {
+        $old_file = str_replace(G5_DATA_URL, G5_DATA_PATH, $old_favicon);
+        if (file_exists($old_file)) @unlink($old_file);
+    }
+    sql_query("DELETE FROM {$g5['mg_config_table']} WHERE cf_key = 'site_favicon'");
+}
+elseif (isset($_FILES['site_favicon']) && $_FILES['site_favicon']['error'] === UPLOAD_ERR_OK) {
+    $new_url = mg_handle_icon_upload('site_favicon', 'morgan', 'favicon');
+    if ($new_url) {
+        // 이전 파비콘 삭제
+        if ($old_favicon) {
+            $old_file = str_replace(G5_DATA_URL, G5_DATA_PATH, $old_favicon);
+            if (file_exists($old_file)) @unlink($old_file);
+        }
+
+        $sql = "SELECT COUNT(*) as cnt FROM {$g5['mg_config_table']} WHERE cf_key = 'site_favicon'";
+        $row = sql_fetch($sql);
+        $cnt = isset($row['cnt']) ? (int)$row['cnt'] : 0;
+
+        if ($cnt > 0) {
+            sql_query("UPDATE {$g5['mg_config_table']} SET cf_value = '".sql_escape_string($new_url)."' WHERE cf_key = 'site_favicon'");
+        } else {
+            sql_query("INSERT INTO {$g5['mg_config_table']} (cf_key, cf_value) VALUES ('site_favicon', '".sql_escape_string($new_url)."')");
+        }
     }
 }
 
