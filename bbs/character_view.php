@@ -71,7 +71,7 @@ $char_relations = mg_get_relations($ch_id, 'active');
 // 관계 신청 가능 여부: 로그인 + 타인 캐릭터 + 승인된 캐릭터
 $can_request_relation = false;
 $my_approved_characters = array();
-if ($is_member && !$is_owner && $char['ch_state'] == 'approved') {
+if ($is_member && (!$is_owner || $is_admin) && $char['ch_state'] == 'approved') {
     $sql = "SELECT ch_id, ch_name, ch_thumb FROM {$g5['mg_character_table']}
             WHERE mb_id = '{$member['mb_id']}' AND ch_state = 'approved'
             ORDER BY ch_main DESC, ch_name";
@@ -218,6 +218,7 @@ if ($profile_bg_id) {
                     <label class="block text-sm text-mg-text-secondary mb-1">내 캐릭터</label>
                     <select id="rr-from-ch" class="w-full bg-mg-bg-primary border border-mg-bg-tertiary rounded-lg px-3 py-2 text-sm text-mg-text-primary">
                         <?php foreach ($my_approved_characters as $mc) {
+                            if ($mc['ch_id'] == $ch_id) continue;
                             $_rc = mg_get_relation_count($mc['ch_id']);
                             $_rm = mg_get_max_relations($mc['ch_id']);
                             $_full = ($_rc >= $_rm);

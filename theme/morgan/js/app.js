@@ -439,7 +439,7 @@
                     } else if (script === 'character.php' || script === 'character_edit.php' || script === 'character_form.php') {
                         activeId = 'character';
                     } else if (script === 'character_view.php') {
-                        activeId = (params.get('from') === 'list') ? 'character_list' : 'character';
+                        activeId = 'character_list';
                     } else if (script === 'character_list.php') {
                         activeId = 'character_list';
                     } else if (script === 'shop.php' || script === 'shop_view.php' || script === 'shop_buy.php' || script === 'shop_gift.php') {
