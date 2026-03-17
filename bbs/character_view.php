@@ -156,6 +156,13 @@ if ($_battle_use == '1') {
     }
 }
 
+// 전신 이미지 (있을 때만 표시)
+if (!empty($char['ch_image'])) {
+    echo '<div class="mg-inner" style="max-width:800px;margin-bottom:1.5rem;text-align:center;">';
+    echo '<img src="' . htmlspecialchars(MG_CHAR_IMAGE_URL.'/'.$char['ch_image']) . '" alt="" style="max-width:100%;height:auto;display:inline-block;">';
+    echo '</div>';
+}
+
 // 프로필 템플릿 렌더링 (전투 스탯은 각 스킨 내부에서 표시)
 include($skin_template);
 
