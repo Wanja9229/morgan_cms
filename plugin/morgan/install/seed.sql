@@ -140,13 +140,6 @@ INSERT IGNORE INTO mg_config (cf_key, cf_value) VALUES
     ('relation_log_board', 'rellog');
 
 -- ============================================================
--- 7. 기본 상점 카테고리
--- ============================================================
-INSERT IGNORE INTO mg_shop_category (sc_name, sc_order) VALUES
-    ('프로필', 0),
-    ('기타', 1);
-
--- ============================================================
--- 8. FAQ 마스터
+-- 7. FAQ 마스터
 -- ============================================================
 INSERT IGNORE INTO g5_faq_master (fm_id, fm_subject) VALUES (1, '자주 묻는 질문');
