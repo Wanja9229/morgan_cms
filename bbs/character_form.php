@@ -72,7 +72,11 @@ if ($_is_approved) {
     $_char_reg_start = mg_config('char_reg_start', '');
     $_char_reg_end = mg_config('char_reg_end', '');
     $_char_reg_stop = mg_config('char_reg_stop', '0');
-    if ($_char_reg_start && $_char_reg_end && $_char_reg_stop !== '1') {
+    $_char_reg_period_use = mg_config('char_reg_period_use', '0');
+    if ($_char_reg_period_use !== '1' || !$_char_reg_start || !$_char_reg_end) {
+        // 기간 제한 미사용 → 항상 수정 가능
+        $_is_edit_period = true;
+    } else if ($_char_reg_stop !== '1') {
         $now = date('Y-m-d\TH:i');
         $_is_edit_period = ($now >= $_char_reg_start && $now <= $_char_reg_end);
     }
