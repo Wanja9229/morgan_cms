@@ -933,7 +933,7 @@ include_once(G5_THEME_PATH.'/head.php');
                         </div>
                         <div class="flex-shrink-0 flex gap-1">
                             <?php if (!$my_submitted) { ?>
-                            <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=<?php echo $rellog_board; ?>&w=write" class="text-xs bg-mg-accent text-white px-3 py-1.5 rounded-lg hover:opacity-80 transition-opacity">로그 작성</a>
+                            <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=<?php echo $rellog_board; ?>&w=write&cr_id=<?php echo $rel['cr_id']; ?>" class="text-xs bg-mg-accent text-white px-3 py-1.5 rounded-lg hover:opacity-80 transition-opacity">로그 작성</a>
                             <?php } ?>
                             <button type="button" onclick="cfDeleteRelation(<?php echo $rel['cr_id']; ?>, <?php echo $ch_id; ?>)" class="text-xs text-red-400 hover:text-red-300 px-2 py-1.5 rounded hover:bg-mg-bg-tertiary transition-colors" title="해제">
                                 <i data-lucide="x" class="w-4 h-4"></i>

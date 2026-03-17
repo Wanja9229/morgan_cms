@@ -9338,13 +9338,15 @@ function mg_update_relation_side($cr_id, $ch_id, $label = '', $memo = '', $color
  * @param int $wr_id 작성된 글 ID
  * @param int $ch_id 작성자의 캐릭터 ID
  * @param string $mb_id 작성자 회원 ID
+ * @param int $cr_id 대상 관계 ID (0이면 자동 매칭)
  * @return array
  */
-function mg_relation_submit_log($bo_table, $wr_id, $ch_id, $mb_id)
+function mg_relation_submit_log($bo_table, $wr_id, $ch_id, $mb_id, $cr_id = 0)
 {
     global $g5;
     $wr_id = (int)$wr_id;
     $ch_id = (int)$ch_id;
+    $cr_id = (int)$cr_id;
     if (!$ch_id || !$wr_id) {
         return array('success' => false, 'message' => '캐릭터 또는 글 정보가 없습니다.');
     }
@@ -9353,6 +9355,21 @@ function mg_relation_submit_log($bo_table, $wr_id, $ch_id, $mb_id)
     $rels = mg_get_relations($ch_id, 'accepted');
     if (empty($rels)) {
         return array('success' => false, 'message' => '로그를 제출할 수 있는 관계가 없습니다.');
+    }
+
+    // cr_id 지정 시 해당 관계만 필터링
+    if ($cr_id > 0) {
+        $filtered = array();
+        foreach ($rels as $rel) {
+            if ((int)$rel['cr_id'] === $cr_id) {
+                $filtered[] = $rel;
+                break;
+            }
+        }
+        if (empty($filtered)) {
+            return array('success' => false, 'message' => '해당 관계를 찾을 수 없습니다.');
+        }
+        $rels = $filtered;
     }
 
     $submitted = 0;

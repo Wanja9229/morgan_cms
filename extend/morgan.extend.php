@@ -42,7 +42,8 @@ function mg_write_update_after($board, $wr_id, $w, $qstr, $redirect_url) {
     // 관계 로그 제출 (신규 작성 시에만)
     $rellog_board = mg_config('relation_log_board', 'rellog');
     if ($w == '' && $bo_table === $rellog_board && $ch_id > 0 && function_exists('mg_relation_submit_log')) {
-        mg_relation_submit_log($bo_table, $wr_id, $ch_id, $member['mb_id']);
+        $cr_id = isset($_POST['mg_cr_id']) ? (int)$_POST['mg_cr_id'] : 0;
+        mg_relation_submit_log($bo_table, $wr_id, $ch_id, $member['mb_id'], $cr_id);
     }
 }
 

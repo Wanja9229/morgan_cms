@@ -106,6 +106,75 @@ $form_title = $is_edit ? '글 수정' : '글쓰기';
             <input type="hidden" name="mg_ch_id" value="0">
             <?php } ?>
 
+            <!-- 관계 로그 대상 선택 (rellog 게시판 + 신규 작성) -->
+            <?php
+            $_rellog_board = function_exists('mg_config') ? mg_config('relation_log_board', 'rellog') : 'rellog';
+            if ($is_member && $bo_table === $_rellog_board && !$is_edit) {
+                $_rellog_relations = array();
+                if (count($mg_characters) > 0) {
+                    $ch_ids = array();
+                    foreach ($mg_characters as $ch) { $ch_ids[] = (int)$ch['ch_id']; }
+                    $ch_ids_str = implode(',', $ch_ids);
+                    $sql = "SELECT r.cr_id, r.ch_id_a, r.ch_id_b, r.ch_id_from, r.cr_label_a, r.cr_label_b, r.cr_wr_id_a, r.cr_wr_id_b,
+                                   ca.ch_name AS name_a, cb.ch_name AS name_b
+                            FROM {$g5['mg_relation_table']} r
+                            JOIN {$g5['mg_character_table']} ca ON r.ch_id_a = ca.ch_id
+                            JOIN {$g5['mg_character_table']} cb ON r.ch_id_b = cb.ch_id
+                            WHERE r.cr_status = 'accepted'
+                            AND (r.ch_id_a IN ({$ch_ids_str}) OR r.ch_id_b IN ({$ch_ids_str}))
+                            ORDER BY r.cr_id DESC";
+                    $result = sql_query($sql);
+                    if ($result) {
+                        while ($row = sql_fetch_array($result)) {
+                            $_rellog_relations[] = $row;
+                        }
+                    }
+                }
+                if (!empty($_rellog_relations)) {
+            ?>
+            <div class="mb-4" id="mg-relation-selector">
+                <label class="block text-sm font-medium text-mg-text-secondary mb-2">관계 로그 대상</label>
+                <?php $_cr_id_preselect = isset($_GET['cr_id']) ? (int)$_GET['cr_id'] : 0; ?>
+                <select name="mg_cr_id" class="w-full bg-mg-bg-primary border border-mg-bg-tertiary rounded-lg px-3 py-2 text-sm text-mg-text-primary">
+                    <?php foreach ($_rellog_relations as $rel) {
+                        // 내 캐릭터 쪽 판별
+                        $my_side = in_array($rel['ch_id_a'], $ch_ids) ? 'a' : 'b';
+                        $my_ch_id_rel = ($my_side === 'a') ? $rel['ch_id_a'] : $rel['ch_id_b'];
+                        $my_name = ($my_side === 'a') ? $rel['name_a'] : $rel['name_b'];
+                        $other_name = ($my_side === 'a') ? $rel['name_b'] : $rel['name_a'];
+                        $my_label = ($my_side === 'a') ? $rel['cr_label_a'] : $rel['cr_label_b'];
+                        $wr_col = ($my_side === 'a') ? 'cr_wr_id_a' : 'cr_wr_id_b';
+                        $already = !empty($rel[$wr_col]);
+                    ?>
+                    <option value="<?php echo $rel['cr_id']; ?>" data-ch-id="<?php echo $my_ch_id_rel; ?>" <?php echo $already ? 'disabled' : ''; ?> <?php echo (!$already && $rel['cr_id'] == $_cr_id_preselect) ? 'selected' : ''; ?>>
+                        <?php echo htmlspecialchars($my_name); ?> ↔ <?php echo htmlspecialchars($other_name); ?> (<?php echo htmlspecialchars($my_label); ?>)<?php echo $already ? ' — 제출 완료' : ''; ?>
+                    </option>
+                    <?php } ?>
+                </select>
+                <p class="text-xs text-mg-text-muted mt-1">로그를 제출할 관계를 선택하세요.</p>
+            </div>
+            <script>
+            // 관계 선택 시 해당 캐릭터 자동 선택
+            document.addEventListener('DOMContentLoaded', function() {
+                var crSelect = document.querySelector('select[name="mg_cr_id"]');
+                if (crSelect) {
+                    function syncCharacter() {
+                        var opt = crSelect.options[crSelect.selectedIndex];
+                        if (opt && opt.dataset.chId) {
+                            var radio = document.querySelector('input[name="mg_ch_id"][value="' + opt.dataset.chId + '"]');
+                            if (radio) { radio.checked = true; radio.dispatchEvent(new Event('change', {bubbles:true})); }
+                        }
+                    }
+                    crSelect.addEventListener('change', syncCharacter);
+                    syncCharacter();
+                }
+            });
+            </script>
+            <?php
+                }
+            }
+            ?>
+
             <!-- 보상 유형 (request 모드) -->
             <?php if ($_mg_br_mode === 'request' && !empty($_mg_reward_types)) { ?>
             <div class="mb-4">
