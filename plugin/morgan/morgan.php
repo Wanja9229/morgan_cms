@@ -9214,11 +9214,39 @@ function mg_accept_relation($cr_id, $label_b = '', $memo_b = '', $color = '')
         $sets[] = "cr_color = '".sql_real_escape_string($color)."'";
     }
 
+    // 로그 필수 여부에 따라 상태 결정
+    $require_log = mg_config('relation_require_log', '1');
+    if ($require_log !== '1') {
+        // 로그 불필요 → 바로 active
+        $sets[0] = "cr_status = 'active'";
+    }
+
     sql_query("UPDATE {$g5['mg_relation_table']} SET " . implode(', ', $sets) . " WHERE cr_id = {$cr_id}");
 
-    // 신청자에게 승인 알림 — 양쪽 관계 로그 제출 안내
     $from_char = mg_get_character($rel['ch_id_from']);
     $approver_char = mg_get_character($approver_ch_id);
+
+    if ($require_log !== '1') {
+        // 로그 불필요 → 양쪽에 관계 성립 알림
+        $label_display = $label_b ?: $rel['cr_label_a'] ?: $rel['cr_label_b'];
+        if ($from_char && $from_char['mb_id']) {
+            mg_notify($from_char['mb_id'], 'relation_active',
+                $approver_char['ch_name'] . '과(와)의 관계가 성립되었습니다.',
+                $label_display, G5_BBS_URL . '/relation.php');
+        }
+        if ($approver_char && $approver_char['mb_id']) {
+            mg_notify($approver_char['mb_id'], 'relation_active',
+                $from_char['ch_name'] . '과(와)의 관계가 성립되었습니다.',
+                $label_display, G5_BBS_URL . '/relation.php');
+        }
+        if (function_exists('mg_trigger_achievement')) {
+            if ($from_char && $from_char['mb_id']) mg_trigger_achievement($from_char['mb_id'], 'relation_count');
+            if ($approver_char && $approver_char['mb_id']) mg_trigger_achievement($approver_char['mb_id'], 'relation_count');
+        }
+        return array('success' => true, 'message' => '관계가 성립되었습니다.');
+    }
+
+    // 로그 필수 → 양쪽 관계 로그 제출 안내
     $rellog_board = mg_config('relation_log_board', 'rellog');
     if ($from_char && $from_char['mb_id']) {
         $noti_title = $approver_char['ch_name'] . '이(가) 관계를 승인했습니다. 관계 로그를 작성해주세요.';
@@ -9226,7 +9254,6 @@ function mg_accept_relation($cr_id, $label_b = '', $memo_b = '', $color = '')
         mg_notify($from_char['mb_id'], 'relation_accepted', $noti_title, $noti_content,
             G5_BBS_URL . '/board.php?bo_table=' . $rellog_board);
     }
-    // 승인자에게도 로그 작성 안내
     if ($approver_char && $approver_char['mb_id']) {
         $noti_title = '관계가 승인되었습니다. 관계 로그를 작성해주세요.';
         $noti_content = $label_b ?: $rel['cr_label_a'] ?: $rel['cr_label_b'];

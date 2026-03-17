@@ -99,6 +99,7 @@ $config_keys = array(
     'character_create_point',
     'max_characters',
     'max_relations',
+    'relation_require_log',
     'show_main_character',
     'use_side',
     'use_class',
