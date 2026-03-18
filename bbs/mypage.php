@@ -155,7 +155,7 @@ $ach_rarity_colors = array(
                 <i data-lucide="file-text" class="w-5 h-5 text-mg-accent flex-shrink-0"></i>
                 <span class="text-sm text-mg-text-secondary">내 글 모아보기</span>
             </a>
-            <a href="<?php echo G5_BBS_URL; ?>/character_list.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
+            <a href="<?php echo G5_BBS_URL; ?>/character.php" class="flex items-center gap-2 p-3 bg-mg-bg-primary rounded-lg hover:bg-mg-bg-tertiary transition-colors">
                 <i data-lucide="user" class="w-5 h-5 text-mg-accent flex-shrink-0"></i>
                 <span class="text-sm text-mg-text-secondary">캐릭터 관리</span>
             </a>
