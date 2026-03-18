@@ -15,19 +15,30 @@ if (isset($_POST['rel_action'])) {
     $action = $_POST['rel_action'];
     $cr_id = (int)($_POST['cr_id'] ?? 0);
 
-    if (!$cr_id) {
-        echo json_encode(array('success' => false, 'message' => '관계 ID가 없습니다.'));
-        exit;
-    }
-
     switch ($action) {
         case 'force_approve':
+            if (!$cr_id) { echo json_encode(array('success' => false, 'message' => '관계 ID가 없습니다.')); exit; }
             sql_query("UPDATE {$g5['mg_relation_table']} SET cr_status = 'active', cr_accept_datetime = NOW() WHERE cr_id = {$cr_id}");
             echo json_encode(array('success' => true, 'message' => '관계를 강제 승인했습니다.'));
             break;
         case 'force_delete':
+            if (!$cr_id) { echo json_encode(array('success' => false, 'message' => '관계 ID가 없습니다.')); exit; }
             sql_query("DELETE FROM {$g5['mg_relation_table']} WHERE cr_id = {$cr_id}");
             echo json_encode(array('success' => true, 'message' => '관계를 삭제했습니다.'));
+            break;
+        case 'save_config':
+            $val = ($_POST['relation_require_log'] ?? '1') === '1' ? '1' : '0';
+            mg_set_config('relation_require_log', $val);
+            echo json_encode(array('success' => true, 'message' => '설정이 저장되었습니다.'));
+            break;
+        case 'activate_all_accepted':
+            $cnt = (int)sql_fetch("SELECT COUNT(*) AS cnt FROM {$g5['mg_relation_table']} WHERE cr_status = 'accepted'")['cnt'];
+            if ($cnt === 0) {
+                echo json_encode(array('success' => false, 'message' => '전환할 관계가 없습니다.'));
+            } else {
+                sql_query("UPDATE {$g5['mg_relation_table']} SET cr_status = 'active' WHERE cr_status = 'accepted'");
+                echo json_encode(array('success' => true, 'message' => $cnt.'건의 관계를 활성 상태로 전환했습니다.'));
+            }
             break;
         default:
             echo json_encode(array('success' => false, 'message' => '알 수 없는 액션입니다.'));
@@ -78,8 +89,12 @@ while ($row = sql_fetch_array($result)) {
 
 // 상태별 통계
 $stat_pending = (int)sql_fetch("SELECT COUNT(*) AS cnt FROM {$g5['mg_relation_table']} WHERE cr_status = 'pending'")['cnt'];
+$stat_accepted = (int)sql_fetch("SELECT COUNT(*) AS cnt FROM {$g5['mg_relation_table']} WHERE cr_status = 'accepted'")['cnt'];
 $stat_active = (int)sql_fetch("SELECT COUNT(*) AS cnt FROM {$g5['mg_relation_table']} WHERE cr_status = 'active'")['cnt'];
 $stat_rejected = (int)sql_fetch("SELECT COUNT(*) AS cnt FROM {$g5['mg_relation_table']} WHERE cr_status = 'rejected'")['cnt'];
+
+// 관계 로그 필수 설정
+$relation_require_log = mg_config('relation_require_log', '1');
 
 include_once('./_head.php');
 ?>
@@ -91,11 +106,33 @@ include_once('./_head.php');
     </div>
     <div class="mg-card-body">
 
+        <!-- 설정 -->
+        <div style="margin-bottom:16px; padding:16px; background:var(--mg-bg-tertiary); border-radius:8px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <label style="font-size:0.875rem; color:var(--mg-text-secondary); white-space:nowrap;">관계 로그 필수</label>
+                <select id="relation_require_log" class="mg-form-select" style="width:auto;">
+                    <option value="1" <?php echo $relation_require_log === '1' ? 'selected' : ''; ?>>ON — 양쪽 로그 제출 후 성립</option>
+                    <option value="0" <?php echo $relation_require_log === '0' ? 'selected' : ''; ?>>OFF — 수락만으로 성립</option>
+                </select>
+                <button class="mg-btn mg-btn-primary mg-btn-sm" onclick="saveRelConfig()">저장</button>
+            </div>
+            <?php if ($stat_accepted > 0) { ?>
+            <div style="border-left:1px solid var(--mg-bg-secondary); padding-left:16px; display:flex; align-items:center; gap:8px;">
+                <span style="font-size:0.875rem; color:var(--mg-text-muted);">로그 대기중 <?php echo $stat_accepted; ?>건</span>
+                <button class="mg-btn mg-btn-warning mg-btn-sm" onclick="activateAllAccepted()">일괄 활성 전환</button>
+            </div>
+            <?php } ?>
+        </div>
+
         <!-- 통계 -->
         <div class="mg-stats-grid" style="margin-bottom:16px;">
             <div class="mg-stat-card">
                 <div class="mg-stat-label">대기중</div>
                 <div class="mg-stat-value"><?php echo $stat_pending; ?></div>
+            </div>
+            <div class="mg-stat-card">
+                <div class="mg-stat-label">로그 대기</div>
+                <div class="mg-stat-value"><?php echo $stat_accepted; ?></div>
             </div>
             <div class="mg-stat-card">
                 <div class="mg-stat-label">활성</div>
@@ -200,6 +237,33 @@ function adminAction(crId, action) {
     var data = new FormData();
     data.append('rel_action', action);
     data.append('cr_id', crId);
+
+    fetch(location.href, { method: 'POST', body: data })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            alert(res.message);
+            if (res.success) location.reload();
+        });
+}
+
+function saveRelConfig() {
+    var val = document.getElementById('relation_require_log').value;
+    var data = new FormData();
+    data.append('rel_action', 'save_config');
+    data.append('relation_require_log', val);
+
+    fetch(location.href, { method: 'POST', body: data })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            alert(res.message);
+        });
+}
+
+function activateAllAccepted() {
+    if (!confirm('로그 대기중(accepted)인 모든 관계를 활성 상태로 전환하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) return;
+
+    var data = new FormData();
+    data.append('rel_action', 'activate_all_accepted');
 
     fetch(location.href, { method: 'POST', body: data })
         .then(function(r) { return r.json(); })

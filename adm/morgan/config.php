@@ -139,14 +139,6 @@ function _cfg_radio($name, $configs, $default = '1', $labels = array('사용', '
                     <input type="number" name="max_relations" id="max_relations" value="<?php echo isset($mg_configs['max_relations']) ? $mg_configs['max_relations'] : '3'; ?>" class="mg-form-input" min="0" max="100">
                     <small style="color:var(--mg-text-muted);font-size:0.75rem;">캐릭터당 기본 관계 수 (상점에서 관계 슬롯 구매 시 추가)</small>
                 </div>
-                <div class="mg-form-group">
-                    <label class="mg-form-label" for="relation_require_log">관계 로그 필수</label>
-                    <select name="relation_require_log" id="relation_require_log" class="mg-form-input">
-                        <option value="1" <?php echo (isset($mg_configs['relation_require_log']) ? $mg_configs['relation_require_log'] : '1') == '1' ? 'selected' : ''; ?>>ON — 양쪽 로그 제출 후 성립</option>
-                        <option value="0" <?php echo (isset($mg_configs['relation_require_log']) ? $mg_configs['relation_require_log'] : '1') == '0' ? 'selected' : ''; ?>>OFF — 수락만으로 성립</option>
-                    </select>
-                    <small style="color:var(--mg-text-muted);font-size:0.75rem;">OFF 시 관계 신청 수락 즉시 active 상태로 전환됩니다</small>
-                </div>
             </div>
 
             <hr style="border:0;border-top:1px solid var(--mg-bg-tertiary);margin:1.5rem 0;">
