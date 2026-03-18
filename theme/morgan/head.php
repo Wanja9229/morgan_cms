@@ -219,7 +219,7 @@ if (isset($is_ajax_request) && $is_ajax_request) {
                 <?php echo get_text($member['mb_nick']); ?>님
             </a>
             <?php if ($is_admin) { ?>
-            <a href="<?php echo G5_ADMIN_URL; ?>/morgan/config.php" class="text-sm text-mg-accent hover:text-mg-accent-hover transition-colors px-2 py-1.5 hidden sm:inline">
+            <a href="<?php echo G5_ADMIN_URL; ?>/morgan/dashboard.php" class="text-sm text-mg-accent hover:text-mg-accent-hover transition-colors px-2 py-1.5 hidden sm:inline">
                 관리자
             </a>
             <?php } ?>
