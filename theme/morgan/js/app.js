@@ -400,7 +400,7 @@
             // 사이드바 활성 상태 업데이트
             updateSidebar: function(url) {
                 try {
-                    var parsed = new URL(url, window.location.origin);
+                    var parsed = new URL(url, window.location.href);
                     var pathname = parsed.pathname;
                     var script = pathname.split('/').pop() || 'index.php';
                     var params = parsed.searchParams;
