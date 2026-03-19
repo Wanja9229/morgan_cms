@@ -356,6 +356,7 @@
 
                     // 스크롤 맨 위로
                     this.mainContent.scrollTo(0, 0);
+                    window.scrollTo(0, 0);
 
                     // 사이드바 활성 상태 업데이트
                     this.updateSidebar(url);
