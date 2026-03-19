@@ -411,12 +411,21 @@ if ($profile_bg_id) {
                     }));
                     var edges = new vis.DataSet(data.edges.map(function(e) {
                         var ec = e.edge_color || '#666';
+                        var la = e.label_a || '';
+                        var lb = e.label_b || '';
+                        var edgeLabel = '';
+                        if (la && lb && la !== lb) {
+                            edgeLabel = la + '  →\n←  ' + lb;
+                        } else {
+                            edgeLabel = la || lb || '';
+                        }
                         return {
                             from: e.ch_id_a, to: e.ch_id_b,
-                            label: e.label_display || '',
+                            label: edgeLabel,
+                            arrows: { to: { enabled: true, scaleFactor: 0.5 }, from: { enabled: true, scaleFactor: 0.5 } },
                             color: { color: ec, hover: ec, highlight: ec },
                             width: e.edge_width || 2,
-                            font: { color: _clr.textSec, size: 10, strokeWidth: 3, strokeColor: '#1a1a1a' },
+                            font: { color: _clr.textSec, size: 10, strokeWidth: 3, strokeColor: '#1a1a1a', multi: false, align: 'middle' },
                             smooth: { type: 'continuous' }
                         };
                     }));
