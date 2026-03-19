@@ -471,6 +471,30 @@ if ($profile_bg_id) {
                         container.appendChild(saveBtn);
                     }
 
+                    // 엣지/노드 데이터를 참조용으로 저장
+                    var _nodesMap = {};
+                    data.nodes.forEach(function(n) { _nodesMap[n.ch_id] = n; });
+                    var _edgesMap = {};
+                    data.edges.forEach(function(e) { _edgesMap[e.cr_id] = e; });
+
+                    // 엣지 클릭 → 관계 상세 모달
+                    _network.on('click', function(params) {
+                        if (params.edges.length > 0 && params.nodes.length === 0) {
+                            var visEdge = edges.get(params.edges[0]);
+                            if (!visEdge) return;
+                            // cr_id로 원본 데이터 찾기
+                            var edgeData = null;
+                            data.edges.forEach(function(e) {
+                                if (e.ch_id_a === visEdge.from && e.ch_id_b === visEdge.to) edgeData = e;
+                            });
+                            if (!edgeData) return;
+                            var na = _nodesMap[edgeData.ch_id_a];
+                            var nb = _nodesMap[edgeData.ch_id_b];
+                            if (!na || !nb) return;
+                            showRelationModal(na, nb, edgeData);
+                        }
+                    });
+
                     // 비주인: 클릭으로 캐릭터 이동
                     if (!isOwner) {
                         _network.on('click', function(params) {
@@ -523,6 +547,59 @@ if ($profile_bg_id) {
                 });
         });
     }
+
+    function showRelationModal(na, nb, edge) {
+        var existing = document.getElementById('rel-detail-modal');
+        if (existing) existing.remove();
+
+        var ec = edge.edge_color || '#95a5a6';
+        var imgA = na.ch_thumb ? '<img src="' + na.ch_thumb + '" style="width:56px;height:56px;border-radius:50%;object-fit:cover;">' : '<div style="width:56px;height:56px;border-radius:50%;background:var(--mg-bg-tertiary);display:flex;align-items:center;justify-content:center;color:var(--mg-text-muted);font-size:1.25rem;">?</div>';
+        var imgB = nb.ch_thumb ? '<img src="' + nb.ch_thumb + '" style="width:56px;height:56px;border-radius:50%;object-fit:cover;">' : '<div style="width:56px;height:56px;border-radius:50%;background:var(--mg-bg-tertiary);display:flex;align-items:center;justify-content:center;color:var(--mg-text-muted);font-size:1.25rem;">?</div>';
+
+        var la = edge.label_a || '';
+        var lb = edge.label_b || '';
+        var ma = edge.memo_a || '';
+        var mb = edge.memo_b || '';
+
+        var arrowHtml = '';
+        if (la) {
+            arrowHtml += '<div style="display:flex;align-items:center;gap:8px;justify-content:center;margin-top:12px;">';
+            arrowHtml += '<span style="font-size:0.75rem;color:var(--mg-text-muted);">' + esc(na.ch_name) + '</span>';
+            arrowHtml += '<span style="color:' + ec + ';">→</span>';
+            arrowHtml += '<span style="font-size:0.875rem;font-weight:600;color:var(--mg-text-primary);">' + esc(la) + '</span>';
+            arrowHtml += '<span style="color:' + ec + ';">→</span>';
+            arrowHtml += '<span style="font-size:0.75rem;color:var(--mg-text-muted);">' + esc(nb.ch_name) + '</span>';
+            arrowHtml += '</div>';
+            if (ma) arrowHtml += '<p style="text-align:center;font-size:0.75rem;color:var(--mg-text-muted);margin-top:4px;">' + esc(ma) + '</p>';
+        }
+        if (lb && lb !== la) {
+            arrowHtml += '<div style="display:flex;align-items:center;gap:8px;justify-content:center;margin-top:8px;">';
+            arrowHtml += '<span style="font-size:0.75rem;color:var(--mg-text-muted);">' + esc(nb.ch_name) + '</span>';
+            arrowHtml += '<span style="color:' + ec + ';">→</span>';
+            arrowHtml += '<span style="font-size:0.875rem;font-weight:600;color:var(--mg-text-primary);">' + esc(lb) + '</span>';
+            arrowHtml += '<span style="color:' + ec + ';">→</span>';
+            arrowHtml += '<span style="font-size:0.75rem;color:var(--mg-text-muted);">' + esc(na.ch_name) + '</span>';
+            arrowHtml += '</div>';
+            if (mb) arrowHtml += '<p style="text-align:center;font-size:0.75rem;color:var(--mg-text-muted);margin-top:4px;">' + esc(mb) + '</p>';
+        } else if (lb === la && mb) {
+            arrowHtml += '<p style="text-align:center;font-size:0.75rem;color:var(--mg-text-muted);margin-top:4px;">' + esc(mb) + '</p>';
+        }
+
+        var html = '<div id="rel-detail-modal" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);" onclick="if(event.target===this)this.remove();">';
+        html += '<div style="background:var(--mg-bg-secondary);border:1px solid var(--mg-bg-tertiary);border-radius:12px;padding:24px;max-width:400px;width:90%;position:relative;">';
+        html += '<button onclick="this.closest(\'#rel-detail-modal\').remove();" style="position:absolute;top:8px;right:8px;background:none;border:none;color:var(--mg-text-muted);cursor:pointer;font-size:1.25rem;">&times;</button>';
+        html += '<div style="display:flex;align-items:center;justify-content:center;gap:24px;">';
+        html += '<div style="text-align:center;">' + imgA + '<p style="font-size:0.75rem;color:var(--mg-text-primary);margin-top:6px;font-weight:500;">' + esc(na.ch_name) + '</p></div>';
+        html += '<div style="width:40px;height:2px;background:' + ec + ';border-radius:1px;"></div>';
+        html += '<div style="text-align:center;">' + imgB + '<p style="font-size:0.75rem;color:var(--mg-text-primary);margin-top:6px;font-weight:500;">' + esc(nb.ch_name) + '</p></div>';
+        html += '</div>';
+        html += arrowHtml;
+        html += '</div></div>';
+
+        document.body.insertAdjacentHTML('beforeend', html);
+    }
+
+    function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 })();
 </script>
 <?php } ?>
