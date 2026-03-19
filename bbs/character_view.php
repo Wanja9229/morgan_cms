@@ -413,11 +413,18 @@ if ($profile_bg_id) {
                         var ec = e.edge_color || '#666';
                         var la = e.label_a || '';
                         var lb = e.label_b || '';
+                        var ma = e.memo_a || '';
+                        var mb = e.memo_b || '';
+                        // A쪽: 캐릭터명은 노드에 있으므로 관계명 + 메모
+                        var lineA = la;
+                        if (ma) lineA += '\n' + ma;
+                        var lineB = lb;
+                        if (mb) lineB += '\n' + mb;
                         var edgeLabel = '';
                         if (la && lb && la !== lb) {
-                            edgeLabel = la + '  →\n←  ' + lb;
+                            edgeLabel = lineA + '\n─────\n' + lineB;
                         } else {
-                            edgeLabel = la || lb || '';
+                            edgeLabel = la ? lineA : lineB;
                         }
                         return {
                             from: e.ch_id_a, to: e.ch_id_b,
