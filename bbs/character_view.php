@@ -545,35 +545,19 @@ if ($profile_bg_id) {
         var existing = document.getElementById('rel-detail-modal');
         if (existing) existing.remove();
 
-        var currentChId = <?php echo $ch_id; ?>;
         var ec = edge.edge_color || '#95a5a6';
+        var imgA = na.ch_thumb ? '<img src="' + na.ch_thumb + '" style="width:56px;height:56px;border-radius:50%;object-fit:cover;">' : '<div style="width:56px;height:56px;border-radius:50%;background:var(--mg-bg-tertiary);display:flex;align-items:center;justify-content:center;color:var(--mg-text-muted);font-size:1.25rem;">?</div>';
+        var imgB = nb.ch_thumb ? '<img src="' + nb.ch_thumb + '" style="width:56px;height:56px;border-radius:50%;object-fit:cover;">' : '<div style="width:56px;height:56px;border-radius:50%;background:var(--mg-bg-tertiary);display:flex;align-items:center;justify-content:center;color:var(--mg-text-muted);font-size:1.25rem;">?</div>';
 
-        // 보고 있는 캐릭터를 왼쪽에 배치
-        var me, other, myLabel, otherLabel, myMemo;
-        if (na.ch_id === currentChId) {
-            me = na; other = nb;
-            myLabel = edge.label_a || '';
-            otherLabel = edge.label_b || '';
-            myMemo = edge.memo_a || '';
-        } else if (nb.ch_id === currentChId) {
-            me = nb; other = na;
-            myLabel = edge.label_b || '';
-            otherLabel = edge.label_a || '';
-            myMemo = edge.memo_b || '';
-        } else {
-            me = na; other = nb;
-            myLabel = edge.label_a || '';
-            otherLabel = edge.label_b || '';
-            myMemo = edge.memo_a || '';
-        }
-
-        var imgMe = me.ch_thumb ? '<img src="' + me.ch_thumb + '" style="width:56px;height:56px;border-radius:50%;object-fit:cover;">' : '<div style="width:56px;height:56px;border-radius:50%;background:var(--mg-bg-tertiary);display:flex;align-items:center;justify-content:center;color:var(--mg-text-muted);font-size:1.25rem;">?</div>';
-        var imgOther = other.ch_thumb ? '<img src="' + other.ch_thumb + '" style="width:56px;height:56px;border-radius:50%;object-fit:cover;">' : '<div style="width:56px;height:56px;border-radius:50%;background:var(--mg-bg-tertiary);display:flex;align-items:center;justify-content:center;color:var(--mg-text-muted);font-size:1.25rem;">?</div>';
+        var la = edge.label_a || '';
+        var lb = edge.label_b || '';
+        var ma = edge.memo_a || '';
+        var mb = edge.memo_b || '';
 
         // 화살표 영역: 서로를 향한 관계명
         var arrowHtml = '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;">';
-        arrowHtml += '<div style="display:flex;align-items:center;gap:6px;"><span style="font-size:0.75rem;color:var(--mg-text-secondary);">' + esc(myLabel || '—') + '</span><span style="color:' + ec + ';">→</span></div>';
-        arrowHtml += '<div style="display:flex;align-items:center;gap:6px;"><span style="color:' + ec + ';">←</span><span style="font-size:0.75rem;color:var(--mg-text-secondary);">' + esc(otherLabel || '—') + '</span></div>';
+        arrowHtml += '<div style="display:flex;align-items:center;gap:6px;"><span style="font-size:0.75rem;color:var(--mg-text-secondary);">' + esc(la || '—') + '</span><span style="color:' + ec + ';">→</span></div>';
+        arrowHtml += '<div style="display:flex;align-items:center;gap:6px;"><span style="color:' + ec + ';">←</span><span style="font-size:0.75rem;color:var(--mg-text-secondary);">' + esc(lb || '—') + '</span></div>';
         arrowHtml += '</div>';
 
         var html = '<div id="rel-detail-modal" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);" onclick="if(event.target===this)this.remove();">';
@@ -581,15 +565,22 @@ if ($profile_bg_id) {
         html += '<button onclick="this.closest(\'#rel-detail-modal\').remove();" style="position:absolute;top:8px;right:8px;background:none;border:none;color:var(--mg-text-muted);cursor:pointer;font-size:1.25rem;">&times;</button>';
         // 캐릭터 + 화살표
         html += '<div style="display:flex;align-items:center;justify-content:center;gap:16px;">';
-        html += '<div style="text-align:center;flex-shrink:0;">' + imgMe + '<p style="font-size:0.75rem;color:var(--mg-text-primary);margin-top:6px;font-weight:500;">' + esc(me.ch_name) + '</p></div>';
+        html += '<div style="text-align:center;flex-shrink:0;">' + imgA + '<p style="font-size:0.75rem;color:var(--mg-text-primary);margin-top:6px;font-weight:500;">' + esc(na.ch_name) + '</p></div>';
         html += arrowHtml;
-        html += '<div style="text-align:center;flex-shrink:0;">' + imgOther + '<p style="font-size:0.75rem;color:var(--mg-text-primary);margin-top:6px;font-weight:500;">' + esc(other.ch_name) + '</p></div>';
+        html += '<div style="text-align:center;flex-shrink:0;">' + imgB + '<p style="font-size:0.75rem;color:var(--mg-text-primary);margin-top:6px;font-weight:500;">' + esc(nb.ch_name) + '</p></div>';
         html += '</div>';
-        // 메모
-        if (myMemo) {
+        // 메모: A→B
+        if (ma) {
             html += '<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--mg-bg-tertiary);">';
-            html += '<p style="font-size:0.75rem;color:var(--mg-text-muted);margin-bottom:4px;">메모</p>';
-            html += '<p style="font-size:0.8125rem;color:var(--mg-text-secondary);line-height:1.5;">' + esc(myMemo) + '</p>';
+            html += '<p style="font-size:0.75rem;color:var(--mg-text-muted);margin-bottom:4px;">' + esc(na.ch_name) + ' → ' + esc(nb.ch_name) + '</p>';
+            html += '<p style="font-size:0.8125rem;color:var(--mg-text-secondary);line-height:1.5;">' + esc(ma) + '</p>';
+            html += '</div>';
+        }
+        // 메모: B→A
+        if (mb) {
+            html += '<div style="margin-top:' + (ma ? '8' : '16') + 'px;' + (ma ? '' : 'padding-top:12px;border-top:1px solid var(--mg-bg-tertiary);') + '">';
+            html += '<p style="font-size:0.75rem;color:var(--mg-text-muted);margin-bottom:4px;">' + esc(nb.ch_name) + ' → ' + esc(na.ch_name) + '</p>';
+            html += '<p style="font-size:0.8125rem;color:var(--mg-text-secondary);line-height:1.5;">' + esc(mb) + '</p>';
             html += '</div>';
         }
         html += '</div></div>';
