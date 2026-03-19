@@ -560,7 +560,7 @@ if ($profile_bg_id) {
         arrowHtml += '<div style="display:flex;align-items:center;gap:6px;"><span style="color:' + ec + ';">←</span><span style="font-size:0.75rem;color:var(--mg-text-secondary);">' + esc(lb || '—') + '</span></div>';
         arrowHtml += '</div>';
 
-        var html = '<div id="rel-detail-modal" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);" onclick="if(event.target===this)this.remove();">';
+        var html = '<div id="rel-detail-modal" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);" onmousedown="this._mdTarget=event.target" onclick="if(event.target===this&&this._mdTarget===this)this.remove();">';
         html += '<div style="background:var(--mg-bg-secondary);border:1px solid var(--mg-bg-tertiary);border-radius:12px;padding:24px;max-width:380px;width:90%;position:relative;">';
         html += '<button onclick="this.closest(\'#rel-detail-modal\').remove();" style="position:absolute;top:8px;right:8px;background:none;border:none;color:var(--mg-text-muted);cursor:pointer;font-size:1.25rem;">&times;</button>';
         // 캐릭터 + 화살표
