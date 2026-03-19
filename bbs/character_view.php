@@ -410,7 +410,7 @@ if ($profile_bg_id) {
                         return nodeOpt;
                     }));
                     var edges = new vis.DataSet(data.edges.map(function(e) {
-                        var ec = e.edge_color || '#666';
+                        var ec = e.edge_color || '#95a5a6';
                         var la = e.label_a || '';
                         var lb = e.label_b || '';
                         var edgeLabel = '';
@@ -438,7 +438,7 @@ if ($profile_bg_id) {
                             dragNodes: isOwner,
                             dragView: false,
                             zoomView: false,
-                            selectable: false,
+                            selectable: true,
                             hover: true
                         },
                         layout: {
