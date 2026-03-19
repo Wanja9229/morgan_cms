@@ -80,14 +80,14 @@ if (!empty($characters)) {
     }
     $ch_ids_str = implode(',', $my_ch_ids);
 
-    // 받은 대기 신청
+    // 받은 대기 신청 (대상이 내 캐릭터이고, 신청자가 대상과 다른 것)
     $sql = "SELECT r.*, ca.ch_name AS name_a, ca.ch_thumb AS thumb_a, cb.ch_name AS name_b, cb.ch_thumb AS thumb_b
             FROM {$g5['mg_relation_table']} r
             JOIN {$g5['mg_character_table']} ca ON r.ch_id_a = ca.ch_id
             JOIN {$g5['mg_character_table']} cb ON r.ch_id_b = cb.ch_id
             WHERE r.cr_status = 'pending'
-            AND ((r.ch_id_a IN ({$ch_ids_str}) AND r.ch_id_from NOT IN ({$ch_ids_str}))
-              OR (r.ch_id_b IN ({$ch_ids_str}) AND r.ch_id_from NOT IN ({$ch_ids_str})))
+            AND ((r.ch_id_a IN ({$ch_ids_str}) AND r.ch_id_from != r.ch_id_a)
+              OR (r.ch_id_b IN ({$ch_ids_str}) AND r.ch_id_from != r.ch_id_b))
             ORDER BY r.cr_id DESC";
     $result = sql_query($sql);
     if ($result) { while ($row = sql_fetch_array($result)) { $all_received[] = $row; } }
