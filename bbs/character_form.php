@@ -651,8 +651,7 @@ include_once(G5_THEME_PATH.'/head.php');
                     <div>
                         <label for="ch_profile_skin" class="block text-sm font-medium text-mg-text-secondary mb-1.5">프로필 스킨</label>
                         <select name="ch_profile_skin" id="ch_profile_skin" class="w-full bg-mg-bg-tertiary border border-mg-bg-tertiary text-mg-text-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-mg-accent focus:border-transparent">
-                            <option value="" <?php echo !$cur_skin ? 'selected' : ''; ?>><?php echo htmlspecialchars($skin_default_label); ?></option>
-                            <option value="default" <?php echo $cur_skin === 'default' ? 'selected' : ''; ?>>기본 스킨</option>
+                            <option value="" <?php echo (!$cur_skin || $cur_skin === 'default') ? 'selected' : ''; ?>><?php echo htmlspecialchars($skin_default_label); ?></option>
                             <?php foreach ($owned_skins as $sk_id => $sk_name) { ?>
                             <option value="<?php echo htmlspecialchars($sk_id); ?>" <?php echo $cur_skin === $sk_id ? 'selected' : ''; ?>><?php echo htmlspecialchars($sk_name); ?></option>
                             <?php } ?>
