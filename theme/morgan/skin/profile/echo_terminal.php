@@ -235,6 +235,7 @@ $ch_initial = mb_substr($char['ch_name'], 0, 1);
                         $other_thumb = $is_a ? $rel['thumb_b'] : $rel['thumb_a'];
                         $other_ch_id = $is_a ? $rel['ch_id_b'] : $rel['ch_id_a'];
                         $my_label = htmlspecialchars($is_a ? ($rel['cr_label_a'] ?: $rel['cr_label_b']) : ($rel['cr_label_b'] ?: $rel['cr_label_a']));
+                        $my_memo = $is_a ? ($rel['cr_memo_a'] ?? '') : ($rel['cr_memo_b'] ?? '');
                         $rel_color = $rel['cr_color'] ?: '#95a5a6';
                     ?>
                     <div class="echo-rel-item" style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #3949ab44;">
@@ -246,8 +247,15 @@ $ch_initial = mb_substr($char['ch_name'], 0, 1);
                         <div style="width:26px;height:26px;border:1px solid #3949ab;display:flex;align-items:center;justify-content:center;color:#8c9eff;font-size:12px;flex-shrink:0;">?</div>
                         <?php } ?>
                         <span style="width:8px;height:8px;flex-shrink:0;background:<?php echo htmlspecialchars($rel_color); ?>;box-shadow:0 0 4px <?php echo htmlspecialchars($rel_color); ?>;"></span>
-                        <span style="color:#8c9eff;font-size:14px;"><?php echo $my_label; ?></span>
-                        <a href="<?php echo G5_BBS_URL; ?>/character_view.php?ch_id=<?php echo $other_ch_id; ?>" style="margin-left:auto;color:#00ffff;font-size:14px;font-weight:500;"><?php echo $other_name; ?></a>
+                        <div style="flex:1;min-width:0;">
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <span style="color:#8c9eff;font-size:14px;"><?php echo $my_label; ?></span>
+                                <a href="<?php echo G5_BBS_URL; ?>/character_view.php?ch_id=<?php echo $other_ch_id; ?>" style="margin-left:auto;color:#00ffff;font-size:14px;font-weight:500;"><?php echo $other_name; ?></a>
+                            </div>
+                            <?php if ($my_memo) { ?>
+                            <p style="font-size:0.75rem;color:#5c6bc0;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?php echo htmlspecialchars($my_memo); ?></p>
+                            <?php } ?>
+                        </div>
                     </div>
                     <?php } ?>
                     <!-- 인라인 관계도 -->

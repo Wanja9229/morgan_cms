@@ -256,6 +256,7 @@ $serial = strtoupper(substr(md5($char['ch_id'] . $char['ch_name']), 0, 8));
                     $other_thumb = $is_a ? $rel['thumb_b'] : $rel['thumb_a'];
                     $other_ch_id = $is_a ? $rel['ch_id_b'] : $rel['ch_id_a'];
                     $my_label = htmlspecialchars($is_a ? ($rel['cr_label_a'] ?: $rel['cr_label_b']) : ($rel['cr_label_b'] ?: $rel['cr_label_a']));
+                    $my_memo = $is_a ? ($rel['cr_memo_a'] ?? '') : ($rel['cr_memo_b'] ?? '');
                     $rel_color = $rel['cr_color'] ?: '#95a5a6';
                 ?>
                 <div class="mil-row" style="align-items:center;gap:0.75rem;">
@@ -264,10 +265,15 @@ $serial = strtoupper(substr(md5($char['ch_id'] . $char['ch_name']), 0, 8));
                     <?php } else { ?>
                     <div style="width:28px;height:28px;background:#e7e5e4;display:flex;align-items:center;justify-content:center;font-size:0.625rem;color:#78716c;margin-left:0.75rem;">?</div>
                     <?php } ?>
-                    <div style="flex:1;padding:0.375rem 0.5rem;display:flex;align-items:center;gap:0.5rem;">
-                        <span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:<?php echo htmlspecialchars($rel_color); ?>;"></span>
-                        <span style="color:#78716c;font-size:0.75rem;"><?php echo $my_label; ?></span>
-                        <a href="<?php echo G5_BBS_URL; ?>/character_view.php?ch_id=<?php echo $other_ch_id; ?>" style="margin-left:auto;font-size:0.8125rem;font-weight:600;"><?php echo $other_name; ?></a>
+                    <div style="flex:1;padding:0.375rem 0.5rem;min-width:0;">
+                        <div style="display:flex;align-items:center;gap:0.5rem;">
+                            <span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:<?php echo htmlspecialchars($rel_color); ?>;"></span>
+                            <span style="color:#78716c;font-size:0.75rem;"><?php echo $my_label; ?></span>
+                            <a href="<?php echo G5_BBS_URL; ?>/character_view.php?ch_id=<?php echo $other_ch_id; ?>" style="margin-left:auto;font-size:0.8125rem;font-weight:600;"><?php echo $other_name; ?></a>
+                        </div>
+                        <?php if ($my_memo) { ?>
+                        <p style="font-size:0.6875rem;color:#a8a29e;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?php echo htmlspecialchars($my_memo); ?></p>
+                        <?php } ?>
                     </div>
                 </div>
                 <?php } ?>

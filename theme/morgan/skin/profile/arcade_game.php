@@ -233,6 +233,7 @@ mt_srand();
                     $other_thumb = $is_a ? $rel['thumb_b'] : $rel['thumb_a'];
                     $other_ch_id = $is_a ? $rel['ch_id_b'] : $rel['ch_id_a'];
                     $my_label = htmlspecialchars($is_a ? ($rel['cr_label_a'] ?: $rel['cr_label_b']) : ($rel['cr_label_b'] ?: $rel['cr_label_a']));
+                    $my_memo = $is_a ? ($rel['cr_memo_a'] ?? '') : ($rel['cr_memo_b'] ?? '');
                     $rel_color = $rel['cr_color'] ?: '#95a5a6';
                 ?>
                 <div class="arc-rel-item" style="display:flex;align-items:center;gap:0.75rem;padding:0.375rem 0;border-bottom:1px solid #222;">
@@ -244,8 +245,15 @@ mt_srand();
                     <div style="width:28px;height:28px;background:#111;border:2px solid #333;display:flex;align-items:center;justify-content:center;color:#666;flex-shrink:0;">?</div>
                     <?php } ?>
                     <span style="width:8px;height:8px;flex-shrink:0;background:<?php echo htmlspecialchars($rel_color); ?>;"></span>
-                    <span style="color:#666;"><?php echo $my_label; ?></span>
-                    <a href="<?php echo G5_BBS_URL; ?>/character_view.php?ch_id=<?php echo $other_ch_id; ?>" style="margin-left:auto;"><?php echo $other_name; ?></a>
+                    <div style="flex:1;min-width:0;">
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span style="color:#666;"><?php echo $my_label; ?></span>
+                            <a href="<?php echo G5_BBS_URL; ?>/character_view.php?ch_id=<?php echo $other_ch_id; ?>" style="margin-left:auto;"><?php echo $other_name; ?></a>
+                        </div>
+                        <?php if ($my_memo) { ?>
+                        <p style="font-size:0.75rem;color:#555;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?php echo htmlspecialchars($my_memo); ?></p>
+                        <?php } ?>
+                    </div>
                 </div>
                 <?php } ?>
                 <!-- 인라인 관계도 -->

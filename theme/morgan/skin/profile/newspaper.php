@@ -236,6 +236,7 @@ $edition = 'Vol. ' . ceil($char['ch_id'] / 10) . ', No. ' . $char['ch_id'];
                     $other_thumb = $is_a ? $rel['thumb_b'] : $rel['thumb_a'];
                     $other_ch_id = $is_a ? $rel['ch_id_b'] : $rel['ch_id_a'];
                     $my_label = htmlspecialchars($is_a ? ($rel['cr_label_a'] ?: $rel['cr_label_b']) : ($rel['cr_label_b'] ?: $rel['cr_label_a']));
+                    $my_memo = $is_a ? ($rel['cr_memo_a'] ?? '') : ($rel['cr_memo_b'] ?? '');
                     $rel_color = $rel['cr_color'] ?: '#95a5a6';
                 ?>
                 <div class="nw-rel-item" style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0;border-bottom:1px solid #d4c5a9;">
@@ -245,8 +246,15 @@ $edition = 'Vol. ' . ceil($char['ch_id'] / 10) . ', No. ' . $char['ch_id'];
                     <div style="width:36px;height:36px;border-radius:50%;background:#f0e6d2;display:flex;align-items:center;justify-content:center;color:#8b7355;font-weight:700;font-size:0.75rem;border:1px solid #d4c5a9;" class="nw-playfair"><?php echo mb_substr($is_a ? $rel['name_b'] : $rel['name_a'], 0, 1); ?></div>
                     <?php } ?>
                     <span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:<?php echo htmlspecialchars($rel_color); ?>;"></span>
-                    <span style="color:#8b7355;font-style:italic;font-size:0.875rem;"><?php echo $my_label; ?></span>
-                    <a href="<?php echo G5_BBS_URL; ?>/character_view.php?ch_id=<?php echo $other_ch_id; ?>" style="margin-left:auto;font-weight:700;font-size:0.9375rem;" class="nw-playfair"><?php echo $other_name; ?></a>
+                    <div style="flex:1;min-width:0;">
+                        <div style="display:flex;align-items:center;gap:0.75rem;">
+                            <span style="color:#8b7355;font-style:italic;font-size:0.875rem;"><?php echo $my_label; ?></span>
+                            <a href="<?php echo G5_BBS_URL; ?>/character_view.php?ch_id=<?php echo $other_ch_id; ?>" style="margin-left:auto;font-weight:700;font-size:0.9375rem;" class="nw-playfair"><?php echo $other_name; ?></a>
+                        </div>
+                        <?php if ($my_memo) { ?>
+                        <p style="font-size:0.75rem;color:#a89070;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?php echo htmlspecialchars($my_memo); ?></p>
+                        <?php } ?>
+                    </div>
                 </div>
                 <?php } ?>
                 </div>

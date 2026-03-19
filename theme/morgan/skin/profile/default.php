@@ -252,18 +252,26 @@ if (!defined('_GNUBOARD_')) exit;
                 $other_thumb = $is_a ? $rel['thumb_b'] : $rel['thumb_a'];
                 $other_ch_id = $is_a ? $rel['ch_id_b'] : $rel['ch_id_a'];
                 $my_label = $is_a ? ($rel['cr_label_a'] ?: $rel['cr_label_b']) : ($rel['cr_label_b'] ?: $rel['cr_label_a']);
+                $my_memo = $is_a ? ($rel['cr_memo_a'] ?? '') : ($rel['cr_memo_b'] ?? '');
                 $rel_color = $rel['cr_color'] ?: '#95a5a6';
             ?>
-            <div class="px-4 py-3 flex items-center gap-3">
+            <a href="<?php echo G5_BBS_URL; ?>/character_view.php?ch_id=<?php echo $other_ch_id; ?>" class="px-4 py-3 flex items-center gap-3 hover:bg-mg-bg-tertiary/30 transition-colors">
                 <?php if ($other_thumb) { ?>
                 <img src="<?php echo MG_CHAR_IMAGE_URL.'/'.$other_thumb; ?>" class="w-9 h-9 rounded-full object-cover flex-shrink-0" alt="">
                 <?php } else { ?>
                 <div class="w-9 h-9 rounded-full bg-mg-bg-tertiary flex items-center justify-center text-mg-text-muted text-sm flex-shrink-0">?</div>
                 <?php } ?>
                 <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:<?php echo htmlspecialchars($rel_color); ?>"></span>
-                <span class="text-sm text-mg-text-secondary"><?php echo htmlspecialchars($my_label); ?></span>
-                <a href="<?php echo G5_BBS_URL; ?>/character_view.php?ch_id=<?php echo $other_ch_id; ?>" class="text-sm font-medium text-mg-accent hover:underline ml-auto"><?php echo htmlspecialchars($other_name); ?></a>
-            </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-medium text-mg-accent"><?php echo htmlspecialchars($other_name); ?></span>
+                        <span class="text-sm text-mg-text-secondary"><?php echo htmlspecialchars($my_label); ?></span>
+                    </div>
+                    <?php if ($my_memo) { ?>
+                    <p class="text-xs text-mg-text-muted mt-0.5 truncate"><?php echo htmlspecialchars($my_memo); ?></p>
+                    <?php } ?>
+                </div>
+            </a>
             <?php } ?>
         </div>
 

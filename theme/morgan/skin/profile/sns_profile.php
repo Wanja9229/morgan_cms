@@ -270,6 +270,7 @@ foreach ($grouped_fields as $fields) { $field_count += count($fields); }
             $other_thumb = $is_a ? $rel['thumb_b'] : $rel['thumb_a'];
             $other_ch_id = $is_a ? $rel['ch_id_b'] : $rel['ch_id_a'];
             $my_label = htmlspecialchars($is_a ? ($rel['cr_label_a'] ?: $rel['cr_label_b']) : ($rel['cr_label_b'] ?: $rel['cr_label_a']));
+            $my_memo = $is_a ? ($rel['cr_memo_a'] ?? '') : ($rel['cr_memo_b'] ?? '');
             $rel_color = $rel['cr_color'] ?: '#95a5a6';
         ?>
         <div class="sns-rel-item" style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1.5rem;border-bottom:1px solid #eff3f4;">
@@ -284,6 +285,9 @@ foreach ($grouped_fields as $fields) { $field_count += count($fields); }
                     <span style="width:8px;height:8px;border-radius:50%;background:<?php echo htmlspecialchars($rel_color); ?>;"></span>
                     <span style="font-size:0.8125rem;color:#536471;"><?php echo $my_label; ?></span>
                 </div>
+                <?php if ($my_memo) { ?>
+                <p style="font-size:0.75rem;color:#8899a6;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?php echo htmlspecialchars($my_memo); ?></p>
+                <?php } ?>
             </div>
         </div>
         <?php } ?>
